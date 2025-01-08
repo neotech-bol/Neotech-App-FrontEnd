@@ -1,0 +1,64 @@
+import { createRouter, createWebHistory } from 'vue-router'
+import HomeView from '../views/HomeView.vue'
+import LoginView from '@/views/Auth/LoginView.vue'
+import RegisterView from '@/views/Auth/RegisterView.vue'
+import LayoutAdmin from '@/Layouts/LayoutAdmin.vue'
+import HomAdminView from '@/Admin/HomAdminView.vue'
+import UsuariosView from '@/Admin/UsuariosView.vue'
+import ProductosView from '@/Admin/ProductosView.vue'
+import CatalogosView from '@/Admin/CatalogosView.vue'
+import CategoriasView from '@/Admin/CategoriasView.vue'
+
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes: [
+    {
+      path: '/',
+      name: 'home',
+      component: HomeView,
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: LoginView
+    },
+    {
+      path: '/register',
+      name: 'register',
+      component: RegisterView,
+    },
+    {
+      path: '/admin-panel',
+      component: LayoutAdmin,
+      children: [
+        {
+          path: '/inicio',
+          name: 'inicio',
+          component: HomAdminView
+        },
+        {
+          path: '/usuarios',
+          name: 'usuarios',
+          component: UsuariosView
+        },
+        {
+          path: '/productos',
+          name: 'productos',
+          component: ProductosView
+        },
+        {
+          path: '/catalogos',
+          name: 'catalogos',
+          component: CatalogosView
+        },
+        {
+          path: '/categorias',
+          name: 'not-found',
+          component: CategoriasView
+        }
+      ]
+    }
+  ],
+})
+
+export default router
