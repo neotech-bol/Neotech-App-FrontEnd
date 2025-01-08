@@ -8,6 +8,7 @@ import UsuariosView from '@/Admin/UsuariosView.vue'
 import ProductosView from '@/Admin/ProductosView.vue'
 import CatalogosView from '@/Admin/CatalogosView.vue'
 import CategoriasView from '@/Admin/CategoriasView.vue'
+import RolesView from '@/Admin/RolesView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -55,6 +56,11 @@ const router = createRouter({
           path: '/categorias',
           name: 'not-found',
           component: CategoriasView
+        },
+        {
+          path: '/roles',
+          name: 'roles',
+          component: RolesView
         }
       ]
     }

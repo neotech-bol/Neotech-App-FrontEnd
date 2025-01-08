@@ -4,7 +4,7 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header bg-primary-subtle">
-                        <span class="card-title h4">Usuarios</span>
+                        <span class="card-title h3">Usuarios</span>
                     </div>
                     <div class="card-body">
                         <div class="row gy-4">

@@ -73,7 +73,8 @@
     { name: 'Usuarios', path: '/usuarios', icon: 'bi-people' },
     { name: 'Catalogos', path: '/catalogos', icon: 'bi-box' },
     { name: 'Categorias', path: '/categorias', icon: 'bi-gear' },
-    { name: 'Productos', path: '/productos', icon: 'bi-box-arrow-right', logout: true }
+    { name: 'Productos', path: '/productos', icon: 'bi-box-arrow-right'},
+    { name: 'Roles', path: '/roles', icon: 'bi-box-arrow-right'}
   ];
   
   const goToProfile = () => {

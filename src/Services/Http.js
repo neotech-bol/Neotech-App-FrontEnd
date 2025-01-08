@@ -1,7 +1,7 @@
 import axios from "axios";
 import { Buffer } from "buffer";
-export const urlBase = 'http://neotech-app-backend.test/api/';
-export const urlBaseAsset = 'http://neotech-app-backend.test/';
+export const urlBase = 'http://neotechbol.test/api/';
+export const urlBaseAsset = 'http://neotechbol.test/';
 export const http = () => {
 	let token = "";
 	if (localStorage.getItem("token") != null) {
