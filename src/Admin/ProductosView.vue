@@ -19,7 +19,7 @@
                 <div class="table-responsive">
                   <table class="table table-hover table-striped">
                     <thead class="table-primary">
-                      <tr>
+                      <tr class="text-center">
                         <th>ID</th>
                         <th>Nombre</th>
                         <th>Precio</th>
@@ -45,7 +45,7 @@
                         <td>{{ item.images?.length }}</td>
                         <td>
                           <div class="btn-group">
-                            <button class="btn btn-sm btn-warning">Editar</button>
+                            <button class="btn btn-sm btn-warning" @click="mostrarProducto(item.id)">Editar</button>
                           </div>
                         </td>
                       </tr>
@@ -99,10 +99,10 @@
             </div>
             <div class="col-12 mt-3">
               <h6>Imágenes seleccionadas:</h6>
-              <div class="row" v-if="formulario.images.length > 0">
-                <div class="col-4" v-for="(image, index) in formulario.images" :key="index">
+              <div class="row" v-if="formulario.imagePreviews.length > 0">
+                <div class="col-4" v-for="(image, index) in formulario.imagePreviews" :key="index">
                   <div class="position-relative">
-                    <img :src="image.preview" class="img-fluid" alt="Preview" />
+                    <img :src="image" class="img-fluid" alt="Preview" />
                     <button type="button" class="btn-close position-absolute top-0 end-0"
                       @click="removeImage(index)"></button>
                   </div>
@@ -124,7 +124,7 @@
 import { ref, onMounted } from 'vue';
 import { Modal } from 'bootstrap/dist/js/bootstrap.bundle.min';
 import { indexCatalogoItems } from '@/Services/CatalogoService';
-import { indexProductos, storeProducto } from '@/Services/ProductoService';
+import { indexProductos, showProducto, storeProducto } from '@/Services/ProductoService';
 
 let modal = null;
 let instanciaModal = null;
@@ -138,7 +138,7 @@ const formulario = ref({
   images: [],
   imagePreviews: []
 });
-
+const posicion = ref('');
 onMounted(() => {
   modal = document.getElementById('staticBackdrop');
   instanciaModal = new Modal(modal);
@@ -147,6 +147,14 @@ onMounted(() => {
 });
 
 const abrirModal = () => {
+  formulario.value = {
+    nombre: '',
+    precio: '',
+    catalogo_id: '',
+    descripcion: '',
+    images: [],
+    imagePreviews: []
+  };
   instanciaModal.show();
 };
 
@@ -181,6 +189,9 @@ const handleFileUpload = (event) => {
 
   // Combinar las imágenes existentes con las nuevas
   formulario.value.images = [...(formulario.value.images || []), ...newImages];
+
+  // Actualizar las vistas previas
+  formulario.value.imagePreviews = [...(formulario.value.imagePreviews || []), ...newImages.map(img => img.preview)];
 };
 
 const removeImage = (index) => {
@@ -203,11 +214,35 @@ const guardarProducto = async () => {
     const { data } = await storeProducto(formData);
     console.log(data);
     instanciaModal.hide();
+    listarProductos();
     // Aquí puedes agregar lógica adicional después de guardar, como actualizar la lista de productos
   } catch (error) {
     console.log(error);
   }
 };
+const mostrarProducto = async (id) => {
+  try {
+    const { data } = await showProducto(id);
+    instanciaModal.show();
+    
+    // Crear un nuevo array de imágenes con vistas previas
+    const imagePreviews = data.dato.images.map(image => image.imagen); // Asegúrate de que `imagen` sea la propiedad correcta
+
+    formulario.value = {
+      nombre: data.dato.nombre,
+      precio: data.dato.precio,
+      catalogo_id: data.dato.catalogo_id,
+      descripcion: data.dato.descripcion,
+      images: [], // Mantener esto vacío ya que no tenemos archivos
+      imagePreviews: imagePreviews // Asignar las vistas previas
+    };
+    
+    posicion.value = id;
+    console.log(data);
+  } catch (error) {
+    console.log(error);
+  }
+}
 </script>
 
 <style scoped>
