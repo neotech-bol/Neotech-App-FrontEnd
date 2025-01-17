@@ -69,7 +69,7 @@
   };
   
   const menuItems = [
-    { name: 'Dashboard', path: '/inicio', icon: 'bi-speedometer2' },
+    { name: 'Dashboard', path: '/admin-panel', icon: 'bi-speedometer2' },
     { name: 'Usuarios', path: '/usuarios', icon: 'bi-people' },
     { name: 'Catalogos', path: '/catalogos', icon: 'bi-box' },
     { name: 'Categorias', path: '/categorias', icon: 'bi-gear' },

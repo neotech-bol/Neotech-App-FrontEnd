@@ -10,10 +10,13 @@ export const showProducto = (id) => {
 }
 
 export const updateProducto = (id, formulario) => {
-    return httpAsset().put(`${urlBase}producto/${id}`, formulario);
+    return httpAsset().post(`${urlBase}producto/${id}`, formulario);
 }
 
 
 export const storeProducto = (formulario) => {
     return httpAsset().post(`${urlBase}producto-nuevo`, formulario);
+}
+export const deleteImage = (idProducto, idImagen) => {
+    return http().delete(`${urlBase}productos/${idProducto}/images/${idImagen}`);
 }

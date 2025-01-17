@@ -9,14 +9,29 @@ import ProductosView from '@/Admin/ProductosView.vue'
 import CatalogosView from '@/Admin/CatalogosView.vue'
 import CategoriasView from '@/Admin/CategoriasView.vue'
 import RolesView from '@/Admin/RolesView.vue'
+import LayoutUser from '@/Layouts/LayoutUser.vue'
+import NosotrosVire from '@/views/NosotrosVire.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: HomeView,
+      name: 'navbar-user',
+      component: LayoutUser,
+      children: [
+        {
+          path: '/',
+          name: 'home',
+          component: HomeView
+        },
+        {
+          path: '/nosotros',
+          name: 'nosotros',
+          component: NosotrosVire
+        }
+      ],
+
     },
     {
       path: '/login',
@@ -33,8 +48,8 @@ const router = createRouter({
       component: LayoutAdmin,
       children: [
         {
-          path: '/inicio',
-          name: 'inicio',
+          path: '/admin-panel',
+          name: 'admin-panel',
           component: HomAdminView
         },
         {

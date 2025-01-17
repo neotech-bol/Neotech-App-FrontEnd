@@ -23,6 +23,7 @@
                                                 <th>ID</th>
                                                 <th>Nombre</th>
                                                 <th>Descripción</th>
+                                                <th>Productos</th>
                                                 <th>Estado</th>
                                                 <th>Acciones</th>
                                             </tr>
@@ -36,6 +37,7 @@
                                                 <td>{{ index + 1 }}</td>
                                                 <td>{{ item.nombre }}</td>
                                                 <td>{{ item.descripcion }}</td>
+                                                <td>{{ item.productos?.length }}</td>
                                                 <td>
                                                     <span class="badge"
                                                         :class="item.estado == true ? 'bg-success' : 'bg-danger'">

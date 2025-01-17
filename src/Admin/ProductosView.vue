@@ -37,10 +37,10 @@
                       </tr>
                       <tr v-for="(item, index) in productos" :key="item.id" class="text-center">
                         <td>{{ index + 1 }}</td>
-                        <td>{{ item.nombre }}</td> 
+                        <td>{{ item.nombre }}</td>
                         <td>{{ item.precio }}</td>
                         <td>{{ 0 }}</td>
-                        <td>{{ item.categoria }}</td>
+                        <td>{{ item.categoria?.nombre}}</td>
                         <td>{{ item.catalogo?.nombre }}</td>
                         <td>{{ item.images?.length }}</td>
                         <td>
@@ -65,7 +65,8 @@
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="staticBackdropLabel">Nuevo Producto</h5>
+          <h5 class="modal-title" id="staticBackdropLabel">{{ posicion != "" ? 'Editar registro' : 'Guardar registro' }}
+          </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
@@ -79,11 +80,21 @@
               <input type="number" id="precio" class="form-control" v-model="formulario.precio">
             </div>
             <div class="col-12 col-md-6">
-              <label for="catalogo" class="label-form fw-bold">Catalogo <i class="text-danger">*</i></label>
+              <label for="catalogo" class="label-form fw-bold">Catalogo</label>
               <select class="form-select" aria-label="Default select example" id="catalogo"
                 v-model="formulario.catalogo_id">
                 <option value="" selected>Seleccione</option>
                 <option :value="item.id" v-for="item in catalogos" :key="item.id">
+                  {{ item.nombre }}
+                </option>
+              </select>
+            </div>
+            <div class="col-12 col-md-6">
+              <label for="catalogo" class="label-form fw-bold">Categoria</label>
+              <select class="form-select" aria-label="Default select example" id="catalogo"
+                v-model="formulario.categoria_id">
+                <option value="" selected>Seleccione</option>
+                <option :value="item.id" v-for="item in categorias" :key="item.id">
                   {{ item.nombre }}
                 </option>
               </select>
@@ -102,10 +113,11 @@
               <div class="row" v-if="formulario.imagePreviews.length > 0">
                 <div class="col-4" v-for="(image, index) in formulario.imagePreviews" :key="index">
                   <div class="position-relative">
-                    <img :src="image" class="img-fluid" alt="Preview" />
+                    <img :src="image.preview" class="img-fluid" alt="Preview" />
                     <button type="button" class="btn-close position-absolute top-0 end-0"
                       @click="removeImage(index)"></button>
                   </div>
+                  <button class="btn btn-danger" @click="eliminarImage(image.id)">Eliminar</button>
                 </div>
               </div>
             </div>
@@ -113,7 +125,8 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cerrar</button>
-          <button type="button" class="btn btn-primary" @click="guardarProducto">Guardar</button>
+          <button type="button" class="btn" :class="posicion != '' ? 'btn-warning' : 'btn-primary'"
+            @click="guardarProducto">{{ posicion != "" ? 'Editar' : "Guardar" }}</button>
         </div>
       </div>
     </div>
@@ -124,16 +137,19 @@
 import { ref, onMounted } from 'vue';
 import { Modal } from 'bootstrap/dist/js/bootstrap.bundle.min';
 import { indexCatalogoItems } from '@/Services/CatalogoService';
-import { indexProductos, showProducto, storeProducto } from '@/Services/ProductoService';
+import { deleteImage, indexProductos, showProducto, storeProducto, updateProducto } from '@/Services/ProductoService';
+import { indexActivosCategorias } from '@/Services/CategoriaService';
 
 let modal = null;
 let instanciaModal = null;
 const catalogos = ref([]);
 const productos = ref([]);
+const categorias = ref([]);
 const formulario = ref({
   nombre: '',
   precio: '',
   catalogo_id: '',
+  categoria_id: '',
   descripcion: '',
   images: [],
   imagePreviews: []
@@ -143,21 +159,32 @@ onMounted(() => {
   modal = document.getElementById('staticBackdrop');
   instanciaModal = new Modal(modal);
   listarCatalogosActivos();
+  listarCategorias();
   listarProductos();
 });
 
 const abrirModal = () => {
+  posicion.value = '';
   formulario.value = {
     nombre: '',
     precio: '',
     catalogo_id: '',
+    categoria_id: '',
     descripcion: '',
     images: [],
     imagePreviews: []
   };
   instanciaModal.show();
 };
-
+const listarCategorias = async () => {
+  try {
+    const {data} = await indexActivosCategorias();
+    categorias.value = data.datos;
+    console.log(categorias.value);
+  } catch (error) {
+    console.log(error);
+  }
+}
 const listarCatalogosActivos = async () => {
   try {
     const { data } = await indexCatalogoItems();
@@ -186,16 +213,26 @@ const handleFileUpload = (event) => {
     file: file,
     preview: URL.createObjectURL(file) // Crear una vista previa de la imagen
   }));
+  console.log(newImages);
 
   // Combinar las imágenes existentes con las nuevas
   formulario.value.images = [...(formulario.value.images || []), ...newImages];
+  console.log(formulario.value.images);
 
   // Actualizar las vistas previas
-  formulario.value.imagePreviews = [...(formulario.value.imagePreviews || []), ...newImages.map(img => img.preview)];
+  formulario.value.imagePreviews = [
+    ...(formulario.value.imagePreviews || []), 
+    ...newImages.map(img => ({ preview: img.preview }))
+  ];
+  console.log(formulario.value.imagePreviews);
 };
 
 const removeImage = (index) => {
+  // Eliminar de images
   formulario.value.images.splice(index, 1);
+  
+  // Eliminar de imagePreviews
+  formulario.value.imagePreviews.splice(index, 1);
 };
 
 
@@ -205,17 +242,24 @@ const guardarProducto = async () => {
     formData.append('nombre', formulario.value.nombre);
     formData.append('precio', formulario.value.precio);
     formData.append('catalogo_id', formulario.value.catalogo_id);
+    formData.append('categoria_id', formulario.value.categoria_id);
     formData.append('descripcion', formulario.value.descripcion);
 
     for (let i = 0; i < formulario.value.images.length; i++) {
       formData.append('images[]', formulario.value.images[i].file);
     }
-
-    const { data } = await storeProducto(formData);
-    console.log(data);
-    instanciaModal.hide();
-    listarProductos();
-    // Aquí puedes agregar lógica adicional después de guardar, como actualizar la lista de productos
+    if (posicion.value != '') {
+      formData.append('_method', 'PUT')
+      const { data } = await updateProducto(posicion.value, formData);
+      console.log(data);
+      instanciaModal.hide();
+      listarProductos();
+    } else {
+      const { data } = await storeProducto(formData);
+      console.log(data);
+      instanciaModal.hide();
+      listarProductos();
+    }
   } catch (error) {
     console.log(error);
   }
@@ -224,21 +268,37 @@ const mostrarProducto = async (id) => {
   try {
     const { data } = await showProducto(id);
     instanciaModal.show();
-    
-    // Crear un nuevo array de imágenes con vistas previas
-    const imagePreviews = data.dato.images.map(image => image.imagen); // Asegúrate de que `imagen` sea la propiedad correcta
 
+    // Crear un nuevo array de imágenes con vistas previas
+    const imagePreviews = data.dato.images.map(image => ({
+      id: image.id, // Asegúrate de que `id` sea la propiedad correcta
+      preview: image.imagen // Asegúrate de que `imagen` sea la propiedad correcta
+    }));
+    console.log(imagePreviews);
     formulario.value = {
       nombre: data.dato.nombre,
       precio: data.dato.precio,
       catalogo_id: data.dato.catalogo_id,
+      categoria_id: data.dato.categoria_id,
       descripcion: data.dato.descripcion,
       images: [], // Mantener esto vacío ya que no tenemos archivos
       imagePreviews: imagePreviews // Asignar las vistas previas
     };
-    
+
     posicion.value = id;
     console.log(data);
+  } catch (error) {
+    console.log(error);
+  }
+}
+const eliminarImage = async (idImagen) => {
+  try {
+    const { data } = await deleteImage(posicion.value, idImagen);
+    console.log(data);
+
+    // Actualizar las vistas previas de imágenes
+    formulario.value.imagePreviews = formulario.value.imagePreviews.filter(image => image.id !== idImagen);
+    listarProductos();
   } catch (error) {
     console.log(error);
   }

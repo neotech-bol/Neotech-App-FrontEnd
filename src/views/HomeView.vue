@@ -1,10 +1,11 @@
 <template>
-  <h1>Home</h1>
+  <CarruselDeImagenesComponent />
+  <ProductsBannerComponent />
 </template>
-<script>
-console.log("Welcome to HomeView");
-console.log('object');
-console.log('2');
+<script setup>
+
+import CarruselDeImagenesComponent from '@/Components/InicioComponents/CarruselDeImagenesComponent.vue';
+import ProductsBannerComponent from '@/Components/InicioComponents/ProductsBannerComponent.vue';
 </script>
 <style>
   
