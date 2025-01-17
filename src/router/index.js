@@ -9,8 +9,10 @@ import ProductosView from '@/Admin/ProductosView.vue'
 import CatalogosView from '@/Admin/CatalogosView.vue'
 import CategoriasView from '@/Admin/CategoriasView.vue'
 import RolesView from '@/Admin/RolesView.vue'
-import LayoutUser from '@/Layouts/LayoutUser.vue'
 import NosotrosVire from '@/views/NosotrosVire.vue'
+import LayoutF1User from '@/Layouts/LayoutF1User.vue'
+import ContactoView from '@/views/ContactoView.vue'
+import Producto from '@/views/Producto.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -18,7 +20,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'navbar-user',
-      component: LayoutUser,
+      component: LayoutF1User,
       children: [
         {
           path: '/',
@@ -29,6 +31,16 @@ const router = createRouter({
           path: '/nosotros',
           name: 'nosotros',
           component: NosotrosVire
+        },
+        {
+          path: '/contacto',
+          name: 'contacto',
+          component: ContactoView
+        },
+        {
+          path: '/producto',
+          name: 'producto',
+          component: Producto
         }
       ],
 
