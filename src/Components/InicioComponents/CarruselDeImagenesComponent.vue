@@ -1,165 +1,252 @@
 <template>
     <div class="carousel-container">
-        <div class="carousel-wrapper">
-            <div class="carousel">
-                <div v-for="(image, index) in images" 
-                     :key="index"
-                     :class="['carousel-slide', { active: currentIndex === index }]">
-                    <img :src="image.url" :alt="image.alt">
-                </div>
+      <div class="carousel-wrapper">
+        <div class="carousel">
+          <transition-group name="fade">
+            <div v-for="(image, index) in images" 
+                 :key="index"
+                 v-show="currentIndex === index"
+                 class="carousel-slide">
+              <img :src="image.url" :alt="image.alt" class="carousel-image">
             </div>
-            <div class="carousel-content">
-                <h2 class="carousel-title">Nuestras Imágenes Destacadas</h2>
-                <a href="/productos" class="carousel-link-button">Ver Productos</a>
-            </div>
-            <div class="carousel-indicators">
-                <button v-for="(image, index) in images" 
-                        :key="index"
-                        :class="['indicator', { active: currentIndex === index }]"
-                        @click="goToSlide(index)">
-                </button>
-            </div>
+          </transition-group>
         </div>
+        <div class="carousel-content">
+          <h2 class="carousel-title">Nuestras Imágenes Destacadas</h2>
+          <a href="/productos" class="carousel-link-button">Ver Productos</a>
+        </div>
+        <div class="carousel-indicators">
+          <button v-for="(image, index) in images" 
+                  :key="index"
+                  :class="['indicator', { active: currentIndex === index }]"
+                  @click="goToSlide(index)"
+                  :aria-label="`Ir a la diapositiva ${index + 1}`">
+          </button>
+        </div>
+        <button @click="prevSlide" class="carousel-control prev" aria-label="Diapositiva anterior">
+          <span class="carousel-control-icon">&lsaquo;</span>
+        </button>
+        <button @click="nextSlide" class="carousel-control next" aria-label="Siguiente diapositiva">
+          <span class="carousel-control-icon">&rsaquo;</span>
+        </button>
+      </div>
     </div>
-</template>
-
-<script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
-
-const images = ref([
+  </template>
+  
+  <script setup>
+  import { ref, onMounted, onUnmounted } from 'vue';
+  
+  const images = ref([
     { url: 'https://www.publimpresos.com/wp-content/uploads/2023/12/banner-intro.jpg', alt: 'Imagen 1' },
-    { url: '../../../public/imagenes/Sin título.png', alt: 'Imagen 2' },
-]);
-
-const currentIndex = ref(0);
-let intervalId = null;
-
-const nextSlide = () => {
+    { url: '/imagenes/Sin título.png', alt: 'Imagen 2' },
+  ]);
+  
+  const currentIndex = ref(0);
+  let intervalId = null;
+  
+  const nextSlide = () => {
     currentIndex.value = (currentIndex.value + 1) % images.value.length;
-};
-
-const goToSlide = (index) => {
+  };
+  
+  const prevSlide = () => {
+    currentIndex.value = (currentIndex.value - 1 + images.value.length) % images.value.length;
+  };
+  
+  const goToSlide = (index) => {
     currentIndex.value = index;
-};
-
-const startAutoSlide = () => {
-    intervalId = setInterval(nextSlide, 10000);
-};
-
-onMounted(() => {
+  };
+  
+  const startAutoSlide = () => {
+    intervalId = setInterval(nextSlide, 5000);
+  };
+  
+  onMounted(() => {
     startAutoSlide();
-});
-
-onUnmounted(() => {
+  });
+  
+  onUnmounted(() => {
     if (intervalId) clearInterval(intervalId);
-});
-</script>
-
-<style scoped>
-.carousel-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.carousel-wrapper {
+  });
+  </script>
+  
+  <style scoped>
+  .carousel-container {
+    max-width: 100%;
+    margin: 20px auto; /* Añadido margen arriba y abajo */
+    padding: 0 20px; /* Añadido padding izquierdo y derecho */
+  }
+  
+  @media (min-width: 1024px) {
+    .carousel-container {
+      max-width: 1200px;
+    }
+  }
+  
+  .carousel-wrapper {
     position: relative;
     overflow: hidden;
-    border-radius: 10px;
-}
-
-.carousel-content {
+    border-radius: 0;
+  }
+  
+  .carousel {
+    position: relative;
+    height: 300px;
+  }
+  
+  @media (min-width: 768px) {
+    .carousel {
+      height: 400px;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .carousel {
+      height: 500px;
+    }
+  }
+  
+  .carousel-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .carousel-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .carousel-content {
     position: absolute;
     top: 50%;
-    left: 50px;
+    left: 20px;
+    right: 20px;
     transform: translateY(-50%);
-    text-align: left;
+    text-align: center;
     z-index: 2;
-}
-
-.carousel-title {
-    font-size: 2.5rem;
-    color: rgb(0, 0, 0);
-    margin-bottom: 20px;
+  }
+  
+  @media (min-width: 768px) {
+    .carousel-content {
+      left: 50px;
+      right: auto;
+      text-align: left;
+    }
+  }
+  
+  .carousel-title {
+    font-size: 1.5rem;
+    color: #ffffff;
+    margin-bottom: 15px;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.carousel-link-button {
+  }
+  
+  @media (min-width: 768px) {
+    .carousel-title {
+      font-size: 2rem;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .carousel-title {
+      font-size: 2.5rem;
+    }
+  }
+  
+  .carousel-link-button {
     display: inline-block;
-    padding: 12px 25px;
+    padding: 10px 20px;
     background-color: #007bff;
     color: white;
     text-decoration: none;
     border-radius: 5px;
     font-weight: bold;
     transition: background-color 0.3s, transform 0.2s;
-}
-
-.carousel-link-button:hover {
+  }
+  
+  .carousel-link-button:hover {
     background-color: #0056b3;
     transform: translateY(-2px);
-}
-
-.carousel-slide {
-    width: 100%;
+  }
+  
+  .carousel-indicators {
     position: absolute;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.5s ease-in-out;
-}
-
-.carousel-slide.active {
-    opacity: 1;
-    visibility: visible;
-}
-
-.carousel-slide img {
-    width: 100%;
-    height: 500px;
-    object-fit: contain;
-}
-
-.carousel-indicators {
-    position: absolute;
-    bottom: 20px;
+    bottom: 10px;
     left: 0;
     right: 0;
     display: flex;
     justify-content: center;
-    gap: 10px;
+    gap: 8px;
     margin: 0 auto;
     padding: 0 20px;
     z-index: 2;
-}
-
-.indicator {
-    width: 12px;
-    height: 12px;
+  }
+  
+  .indicator {
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
-    background-color: rgba(109, 99, 99, 0.849);
+    background-color: rgba(255, 255, 255, 0.5);
     border: none;
     cursor: pointer;
     transition: all 0.3s ease;
-}
-
-.indicator.active {
-    background-color: rgb(0, 26, 255);
+  }
+  
+  .indicator.active {
+    background-color: #ffffff;
     transform: scale(1.2);
-}
-
-.carousel {
-    position: relative;
-    height: 500px;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: scale(0.98);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-</style>
+  }
+  
+  .carousel-control {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    z-index: 2;
+    font-size: 24px;
+    line-height: 1;
+  }
+  
+  .carousel-control:hover {
+    background-color: rgba(0, 0, 0, 0.7);
+  }
+  
+  .carousel-control.prev {
+    left: 10px;
+  }
+  
+  .carousel-control.next {
+    right: 10px;
+  }
+  
+  .carousel-control-icon {
+    display: block;
+    width: 100%;
+    text-align: center;
+  }
+  
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: opacity 0.5s ease;
+  }
+  
+  .fade-enter-from,
+  .fade-leave-to {
+    opacity: 0;
+  }
+  </style>
+  
+  

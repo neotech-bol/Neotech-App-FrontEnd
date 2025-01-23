@@ -27,6 +27,7 @@
                         <th>Categoría</th>
                         <th>Catalogo</th>
                         <th>Imagenes</th>
+                        <th>Usuario</th>
                         <th>Acción</th>
                       </tr>
                     </thead>
@@ -40,9 +41,10 @@
                         <td>{{ item.nombre }}</td>
                         <td>{{ item.precio }}</td>
                         <td>{{ 0 }}</td>
-                        <td>{{ item.categoria?.nombre}}</td>
-                        <td>{{ item.catalogo?.nombre }}</td>
+                        <td>{{ item.categoria?.nombre || 'No hay categoría' }}</td>
+                        <td>{{ item.catalogo?.nombre || 'No hay catalogo'}}</td>
                         <td>{{ item.images?.length }}</td>
+                        <td>{{ item.user?.nombre }} {{ item.user?.apellido }}</td>
                         <td>
                           <div class="btn-group">
                             <button class="btn btn-sm btn-warning" @click="mostrarProducto(item.id)">Editar</button>

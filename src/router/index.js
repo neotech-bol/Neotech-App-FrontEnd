@@ -13,6 +13,7 @@ import NosotrosVire from '@/views/NosotrosVire.vue'
 import LayoutF1User from '@/Layouts/LayoutF1User.vue'
 import ContactoView from '@/views/ContactoView.vue'
 import Producto from '@/views/Producto.vue'
+import CheckoutView from '@/views/CheckoutView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -41,6 +42,11 @@ const router = createRouter({
           path: '/producto',
           name: 'producto',
           component: Producto
+        },
+        {
+          path: '/checkout',
+          name: 'checkout',
+          component: CheckoutView
         }
       ],
 

@@ -1,12 +1,5 @@
-<script setup>
-import { ref } from 'vue'
-
-const searchQuery = ref('')
-</script>
-
 <template>
-  <header>
-    <!-- Top Bar -->
+  <header class="header">
     <div class="top-bar">
       <div class="contact">
         <a href="tel:+59175901415">+591 759-01415</a>
@@ -17,94 +10,115 @@ const searchQuery = ref('')
       <div class="top-links">
         <a href="#">Ayuda</a>
         <a href="#">Rastrear Pedido</a>
-        <select class="language-select">
+        <select v-model="language" class="select-styled">
           <option value="es">Español</option>
+          <option value="en">English</option>
         </select>
-        <select class="currency-select">
+        <select v-model="currency" class="select-styled">
           <option value="bs">Moneda (Bs)</option>
+          <option value="usd">USD ($)</option>
         </select>
       </div>
     </div>
 
-    <!-- Main Header -->
     <div class="main-header">
       <div class="logo">
         <img src="" alt="Logo" />
       </div>
 
       <div class="search-bar">
-        <input type="text" v-model="searchQuery" placeholder="¿Qué estás buscando en este ciclo?">
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="¿Qué estás buscando en este ciclo?"
+        />
         <button class="search-button">
-          <i class="search-icon">🔍</i>
+          <span class="search-icon">🔍</span>
         </button>
       </div>
 
       <div class="user-actions">
-        <div class="account">
-          <i class="user-icon">👤</i>
-          <div class="account-text">
-            <span>Cuenta</span>
-            <span>LOGIN</span>
-          </div>
-        </div>
-        <div class="favorites">
-          <i class="heart-icon">❤️</i>
-          <div class="count">3-ITEMS</div>
-        </div>
-        <div class="cart">
-          <i class="cart-icon">🛒</i>
-          <div class="count">2-ITEMS</div>
-        </div>
+        <button class="icon-button">
+          <span class="icon">👤</span>
+          <span class="label">Cuenta</span>
+        </button>
+        <button class="icon-button">
+          <span class="icon">❤️</span>
+          <span class="label">Favoritos</span>
+        </button>
+        <button class="icon-button cart-button">
+          <span class="icon">🛒</span>
+          <span class="label">Carrito</span>
+          <span class="cart-count" v-if="cartItemCount > 0">{{ cartItemCount }}</span>
+        </button>
       </div>
     </div>
 
-    <!-- Navigation -->
     <nav class="main-nav">
-      <button class="catalog-btn">
-        <i class="menu-icon">☰</i>
+      <button class="catalog-button">
+        <span class="menu-icon">☰</span>
         Ver catálogo
       </button>
 
-      <ul class="nav-links">
-        <li><router-link to="/">Inicio</router-link></li>
-        <li><router-link to="">Categorías</router-link></li>
-        <li><router-link to="/producto">Productos</router-link></li>
-        <li><router-link to="">Ofertas</router-link></li>
-        <li><router-link to="/nosotros">Nosotros</router-link></li>
-        <li><router-link to="/contacto">Contacto</router-link></li>
+      <button class="mobile-menu-toggle " @click="toggleMobileMenu">
+        <span class="menu-icon">☰</span>
+        <span class="label">Menú</span>
+      </button>
+
+      <ul :class="['nav-links', { 'mobile-open': isMobileMenuOpen }]">
+        <li v-for="item in navItems" :key="item">
+          <a href="#">{{ item }}</a>
+        </li>
       </ul>
 
-      <div class="location">
-        <select>
-          <option>Cochabamba</option>
-        </select>
-      </div>
+      <select v-model="location" class="select-styled location-select">
+        <option value="cochabamba">Cochabamba</option>
+        <option value="la-paz">La Paz</option>
+        <option value="santa-cruz">Santa Cruz</option>
+      </select>
     </nav>
   </header>
 </template>
 
+<script setup>
+import { ref } from 'vue'
+
+const searchQuery = ref('')
+const language = ref('es')
+const currency = ref('bs')
+const location = ref('cochabamba')
+const isMobileMenuOpen = ref(false)
+const cartItemCount = ref(3) // Ejemplo de contador de carrito
+
+const navItems = ['Inicio', 'Categorías', 'Productos', 'Ofertas', 'Nosotros', 'Contacto']
+
+const toggleMobileMenu = () => {
+  isMobileMenuOpen.value = !isMobileMenuOpen.value
+}
+</script>
+
 <style scoped>
-/* Base Styles */
-header {
-  font-family: Inter, system-ui, sans-serif;
-  width: 100%;
+.header {
+  font-family: 'Roboto', Arial, sans-serif;
   max-width: 1440px;
   margin: 0 auto;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Top Bar */
 .top-bar {
-  background: #f8f9fa;
+  background-color: #f0f0f0;
   padding: 8px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
   font-size: 14px;
 }
 
-.top-bar a {
+.top-bar a, .top-bar select {
   color: #333;
   text-decoration: none;
+  margin-right: 16px;
   transition: color 0.3s ease;
 }
 
@@ -114,148 +128,164 @@ header {
 
 .top-links {
   display: flex;
-  gap: 16px;
+  align-items: center;
 }
 
-.language-select,
-.currency-select {
-  border: none;
-  background: transparent;
+.select-styled {
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
   cursor: pointer;
-  transition: opacity 0.3s ease;
+  transition: border-color 0.3s ease;
 }
 
-.language-select:hover,
-.currency-select:hover {
-  opacity: 0.8;
+.select-styled:hover {
+  border-color: #007bff;
 }
 
-/* Main Header */
 .main-header {
   padding: 16px;
   display: flex;
   align-items: center;
-  gap: 24px;
-  max-width: 1200px;
-  margin: 0 auto;
-  background: white;
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: transform 0.3s ease;
-}
-
-.logo:hover {
-  transform: scale(1.05);
+  justify-content: space-between;
+  flex-wrap: wrap;
+  background-color: white;
 }
 
 .logo img {
   height: 40px;
+  transition: transform 0.3s ease;
+}
+
+.logo img:hover {
+  transform: scale(1.05);
 }
 
 .search-bar {
-  flex: 1;
+  flex-grow: 1;
   display: flex;
+  margin: 0 16px;
   position: relative;
 }
 
 .search-bar input {
   width: 100%;
-  padding: 12px 48px 12px 16px;
-  border: 2px solid #e0e0e0;
-  border-radius: 4px;
-  font-size: 1rem;
-  transition: border-color 0.3s ease;
+  padding: 12px 40px 12px 16px;
+  border: 2px solid #ddd;
+  border-radius: 25px;
+  font-size: 16px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .search-bar input:focus {
-  border-color: #007bff;
   outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
 }
 
 .search-button {
   position: absolute;
-  right: 8px;
+  right: 12px;
   top: 50%;
   transform: translateY(-50%);
   background: none;
   border: none;
   cursor: pointer;
-  transition: transform 0.3s ease;
+  font-size: 20px;
+  color: #007bff;
+  transition: color 0.3s ease;
 }
 
 .search-button:hover {
-  transform: translateY(-50%) scale(1.1);
+  color: #0056b3;
 }
 
 .user-actions {
   display: flex;
-  gap: 24px;
-  align-items: center;
+  gap: 16px;
 }
 
-.account,
-.favorites,
-.cart {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.icon-button {
+  background: none;
+  border: none;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   transition: transform 0.3s ease;
 }
 
-.account:hover,
-.favorites:hover,
-.cart:hover {
+.icon-button:hover {
   transform: translateY(-2px);
 }
 
-.account-text {
-  display: flex;
-  flex-direction: column;
-  font-size: 14px;
+.icon-button .icon {
+  font-size: 24px;
 }
 
-.count {
+.icon-button .label {
   font-size: 12px;
-  color: #666;
+  margin-top: 4px;
 }
 
-/* Navigation */
+.cart-button {
+  position: relative;
+}
+
+.cart-count {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #ff4136;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+  font-weight: bold;
+}
+
 .main-nav {
-  background: #f8f9fa;
+  background-color: #f8f9fa;
   padding: 12px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
 }
 
-.catalog-btn {
+.catalog-button {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #007bff;
+  background-color: #007bff;
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
+  padding: 12px 24px;
+  border-radius: 25px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  font-weight: bold;
+  transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
-.catalog-btn:hover {
-  background: #0056b3;
+.catalog-button:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
 }
 
 .nav-links {
   display: flex;
-  gap: 24px;
-  list-style: none;
-  margin: 0;
+  list-style-type: none;
   padding: 0;
+  margin: 0;
+}
+
+.nav-links li {
+  margin-right: 24px;
 }
 
 .nav-links a {
@@ -269,47 +299,94 @@ header {
   color: #007bff;
 }
 
-.location select {
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  transition: border-color 0.3s ease;
+.location-select {
+  padding: 8px 16px;
 }
 
-.location select:hover {
-  border-color: #007bff;
+.mobile-menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 
-/* Responsive Styles */
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   .top-bar {
-    padding: 6px 12px;
+    display: none;
   }
 
   .main-header {
-    padding: 12px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .logo {
+    align-self: center;
+    margin-bottom: 16px;
   }
 
   .search-bar {
-    order: 3;
+    order: 1;
+    margin: 16px 0;
+  }
+
+  .user-actions {
+    justify-content: space-around;
+    margin-top: 16px;
+  }
+
+  .mobile-menu-toggle {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 12px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 25px;
+    margin-bottom: 16px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+  }
+
+  .mobile-menu-toggle:hover {
+    background-color: #0056b3;
+  }
+
+  .mobile-menu-toggle .menu-icon {
+    margin-right: 8px;
+  }
+
+  .nav-links {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .nav-links.mobile-open {
+    display: flex;
+  }
+
+  .nav-links li {
+    margin-right: 0;
+    margin-bottom: 12px;
+  }
+
+  .location-select {
     width: 100%;
     margin-top: 12px;
   }
 
-  .user-actions {
-    gap: 16px;
-  }
-
-  .account-text,
-  .count {
-    display: none;
+  .catalog-button {
+    width: 100%;
+    justify-content: center;
   }
 }
 
 @media (max-width: 480px) {
   .main-header {
-    padding: 8px;
+    padding: 12px;
   }
 
   .logo img {
@@ -317,12 +394,21 @@ header {
   }
 
   .search-bar input {
-    padding: 8px 40px 8px 12px;
     font-size: 14px;
+    padding: 10px 36px 10px 12px;
   }
 
   .user-actions {
     gap: 8px;
+  }
+
+  .icon-button .label {
+    display: none;
+  }
+
+  .cart-count {
+    top: -8px;
+    right: -8px;
   }
 }
 </style>

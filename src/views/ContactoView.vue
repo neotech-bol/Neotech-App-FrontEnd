@@ -49,7 +49,7 @@ const handleSubmit = (event: Event) => {
             <span class="material-icon">📞</span>
           </div>
           <h3>Llámanos</h3>
-          <a href="tel:+59175901415">+591 759-01415</a>
+          <a href="tel:+59175901415">+591 77997694</a>
         </div>
 
         <div class="contact-card">
