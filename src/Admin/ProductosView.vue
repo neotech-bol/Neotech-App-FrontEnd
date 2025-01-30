@@ -40,7 +40,7 @@
                         <td>{{ index + 1 }}</td>
                         <td>{{ item.nombre }}</td>
                         <td>{{ item.precio }}</td>
-                        <td>{{ 0 }}</td>
+                        <td>{{ item.cantidad}}</td>
                         <td>{{ item.categoria?.nombre || 'No hay categoría' }}</td>
                         <td>{{ item.catalogo?.nombre || 'No hay catalogo'}}</td>
                         <td>{{ item.images?.length }}</td>
@@ -106,6 +106,15 @@
               <textarea name="descripcion" id="descripcion" class="form-control"
                 v-model="formulario.descripcion"></textarea>
             </div>
+            <div class="col-12 col-md-6">
+                            <label for="imagen" class="label-form fw-bold">Imagen principal <span class="text-danger">*</span></label>
+                            <input type="file" class="form-control" id="imagen" placeholder="Escribe..."
+                                @change="obtenerImagen($event)" :class="{ 'border-danger': errors.imagen_principal }">
+                            <small class="text-danger fst-italic text-xs" v-if="errors.imagen_principal"><i
+                                    class="fas fa-times me-1"></i>{{ errors.imagen_principal[0] }}</small>
+                            <img v-if="imagenPreview" :src="imagenPreview" alt="Imagen"
+                                style="width: 400px; height: 200px; margin-top: 30px;">
+                        </div>
             <div class="col-12">
               <label for="imagenes" class="label-form fw-bold">Imágenes <i class="text-danger">*</i></label>
               <input type="file" id="imagenes" class="form-control" @change="handleFileUpload" multiple>
@@ -154,9 +163,12 @@ const formulario = ref({
   categoria_id: '',
   descripcion: '',
   images: [],
-  imagePreviews: []
+  imagePreviews: [],
+  imagen_principal: ''
 });
 const posicion = ref('');
+const imagenPreview = ref('');
+const errors = ref({});
 onMounted(() => {
   modal = document.getElementById('staticBackdrop');
   instanciaModal = new Modal(modal);
@@ -164,7 +176,18 @@ onMounted(() => {
   listarCategorias();
   listarProductos();
 });
-
+const obtenerImagen = (event) => {
+    if (event.target.files[0]) {
+        formulario.value.imagen_principal = event.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            imagenPreview.value = e.target.result;
+        };
+        reader.readAsDataURL(event.target.files[0]);
+    } else {
+        imagenPreview.value = formulario.value.imagen_principal;
+    }
+};
 const abrirModal = () => {
   posicion.value = '';
   formulario.value = {
@@ -176,9 +199,10 @@ const abrirModal = () => {
     images: [],
     imagePreviews: []
   };
+  imagenPreview.value = ''; // Limpiar la vista previa de la imagen
   instanciaModal.show();
 };
-const listarCategorias = async () => {
+const listarCategorias = async () => { 
   try {
     const {data} = await indexActivosCategorias();
     categorias.value = data.datos;
@@ -239,6 +263,7 @@ const removeImage = (index) => {
 
 
 const guardarProducto = async () => {
+  errors.value = {};
   try {
     const formData = new FormData();
     formData.append('nombre', formulario.value.nombre);
@@ -246,7 +271,10 @@ const guardarProducto = async () => {
     formData.append('catalogo_id', formulario.value.catalogo_id);
     formData.append('categoria_id', formulario.value.categoria_id);
     formData.append('descripcion', formulario.value.descripcion);
-
+        // Solo agregar el archivo de imagen si se seleccionó uno nuevo
+        if (formulario.value.imagen_principal instanceof File) {
+            formData.append('imagen_principal', formulario.value.imagen_principal);
+        }
     for (let i = 0; i < formulario.value.images.length; i++) {
       formData.append('images[]', formulario.value.images[i].file);
     }
@@ -263,7 +291,11 @@ const guardarProducto = async () => {
       listarProductos();
     }
   } catch (error) {
-    console.log(error);
+    if (error.response.status == 422) {
+            errors.value = error.response.data.errors;
+        } else {
+            console.log(error);
+        }
   }
 };
 const mostrarProducto = async (id) => {
@@ -282,11 +314,13 @@ const mostrarProducto = async (id) => {
       precio: data.dato.precio,
       catalogo_id: data.dato.catalogo_id,
       categoria_id: data.dato.categoria_id,
+      imagen_principal: data.dato.imagen_principal,
       descripcion: data.dato.descripcion,
       images: [], // Mantener esto vacío ya que no tenemos archivos
       imagePreviews: imagePreviews // Asignar las vistas previas
     };
-
+    console.log(formulario.value);
+    imagenPreview.value = formulario.value.imagen_principal;
     posicion.value = id;
     console.log(data);
   } catch (error) {

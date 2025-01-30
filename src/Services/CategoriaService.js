@@ -1,4 +1,4 @@
-import { http, urlBase } from "./Http";
+import { http, httpNotToken, urlBase } from "./Http";
 
 
 export const indexCategorias = () => {

@@ -76,10 +76,10 @@
             <div class="col-12 col-lg-6 mb-2 mb-lg-0">
               <ul class="nav justify-content-center">
                 <li class="nav-item">
-                  <a class="nav-link" href="#">Inicio</a>
+                  <router-link to="/"><a class="nav-link" href="#">Inicio</a></router-link>
                 </li>
                 <li class="nav-item">
-                  <a class="nav-link" href="#">Categorías</a>
+                  <router-link to="/"></router-link><a class="nav-link" href="#">Categorías</a>
                 </li>
                 <li class="nav-item">
                   <a class="nav-link" href="#">Productos</a>

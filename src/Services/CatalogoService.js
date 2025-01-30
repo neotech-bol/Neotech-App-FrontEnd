@@ -1,4 +1,4 @@
-import { http, urlBase } from "./Http"
+import { http, httpNotToken, urlBase } from "./Http"
 
 export const indexCatalogos = () => {
     return http().get(`${urlBase}catalogos`)
@@ -19,5 +19,5 @@ export const destroyCatalogo = (id) => {
 }
 
 export const indexCatalogoItems = () => {
-    return http().get(`${urlBase}catalogos-activos`)
+    return httpNotToken().get(`${urlBase}catalogos-activos`)
 }

@@ -185,6 +185,7 @@ const mostrar = async (id) => {
             permissions: data.datos.permissions.map(permiso => permiso.name)
         }
         posicion.value = id;
+        errors.value = {};
     } catch (error) {
         console.log(error);
     }

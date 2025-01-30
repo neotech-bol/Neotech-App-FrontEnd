@@ -46,7 +46,7 @@
           <span class="icon">❤️</span>
           <span class="label">Favoritos</span>
         </button>
-        <button class="icon-button cart-button">
+        <button class="icon-button cart-button" @click="carritoView()">
           <span class="icon">🛒</span>
           <span class="label">Carrito</span>
           <span class="cart-count" v-if="cartItemCount > 0">{{ cartItemCount }}</span>
@@ -67,7 +67,7 @@
 
       <ul :class="['nav-links', { 'mobile-open': isMobileMenuOpen }]">
         <li v-for="item in navItems" :key="item">
-          <a href="#">{{ item }}</a>
+          <router-link :to="item.path"><a href="#">{{ item.nombre }}</a></router-link>
         </li>
       </ul>
 
@@ -82,7 +82,8 @@
 
 <script setup>
 import { ref } from 'vue'
-
+import { useRouter } from 'vue-router'
+const router = useRouter();
 const searchQuery = ref('')
 const language = ref('es')
 const currency = ref('bs')
@@ -90,10 +91,30 @@ const location = ref('cochabamba')
 const isMobileMenuOpen = ref(false)
 const cartItemCount = ref(3) // Ejemplo de contador de carrito
 
-const navItems = ['Inicio', 'Categorías', 'Productos', 'Ofertas', 'Nosotros', 'Contacto']
+const navItems = [
+  {
+    nombre: 'Categorías',
+    path: '/'
+  },
+  {
+    nombre: 'Productos',
+    path: '/producto'
+  },
+  {
+    nombre: 'Nosotros',
+    path: '/nosotros'
+  },
+  {
+    nombre: 'Contacto',
+    path: '/contacto'
+  }
+]
 
 const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value
+}
+const carritoView = () => {
+  router.push({path: '/checkout'})
 }
 </script>
 

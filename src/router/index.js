@@ -14,6 +14,8 @@ import LayoutF1User from '@/Layouts/LayoutF1User.vue'
 import ContactoView from '@/views/ContactoView.vue'
 import Producto from '@/views/Producto.vue'
 import CheckoutView from '@/views/CheckoutView.vue'
+import PedidosView from '@/Admin/PedidosView.vue'
+import CartView from '@/views/CartView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -39,7 +41,7 @@ const router = createRouter({
           component: ContactoView
         },
         {
-          path: '/producto',
+          path: "/producto/:idProducto?",
           name: 'producto',
           component: Producto
         },
@@ -47,6 +49,11 @@ const router = createRouter({
           path: '/checkout',
           name: 'checkout',
           component: CheckoutView
+        },
+        {
+          path: '/carrito',
+          name: 'carrito',
+          component: CartView
         }
       ],
 
@@ -94,6 +101,11 @@ const router = createRouter({
           path: '/roles',
           name: 'roles',
           component: RolesView
+        },
+        {
+          path: '/pedidos',
+          name: 'pedidos',
+          component: PedidosView
         }
       ]
     }

@@ -17,18 +17,7 @@ const formatPrice = (price: number) => {
 </script>
 
 <template>
-  <div class="product-list">
-    <div v-for="product in products" :key="product.id" class="product-item">
-      <img :src="product.image" :alt="product.name" class="product-image">
-      <div class="product-info">
-        <h3>{{ product.name }}</h3>
-        <p v-if="product.specs" class="specs">{{ product.specs }}</p>
-        <p class="price">{{ formatPrice(product.price) }}</p>
-        <p class="unit-price">(Precio unitario: {{ formatPrice(product.unitPrice) }})</p>
-        <p class="quantity">{{ product.quantity }} und.</p>
-      </div>
-    </div>
-  </div>
+
 </template>
 
 <style scoped>

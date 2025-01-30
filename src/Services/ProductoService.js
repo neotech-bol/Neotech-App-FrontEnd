@@ -1,4 +1,4 @@
-import { http, httpAsset, urlBase } from "./Http";
+import { http, httpAsset, httpNotToken, urlBase } from "./Http";
 
 
 export const indexProductos = () => {
@@ -19,4 +19,8 @@ export const storeProducto = (formulario) => {
 }
 export const deleteImage = (idProducto, idImagen) => {
     return http().delete(`${urlBase}productos/${idProducto}/images/${idImagen}`);
+}
+
+export const detalleProducto = (idProducto) => {
+    return httpNotToken().get(`${urlBase}producto-ver/${idProducto}`);
 }

@@ -1,10 +1,111 @@
-<script setup lang="ts">
-import { ref } from 'vue'
+<template>
+  <div class="product-detail">
+    <div class="product-container">
+      <!-- Product Images -->
+      <div class="product-images">
+        <div class="main-image">
+          <img :src="dato.imagen_principal" alt="Moto Eléctrica">
+        </div>
+        <div class="thumbnail-list">
+          <button v-for="(image, index) in dato.images" :key="index"
+            :class="['thumbnail', { active: selectedImage === index }]" @click="selectedImage = index">
+            <img :src="image.imagen" :alt="`Vista ${index + 1}`">
+          </button>
+        </div>
+      </div>
 
+      <!-- Product Info -->
+      <div class="product-info">
+        <h1>{{ dato.nombre }}</h1>
+        <h2>Tecnología Avanzada de Litio</h2>
+
+        <!-- Rating -->
+        <div class="rating">
+          <span class="stars">★★★★☆</span>
+          <span class="reviews">(22 Reviews)</span>
+        </div>
+
+        <!-- Price -->
+        <div class="price">
+          <span class="current-price">{{ dato.precio }}</span>
+          <span class="original-price">2.300 Bs</span>
+          <span class="discount">-60%</span>
+        </div>
+
+        <p class="description">
+          {{ dato.descripcion }}
+        </p>
+
+        <!-- Features -->
+        <ul class="features">
+          <li>Potencia de 350W</li>
+          <li>Velocidad máxima de 25 km/h</li>
+          <li>Autonomía de hasta 40 km con una sola carga</li>
+        </ul>
+
+        <!-- Model Selection -->
+        <div class="option-section">
+          <h3>MODELO</h3>
+          <div class="model-options">
+            <button v-for="model in models" :key="model.id"
+              :class="['model-btn', { active: selectedModel === model.id }]" @click="selectedModel = model.id">
+              {{ model.power }}
+            </button>
+          </div>
+        </div>
+
+           <!-- Color Selection -->
+           <div class="option-section">
+          <h3>COLOR</h3>
+<!--           <div class="color-options">
+            <button v-for="color in colors" :key="color.id"
+              :class="['color-btn', color.id, { active: selectedColor === color.id }]" @click="selectedColor = color.id"
+              :title="color.name"></button>
+          </div> -->
+        </div>
+
+        <!-- Quantity and Add to Cart -->
+        <div class="purchase-section">
+          <div class="action-buttons">
+            <button class="add-to-cart" @click="addToCart(dato)">
+              <span class="cart-icon">🛒</span>
+              Agregar al carrito
+            </button>
+            <button class="add-to-wishlist">
+              <span class="heart-icon">♡</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script setup>
+import { detalleProducto } from '@/Services/ProductoService';
+import { useCartStore } from '@/stores/cart';
+import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router';
+const dato = ref({});
+const router = useRouter();
 const selectedImage = ref(0)
 const selectedModel = ref('350W')
 const selectedColor = ref('blue')
 const quantity = ref(1)
+const idProducto = router.currentRoute.value.params.idProducto;
+const cartStore = useCartStore();
+onMounted(() => {
+  verProducto();
+})
+const verProducto = async () => {
+  try {
+    const { data } = await detalleProducto(idProducto);
+    dato.value = data.dato;
+    console.log(dato.value);
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 
 const images = [
   '../../public/imagenes/Sin título.png',
@@ -24,125 +125,19 @@ const models = [
   { id: '250W', power: '250W' },
   { id: '150W', power: '150W' }
 ]
+const addToCart = (product) => {
+  cartStore.addToCart(product);
+  console.log(`Agregado al carrito: ${product.nombre}`);
+};
 
-const incrementQuantity = () => {
-  if (quantity.value < 10) quantity.value++
-}
-
-const decrementQuantity = () => {
-  if (quantity.value > 1) quantity.value--
-}
-
-const addToCart = () => {
-  console.log('Agregando al carrito:', {
-    model: selectedModel.value,
-    color: selectedColor.value,
-    quantity: quantity.value
-  })
+const getImageByColor = (color) => {
+  if (dato.value.images) {
+    const image = dato.value.images.find(img => img.color === color);
+    return image ? image.imagen : '';
+  }
+  return ''; // Retorna una cadena vacía si no hay imágenes
 }
 </script>
-
-<template>
-  <div class="product-detail">
-    <div class="product-container">
-      <!-- Product Images -->
-      <div class="product-images">
-        <div class="main-image">
-          <img :src="images[selectedImage]" alt="Moto Eléctrica">
-        </div>
-        <div class="thumbnail-list">
-          <button 
-            v-for="(image, index) in images" 
-            :key="index"
-            :class="['thumbnail', { active: selectedImage === index }]"
-            @click="selectedImage = index"
-          >
-            <img :src="image" :alt="`Vista ${index + 1}`">
-          </button>
-        </div>
-      </div>
-
-      <!-- Product Info -->
-      <div class="product-info">
-        <h1>Moto Eléctrica FAPP 350W con Batería Recargable</h1>
-        <h2>Tecnología Avanzada de Litio</h2>
-
-        <!-- Rating -->
-        <div class="rating">
-          <span class="stars">★★★★☆</span>
-          <span class="reviews">(22 Reviews)</span>
-        </div>
-
-        <!-- Price -->
-        <div class="price">
-          <span class="current-price">1.150 Bs</span>
-          <span class="original-price">2.300 Bs</span>
-          <span class="discount">-60%</span>
-        </div>
-
-        <p class="description">
-          La moto eléctrica que combina estilo y eficiencia. Disfruta de un
-          desplazamiento silencioso, ecológico y económico con una
-          batería de larga duración.
-        </p>
-
-        <!-- Features -->
-        <ul class="features">
-          <li>Potencia de 350W</li>
-          <li>Velocidad máxima de 25 km/h</li>
-          <li>Autonomía de hasta 40 km con una sola carga</li>
-        </ul>
-
-        <!-- Model Selection -->
-        <div class="option-section">
-          <h3>MODELO</h3>
-          <div class="model-options">
-            <button
-              v-for="model in models"
-              :key="model.id"
-              :class="['model-btn', { active: selectedModel === model.id }]"
-              @click="selectedModel = model.id"
-            >
-              {{ model.power }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Color Selection -->
-        <div class="option-section">
-          <h3>COLOR</h3>
-          <div class="color-options">
-            <button
-              v-for="color in colors"
-              :key="color.id"
-              :class="['color-btn', color.id, { active: selectedColor === color.id }]"
-              @click="selectedColor = color.id"
-              :title="color.name"
-            ></button>
-          </div>
-        </div>
-
-        <!-- Quantity and Add to Cart -->
-        <div class="purchase-section">
-          <div class="quantity-selector">
-            <button @click="decrementQuantity">-</button>
-            <input type="number" v-model="quantity" min="1" max="10">
-            <button @click="incrementQuantity">+</button>
-          </div>
-          <div class="action-buttons">
-            <button class="add-to-cart" @click="addToCart">
-              <span class="cart-icon">🛒</span>
-              Agregar al carrito
-            </button>
-            <button class="add-to-wishlist">
-              <span class="heart-icon">♡</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
 
 <style scoped>
 .product-detail {
@@ -342,9 +337,17 @@ const addToCart = () => {
   color: white;
 }
 
-.color-btn.blue { background: #007bff; }
-.color-btn.red { background: #dc3545; }
-.color-btn.green { background: #28a745; }
+.color-btn.blue {
+  background: #007bff;
+}
+
+.color-btn.red {
+  background: #dc3545;
+}
+
+.color-btn.green {
+  background: #28a745;
+}
 
 /* Purchase Section */
 .purchase-section {
@@ -353,29 +356,7 @@ const addToCart = () => {
   margin-top: 20px;
 }
 
-.quantity-selector {
-  display: flex;
-  align-items: center;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
 
-.quantity-selector button {
-  padding: 8px 16px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  color: #666;
-}
-
-.quantity-selector input {
-  width: 50px;
-  text-align: center;
-  border: none;
-  border-left: 1px solid #ddd;
-  border-right: 1px solid #ddd;
-  padding: 8px;
-}
 
 .action-buttons {
   display: flex;
@@ -449,9 +430,6 @@ const addToCart = () => {
     flex-direction: column;
   }
 
-  .quantity-selector {
-    width: 100%;
-  }
 }
 
 @media (max-width: 480px) {
