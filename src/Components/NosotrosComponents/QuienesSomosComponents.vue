@@ -4,17 +4,17 @@
         <div class="image-grid">
           <!-- Imagen del trabajador (Tamaño recomendado: 600x800px) -->
           <div class="image-card large">
-            <img src="../../../public/imagenes/Sin título.png" alt="Trabajador con tablet" />
+            <img src="../../../public/imagenes/working-business-project-qjpx3orx3fd4or633iazgbh68w89ipbg1fzbd65f0g.jpg" alt="Trabajador con tablet" />
             <span class="image-size-note">Tamaño recomendado: 600x800px</span>
           </div>
           <!-- Imagen de contenedores (Tamaño recomendado: 400x300px) -->
           <div class="image-card small">
-            <img src="../../../public/imagenes/Sin título.png" alt="Contenedores" />
+            <img src="../../../public/imagenes/sobre-nosotros-400x300.jpg" alt="Contenedores" />
             <span class="image-size-note">Tamaño recomendado: 400x300px</span>
           </div>
           <!-- Imagen del barco (Tamaño recomendado: 400x300px) -->
           <div class="image-card small">
-            <img src="../../../public/imagenes/Sin título.png" alt="Barco de carga" />
+            <img src="../../../public/imagenes/depositphotos_39479909-stock-photo-about-us-blue-marker.jpg" alt="Barco de carga" />
             <span class="image-size-note">Tamaño recomendado: 400x300px</span>
           </div>
         </div>

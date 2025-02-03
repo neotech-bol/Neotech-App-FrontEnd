@@ -12,3 +12,7 @@ export const showUser = (id) => {
 export const updateUser = (id, formulario) => {
     return http().put(`${urlBase}usuario/${id}`, formulario)
 }
+
+export const changeStatus = (id) => {
+    return http().delete(`${urlBase}usuario/${id}`)
+}

@@ -29,6 +29,7 @@
                                                 <th>Telefono</th>
                                                 <th>Genero</th>
                                                 <th>Rol</th>
+                                                <th>Estado</th>
                                                 <th>Acciones</th>
                                             </tr>
                                         </thead>
@@ -44,8 +45,19 @@
                                                 <td>{{ item.genero }}</td>
                                                 <td>{{ item.roles[0]?.name }}</td>
                                                 <td>
+                                                    <span class="badge"
+                                                        :class="item.estado == true ? 'bg-success' : 'bg-danger'">
+                                                        {{ item.estado == true ? 'Activo' : 'Inactivo' }}
+                                                    </span>
+                                                </td>
+                                                <td>
                                                     <div class="btn-group">
                                                         <button class="btn btn-sm btn-warning" @click="mostarUser(item.id)">Editar</button>
+                                                        <button class="btn btn-sm"
+                                                            :class="item.estado == true ? 'btn-danger' : 'btn-success'"
+                                                            @click=cambiarEstado(item.id)>{{ item.estado == true ?
+                                                                'Desactivar' : 'Activar' }}
+                                                        </button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -200,7 +212,7 @@
 </template>
 <script setup>
 import { indexRoles } from '@/Services/RolesPermisosService';
-import { indexUsers, showUser, storeUserAdmin, updateUser } from '@/Services/UsuarioService';
+import { changeStatus, indexUsers, showUser, storeUserAdmin, updateUser } from '@/Services/UsuarioService';
 import { Modal } from 'bootstrap/dist/js/bootstrap.bundle.min';
 import { onMounted, ref } from 'vue';
 const formulario = ref({});
@@ -289,6 +301,15 @@ const mostarUser = async (id) => {
         };
         instanciaModal.show();
         posicion.value = id;
+    } catch (error) {
+        console.log(error);
+    }
+}
+const cambiarEstado = async (id) => {
+    try {
+        const {data} = await changeStatus(id);
+        console.log(data);
+        listarUsuarios();
     } catch (error) {
         console.log(error);
     }

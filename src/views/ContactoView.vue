@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-const searchQuery = ref('')
-const showMobileMenu = ref(false)
 const formData = ref({
   nombre: '',
   correo: '',
@@ -10,23 +8,20 @@ const formData = ref({
   mensaje: ''
 })
 
-const toggleMobileMenu = () => {
-  showMobileMenu.value = !showMobileMenu.value
-}
-
 const handleSubmit = (event: Event) => {
   event.preventDefault()
-  // Handle form submission logic here
   console.log('Form submitted:', formData.value)
+  // Handle form submission logic here
 }
 
-// Previous stats and teamMembers data remains unchanged...
+const contactCards = [
+  { icon: 'fa-envelope', title: 'Escríbenos', content: 'contacto@neotechbol.com', href: 'mailto:contacto@neotechbol.com' },
+  { icon: 'fa-phone', title: 'Llámanos', content: '+591 77997694', href: 'tel:+59177997694' },
+  { icon: 'fa-map-marker-alt', title: 'Visítanos', content: 'Calle Tarija, esquina América, Cochabamba - BO' },
+]
 </script>
 
 <template>
-  <!-- Previous header and sections remain unchanged -->
-
-  <!-- Contact Section -->
   <section class="contact-section">
     <div class="contact-container">
       <div class="section-header">
@@ -36,28 +31,13 @@ const handleSubmit = (event: Event) => {
       </div>
 
       <div class="contact-cards">
-        <div class="contact-card">
+        <div v-for="(card, index) in contactCards" :key="index" class="contact-card">
           <div class="icon">
-            <span class="material-icon">✉️</span>
+            <i :class="['fas', card.icon]"></i>
           </div>
-          <h3>Escríbenos</h3>
-          <a href="mailto:contacto@neotechbol.com">contacto@neotechbol.com</a>
-        </div>
-
-        <div class="contact-card">
-          <div class="icon">
-            <span class="material-icon">📞</span>
-          </div>
-          <h3>Llámanos</h3>
-          <a href="tel:+59175901415">+591 77997694</a>
-        </div>
-
-        <div class="contact-card">
-          <div class="icon">
-            <span class="material-icon">📍</span>
-          </div>
-          <h3>Visítanos</h3>
-          <p>Calle Tarija, esquina América, Cochabamba - BO</p>
+          <h3>{{ card.title }}</h3>
+          <a v-if="card.href" :href="card.href">{{ card.content }}</a>
+          <p v-else>{{ card.content }}</p>
         </div>
       </div>
 
@@ -65,47 +45,22 @@ const handleSubmit = (event: Event) => {
         <div class="map-container">
           <iframe
             src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3807.3758801973644!2d-66.1552!3d-17.393611!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTfCsDIyJzIyLjciUyA2NsKwMDknMzguNyJX!5e0!3m2!1ses!2sbo!4v1234567890!5m2!1ses!2sbo"
-            width="100%"
-            height="100%"
-            style="border:0;"
-            allowfullscreen=""
-            loading="lazy"
-            referrerpolicy="no-referrer-when-downgrade"
-          ></iframe>
+            width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"></iframe>
         </div>
 
         <form class="contact-form" @submit="handleSubmit">
           <div class="form-group">
-            <input 
-              type="text" 
-              v-model="formData.nombre"
-              placeholder="Nombre Completo"
-              required
-            >
+            <input type="text" v-model="formData.nombre" placeholder="Nombre Completo" required>
           </div>
           <div class="form-group">
-            <input 
-              type="email" 
-              v-model="formData.correo"
-              placeholder="Correo"
-              required
-            >
+            <input type="email" v-model="formData.correo" placeholder="Correo" required>
           </div>
           <div class="form-group">
-            <input 
-              type="tel" 
-              v-model="formData.telefono"
-              placeholder="Teléfono"
-              required
-            >
+            <input type="tel" v-model="formData.telefono" placeholder="Teléfono" required>
           </div>
           <div class="form-group">
-            <textarea 
-              v-model="formData.mensaje"
-              placeholder="Mensaje"
-              rows="4"
-              required
-            ></textarea>
+            <textarea v-model="formData.mensaje" placeholder="Mensaje" rows="4" required></textarea>
           </div>
           <button type="submit" class="submit-btn">Enviar</button>
         </form>
@@ -115,9 +70,6 @@ const handleSubmit = (event: Event) => {
 </template>
 
 <style scoped>
-/* Previous styles remain unchanged */
-
-/* Contact Section */
 .contact-section {
   padding: 60px 0;
   background-color: #fff;
@@ -143,11 +95,14 @@ const handleSubmit = (event: Event) => {
 .section-header p {
   color: #666;
   max-width: 600px;
-  margin: 0 auto;
+  margin: 0 auto 10px;
   line-height: 1.6;
 }
 
-/* Contact Cards */
+.highlight {
+  color: #007bff;
+}
+
 .contact-cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -158,13 +113,15 @@ const handleSubmit = (event: Event) => {
 .contact-card {
   background: #f8f9fa;
   padding: 24px;
-  border-radius: 8px;
+  border-radius: 12px;
   text-align: center;
-  transition: transform 0.3s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .contact-card:hover {
   transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
 .contact-card .icon {
@@ -176,11 +133,8 @@ const handleSubmit = (event: Event) => {
   align-items: center;
   justify-content: center;
   margin: 0 auto 16px;
-}
-
-.contact-card .material-icon {
-  font-size: 28px;
   color: white;
+  font-size: 24px;
 }
 
 .contact-card h3 {
@@ -194,13 +148,13 @@ const handleSubmit = (event: Event) => {
   color: #666;
   text-decoration: none;
   font-size: 0.9rem;
+  transition: color 0.3s ease;
 }
 
 .contact-card a:hover {
   color: #007bff;
 }
 
-/* Contact Content */
 .contact-content {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -210,35 +164,32 @@ const handleSubmit = (event: Event) => {
 
 .map-container {
   height: 400px;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Contact Form */
 .contact-form {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
 .form-group input,
 .form-group textarea {
+  width: 100%;
   padding: 12px;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 1rem;
-  transition: border-color 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
   border-color: #007bff;
   outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
 }
 
 .submit-btn {
@@ -246,7 +197,7 @@ const handleSubmit = (event: Event) => {
   color: white;
   padding: 12px 24px;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 1rem;
   cursor: pointer;
   transition: background-color 0.3s ease;
@@ -256,7 +207,6 @@ const handleSubmit = (event: Event) => {
   background: #0056b3;
 }
 
-/* Responsive Styles */
 @media (max-width: 1024px) {
   .contact-cards {
     grid-template-columns: repeat(3, 1fr);
@@ -295,3 +245,4 @@ const handleSubmit = (event: Event) => {
   }
 }
 </style>
+

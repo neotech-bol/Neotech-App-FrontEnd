@@ -22,6 +22,11 @@ export const useCartStore = defineStore('cart', () => {
     return items.value.reduce((total, item) => total + item.cantidad, 0); // Suma la cantidad de cada artículo
   });
 
+  // Propiedad computada que calcula el número de productos únicos en el carrito
+  const uniqueItemCount = computed(() => {
+    return items.value.length; // Devuelve la cantidad de productos únicos
+  });
+
   // Propiedad computada que calcula el monto total del carrito
   const totalAmount = computed(() => {
     return items.value.reduce((total, item) => total + (item.precio * item.cantidad), 0); // Suma el precio total de cada artículo
@@ -40,7 +45,7 @@ export const useCartStore = defineStore('cart', () => {
   // Función para agregar un producto al carrito
   function addToCart(product) {
     const existingItem = items.value.find(item => item.id === product.id);
-    
+
     if (existingItem) {
       // Si ya existe, solo se puede incrementar la cantidad
       existingItem.cantidad += 1; // Aumenta la cantidad
@@ -54,7 +59,7 @@ export const useCartStore = defineStore('cart', () => {
         image: product.imagen_principal
       });
     }
-    
+
     saveCartToStorage();
   }
 
@@ -74,7 +79,7 @@ export const useCartStore = defineStore('cart', () => {
       } else {
         console.warn(`La cantidad mínima para el producto ${item.nombre} es 10.`);
       }
-      
+
       if (item.cantidad <= 0) {
         removeFromCart(productId);
       }
@@ -95,6 +100,7 @@ export const useCartStore = defineStore('cart', () => {
     totalAmount,
     totalToPay,
     pending, // Agregado para que puedas acceder al monto pendiente
+    uniqueItemCount, // Agregado para que puedas acceder al número de productos únicos
     addToCart,
     removeFromCart,
     updateQuantity,

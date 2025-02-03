@@ -16,6 +16,9 @@ import Producto from '@/views/Producto.vue'
 import CheckoutView from '@/views/CheckoutView.vue'
 import PedidosView from '@/Admin/PedidosView.vue'
 import CartView from '@/views/CartView.vue'
+import PerfilView from '@/views/PerfilView.vue'
+import Register2View from '@/views/Auth/Register2View.vue'
+import Login2View from '@/views/Auth/Login2View.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -54,7 +57,12 @@ const router = createRouter({
           path: '/carrito',
           name: 'carrito',
           component: CartView
-        }
+        },  
+        {
+          path: '/perfil',
+          name: 'perfil',
+          component: PerfilView
+        },
       ],
 
     },
@@ -67,6 +75,16 @@ const router = createRouter({
       path: '/register',
       name: 'register',
       component: RegisterView,
+    },
+    {
+      path: '/login2',
+      name: 'login2',
+      component: Login2View
+    },
+    {
+      path: '/register2',
+      name: 'register2',
+      component: Register2View
     },
     {
       path: '/admin-panel',

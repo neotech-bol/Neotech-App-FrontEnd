@@ -81,7 +81,9 @@
                             <label for="nombre" class="label-form fw-bold">Nombre <span
                                     class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="nombre" name="nombre"
-                                v-model="formulario.nombre" required>
+                                v-model="formulario.nombre" required :class="{ 'border-danger': errors.nombre }">
+                                <small class="text-danger fst-italic text-xs" v-if="errors.nombre"><i
+                                    class="fas fa-times me-1"></i>{{ errors.nombre[0] }}</small>
                         </div>
                         <div class="col-12">
                             <label for="descripcion" class="label-form fw-bold">Descripción</label>
@@ -111,6 +113,7 @@ const formulario = ref({
     nombre: '',
     descripcion: ''
 });
+const errors = ref({});
 onMounted(() => {
     modal = document.getElementById('staticBackdrop');
     instanciaModal = new Modal(modal);
@@ -123,6 +126,7 @@ const abrirModal = () => {
         descripcion: ''
     }
     instanciaModal.show();
+    errors.value = {};
 }
 const cerrarModal = () => {
     instanciaModal.hide();
@@ -137,6 +141,7 @@ const listarCategorias = async () => {
     }
 }
 const guardarCategoria = async () => {
+    errors.value = {};
     try {
         if (posicion.value != '') {
             const { data } = await updateCategoria(posicion.value, formulario.value);
@@ -150,7 +155,11 @@ const guardarCategoria = async () => {
             listarCategorias();
         }
     } catch (error) {
-        console.log(error);
+        if (error.response.status == 422) {
+            errors.value = error.response.data.errors;
+        } else {
+            console.log(error);
+        }
     }
 }
 const cambiarEstado = async (id) => {

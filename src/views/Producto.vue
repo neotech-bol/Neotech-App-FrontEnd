@@ -19,6 +19,7 @@
         <h1>{{ dato.nombre }}</h1>
         <h2>Tecnología Avanzada de Litio</h2>
 
+        
         <!-- Rating -->
         <div class="rating">
           <span class="stars">★★★★☆</span>
@@ -33,14 +34,14 @@
         </div>
 
         <p class="description">
-          {{ dato.descripcion }}
+          {{ dato.descripcion != null ? dato.descripcion : 'No hay descripción' }}
         </p>
 
         <!-- Features -->
         <ul class="features">
-          <li>Potencia de 350W</li>
-          <li>Velocidad máxima de 25 km/h</li>
-          <li>Autonomía de hasta 40 km con una sola carga</li>
+          <li v-for="caracteristica in dato.caracteristicas" :key="caracteristica.id">
+            {{ caracteristica.caracteristica }}
+          </li>
         </ul>
 
         <!-- Model Selection -->

@@ -45,7 +45,7 @@
           <button class="sidebar-toggle" @click="toggleSidebar">
             <i :class="['bi', sidebarOpen ? 'bi-x-lg' : 'bi-list']"></i>
           </button>
-          <router-link to="/admin" class="home-link">
+          <router-link to="/" class="home-link">
             <i class="bi bi-house-door"></i>
             <span>Home</span>
           </router-link>
@@ -66,7 +66,7 @@
           </div>
         </div>
       </header>
-      <main class="main-content">
+      <main class="main-content"> 
         <RouterView />
       </main>
     </div>

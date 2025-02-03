@@ -22,6 +22,7 @@
                                             <tr class="text-center">
                                                 <th>ID</th>
                                                 <th>Nombre</th>
+                                                <th>Banner</th>
                                                 <th>Descripción</th>
                                                 <th>Productos</th>
                                                 <th>Estado</th>
@@ -36,6 +37,10 @@
                                             <tr v-for="(item, index) in datos" :key="item.id" class="text-center">
                                                 <td>{{ index + 1 }}</td>
                                                 <td>{{ item.nombre }}</td>
+                                                <td>
+                                                    <img :src="item.banner" alt="Banner" class="img-thumbnail img-fluid"
+                                                        style="width: 100px; height: 60px;">
+                                                </td>
                                                 <td>{{ item.descripcion }}</td>
                                                 <td>{{ item.productos?.length }}</td>
                                                 <td>
@@ -71,42 +76,37 @@
         aria-labelledby="staticBackdropLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="staticBackdropLabel">Nuevo catalogo</h5>
+                <div class="modal-header" :class="posicion != '' ? 'bg-warning-subtle' : 'bg-primary-subtle'">
+                    <h5 class="modal-title" id="staticBackdropLabel">{{ posicion != "" ? 'Editar registro' : 'Guardar Registro' }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row gy-4">
                         <div class="col-12">
                             <label for="nombre" class="label-form fw-bold">Nombre <i class="text-danger">*</i></label>
-                            <input type="text" class="form-control" id="nombre" v-model="formulario.nombre">
+                            <input type="text" class="form-control" :class="{ 'border-danger': errors.nombre }"
+                                id="nombre" v-model="formulario.nombre">
+                                <small class="text-danger fst-italic text-xs" v-if="errors.nombre"><i
+                                    class="fas fa-times me-1"></i>{{ errors.nombre[0] }}</small>
                         </div>
                         <div class="col-12">
                             <label for="descripcion" class="label-form fw-bold">Descripción</label>
                             <textarea class="form-control" id="descripcion" v-model="formulario.descripcion"></textarea>
                         </div>
                         <div class="col-12">
-                            <h6>Productos en el Catálogo:</h6>
-                            <div class="row" v-if="formulario.productos && formulario.productos.length > 0">
-                                <div class="col-4" v-for="(producto, index) in formulario.productos" :key="producto.id">
-                                    <div class="card">
-                                        <div class="card-body">
-                                            <h5 class="card-title">{{ producto.nombre }}</h5>
-                                            <p class="card-text">Precio: {{ producto.precio }}</p>
-                                            <p class="card-text">Descripción: {{ producto.descripcion || 'Sindescripción' }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div v-else>
-                                <p>No hay productos en este catálogo.</p>
-                            </div>
+                            <label for="imagen" class="label-form fw-bold">Imagen banner</label>
+                            <input type="file" class="form-control" id="imagen" placeholder="Escribe..."
+                                @change="obtenerImagen($event)" :class="{ 'border-danger': errors.banner }">
+                            <small class="text-danger fst-italic text-xs" v-if="errors.banner"><i
+                                    class="fas fa-times me-1"></i>{{ errors.banner[0] }}</small>
+                            <img v-if="imagenPreview" :src="imagenPreview" alt="Imagen"
+                                style="width: 400px; height: 200px; margin-top: 30px;">
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="button" class="btn btn-primary" @click="guardarCatalogo()">Guardar</button>
+                    <button type="button" class="btn" :class="posicion != '' ? 'btn-warning' : 'btn-primary'" @click="guardarCatalogo()">{{ posicion != '' ? 'Editar' : 'Guardar' }}</button>
                 </div>
             </div>
         </div>
@@ -121,9 +121,12 @@ let instanciaModal = null;
 const formulario = ref({
     nombre: '',
     descripcion: '',
+    banner: '',
 });
 const datos = ref([]);
 const posicion = ref('');
+const imagenPreview = ref('');
+const errors = ref({});
 onMounted(() => {
     modal = document.getElementById('staticBackdrop');
     instanciaModal = new Modal(modal);
@@ -133,13 +136,27 @@ const abrirModal = () => {
     formulario.value = {
         nombre: '',
         descripcion: '',
+        banner: '',
     }
+    imagenPreview.value = '';
     posicion.value = '';
     instanciaModal.show();
 }
 const cerrarModal = () => {
     instanciaModal.hide();
 }
+const obtenerImagen = (event) => {
+    if (event.target.files[0]) {
+        formulario.value.banner = event.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            imagenPreview.value = e.target.result;
+        };
+        reader.readAsDataURL(event.target.files[0]);
+    } else {
+        imagenPreview.value = formulario.value.banner;
+    }
+};
 const listarCatalogos = async () => {
     try {
         const { data } = await indexCatalogos();
@@ -150,20 +167,37 @@ const listarCatalogos = async () => {
     }
 }
 const guardarCatalogo = async () => {
+    errors.value = {};
     try {
+        const formData = new FormData();
+            if (formulario.value.nombre) {
+                formData.append('nombre', formulario.value.nombre);
+            }
+            if (formulario.value.descripcion) {
+                formData.append('descripcion', formulario.value.descripcion);
+            }
+            // Solo agregar el archivo de imagen si se seleccionó uno nuevo
+            if (formulario.value.banner instanceof File) {
+                formData.append('banner', formulario.value.banner);
+            }
         if (posicion.value != '') {
-            const { data } = await updateCatalogo(posicion.value, formulario.value);
+            formData.append('_method', 'PUT')
+            const { data } = await updateCatalogo(posicion.value, formData);
             listarCatalogos();
             cerrarModal();
             console.log(data);
         } else {
-            const { data } = await storeCatalogo(formulario.value);
+            const { data } = await storeCatalogo(formData);
             listarCatalogos();
             cerrarModal();
             console.log(data);
         }
     } catch (error) {
-        console.log(error);
+        if (error.response.status == 422) {
+            errors.value = error.response.data.errors;
+        } else {
+            console.log(error);
+        }
     }
 }
 const mostrarCatalogo = async (id) => {
@@ -173,10 +207,13 @@ const mostrarCatalogo = async (id) => {
         formulario.value = {
             nombre: data.dato.nombre,
             descripcion: data.dato.descripcion,
+            banner: data.dato.banner,
             productos: data.dato.productos
         }
+        imagenPreview.value = formulario.value.banner;
         instanciaModal.show();
         posicion.value = id;
+        errors.value = {};
     } catch (error) {
         console.log(error);
     }

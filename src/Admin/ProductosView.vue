@@ -40,9 +40,9 @@
                         <td>{{ index + 1 }}</td>
                         <td>{{ item.nombre }}</td>
                         <td>{{ item.precio }}</td>
-                        <td>{{ item.cantidad}}</td>
+                        <td>{{ item.cantidad }}</td>
                         <td>{{ item.categoria?.nombre || 'No hay categoría' }}</td>
-                        <td>{{ item.catalogo?.nombre || 'No hay catalogo'}}</td>
+                        <td>{{ item.catalogo?.nombre || 'No hay catalogo' }}</td>
                         <td>{{ item.images?.length }}</td>
                         <td>{{ item.user?.nombre }} {{ item.user?.apellido }}</td>
                         <td>
@@ -107,14 +107,14 @@
                 v-model="formulario.descripcion"></textarea>
             </div>
             <div class="col-12 col-md-6">
-                            <label for="imagen" class="label-form fw-bold">Imagen principal <span class="text-danger">*</span></label>
-                            <input type="file" class="form-control" id="imagen" placeholder="Escribe..."
-                                @change="obtenerImagen($event)" :class="{ 'border-danger': errors.imagen_principal }">
-                            <small class="text-danger fst-italic text-xs" v-if="errors.imagen_principal"><i
-                                    class="fas fa-times me-1"></i>{{ errors.imagen_principal[0] }}</small>
-                            <img v-if="imagenPreview" :src="imagenPreview" alt="Imagen"
-                                style="width: 400px; height: 200px; margin-top: 30px;">
-                        </div>
+              <label for="imagen" class="label-form fw-bold">Imagen principal <span class="text-danger">*</span></label>
+              <input type="file" class="form-control" id="imagen" placeholder="Escribe..."
+                @change="obtenerImagen($event)" :class="{ 'border-danger': errors.imagen_principal }">
+              <small class="text-danger fst-italic text-xs" v-if="errors.imagen_principal"><i
+                  class="fas fa-times me-1"></i>{{ errors.imagen_principal[0] }}</small>
+              <img v-if="imagenPreview" :src="imagenPreview" alt="Imagen"
+                style="width: 400px; height: 200px; margin-top: 30px;">
+            </div>
             <div class="col-12">
               <label for="imagenes" class="label-form fw-bold">Imágenes <i class="text-danger">*</i></label>
               <input type="file" id="imagenes" class="form-control" @change="handleFileUpload" multiple>
@@ -131,6 +131,17 @@
                   <button class="btn btn-danger" @click="eliminarImage(image.id)">Eliminar</button>
                 </div>
               </div>
+            </div>
+            <div class="col-12 col-md-12">
+              <label for="caracteristicas" class="form-label fw-bold">Caracteristicas <span
+                  class="text-danger">*</span></label>
+              <div v-for="(caracteristica, index) in formulario.caracteristicas" :key="index" class="input-group mb-2">
+                <input type="text" class="form-control" v-model="formulario.caracteristicas[index]"
+                  placeholder="Ingrese las caracteristicas del producto">
+                <button type="button" class="btn btn-danger" @click="eliminarCaracteristicas(index)">Eliminar</button>
+              </div>
+              <button type="button" class="btn btn-secondary mt-2" @click="agregarCaracteristicas()">Agregar
+                Caracteristica</button>
             </div>
           </div>
         </div>
@@ -164,29 +175,33 @@ const formulario = ref({
   descripcion: '',
   images: [],
   imagePreviews: [],
-  imagen_principal: ''
+  imagen_principal: '',
+  caracteristicas: [] // Asegúrate de que esto esté inicializado como un array
 });
 const posicion = ref('');
 const imagenPreview = ref('');
 const errors = ref({});
+const nuevaCaracteristica = ref(''); // Para almacenar la nueva característica
+
 onMounted(() => {
   modal = document.getElementById('staticBackdrop');
   instanciaModal = new Modal(modal);
   listarCatalogosActivos();
-  listarCategorias();
+  listarCategorias(); 
   listarProductos();
 });
+
 const obtenerImagen = (event) => {
-    if (event.target.files[0]) {
-        formulario.value.imagen_principal = event.target.files[0];
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            imagenPreview.value = e.target.result;
-        };
-        reader.readAsDataURL(event.target.files[0]);
-    } else {
-        imagenPreview.value = formulario.value.imagen_principal;
-    }
+  if (event.target.files[0]) {
+    formulario.value.imagen_principal = event.target.files[0];
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      imagenPreview.value = e.target.result;
+    };
+    reader.readAsDataURL(event.target.files[0]);
+  } else {
+    imagenPreview.value = formulario.value.imagen_principal;
+  }
 };
 const abrirModal = () => {
   posicion.value = '';
@@ -197,14 +212,15 @@ const abrirModal = () => {
     categoria_id: '',
     descripcion: '',
     images: [],
-    imagePreviews: []
+    imagePreviews: [],
+    caracteristicas: [] // Asegúrate de que esto esté inicializado como un array
   };
   imagenPreview.value = ''; // Limpiar la vista previa de la imagen
   instanciaModal.show();
 };
-const listarCategorias = async () => { 
+const listarCategorias = async () => {
   try {
-    const {data} = await indexActivosCategorias();
+    const { data } = await indexActivosCategorias();
     categorias.value = data.datos;
     console.log(categorias.value);
   } catch (error) {
@@ -247,7 +263,7 @@ const handleFileUpload = (event) => {
 
   // Actualizar las vistas previas
   formulario.value.imagePreviews = [
-    ...(formulario.value.imagePreviews || []), 
+    ...(formulario.value.imagePreviews || []),
     ...newImages.map(img => ({ preview: img.preview }))
   ];
   console.log(formulario.value.imagePreviews);
@@ -256,7 +272,7 @@ const handleFileUpload = (event) => {
 const removeImage = (index) => {
   // Eliminar de images
   formulario.value.images.splice(index, 1);
-  
+
   // Eliminar de imagePreviews
   formulario.value.imagePreviews.splice(index, 1);
 };
@@ -266,18 +282,34 @@ const guardarProducto = async () => {
   errors.value = {};
   try {
     const formData = new FormData();
-    formData.append('nombre', formulario.value.nombre);
-    formData.append('precio', formulario.value.precio);
-    formData.append('catalogo_id', formulario.value.catalogo_id);
-    formData.append('categoria_id', formulario.value.categoria_id);
-    formData.append('descripcion', formulario.value.descripcion);
-        // Solo agregar el archivo de imagen si se seleccionó uno nuevo
-        if (formulario.value.imagen_principal instanceof File) {
-            formData.append('imagen_principal', formulario.value.imagen_principal);
-        }
+    if (formulario.value.nombre) {
+      formData.append('nombre', formulario.value.nombre);
+    }
+    if (formulario.value.precio) {
+      formData.append('precio', formulario.value.precio);
+    }
+    if (formulario.value.catalogo_id) {
+      formData.append('catalogo_id', formulario.value.catalogo_id);
+    }
+    if (formulario.value.categoria_id) {
+      formData.append('categoria_id', formulario.value.categoria_id);
+    }
+    if (formulario.value.descripcion) {
+      formData.append('descripcion', formulario.value.descripcion);
+    }
+    // Solo agregar el archivo de imagen si se seleccionó uno nuevo
+    if (formulario.value.imagen_principal instanceof File) {
+      formData.append('imagen_principal', formulario.value.imagen_principal);
+    }
     for (let i = 0; i < formulario.value.images.length; i++) {
       formData.append('images[]', formulario.value.images[i].file);
     }
+    // Enviar las características como cadenas
+    formulario.value.caracteristicas.forEach(caracteristica => {
+      formData.append('caracteristicas[]', caracteristica); // Asegúrate de que el nombre sea correcto
+    });
+    console.log('Características a enviar:', formulario.value.caracteristicas);
+    console.log(formulario.value);
     if (posicion.value != '') {
       formData.append('_method', 'PUT')
       const { data } = await updateProducto(posicion.value, formData);
@@ -292,23 +324,26 @@ const guardarProducto = async () => {
     }
   } catch (error) {
     if (error.response.status == 422) {
-            errors.value = error.response.data.errors;
-        } else {
-            console.log(error);
-        }
+      errors.value = error.response.data.errors;
+    } else {
+      console.log(error);
+    }
   }
 };
+// En el método mostrarProducto, asegúrate de que las características se carguen correctamente
 const mostrarProducto = async (id) => {
   try {
     const { data } = await showProducto(id);
+    console.log(data);
     instanciaModal.show();
 
-    // Crear un nuevo array de imágenes con vistas previas
     const imagePreviews = data.dato.images.map(image => ({
-      id: image.id, // Asegúrate de que `id` sea la propiedad correcta
-      preview: image.imagen // Asegúrate de que `imagen` sea la propiedad correcta
+      id: image.id,
+      preview: image.imagen
     }));
-    console.log(imagePreviews);
+    const caracteristicas = Array.isArray(data.dato.caracteristicas) ?
+      data.dato.caracteristicas.map(h => h.caracteristica) : []; // Devuelve los días como strings
+    console.log(caracteristicas);
     formulario.value = {
       nombre: data.dato.nombre,
       precio: data.dato.precio,
@@ -316,17 +351,25 @@ const mostrarProducto = async (id) => {
       categoria_id: data.dato.categoria_id,
       imagen_principal: data.dato.imagen_principal,
       descripcion: data.dato.descripcion,
-      images: [], // Mantener esto vacío ya que no tenemos archivos
-      imagePreviews: imagePreviews // Asignar las vistas previas
+      images: [],
+      imagePreviews: imagePreviews,
+      caracteristicas: caracteristicas,
     };
-    console.log(formulario.value);
+
     imagenPreview.value = formulario.value.imagen_principal;
     posicion.value = id;
-    console.log(data);
   } catch (error) {
     console.log(error);
   }
-}
+};
+const agregarCaracteristicas = () => {
+  formulario.value.caracteristicas.push('');
+};
+
+const eliminarCaracteristicas = (index) => {
+  formulario.value.caracteristicas.splice(index, 1);
+};
+
 const eliminarImage = async (idImagen) => {
   try {
     const { data } = await deleteImage(posicion.value, idImagen);

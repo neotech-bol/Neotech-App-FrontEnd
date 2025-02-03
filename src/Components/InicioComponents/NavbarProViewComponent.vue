@@ -2,28 +2,28 @@
   <header class="header">
     <div class="top-bar">
       <div class="contact">
-        <a href="tel:+59175901415">+591 759-01415</a>
+        <a href="tel:+59177997694"><i class="fas fa-phone-alt"></i> +591 77997694</a>
       </div>
       <div class="announcement">
-        La experiencia de compra más veloz del país
+        <i class="fas fa-bolt"></i> La experiencia de compra más veloz del país
       </div>
       <div class="top-links">
-        <a href="#">Ayuda</a>
-        <a href="#">Rastrear Pedido</a>
+        <a href="#"><i class="fas fa-question-circle"></i> Ayuda</a>
+        <a href="#"><i class="fas fa-truck"></i> Rastrear Pedido</a>
         <select v-model="language" class="select-styled">
-          <option value="es">Español</option>
-          <option value="en">English</option>
+          <option value="es">🇪🇸 Español</option>
+          <option value="en">🇺🇸 English</option>
         </select>
         <select v-model="currency" class="select-styled">
-          <option value="bs">Moneda (Bs)</option>
-          <option value="usd">USD ($)</option>
+          <option value="bs">Bs</option>
+          <option value="usd">USD</option>
         </select>
       </div>
     </div>
 
     <div class="main-header">
       <div class="logo">
-        <img src="" alt="Logo" />
+        <img src="../../../public/logo/Logo Neofetch PNG.png" alt="Logo"/>
       </div>
 
       <div class="search-bar">
@@ -33,21 +33,21 @@
           placeholder="¿Qué estás buscando en este ciclo?"
         />
         <button class="search-button">
-          <span class="search-icon">🔍</span>
+          <i class="fas fa-search"></i>
         </button>
       </div>
 
       <div class="user-actions">
-        <button class="icon-button">
-          <span class="icon">👤</span>
-          <span class="label">Cuenta</span>
+        <button class="icon-button" @click="handleAccountClick">
+          <i class="fas fa-user"></i>
+          <span class="label">{{ isLoggedIn ? 'Cuenta' : 'Iniciar sesión' }}</span>
         </button>
         <button class="icon-button">
-          <span class="icon">❤️</span>
+          <i class="fas fa-heart"></i>
           <span class="label">Favoritos</span>
         </button>
         <button class="icon-button cart-button" @click="carritoView()">
-          <span class="icon">🛒</span>
+          <i class="fas fa-shopping-cart"></i>
           <span class="label">Carrito</span>
           <span class="cart-count" v-if="cartItemCount > 0">{{ cartItemCount }}</span>
         </button>
@@ -56,18 +56,20 @@
 
     <nav class="main-nav">
       <button class="catalog-button">
-        <span class="menu-icon">☰</span>
+        <i class="fas fa-bars"></i>
         Ver catálogo
       </button>
 
-      <button class="mobile-menu-toggle " @click="toggleMobileMenu">
-        <span class="menu-icon">☰</span>
+      <button class="mobile-menu-toggle" @click="toggleMobileMenu">
+        <i class="fas fa-bars"></i>
         <span class="label">Menú</span>
       </button>
 
       <ul :class="['nav-links', { 'mobile-open': isMobileMenuOpen }]">
-        <li v-for="item in navItems" :key="item">
-          <router-link :to="item.path"><a href="#">{{ item.nombre }}</a></router-link>
+        <li v-for="item in navItems" :key="item.path">
+          <router-link :to="item.path">
+            <i :class="item.icon"></i> {{ item.nombre }}
+          </router-link>
         </li>
       </ul>
 
@@ -81,46 +83,75 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { useCartStore } from '@/stores/cart';
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+
 const router = useRouter();
 const searchQuery = ref('')
 const language = ref('es')
 const currency = ref('bs')
 const location = ref('cochabamba')
 const isMobileMenuOpen = ref(false)
-const cartItemCount = ref(3) // Ejemplo de contador de carrito
-
+const cartStore = useCartStore(); // Usar el store de carrito
+// Computed property para obtener el conteo de artículos en el carrito
+const cartItemCount = computed(() => cartStore.uniqueItemCount); // Asegúrate de que totalItems esté definido en tu store
 const navItems = [
   {
     nombre: 'Categorías',
-    path: '/'
+    path: '/',
+    icon: 'fas fa-th-large'
   },
   {
     nombre: 'Productos',
-    path: '/producto'
+    path: '/producto',
+    icon: 'fas fa-box-open'
   },
   {
     nombre: 'Nosotros',
-    path: '/nosotros'
+    path: '/nosotros',
+    icon: 'fas fa-users'
   },
   {
     nombre: 'Contacto',
-    path: '/contacto'
+    path: '/contacto',
+    icon: 'fas fa-envelope'
   }
 ]
+const isLoggedIn = ref(false); // Replace this with your actual authentication logic
+// Verificar el token al montar el componente
+onMounted(() => {
+  const token = localStorage.getItem('token');
+  isLoggedIn.value = !!token; // Establecer isLoggedIn en true si el token existe
+  console.log(token); // Para depuración
+});
 
+
+const handleAccountClick = () => {
+  if (isLoggedIn.value) {
+    // Navegar a la vista de cuenta
+    router.push({ path: '/perfil' }); // Ajusta la ruta según sea necesario
+  } else {
+    // Iniciar el proceso de inicio de sesión
+    router.push({ path: '/login' }); // Ajusta la ruta según sea necesario
+  }
+};
 const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value
 }
+
 const carritoView = () => {
   router.push({path: '/checkout'})
 }
+
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css');
+
 .header {
-  font-family: 'Roboto', Arial, sans-serif;
+  font-family: 'Poppins', Arial, sans-serif;
   max-width: 1440px;
   margin: 0 auto;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -241,7 +272,7 @@ const carritoView = () => {
   transform: translateY(-2px);
 }
 
-.icon-button .icon {
+.icon-button i {
   font-size: 24px;
 }
 
@@ -314,6 +345,9 @@ const carritoView = () => {
   text-decoration: none;
   font-weight: 500;
   transition: color 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .nav-links a:hover {
@@ -375,7 +409,7 @@ const carritoView = () => {
     background-color: #0056b3;
   }
 
-  .mobile-menu-toggle .menu-icon {
+  .mobile-menu-toggle i {
     margin-right: 8px;
   }
 

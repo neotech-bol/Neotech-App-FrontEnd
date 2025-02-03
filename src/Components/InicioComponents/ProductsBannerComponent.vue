@@ -45,55 +45,55 @@
     </div>
 
     <div class="main-catalog">
-      <div v-for="catalog in datos" :key="catalog.id">
-        <div class="banner">
-          <img src="" alt="Motos Eléctricas" />
-          <div class="banner-content">
-            <h2>Motos Eléctricas</h2>
-            <p>Descubre nuestra nueva colección de motos eléctricas</p>
-            <button class="banner-cta" @click="viewCollection">Ver Colección</button>
-          </div>
+  <div v-for="catalog in datos" :key="catalog.id">
+    <div class="banner">
+      <img :src="catalog.banner" alt="Banner de {{ catalog.nombre }}" />
+      <div class="banner-content">
+        <h2>{{ catalog.nombre }}</h2>
+        <p>{{ catalog.descripcion }}</p>
+        <button class="banner-cta" @click="viewCollection">Ver Colección</button>
+      </div>
+    </div>
+    <div class="header">
+      <h2>Movilidad <span class="text-accent">Inteligente</span></h2>
+      <p>Velocidad, diseño y tecnología en cada modelo.</p>
+    </div>
+
+    <div class="products-grid">
+      <div v-for="product in catalog.productos" :key="product.id" class="product-card">
+        <div class="product-image">
+          <img :src="product.imagen_principal" :alt="product.nombre">
+          <span v-if="product.badge"
+            :class="['badge', product.badge === 'LIMITADO' ? 'badge-limited' : 'badge-new']">
+            {{ product.badge }}
+          </span>
         </div>
-        <div class="header">
-          <h2>Movilidad <span class="text-accent">Inteligente</span></h2>
-          <p>Velocidad, diseño y tecnología en cada modelo.</p>
-        </div>
 
-        <div class="products-grid">
-          <div v-for="product in catalog.productos" :key="product.id" class="product-card">
-            <div class="product-image">
-              <img :src="product.imagen_principal" :alt="product.nombre">
-              <span v-if="product.badge"
-                :class="['badge', product.badge === 'LIMITADO' ? 'badge-limited' : 'badge-new']">
-                {{ product.badge }}
-              </span>
-            </div>
+        <div class="product-info">
+          <div class="category">{{ product.categoria?.nombre }}</div>
+          <h3 class="product-name">{{ product.nombre }}</h3>
 
-            <div class="product-info">
-              <div class="category">{{ product.categoria?.nombre }}</div>
-              <h3 class="product-name">{{ product.nombre }}</h3>
-
-              <div class="rating">
-                <span v-for="star in 5" :key="star" class="star" :class="{ 'filled': star <= product.rating }">★</span>
-              </div>
-
-              <div class="price">
-                <span class="current-price">{{ product.precio }} Bs</span>
-                <span class="old-price">{{ product.oldPrice }} Bs</span>
-              </div>
-
-              <button class="add-to-cart" @click="addToCart(product)">
-                <span class="icon">🛒</span>
-                Agregar al carrito
-              </button>
-              <button class="add-to-cart mt-2" @click="verProducto(product.id)">
-                Ver Producto
-              </button>
-            </div>
+          <div class="rating">
+            <span v-for="star in 5" :key="star" class="star" :class="{ 'filled': star <= product.rating }">★</span>
           </div>
+
+          <div class="price">
+            <span class="current-price">{{ product.precio }} Bs</span>
+            <span class="old-price">{{ product.oldPrice }} Bs</span>
+          </div>
+
+          <button class="add-to-cart" @click="addToCart(product)">
+            <span class="icon">🛒</span>
+            Agregar al carrito
+          </button>
+          <button class="add-to-cart mt-2" @click="verProducto(product.id)">
+            Ver Producto
+          </button>
         </div>
       </div>
     </div>
+  </div>
+</div>
   </div>
 </template>
 
