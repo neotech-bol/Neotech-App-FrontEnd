@@ -141,7 +141,6 @@ const finalizeOrder = () => {
     totalToPay: totalToPay.value,
     pending: pending.value,
     deliveryAddress,
-    paymentMethod,
   });
 };
 
@@ -157,27 +156,6 @@ const checkoutSteps = [
         <p>${deliveryAddress.district}</p>
         <p>${deliveryAddress.phone}</p>
       `
-    }
-  },
-  {
-    title: 'Método de Pago',
-    editable: true,
-    component: 'div',
-    props: {
-      innerHTML: `
-        <p>${paymentMethod.type} ${paymentMethod.number}</p>
-        <p>${paymentMethod.bank}</p>
-      `
-    }
-  },
-  {
-    title: 'Ofertas',
-    editable: false,
-    component: 'input',
-    props: {
-      type: 'text',
-      placeholder: '¿Tienes un cupón? Ingrésalo aquí',
-      class: 'coupon-input'
     }
   },
   {
