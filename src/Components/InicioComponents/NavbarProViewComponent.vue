@@ -1,17 +1,25 @@
 <template>
   <header class="header">
     <div class="top-bar">
-      <div class="contact">
-        <a href="tel:+59177997694"><i class="fas fa-phone-alt"></i> +591 77997694</a>
-      </div>
-      <div class="announcement text-color">
-        La experiencia de compra más veloz del país
-      </div>
-      <div class="top-links">
-        <a href="#">Ayuda</a>
-        <a href="#">Rastrear Pedido</a>
-        <a href="#">Español <i class="fa-solid fa-chevron-down fa-2xs" style="color: #838384;"></i></a>
-        <a href="#">Bs <i class="fa-solid fa-chevron-down fa-2xs" style="color: #838384;"></i></a>
+      <div class="top-bar-inner">
+        <div class="contact">
+          <a href="tel:+59177997694"><i class="fas fa-phone-alt"></i> +591 77997694</a>
+        </div>
+        <div class="announcement text-color">
+          La experiencia de compra más veloz del país
+        </div>
+        <div class="top-links">
+          <a href="#">Ayuda</a>
+          <a href="#">Rastrear Pedido</a>
+          <select v-model="language" class="language-select">
+            <option value="es">Español</option>
+            <option value="en">English</option>
+          </select>
+          <select v-model="currency" class="currency-select">
+            <option value="bs">Bs</option>
+            <option value="usd">USD</option>
+          </select>
+        </div>
       </div>
     </div>
     <div class="main-header">
@@ -27,7 +35,6 @@
       </div>
       <div class="user-actions">
         <button class="icon-button" @click="handleAccountClick">
-          <!-- <i class="fas fa-user"></i> -->
           <img src="../../../public/svg/icono-header-cuenta.svg" alt="">
           <span class="label">{{ isLoggedIn ? 'Cuenta' : 'Iniciar sesión' }}</span>
         </button>
@@ -42,31 +49,42 @@
         </button>
       </div>
     </div>
+    <hr>
     <nav class="main-nav">
-      <button class="catalog-button">
+      <button class="catalog-button" @click="toggleSidebar">
         <i class="fas fa-bars"></i>
         Ver catálogo
       </button>
 
-      <button class="mobile-menu-toggle" @click="toggleMobileMenu">
-        <i class="fas fa-bars"></i>
-        <span class="label">Menú</span>
-      </button>
-
-      <ul :class="['nav-links', { 'mobile-open': isMobileMenuOpen }]">
+      <ul class="nav-links">
         <li v-for="item in navItems" :key="item.path">
           <router-link :to="item.path">
-               {{ item.nombre }}
+            {{ item.nombre }}
           </router-link>
         </li>
       </ul>
-      <select v-model="location" class="select-styled location-select">
+      <select v-model="location" class="location-select">
         <option value="cochabamba">Cochabamba</option>
         <option value="la-paz">La Paz</option>
         <option value="santa-cruz">Santa Cruz</option>
       </select>
     </nav>
+    <hr>
   </header>
+
+  <!-- Sidebar -->
+  <div :class="['sidebar', { 'open': isSidebarOpen }]">
+    <button class="close-sidebar" @click="toggleSidebar">
+      <i class="fas fa-times"></i>
+    </button>
+    <h2>Categorías</h2>
+    <ul>
+      <li v-for="category in categories" :key="category">
+        <a href="#">{{ category }}</a>
+      </li>
+    </ul>
+  </div>
+  <div :class="['sidebar-overlay', { 'active': isSidebarOpen }]" @click="toggleSidebar"></div>
 </template>
 
 <script setup>
@@ -79,78 +97,62 @@ const searchQuery = ref('')
 const language = ref('es')
 const currency = ref('bs')
 const location = ref('cochabamba')
-const isMobileMenuOpen = ref(false)
-const cartStore = useCartStore(); // Usar el store de carrito
-// Computed property para obtener el conteo de artículos en el carrito
-const cartItemCount = computed(() => cartStore.uniqueItemCount); // Asegúrate de que totalItems esté definido en tu store
+const isSidebarOpen = ref(false)
+const cartStore = useCartStore();
+const cartItemCount = computed(() => cartStore.uniqueItemCount);
 const navItems = [
-  {
-    nombre: 'Inicio'
-  },
-  {
-    nombre: 'Productos',
-    path: '/',
-    icon: 'fas fa-th-large'
-  },
-  {
-    nombre: 'Categorías',
-    path: '/producto',
-    icon: 'fas fa-box-open'
-  },
-  {
-    nombre: 'Nosotros',
-    path: '/nosotros',
-    icon: 'fas fa-users'
-  },
-  {
-    nombre: 'Contacto',
-    path: '/contacto',
-    icon: 'fas fa-envelope'
-  }
+  { nombre: 'Inicio', path: '/' },
+  { nombre: 'Productos', path: '/productos' },
+  { nombre: 'Categorías', path: '/categorias' },
+  { nombre: 'Nosotros', path: '/nosotros' },
+  { nombre: 'Contacto', path: '/contacto' }
 ]
-const isLoggedIn = ref(false); // Replace this with your actual authentication logic
-// Verificar el token al montar el componente
+const isLoggedIn = ref(false);
+const categories = [
+  'Electrónicos', 'Ropa', 'Hogar', 'Deportes', 'Libros', 'Juguetes', 'Belleza', 'Alimentos'
+]
+
 onMounted(() => {
   const token = localStorage.getItem('token');
-  isLoggedIn.value = !!token; // Establecer isLoggedIn en true si el token existe
-  console.log(token); // Para depuración
+  isLoggedIn.value = !!token;
 });
-
 
 const handleAccountClick = () => {
   if (isLoggedIn.value) {
-    // Navegar a la vista de cuenta
-    router.push({ path: '/perfil' }); // Ajusta la ruta según sea necesario
+    router.push({ path: '/perfil' });
   } else {
-    // Iniciar el proceso de inicio de sesión
-    router.push({ path: '/login' }); // Ajusta la ruta según sea necesario
+    router.push({ path: '/login' });
   }
 };
-const toggleMobileMenu = () => {
-  isMobileMenuOpen.value = !isMobileMenuOpen.value
+
+const toggleSidebar = () => {
+  isSidebarOpen.value = !isSidebarOpen.value;
 }
 
 const carritoView = () => {
   router.push({ path: '/checkout' })
 }
-
 </script>
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css');
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 .header {
-  font-family: "Inter", serif;
-  font-optical-sizing: auto;
-  font-style: normal;
-  max-width: 1440px;
-  margin: 0 auto;
+  font-family: "Inter", sans-serif;
+  width: 100%;
+  margin: 0;
 }
 
 .top-bar {
   background-color: #F8F8FB;
+  width: 100%;
+}
+
+.top-bar-inner {
+  max-width: 1440px;
+  margin: 0 auto;
   padding: 8px 16px;
   display: flex;
   justify-content: space-between;
@@ -172,6 +174,17 @@ const carritoView = () => {
   color: #007bff;
 }
 
+.language-select,
+.currency-select {
+  background: none;
+  border: none;
+  color: #838384;
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  outline: none;
+}
+
 .text-color {
   color: #838384;
   font-weight: 250;
@@ -182,36 +195,15 @@ const carritoView = () => {
   align-items: center;
 }
 
-.select-styled {
-  padding: 4px 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background-color: white;
-  cursor: pointer;
-  transition: border-color 0.3s ease;
-}
-
-.select-styled:hover {
-  border-color: #007bff;
-}
-
 .main-header {
+  max-width: 1440px;
+  margin: 0 auto;
   padding: 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   background-color: white;
-}
-
-.linea {
-  background-color: #F8F8FB;
-  padding: 8px 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  font-size: 14px;
 }
 
 .logo img {
@@ -226,10 +218,9 @@ const carritoView = () => {
 .search-bar {
   flex-grow: 1;
   display: flex;
-  margin: 0px 16px;
+  margin: 0 16px;
   position: relative;
-  padding-right: 100px;
-  padding-left: 100px;
+  max-width: 600px;
 }
 
 .search-bar input {
@@ -250,7 +241,7 @@ const carritoView = () => {
 
 .search-button {
   position: absolute;
-  right: 210px;
+  right: 10px;
   top: 50%;
   transform: translateY(-50%);
   background: none;
@@ -315,18 +306,18 @@ const carritoView = () => {
 
 .main-nav {
   background-color: white;
-  padding: 12px 16px;
+  padding: 3px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   border: 1px solid #F8F8FB;
+  max-width: 1440px;
+  margin: 0 auto;
 }
 
-.catalog-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.catalog-button,
+.location-select {
   background-color: #007bff;
   color: white;
   border: none;
@@ -337,7 +328,8 @@ const carritoView = () => {
   transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
-.catalog-button:hover {
+.catalog-button:hover,
+.location-select:hover {
   background-color: #0056b3;
   transform: translateY(-2px);
 }
@@ -367,15 +359,99 @@ const carritoView = () => {
   color: #007bff;
 }
 
-.location-select {
-  padding: 8px 16px;
+hr {
+  background-color: #838384;
+  margin: 0;
+  border: none;
+  height: 1px;
 }
 
-.mobile-menu-toggle {
-  display: none;
+/* Sidebar styles */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: -300px;
+  width: 300px;
+  height: 100%;
+  background-color: #ffffff;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  transition: left 0.3s ease;
+  z-index: 1000;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.sidebar.open {
+  left: 0;
+}
+
+.close-sidebar {
+  position: absolute;
+  top: 10px;
+  right: 10px;
   background: none;
   border: none;
+  font-size: 24px;
   cursor: pointer;
+  color: #333;
+}
+
+.sidebar h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #007bff;
+}
+
+.sidebar ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.sidebar li {
+  margin-bottom: 15px;
+}
+
+.sidebar a {
+  color: #333;
+  text-decoration: none;
+  font-size: 16px;
+  transition: color 0.3s ease;
+}
+
+.sidebar a:hover {
+  color: #007bff;
+}
+
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: none;
+  z-index: 999;
+}
+
+.sidebar-overlay.active {
+  display: block;
+}
+
+@media (max-width: 1024px) {
+  .main-header {
+    padding: 16px;
+  }
+
+  .search-bar {
+    max-width: 100%;
+    margin: 16px 0;
+  }
+
+  .user-actions {
+    width: 100%;
+    justify-content: space-around;
+    margin-top: 16px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -395,60 +471,26 @@ const carritoView = () => {
 
   .search-bar {
     order: 1;
-    margin: 16px 0;
-  }
-
-  .user-actions {
-    justify-content: space-around;
-    margin-top: 16px;
-  }
-
-  .mobile-menu-toggle {
-    margin-top: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    padding: 12px;
-    background-color: #007bff;
-    color: white;
-    border-radius: 25px;
-    margin-bottom: 16px;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
-  }
-
-  .mobile-menu-toggle:hover {
-    background-color: #0056b3;
-  }
-
-  .mobile-menu-toggle i {
-    margin-right: 8px;
   }
 
   .nav-links {
     display: none;
-    flex-direction: column;
-    width: 100%;
   }
 
-  .nav-links.mobile-open {
-    display: flex;
-  }
-
-  .nav-links li {
-    margin-right: 0;
-    margin-bottom: 12px;
-  }
-
+  .catalog-button,
   .location-select {
     width: 100%;
-    margin-top: 12px;
+    justify-content: center;
+    margin-bottom: 8px;
   }
 
-  .catalog-button {
+  .main-nav {
+    flex-direction: column;
+  }
+
+  .sidebar {
     width: 100%;
-    justify-content: center;
+    left: -100%;
   }
 }
 

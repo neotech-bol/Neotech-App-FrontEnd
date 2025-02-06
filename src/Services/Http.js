@@ -21,7 +21,7 @@ const getToken = () => {
 
 // Manejador común de errores
 const handleError = (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 402) {
         localStorage.clear();
         window.location.href = "/login";
     }

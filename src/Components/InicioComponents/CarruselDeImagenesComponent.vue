@@ -80,7 +80,7 @@
   
   @media (min-width: 1024px) {
     .carousel-container {
-      max-width: 1480px;
+      max-width: 1440px;
     }
   }
   
