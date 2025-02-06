@@ -4,56 +4,44 @@
       <div class="contact">
         <a href="tel:+59177997694"><i class="fas fa-phone-alt"></i> +591 77997694</a>
       </div>
-      <div class="announcement">
-        <i class="fas fa-bolt"></i> La experiencia de compra más veloz del país
+      <div class="announcement text-color">
+        La experiencia de compra más veloz del país
       </div>
       <div class="top-links">
-        <a href="#"><i class="fas fa-question-circle"></i> Ayuda</a>
-        <a href="#"><i class="fas fa-truck"></i> Rastrear Pedido</a>
-        <select v-model="language" class="select-styled">
-          <option value="es">🇪🇸 Español</option>
-          <option value="en">🇺🇸 English</option>
-        </select>
-        <select v-model="currency" class="select-styled">
-          <option value="bs">Bs</option>
-          <option value="usd">USD</option>
-        </select>
+        <a href="#">Ayuda</a>
+        <a href="#">Rastrear Pedido</a>
+        <a href="#">Español <i class="fa-solid fa-chevron-down fa-2xs" style="color: #838384;"></i></a>
+        <a href="#">Bs <i class="fa-solid fa-chevron-down fa-2xs" style="color: #838384;"></i></a>
       </div>
     </div>
-
     <div class="main-header">
       <div class="logo">
-        <img src="../../../public/logo/Logo Neofetch PNG.png" alt="Logo"/>
+        <img src="../../../public/logo/Logo Neofetch PNG.png" alt="Logo" />
       </div>
 
       <div class="search-bar">
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="¿Qué estás buscando en este ciclo?"
-        />
+        <input v-model="searchQuery" type="text" placeholder="¿Qué estás buscando en este ciclo?" />
         <button class="search-button">
           <i class="fas fa-search"></i>
         </button>
       </div>
-
       <div class="user-actions">
         <button class="icon-button" @click="handleAccountClick">
-          <i class="fas fa-user"></i>
+          <!-- <i class="fas fa-user"></i> -->
+          <img src="../../../public/svg/icono-header-cuenta.svg" alt="">
           <span class="label">{{ isLoggedIn ? 'Cuenta' : 'Iniciar sesión' }}</span>
         </button>
         <button class="icon-button">
-          <i class="fas fa-heart"></i>
+          <img src="../../../public/svg/icono-header-favoritos.svg" alt="">
           <span class="label">Favoritos</span>
         </button>
         <button class="icon-button cart-button" @click="carritoView()">
-          <i class="fas fa-shopping-cart"></i>
+          <img src="../../../public/svg/icono-header-carrito.svg" alt="">
           <span class="label">Carrito</span>
           <span class="cart-count" v-if="cartItemCount > 0">{{ cartItemCount }}</span>
         </button>
       </div>
     </div>
-
     <nav class="main-nav">
       <button class="catalog-button">
         <i class="fas fa-bars"></i>
@@ -68,11 +56,10 @@
       <ul :class="['nav-links', { 'mobile-open': isMobileMenuOpen }]">
         <li v-for="item in navItems" :key="item.path">
           <router-link :to="item.path">
-            <i :class="item.icon"></i> {{ item.nombre }}
+               {{ item.nombre }}
           </router-link>
         </li>
       </ul>
-
       <select v-model="location" class="select-styled location-select">
         <option value="cochabamba">Cochabamba</option>
         <option value="la-paz">La Paz</option>
@@ -98,12 +85,15 @@ const cartStore = useCartStore(); // Usar el store de carrito
 const cartItemCount = computed(() => cartStore.uniqueItemCount); // Asegúrate de que totalItems esté definido en tu store
 const navItems = [
   {
-    nombre: 'Categorías',
+    nombre: 'Inicio'
+  },
+  {
+    nombre: 'Productos',
     path: '/',
     icon: 'fas fa-th-large'
   },
   {
-    nombre: 'Productos',
+    nombre: 'Categorías',
     path: '/producto',
     icon: 'fas fa-box-open'
   },
@@ -141,7 +131,7 @@ const toggleMobileMenu = () => {
 }
 
 const carritoView = () => {
-  router.push({path: '/checkout'})
+  router.push({ path: '/checkout' })
 }
 
 </script>
@@ -149,26 +139,30 @@ const carritoView = () => {
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 
 .header {
-  font-family: 'Poppins', Arial, sans-serif;
+  font-family: "Inter", serif;
+  font-optical-sizing: auto;
+  font-style: normal;
   max-width: 1440px;
   margin: 0 auto;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .top-bar {
-  background-color: #f0f0f0;
+  background-color: #F8F8FB;
   padding: 8px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   font-size: 14px;
+  font-weight: 300;
 }
 
-.top-bar a, .top-bar select {
-  color: #333;
+.top-bar a,
+.top-bar select {
+  color: #838384;
   text-decoration: none;
   margin-right: 16px;
   transition: color 0.3s ease;
@@ -176,6 +170,11 @@ const carritoView = () => {
 
 .top-bar a:hover {
   color: #007bff;
+}
+
+.text-color {
+  color: #838384;
+  font-weight: 250;
 }
 
 .top-links {
@@ -197,12 +196,22 @@ const carritoView = () => {
 }
 
 .main-header {
-  padding: 16px;
+  padding: 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   background-color: white;
+}
+
+.linea {
+  background-color: #F8F8FB;
+  padding: 8px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 14px;
 }
 
 .logo img {
@@ -217,17 +226,20 @@ const carritoView = () => {
 .search-bar {
   flex-grow: 1;
   display: flex;
-  margin: 0 16px;
+  margin: 0px 16px;
   position: relative;
+  padding-right: 100px;
+  padding-left: 100px;
 }
 
 .search-bar input {
   width: 100%;
   padding: 12px 40px 12px 16px;
-  border: 2px solid #ddd;
-  border-radius: 25px;
-  font-size: 16px;
+  border: 1px solid #F5F5F5;
+  border-radius: 8px;
+  font-size: 14px;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  font-weight: 250;
 }
 
 .search-bar input:focus {
@@ -238,14 +250,14 @@ const carritoView = () => {
 
 .search-button {
   position: absolute;
-  right: 12px;
+  right: 210px;
   top: 50%;
   transform: translateY(-50%);
   background: none;
   border: none;
   cursor: pointer;
   font-size: 20px;
-  color: #007bff;
+  color: #838384;
   transition: color 0.3s ease;
 }
 
@@ -302,12 +314,13 @@ const carritoView = () => {
 }
 
 .main-nav {
-  background-color: #f8f9fa;
+  background-color: white;
   padding: 12px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
+  border: 1px solid #F8F8FB;
 }
 
 .catalog-button {
@@ -318,7 +331,7 @@ const carritoView = () => {
   color: white;
   border: none;
   padding: 12px 24px;
-  border-radius: 25px;
+  border-radius: 10px;
   cursor: pointer;
   font-weight: bold;
   transition: background-color 0.3s ease, transform 0.3s ease;
@@ -341,9 +354,9 @@ const carritoView = () => {
 }
 
 .nav-links a {
-  color: #333;
+  color: #4C5A67;
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 400;
   transition: color 0.3s ease;
   display: flex;
   align-items: center;

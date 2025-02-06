@@ -12,8 +12,9 @@
           </transition-group>
         </div>
         <div class="carousel-content">
-          <h2 class="carousel-title">Nuestras Imágenes Destacadas</h2>
-          <a href="/productos" class="carousel-link-button">Ver Productos</a>
+          <h2 class="carousel-title">¡Ofertas disponibles <br>
+            por tiempo limitado!</h2>
+          <a href="/productos" class="carousel-link-button">Aprovechar ahora</a>
         </div>
         <div class="carousel-indicators">
           <button v-for="(image, index) in images" 
@@ -37,8 +38,8 @@
   import { ref, onMounted, onUnmounted } from 'vue';
   
   const images = ref([
-    { url: 'https://www.publimpresos.com/wp-content/uploads/2023/12/banner-intro.jpg', alt: 'Imagen 1' },
-    { url: '/imagenes/Sin título.png', alt: 'Imagen 2' },
+   /*  { url: 'https://www.publimpresos.com/wp-content/uploads/2023/12/banner-intro.jpg', alt: 'Imagen 1' }, */
+    { url: '../../../public/imagenes/home-slider-1.png', alt: 'Imagen 2' },
   ]);
   
   const currentIndex = ref(0);
@@ -70,6 +71,7 @@
   </script>
   
   <style scoped>
+  
   .carousel-container {
     max-width: 100%;
     margin: 20px auto; /* Añadido margen arriba y abajo */
@@ -78,7 +80,7 @@
   
   @media (min-width: 1024px) {
     .carousel-container {
-      max-width: 1200px;
+      max-width: 1480px;
     }
   }
   
@@ -124,6 +126,7 @@
     top: 50%;
     left: 20px;
     right: 20px;
+    padding-left: 30px;
     transform: translateY(-50%);
     text-align: center;
     z-index: 2;
@@ -139,9 +142,8 @@
   
   .carousel-title {
     font-size: 1.5rem;
-    color: #ffffff;
+    color: #342C1F;
     margin-bottom: 15px;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
   }
   
   @media (min-width: 768px) {
