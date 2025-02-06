@@ -118,14 +118,14 @@ const router = createRouter({
         },
         {
           path: '/categorias',
-          name: 'not-found',
+          name: 'categorias',
           meta: { requiredRole: 'super-admin' }, // Solo accesible por usuarios con rol 'admin'
           component: CategoriasView
         },
         {
           path: '/roles',
           name: 'roles',
-          meta: { requiredRole: 'super-admin' }, // Solo accesible por usuarios con rol 'admin'
+          meta: { requiredRole: 'cliente' }, // Solo accesible por usuarios con rol 'admin'
           component: RolesView
         },
         {
@@ -162,22 +162,22 @@ const fetchAuthenticatedUser  = async () => {
   }
 };
 // Llama a la función para obtener el usuario autenticado al cargar la aplicación
-fetchAuthenticatedUser ();
-function getUserRole() {
-    return user; // Devuelve el rol del usuario o null si no está definido
-}
+fetchAuthenticatedUser ().then(() => {
+  // Aquí puedes iniciar la guardia de navegación después de que se haya obtenido el usuario
+  router.beforeEach((to, from, next) => {
+      const requiredRole = to.meta.requiredRole; // Rol requerido para la ruta
+      const userRole = getUserRole(); // Obtener el rol del usuario
 
-// Guardia de navegación
-router.beforeEach((to, from, next) => {
-    const requiredRole = to.meta.requiredRole; // Rol requerido para la ruta
-    const userRole = getUserRole(); // Obtener el rol del usuario
-
-    if (requiredRole && userRole !== requiredRole) {
-        // Si el usuario no tiene el rol requerido, redirigir a una página de acceso denegado o a la página de inicio
-        next({ path: '/unauthorized' }); // Cambia '/unauthorized' a la ruta que desees
-    } else {
-        next(); // Permitir el acceso a la ruta
-    }
+      if (requiredRole && userRole !== requiredRole) {
+          next({ path: '/unauthorized' }); // Cambia '/unauthorized' a la ruta que desees
+      } else {
+          next(); // Permitir el acceso a la ruta
+      }
+  });
 });
+
+function getUserRole() {
+  return user; // Devuelve el rol del usuario o null si no está definido
+}
 export default router
 

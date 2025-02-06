@@ -4,7 +4,7 @@
       <!-- Logo y descripción -->
       <div class="footer-brand">
         <div class="logo">
-          <img src="../../../public/logo/Logo Neofetch PNG.png" alt="Neo Tech Bol" />
+          <img src="/logo/Logo Neofetch PNG.png" alt="Neo Tech Bol" />
         </div>
         <p class="description">
           Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque molestie eu dolor at eleifend. Lorem ipsum dolor sit amet, consectetur adipiscing elit.

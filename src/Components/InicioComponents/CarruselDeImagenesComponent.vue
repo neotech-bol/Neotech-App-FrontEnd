@@ -39,7 +39,7 @@
   
   const images = ref([
    /*  { url: 'https://www.publimpresos.com/wp-content/uploads/2023/12/banner-intro.jpg', alt: 'Imagen 1' }, */
-    { url: '../../../public/imagenes/home-slider-1.png', alt: 'Imagen 2' },
+    { url: '/imagenes/home-slider-1.png', alt: 'Imagen 2' },
   ]);
   
   const currentIndex = ref(0);
@@ -70,7 +70,7 @@
   });
   </script>
   
-  <style scoped>
+  <style>
   
   .carousel-container {
     max-width: 100%;

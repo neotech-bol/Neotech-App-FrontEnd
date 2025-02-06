@@ -24,7 +24,7 @@
     </div>
     <div class="main-header">
       <div class="logo">
-        <img src="../../../public/logo/Logo Neofetch PNG.png" alt="Logo" />
+        <img src="/logo/Logo Neofetch PNG.png" alt="Logo" />
       </div>
 
       <div class="search-bar">
@@ -35,15 +35,15 @@
       </div>
       <div class="user-actions">
         <button class="icon-button" @click="handleAccountClick">
-          <img src="../../../public/svg/icono-header-cuenta.svg" alt="">
+          <img src="/svg/icono-header-cuenta.svg" alt="">
           <span class="label">{{ isLoggedIn ? 'Cuenta' : 'Iniciar sesión' }}</span>
         </button>
         <button class="icon-button">
-          <img src="../../../public/svg/icono-header-favoritos.svg" alt="">
+          <img src="/svg/icono-header-favoritos.svg" alt="">
           <span class="label">Favoritos</span>
         </button>
         <button class="icon-button cart-button" @click="carritoView()">
-          <img src="../../../public/svg/icono-header-carrito.svg" alt="">
+          <img src="/svg/icono-header-carrito.svg" alt="">
           <span class="label">Carrito</span>
           <span class="cart-count" v-if="cartItemCount > 0">{{ cartItemCount }}</span>
         </button>
@@ -137,10 +137,10 @@ const carritoView = () => {
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'); 
 
 .header {
-  font-family: "Inter", sans-serif;
+ font-family: "Inter", sans-serif;
   width: 100%;
   margin: 0;
 }
@@ -179,7 +179,6 @@ const carritoView = () => {
   background: none;
   border: none;
   color: #838384;
-  font-family: "Inter", sans-serif;
   font-size: 14px;
   cursor: pointer;
   outline: none;
