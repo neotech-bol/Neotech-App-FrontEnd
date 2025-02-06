@@ -75,6 +75,7 @@ const inicioSesion = async () => {
     isLoading.value = true; // Establecer estado de carga
     try {
         const { data } = await login(formulario.value);
+        console.log(data);
         const tokenEncrypt = Buffer.from(data.access_token).toString('base64');
         localStorage.setItem('token', tokenEncrypt);
         
@@ -84,8 +85,10 @@ const inicioSesion = async () => {
             apellido: data.user.apellido,
             email: data.user.email,
             direccion: data.user.direccion,
-            telefono: data.user.telefono
+            telefono: data.user.telefono,
+            rol: data.user.roles[0].name
         };
+        console.log(data);
         localStorage.setItem('datosUser', JSON.stringify(datosUser));
         
         // Redirigir según el rol del usuario

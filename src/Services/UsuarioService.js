@@ -16,3 +16,7 @@ export const updateUser = (id, formulario) => {
 export const changeStatus = (id) => {
     return http().delete(`${urlBase}usuario/${id}`)
 }
+
+export const userAutenticado = () => {
+    return http().get(`${urlBase}usuario-autenticado`)
+}

@@ -46,7 +46,6 @@
           <li><a href="#"><i class="fas fa-undo"></i> Política de devoluciones</a></li>
           <li><a href="#"><i class="fas fa-briefcase"></i> Trabaja con nosotros</a></li>
           <li><a href="#"><i class="fas fa-handshake"></i> Programa de afiliados</a></li>
-          <li><a href="#"><i class="fas fa-credit-card"></i> Métodos de Pagos</a></li>
         </ul>
       </div>
 
@@ -78,14 +77,6 @@
     <!-- Footer bottom -->
     <div class="footer-bottom">
       <p>Desarrollado por Tinkuna Dev. 2025.</p>
-      <div class="payment-methods">
-        <i class="fab fa-cc-visa"></i>
-        <i class="fab fa-cc-mastercard"></i>
-        <i class="fab fa-cc-paypal"></i>
-        <i class="fab fa-cc-stripe"></i>
-        <i class="fas fa-qrcode"></i>
-        <i class="fab fa-cc-visa"></i>
-      </div>
     </div>
   </footer>
 </template>
@@ -198,7 +189,7 @@
   padding: 25px 20px;
   border-top: 1px solid #e9ecef;
   display: flex;
-  justify-content: space-between;
+  justify-content:center;
   align-items: center;
   max-width: 1200px;
   margin: 60px auto 0;
@@ -207,22 +198,6 @@
 .footer-bottom p {
   color: #6c757d;
   font-size: 0.9rem;
-}
-
-.payment-methods {
-  display: flex;
-  gap: 20px;
-  align-items: center;
-}
-
-.payment-methods i {
-  font-size: 2rem;
-  color: #6c757d;
-  transition: color 0.3s;
-}
-
-.payment-methods i:hover {
-  color: #007bff;
 }
 
 /* Responsive Design */
@@ -262,8 +237,5 @@
     text-align: center;
   }
 
-  .payment-methods {
-    justify-content: center;
-  }
 }
 </style>
