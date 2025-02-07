@@ -38,7 +38,7 @@
           <img src="/svg/icono-header-cuenta.svg" alt="">
           <span class="label">{{ isLoggedIn ? 'Cuenta' : 'Iniciar sesión' }}</span>
         </button>
-        <button class="icon-button">
+        <button class="icon-button" @click="goFavorites()">
           <img src="/svg/icono-header-favoritos.svg" alt="">
           <span class="label">Favoritos</span>
         </button>
@@ -131,6 +131,9 @@ const toggleSidebar = () => {
 
 const carritoView = () => {
   router.push({ path: '/checkout' })
+}
+const goFavorites = () => {
+  router.push({ path: '/favoritos' })
 }
 </script>
 

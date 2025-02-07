@@ -21,6 +21,7 @@ import Register2View from '@/views/Auth/Register2View.vue'
 import Login2View from '@/views/Auth/Login2View.vue'
 import Unauthorized from '@/views/Unauthorized.vue'
 import { userAutenticado } from '@/Services/UsuarioService'
+import FavoriteView from '@/views/FavoriteView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -65,6 +66,11 @@ const router = createRouter({
           name: 'perfil',
           component: PerfilView
         },
+        {
+          path: '/favoritos',
+          name: 'favoritos',
+          component: FavoriteView
+        }
       ],
 
     },

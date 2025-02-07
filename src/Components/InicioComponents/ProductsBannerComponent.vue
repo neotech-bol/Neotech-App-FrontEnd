@@ -1,138 +1,86 @@
 <template>
   <div class="container">
-
-    <div class="recent-products-section">
-      <div class="header">
-        <h2>Recién Llegadas</h2>
-        <p>¡Apresúrate! Estas ofertas no durarán mucho.</p>
-      </div>
-
-      <div class="products-grid">
-        <div v-for="product in paginatedProducts" :key="product.id" class="product-card">
-          <div class="product-image">
-            <img :src="product.image" :alt="product.name">
-            <span v-if="product.badge" :class="['badge', product.badge === 'LIMITADO' ? 'badge-limited' : 'badge-new']">
-              {{ product.badge }}
-            </span>
-          </div>
-
-          <div class="product-info">
-            <div class="category">{{ product.category }}</div>
-            <h3 class="product-name">{{ product.name }}</h3>
-
-            <div class="rating">
-              <span v-for="star in 5" :key="star" class="star" :class="{ 'filled': star <= product.rating }">★</span>
-            </div>
-
-            <div class="price">
-              <span class="current-price">{{ product.price }} Bs</span>
-              <span class="old-price">{{ product.oldPrice }} Bs</span>
-            </div>
-
-            <button class="add-to-cart" @click="addToCart(product)">
-              <span class="icon">🛒</span>
-              Agregar al carrito
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="pagination">
-        <button @click="prevPage" :disabled="currentPage === 1">Anterior</button>
-        <span>Página {{ currentPage }} de {{ totalPages }}</span>
-        <button @click="nextPage" :disabled="currentPage === totalPages">Siguiente</button>
-      </div>
-    </div>
-
     <div class="main-catalog">
-  <div v-for="catalog in datos" :key="catalog.id">
-    <div class="banner">
-      <img :src="catalog.banner" alt="Banner de {{ catalog.nombre }}" />
-      <div class="banner-content">
-        <h2>{{ catalog.nombre }}</h2>
-        <p>{{ catalog.descripcion }}</p>
-        <button class="banner-cta" @click="viewCollection">Ver Colección</button>
-      </div>
-    </div>
-    <div class="header">
-      <h2>Movilidad <span class="text-accent">Inteligente</span></h2>
-      <p>Velocidad, diseño y tecnología en cada modelo.</p>
-    </div>
-
-    <div class="products-grid">
-      <div v-for="product in catalog.productos" :key="product.id" class="product-card">
-        <div class="product-image">
-          <img :src="product.imagen_principal" :alt="product.nombre">
-          <span v-if="product.badge"
-            :class="['badge', product.badge === 'LIMITADO' ? 'badge-limited' : 'badge-new']">
-            {{ product.badge }}
-          </span>
+      <div v-for="catalog in datos" :key="catalog.id">
+        <div class="banner">
+          <img :src="catalog.banner" alt="Banner de {{ catalog.nombre }}" />
+          <div class="banner-content">
+            <h2>{{ catalog.nombre }}</h2>
+            <p>{{ catalog.descripcion }}</p>
+            <button class="banner-cta" @click="viewCollection">Ver Colección</button>
+          </div>
+        </div>
+        <div class="header">
+          <h2>Movilidad <span class="text-accent">Inteligente</span></h2>
+          <p>Velocidad, diseño y tecnología en cada modelo.</p>
         </div>
 
-        <div class="product-info">
-          <div class="category">{{ product.categoria?.nombre }}</div>
-          <h3 class="product-name">{{ product.nombre }}</h3>
+        <div class="products-grid">
+          <div v-for="product in catalog.productos" :key="product.id" class="product-card">
+            <div class="product-image">
+              <img :src="product.imagen_principal" :alt="product.nombre">
+              <span v-if="product.badge"
+                :class="['badge', product.badge === 'LIMITADO' ? 'badge-limited' : 'badge-new']">
+                {{ product.badge }}
+              </span>
+              <div class="product-actions">
+                <button class="action-button" @click="addToCart(product)">
+                  🛒
+                </button>
+                <button class="action-button" @click="verProducto(product.id)">
+                  👁️
+                </button>
+                <button class="action-button" @click="fororiteUser(product.id)">
+                  ❤️
+                </button>
+              </div>
+            </div>
 
-          <div class="rating">
-            <span v-for="star in 5" :key="star" class="star" :class="{ 'filled': star <= product.rating }">★</span>
+            <div class="product-info">
+              <div class="category">{{ product.categoria?.nombre }}</div>
+              <h3 class="product-name">{{ product.nombre }}</h3>
+
+              <div class="rating">
+                <span v-for="star in 5" :key="star" class="star" 
+                      :class="{ 'filled': star <= (userRatings.find(r => r.producto_id === product.id)?.rating || 0) }"
+                      @click="storeRatingUser(product.id, star)">
+                  ★
+                </span>
+              </div>
+              <div class="rating-count">
+                <p>{{ userRatings.find(r => r.producto_id === product.id)?.total_users || 0 }} usuarios han calificado este producto.</p>
+              </div>
+              <div class="price">
+                <span class="current-price">{{ product.precio }} Bs</span>
+                <span class="old-price">{{ product.oldPrice }} Bs</span>
+              </div>
+            </div>
           </div>
-
-          <div class="price">
-            <span class="current-price">{{ product.precio }} Bs</span>
-            <span class="old-price">{{ product.oldPrice }} Bs</span>
-          </div>
-
-          <button class="add-to-cart" @click="addToCart(product)">
-            <span class="icon">🛒</span>
-            Agregar al carrito
-          </button>
-          <button class="add-to-cart mt-2" @click="verProducto(product.id)">
-            Ver Producto
-          </button>
         </div>
       </div>
     </div>
-  </div>
-</div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { indexCatalogoItems } from '@/Services/CatalogoService';
 import { useCartStore } from '@/stores/cart';
 import { useRouter } from 'vue-router';
+import { storeFavorite } from '@/Services/FavoriteService';
+import { indexRatings, storeRating } from '@/Services/RatingService';
+onMounted(() => {
+  indexRatingUser();
+})
 const cartStore = useCartStore();
 const datos = ref([]);
-const currentPage = ref(1);
-const productsPerPage = ref(4);
 const router = useRouter();
-const products = ref([
-  // ... more products
-]);
+const fovoritesForm = ref({});
 
-const totalPages = computed(() => Math.ceil(products.value.length / productsPerPage.value));
-
-const paginatedProducts = computed(() => {
-  const start = (currentPage.value - 1) * productsPerPage.value;
-  const end = start + productsPerPage.value;
-  return products.value.slice(start, end);
-});
-
-const nextPage = () => {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++;
-  }
-};
-
-const prevPage = () => {
-  if (currentPage.value > 1) {
-    currentPage.value--;
-  }
-};
 const verProducto = param => {
     router.push({ path: `/producto/${param}` })
 }
+
 const listarCatalogo = async () => {
   try {
     const { data } = await indexCatalogoItems();
@@ -143,6 +91,21 @@ const listarCatalogo = async () => {
   }
 };
 
+const fororiteUser = async (idProducto) => {
+  try {
+    fovoritesForm.value = {
+      "producto_id": idProducto,
+    };
+    const {data} = await storeFavorite(fovoritesForm.value);
+  } catch (error) {
+    if(error.response.data.message){
+      console.log(error.response.data.message);
+    }else{
+      console.log(error);
+    }
+  }
+}
+
 const addToCart = (product) => {
   cartStore.addToCart(product);
   console.log(`Agregado al carrito: ${product.nombre}`);
@@ -152,13 +115,50 @@ const viewCollection = () => {
   console.log('Ver colección de Motos Eléctricas');
 };
 
+const storeRatingUser = async (productID, rating) => {
+  console.log(productID, rating);
+  let ratingForm = {
+    "producto_id": productID,
+    "rating": rating
+  };
+  console.log(ratingForm); 
+  try {
+    const { data } = await storeRating(ratingForm);
+    console.log(data.message); // Mensaje de éxito
+    // Aquí puedes actualizar la calificación en el producto si es necesario
+    const product = datos.value.find(p => p.id === productID);
+    if (product) {
+      product.rating = rating; // Actualiza la calificación localmente
+    }
+    indexRatingUser();
+  } catch (error) {
+    if (error.response && error.response.data.message) {
+      console.log(error.response.data.message); // Mensaje de error del servidor
+    } else {
+      console.log(error);
+    }
+  }
+};
+const userRatings = ref([]); // Para almacenar las calificaciones del usuario
+
+const indexRatingUser  = async () => {
+  try {
+    const { data } = await indexRatings();
+    userRatings.value = data; // Almacena las calificaciones del usuario
+    console.log(userRatings.value);
+  } catch (error) {
+    console.log(error);
+  }
+};
+const updateRatingUser = async () => {
+
+}
 onMounted(() => {
   listarCatalogo();
 });
 </script>
 
 <style scoped>
-
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -246,6 +246,7 @@ onMounted(() => {
 }
 
 .product-card {
+  position: relative;
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -317,6 +318,7 @@ onMounted(() => {
 .star {
   color: #d1d5db;
   font-size: 1.25rem;
+  cursor: pointer;
 }
 
 .star.filled {
@@ -342,47 +344,37 @@ onMounted(() => {
   font-size: 0.95rem;
 }
 
-.add-to-cart {
-  width: 100%;
-  padding: 0.75rem;
-  background-color: #3498db;
-  color: white;
+/* Nuevos estilos para los botones de acción */
+.product-actions {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.product-card:hover .product-actions {
+  opacity: 1;
+}
+
+.action-button {
+  background-color: rgba(255, 255, 255, 0.8);
   border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  transition: background-color 0.3s ease;
-}
-
-.add-to-cart:hover {
-  background-color: #2980b9;
-}
-
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
-  margin: 2rem 0;
-}
-
-.pagination button {
-  padding: 0.5rem 1rem;
-  background-color: #3498db;
-  color: white;
-  border: none;
-  border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
 
-.pagination button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.action-button:hover {
+  background-color: rgba(255, 255, 255, 1);
 }
 
 @media (max-width: 768px) {
