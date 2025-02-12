@@ -19,19 +19,18 @@
         <h1>{{ dato.nombre }}</h1>
         <h2>Tecnología Avanzada de Litio</h2>
 
-        
         <!-- Rating -->
         <div class="rating">
           <span class="stars">★★★★☆</span>
           <span class="reviews">(22 Reviews)</span>
         </div>
 
-        <!-- Price -->
-        <div class="price">
-          <span class="current-price">{{ dato.precio }}</span>
-          <span class="original-price">2.300 Bs</span>
-          <span class="discount">-60%</span>
-        </div>
+<!-- Price -->
+<div class="price">
+  <span class="current-price">{{ selectedModelPrice }} Bs</span>
+<!--   <span class="original-price">{{ originalPrice }} Bs</span>
+  <span class="discount">-60%</span> -->
+</div>
 
         <p class="description">
           {{ dato.descripcion != null ? dato.descripcion : 'No hay descripción' }}
@@ -48,21 +47,11 @@
         <div class="option-section">
           <h3>MODELO</h3>
           <div class="model-options">
-            <button v-for="model in models" :key="model.id"
-              :class="['model-btn', { active: selectedModel === model.id }]" @click="selectedModel = model.id">
-              {{ model.power }}
+            <button v-for="model in dato.modelos" :key="model.id"
+              :class="['model-btn', { active: selectedModel === model.id }]" @click="selectModel(model)">
+              {{ model.nombre }}
             </button>
           </div>
-        </div>
-
-           <!-- Color Selection -->
-           <div class="option-section">
-          <h3>COLOR</h3>
-<!--           <div class="color-options">
-            <button v-for="color in colors" :key="color.id"
-              :class="['color-btn', color.id, { active: selectedColor === color.id }]" @click="selectedColor = color.id"
-              :title="color.name"></button>
-          </div> -->
         </div>
 
         <!-- Quantity and Add to Cart -->
@@ -81,65 +70,64 @@
     </div>
   </div>
 </template>
+
 <script setup>
 import { detalleProducto } from '@/Services/ProductoService';
 import { useCartStore } from '@/stores/cart';
-import { onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+
 const dato = ref({});
 const router = useRouter();
-const selectedImage = ref(0)
-const selectedModel = ref('350W')
-const selectedColor = ref('blue')
-const quantity = ref(1)
+const selectedImage = ref(0);
+const selectedModel = ref(null); // Inicializa como null
+const selectedModelPrice = ref(0); // Para almacenar el precio del modelo seleccionado
+const originalPrice = ref(0); // Para almacenar el precio original del producto
 const idProducto = router.currentRoute.value.params.idProducto;
 const cartStore = useCartStore();
+
 onMounted(() => {
   verProducto();
-})
+});
+
 const verProducto = async () => {
   try {
     const { data } = await detalleProducto(idProducto);
     dato.value = data.dato;
-    console.log(dato.value);
+
+    // Establecer el precio original
+    originalPrice.value = dato.value.precio; // Asigna el precio original
+
+    // Si hay modelos, puedes establecer el precio del primer modelo
+    if (dato.value.modelos.length > 0) {
+      selectedModel.value = dato.value.modelos[0].id; // Selecciona el primer modelo por defecto
+      selectedModelPrice.value = dato.value.modelos[0].precio; // Establece el precio del primer modelo
+    } else {
+      selectedModelPrice.value = originalPrice.value; // Si no hay modelos, usa el precio original
+    }
   } catch (error) {
     console.log(error);
   }
-}
-
-
-const images = [
-  '../../public/imagenes/Sin título.png',
-  '../../public/imagenes/Sin título.png',
-  '../../public/imagenes/Sin título.png',
-  '../../public/imagenes/Sin título.png'
-]
-
-const colors = [
-  { id: 'blue', name: 'Azul' },
-  { id: 'red', name: 'Rojo' },
-  { id: 'green', name: 'Verde' }
-]
-
-const models = [
-  { id: '350W', power: '350W' },
-  { id: '250W', power: '250W' },
-  { id: '150W', power: '150W' }
-]
-const addToCart = (product) => {
-  cartStore.addToCart(product);
-  console.log(`Agregado al carrito: ${product.nombre}`);
 };
 
-const getImageByColor = (color) => {
-  if (dato.value.images) {
-    const image = dato.value.images.find(img => img.color === color);
-    return image ? image.imagen : '';
-  }
-  return ''; // Retorna una cadena vacía si no hay imágenes
-}
-</script>
+const selectModel = (model) => {
+  selectedModel.value = model.id; // Cambia el modelo seleccionado
+  selectedModelPrice.value = model.precio; // Cambia el precio al del modelo seleccionado
+};
 
+const addToCart = () => {
+  // Crea un objeto que incluya el producto y el precio del modelo seleccionado
+  const productWithModelPrice = {
+    ...dato.value, // Copia todas las propiedades del producto
+    precio: selectedModelPrice.value, // Agrega el precio del modelo seleccionado
+    modeloId: selectedModel.value // Agrega el ID del modelo seleccionado
+  };
+
+  cartStore.addToCart(productWithModelPrice);
+  console.log(`Agregado al carrito: ${productWithModelPrice.nombre} con precio: ${productWithModelPrice.precio} Bs`);
+};
+
+</script>
 <style scoped>
 .product-detail {
   padding: 40px 20px;

@@ -22,9 +22,8 @@
                                             <tr class="text-center">
                                                 <th>ID</th>
                                                 <th>Nombre</th>
-                                                <th>Banner</th>
                                                 <th>Descripción</th>
-                                                <th>Productos</th>
+                                                <th>Categorias</th>
                                                 <th>Estado</th>
                                                 <th>Acciones</th>
                                             </tr>
@@ -37,12 +36,8 @@
                                             <tr v-for="(item, index) in datos" :key="item.id" class="text-center">
                                                 <td>{{ index + 1 }}</td>
                                                 <td>{{ item.nombre }}</td>
-                                                <td>
-                                                    <img :src="item.banner" alt="Banner" class="img-thumbnail img-fluid"
-                                                        style="width: 100px; height: 60px;">
-                                                </td>
                                                 <td>{{ item.descripcion }}</td>
-                                                <td>{{ item.productos?.length }}</td>
+                                                <td>{{ item.categorias?.length }}</td>
                                                 <td>
                                                     <span class="badge"
                                                         :class="item.estado == true ? 'bg-success' : 'bg-danger'">
@@ -94,13 +89,8 @@
                             <textarea class="form-control" id="descripcion" v-model="formulario.descripcion"></textarea>
                         </div>
                         <div class="col-12">
-                            <label for="imagen" class="label-form fw-bold">Imagen banner</label>
-                            <input type="file" class="form-control" id="imagen" placeholder="Escribe..."
-                                @change="obtenerImagen($event)" :class="{ 'border-danger': errors.banner }">
-                            <small class="text-danger fst-italic text-xs" v-if="errors.banner"><i
-                                    class="fas fa-times me-1"></i>{{ errors.banner[0] }}</small>
-                            <img v-if="imagenPreview" :src="imagenPreview" alt="Imagen"
-                                style="width: 400px; height: 200px; margin-top: 30px;">
+                            <label for="orden" class="label-form fw-bold">Orden</label>
+                            <input type="number" id="orden" class="form-control" v-model="formulario.orden">
                         </div>
                     </div>
                 </div>
@@ -122,10 +112,10 @@ const formulario = ref({
     nombre: '',
     descripcion: '',
     banner: '',
+    orden: '',
 });
 const datos = ref([]);
 const posicion = ref('');
-const imagenPreview = ref('');
 const errors = ref({});
 onMounted(() => {
     modal = document.getElementById('staticBackdrop');
@@ -137,26 +127,14 @@ const abrirModal = () => {
         nombre: '',
         descripcion: '',
         banner: '',
+        orden: '',
     }
-    imagenPreview.value = '';
     posicion.value = '';
     instanciaModal.show();
 }
 const cerrarModal = () => {
     instanciaModal.hide();
 }
-const obtenerImagen = (event) => {
-    if (event.target.files[0]) {
-        formulario.value.banner = event.target.files[0];
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            imagenPreview.value = e.target.result;
-        };
-        reader.readAsDataURL(event.target.files[0]);
-    } else {
-        imagenPreview.value = formulario.value.banner;
-    }
-};
 const listarCatalogos = async () => {
     try {
         const { data } = await indexCatalogos();
@@ -176,9 +154,8 @@ const guardarCatalogo = async () => {
             if (formulario.value.descripcion) {
                 formData.append('descripcion', formulario.value.descripcion);
             }
-            // Solo agregar el archivo de imagen si se seleccionó uno nuevo
-            if (formulario.value.banner instanceof File) {
-                formData.append('banner', formulario.value.banner);
+            if (formulario.value.orden) {
+                formData.append('orden', formulario.value.orden);
             }
         if (posicion.value != '') {
             formData.append('_method', 'PUT')
@@ -207,10 +184,9 @@ const mostrarCatalogo = async (id) => {
         formulario.value = {
             nombre: data.dato.nombre,
             descripcion: data.dato.descripcion,
-            banner: data.dato.banner,
-            productos: data.dato.productos
+            productos: data.dato.productos,
+            orden: data.dato.orden,
         }
-        imagenPreview.value = formulario.value.banner;
         instanciaModal.show();
         posicion.value = id;
         errors.value = {};

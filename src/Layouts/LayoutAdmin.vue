@@ -9,27 +9,17 @@
       </div>
       <ul class="sidebar-menu">
         <li v-for="item in menuItems" :key="item.path">
-          <div 
-            class="sidebar-link" 
-            :class="{ 'active': isActive(item.path) }" 
-            @click="toggleSubmenu(item)"
-          >
+          <div class="sidebar-link" :class="{ 'active': isActive(item.path) }" @click="toggleSubmenu(item)">
             <i :class="['bi', item.icon]"></i>
             <span>{{ item.name }}</span>
-            <i 
-              v-if="item.subItems" 
-              :class="['bi', 'submenu-indicator', item.expanded ? 'bi-chevron-down' : 'bi-chevron-right']"
-            ></i>
+            <i v-if="item.subItems"
+              :class="['bi', 'submenu-indicator', item.expanded ? 'bi-chevron-down' : 'bi-chevron-right']"></i>
           </div>
           <transition name="slide-fade">
             <ul v-if="item.subItems && item.expanded" class="submenu">
               <li v-for="subItem in item.subItems" :key="subItem.path">
-                <router-link 
-                  :to="subItem.path" 
-                  class="submenu-link" 
-                  :class="{ 'active': $route.path === subItem.path }"
-                  @click="closeSidebarOnMobile"
-                >
+                <router-link :to="subItem.path" class="submenu-link" :class="{ 'active': $route.path === subItem.path }"
+                  @click="closeSidebarOnMobile">
                   <i :class="['bi', subItem.icon]"></i>
                   {{ subItem.name }}
                 </router-link>
@@ -59,14 +49,17 @@
               <ul class="user-menu-dropdown" v-show="userMenuOpen">
                 <li><a href="#" @click.prevent="goToProfile"><i class="bi bi-person"></i> Profile</a></li>
                 <li><a href="#" @click.prevent="goToSettings"><i class="bi bi-gear"></i> Settings</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a href="#" @click.prevent="logout" class="logout-link"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                <li>
+                  <hr class="dropdown-divider">
+                </li>
+                <li><a href="#" @click.prevent="logout" class="logout-link"><i class="bi bi-box-arrow-right"></i>
+                    Logout</a></li>
               </ul>
             </transition>
           </div>
         </div>
       </header>
-      <main class="main-content"> 
+      <main class="main-content">
         <RouterView />
       </main>
     </div>
@@ -74,7 +67,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 
 const router = useRouter();
@@ -97,49 +90,54 @@ const closeSidebarOnMobile = () => {
 };
 
 const menuItems = ref([
-  { 
-    name: 'Dashboard', 
-    path: '/admin-panel', 
+  {
+    name: 'Dashboard',
+    path: '/admin-panel',
     icon: 'bi-speedometer2'
   },
-  { 
-    name: 'Usuarios', 
-    path: '/usuarios', 
+  {
+    name: 'Usuarios',
+    path: '/usuarios',
     icon: 'bi-people',
   },
-  { 
-    name: 'Usuarios', 
-    path: '/usuarios', 
+  {
+    name: 'Usuarios',
+    path: '/usuarios',
     icon: 'bi-people',
     subItems: [
       { name: 'Lista de Usuarios', path: '/usuarios', icon: 'bi-list-ul' },
       { name: 'Agregar Usuario', path: '/usuarios/agregar', icon: 'bi-person-plus' },
     ]
   },
-  { 
-    name: 'Catalogos', 
-    path: '/catalogos', 
+  {
+    name: 'Catalogos',
+    path: '/catalogos',
     icon: 'bi-collection',
   },
-  { 
-    name: 'Categorias', 
-    path: '/categorias', 
+  {
+    name: 'Categorias',
+    path: '/categorias',
     icon: 'bi-tags'
   },
-  { 
-    name: 'Productos', 
-    path: '/productos', 
+  {
+    name: 'Productos',
+    path: '/productos',
     icon: 'bi-box-seam',
   },
-  { 
-    name: 'Roles', 
-    path: '/roles', 
+  {
+    name: 'Roles',
+    path: '/roles',
     icon: 'bi-shield-check'
   },
   {
-    name:'Pedidos',
+    name: 'Pedidos',
     path: '/pedidos',
     icon: 'bi-cart-fill',
+  },
+  {
+    name: 'Cupones',
+    path: '/cupones',
+    icon: 'bi-bell-fill'
   }
 ]);
 
@@ -254,7 +252,8 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
-.sidebar-link:hover, .sidebar-link.active {
+.sidebar-link:hover,
+.sidebar-link.active {
   background-color: #34495e;
 }
 
@@ -287,7 +286,8 @@ onUnmounted(() => {
   transition: all 0.2s ease;
 }
 
-.submenu-link:hover, .submenu-link.active {
+.submenu-link:hover,
+.submenu-link.active {
   background-color: #2c3e50;
 }
 
@@ -320,7 +320,8 @@ onUnmounted(() => {
   justify-content: space-between;
 }
 
-.home-link, .user-menu-toggle {
+.home-link,
+.user-menu-toggle {
   background: none;
   border: none;
   color: #2c3e50;
@@ -332,7 +333,8 @@ onUnmounted(() => {
   transition: all 0.2s ease;
 }
 
-.home-link:hover, .user-menu-toggle:hover {
+.home-link:hover,
+.user-menu-toggle:hover {
   color: #3498db;
 }
 
@@ -340,7 +342,8 @@ onUnmounted(() => {
   text-decoration: none;
 }
 
-.home-link i, .user-menu-toggle i {
+.home-link i,
+.user-menu-toggle i {
   margin-right: 0.5rem;
 }
 
@@ -401,6 +404,7 @@ onUnmounted(() => {
   flex: 1;
   padding: 2rem;
   overflow-y: auto;
+  background-color: #f8f9fa;
 }
 
 .sidebar-toggle {
@@ -416,20 +420,24 @@ onUnmounted(() => {
   margin-right: 1rem;
 }
 
-.slide-fade-enter-active, .slide-fade-leave-active {
+.slide-fade-enter-active,
+.slide-fade-leave-active {
   transition: all 0.3s ease;
 }
 
-.slide-fade-enter-from, .slide-fade-leave-to {
+.slide-fade-enter-from,
+.slide-fade-leave-to {
   transform: translateY(-10px);
   opacity: 0;
 }
 
-.fade-enter-active, .fade-leave-active {
+.fade-enter-active,
+.fade-leave-active {
   transition: opacity 0.3s ease;
 }
 
-.fade-enter-from, .fade-leave-to {
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
 }
 
@@ -443,9 +451,9 @@ onUnmounted(() => {
     margin-left: 0 !important;
   }
 
-  .home-link span, .user-menu-toggle span {
+  .home-link span,
+  .user-menu-toggle span {
     display: none;
   }
 }
 </style>
-

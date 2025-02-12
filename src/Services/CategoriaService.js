@@ -1,4 +1,4 @@
-import { http, httpNotToken, urlBase } from "./Http";
+import { http, httpAsset, httpNotToken, urlBase } from "./Http";
 
 
 export const indexCategorias = () => {
@@ -6,7 +6,7 @@ export const indexCategorias = () => {
 }
 
 export const storeCategoria = (formulario) => {
-    return http().post(`${urlBase}categoria-nueva`, formulario);
+    return httpAsset().post(`${urlBase}categoria-nueva`, formulario);
 }
 
 export const showCategoria = (id) => {
@@ -14,7 +14,7 @@ export const showCategoria = (id) => {
 }
 
 export const updateCategoria = (id, formulario) => {
-    return http().put(`${urlBase}categoria/${id}`, formulario);
+    return httpAsset().post(`${urlBase}categoria/${id}`, formulario);
 }
 
 export const destroyCategoria = (id) => {

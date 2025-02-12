@@ -2,11 +2,12 @@
   <div class="container">
     <div class="main-catalog">
       <div v-for="catalog in datos" :key="catalog.id">
+       <div v-for="(categoria, index) in catalog.categorias" :key="index">
         <div class="banner">
-          <img :src="catalog.banner" alt="Banner de {{ catalog.nombre }}" />
+          <img :src="categoria.banner" alt="Banner de {{ categoria.nombre }}" />
           <div class="banner-content">
-            <h2>{{ catalog.nombre }}</h2>
-            <p>{{ catalog.descripcion }}</p>
+            <h2>{{ categoria.nombre }}</h2>
+            <p>{{ categoria.descripcion }}</p>
             <button class="banner-cta" @click="viewCollection">Ver Colección</button>
           </div>
         </div>
@@ -16,7 +17,7 @@
         </div>
 
         <div class="products-grid">
-          <div v-for="product in catalog.productos" :key="product.id" class="product-card">
+          <div v-for="product in categoria.productos" :key="product.id" class="product-card">
             <div class="product-image">
               <img :src="product.imagen_principal" :alt="product.nombre">
               <span v-if="product.badge"
@@ -57,6 +58,7 @@
             </div>
           </div>
         </div>
+       </div>
       </div>
     </div>
   </div>
@@ -108,7 +110,7 @@ const fororiteUser = async (idProducto) => {
 
 const addToCart = (product) => {
   cartStore.addToCart(product);
-  console.log(`Agregado al carrito: ${product.nombre}`);
+  console.log(`Agregado al carrito: ${product.cantidad_minima}`);
 };
 
 const viewCollection = () => {

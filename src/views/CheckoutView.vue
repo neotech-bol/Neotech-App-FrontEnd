@@ -34,12 +34,16 @@
               <p v-if="product.specs" class="specs">{{ product.specs }}</p>
               <p class="price">{{ formatPrice(product.precio) }}</p>
               <p class="unit-price">(Precio unitario: {{ formatPrice(product.precio) }})</p>
+              <p class="min-quantity">Cantidad mínima: {{ product.cantidad_minima }} und.</p>
+              <p class="max-quantity">Cantidad máxima: {{ product.cantidad_maxima }} und.</p>
               <div class="quantity-controls">
-                <button @click="decreaseQuantity(product.id)" :disabled="product.cantidad <= 10" class="quantity-btn">
+                <button @click="decreaseQuantity(product.id)" :disabled="product.cantidad <= product.cantidad_minima"
+                  class="quantity-btn">
                   <i class="fas fa-minus"></i>
                 </button>
                 <span class="quantity">{{ product.cantidad }} und.</span>
-                <button @click="increaseQuantity(product.id)" class="quantity-btn">
+                <button @click="increaseQuantity(product.id)" :disabled="product.cantidad >= product.cantidad_maxima"
+                  class="quantity-btn">
                   <i class="fas fa-plus"></i>
                 </button>
                 <button @click="removeProduct(product.id)" class="remove-btn">
@@ -68,7 +72,18 @@
             <span>{{ formatPrice(pending) }}</span>
           </div>
         </div>
-
+        <div class="coupon-section">
+          <input type="text" v-model="cuponForm.codigo" placeholder="Ingrese el código del cupón" />
+          <button @click="applyCoupon">Aplicar Cupón</button>
+          <p v-if="couponMessage">{{ couponMessage }}</p>
+          <p v-if="cartStore.descuento > 0">
+            Monto en bolivianos: {{ cartStore.descuento }} {{ cartStore.tipoDescuento === 'porcentaje' ? 'Bs' : '%' }}
+          </p>
+          <p  v-if="cartStore.descuento > 0">
+            Monto en porcentaje: {{ cartStore.montoPorcentaje }} %
+          </p>
+          <button v-if="cartStore.descuento > 0" @click="removeCoupon">Eliminar Cupón</button>
+        </div>
         <div class="total">
           <span>Monto final:</span>
           <span class="total-amount">{{ formatPrice(totalAmount) }}</span>
@@ -88,40 +103,48 @@
 </template>
 
 <script setup>
+import { validateCuponBE } from '@/Services/CuponService';
+import { storePedido } from '@/Services/PedidoService';
 import { useCartStore } from '@/stores/cart';
 import { computed, ref } from 'vue';
 
 const cartStore = useCartStore();
+const userData = ref({});
+const couponMessage = ref(''); // Mensaje para mostrar el resultado de la aplicación del cupón
+const cuponForm = ref({
+  codigo: '',
+});
 
-const deliveryAddress = {
-  name: 'María Fernanda Antezana',
-  address: 'Circunvalación y Av. Blanco Galindo, #305',
-  district: 'Barrio: Las Lomas, Cochabamba',
-  phone: '+591 709 876543'
-};
-
-const paymentMethod = {
-  type: 'Tarjeta de Crédito VISA',
-  number: '**** **** **** 8420',
-  bank: 'Banco Económico'
-};
+// Recuperar los datos del localStorage
+const storedData = localStorage.getItem('datosUser');
+console.log(storedData);
+// Verificar si hay datos y analizarlos
+if (storedData) {
+  userData.value = JSON.parse(storedData);
+  console.log(userData.value);
+} else {
+  userData.value = {}; // o manejar el caso donde no hay datos
+}
 
 const totalItems = computed(() => cartStore.totalItems);
 const totalAmount = computed(() => cartStore.totalAmount);
 const totalToPay = computed(() => cartStore.totalToPay);
 const pending = computed(() => cartStore.pending);
-const items = computed(() => cartStore.items);
+const items = computed(() => cartStore.productos);
 
+const pedidoForm = ref({});
+
+// Funciones para aumentar y disminuir la cantidad de productos
 const increaseQuantity = (productId) => {
-  const item = cartStore.items.find(item => item.id === productId);
-  if (item) {
+  const item = cartStore.productos.find(item => item.id === productId);
+  if (item && item.cantidad < item.cantidad_maxima) {
     cartStore.updateQuantity(productId, item.cantidad + 1);
   }
 };
 
 const decreaseQuantity = (productId) => {
-  const item = cartStore.items.find(item => item.id === productId);
-  if (item && item.cantidad > 10) {
+  const item = cartStore.productos.find(item => item.id === productId);
+  if (item && item.cantidad > item.cantidad_minima) {
     cartStore.updateQuantity(productId, item.cantidad - 1);
   }
 };
@@ -134,16 +157,47 @@ const formatPrice = (price) => {
   return price ? `${price.toLocaleString()} Bs` : '0 Bs';
 };
 
-const finalizeOrder = () => {
-  console.log("Pedido finalizado:", {
-    items: items.value,
-    totalAmount: totalAmount.value,
-    totalToPay: totalToPay.value,
-    pending: pending.value,
-    deliveryAddress,
-  });
+// Función para aplicar el cupón
+const applyCoupon = async () => {
+  try {
+    const response = await validateCuponBE(cuponForm.value);
+    console.log(response);
+    if (response.data.success) {
+      cartStore.applyCoupon(response.data.cupon);
+      couponMessage.value = `Cupón aplicado: ${response.data.cupon.codigo}`;
+    } else {
+      couponMessage.value = 'Cupón no válido o expirado.';
+    }
+  } catch (error) {
+    console.error('Error al aplicar el cupón:', error.response ? error.response.data : error.message);
+    couponMessage.value = 'Error al aplicar el cupón. Intenta de nuevo más tarde.';
+  }
 };
 
+// Función para eliminar el cupón
+const removeCoupon = () => {
+  cartStore.removeCoupon();
+  couponMessage.value = 'Cupón eliminado.';
+};
+
+// Función para finalizar el pedido
+const finalizeOrder = async () => {
+  pedidoForm.value = {
+    productos: items.value,
+    total_amount: totalAmount.value,
+    total_to_pay: totalToPay.value,
+    pending: pending.value,
+    cupon_id: cartStore.cuponId, // Agregar el ID del cupón al pedido
+  };
+  try {
+    const { data } = await storePedido(pedidoForm.value);
+    console.log(data);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+// Definición de los pasos del checkout
 const checkoutSteps = [
   {
     title: 'Ubicación de Entrega',
@@ -151,10 +205,10 @@ const checkoutSteps = [
     component: 'div',
     props: {
       innerHTML: `
-        <p>${deliveryAddress.name}</p>
-        <p>${deliveryAddress.address}</p>
-        <p>${deliveryAddress.district}</p>
-        <p>${deliveryAddress.phone}</p>
+        <p>${userData.value.nombre}</p>
+        <p>${userData.value.direccion}</p>
+        <p>${userData.value.telefono}</p>
+        <p>${userData.value.email}</p>
       `
     }
   },
@@ -212,7 +266,7 @@ h1 span {
 }
 
 .lock-icon {
-  color: #C41E3A;
+  color: #007bff;
   font-size: 20px;
 }
 
@@ -222,7 +276,8 @@ h1 span {
   gap: 20px;
 }
 
-.main-content, .order-summary {
+.main-content,
+.order-summary {
   background: white;
   border-radius: 8px;
   padding: 20px;
@@ -230,7 +285,8 @@ h1 span {
   transition: box-shadow 0.3s ease;
 }
 
-.main-content:hover, .order-summary:hover {
+.main-content:hover,
+.order-summary:hover {
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
@@ -257,7 +313,7 @@ h1 span {
 }
 
 .step-number {
-  background: #C41E3A;
+  background: #007bff;
   color: white;
   width: 30px;
   height: 30px;
@@ -277,7 +333,7 @@ h2 {
 
 .edit-button {
   margin-left: auto;
-  color: #C41E3A;
+  color: #007bff;
   background: none;
   border: none;
   cursor: pointer;
@@ -286,7 +342,7 @@ h2 {
 }
 
 .edit-button:hover {
-  color: #a01830;
+  color: #0056b3;
 }
 
 .step-content {
@@ -309,7 +365,7 @@ h2 {
 }
 
 .coupon-input:focus {
-  border-color: #C41E3A;
+  border-color: #007bff;
   outline: none;
 }
 
@@ -364,7 +420,7 @@ h2 {
 .price {
   font-weight: 500;
   margin: 5px 0;
-  color: #C41E3A;
+  color: #007bff;
 }
 
 .unit-price {
@@ -380,9 +436,10 @@ h2 {
   margin-top: 10px;
 }
 
-.quantity-btn, .remove-btn {
+.quantity-btn,
+.remove-btn {
   padding: 5px 10px;
-  background-color: #C41E3A;
+  background-color: #007bff;
   color: white;
   border: none;
   border-radius: 4px;
@@ -390,8 +447,9 @@ h2 {
   transition: background-color 0.3s ease;
 }
 
-.quantity-btn:hover, .remove-btn:hover {
-  background-color: #a01830;
+.quantity-btn:hover,
+.remove-btn:hover {
+  background-color: #0056b3;
 }
 
 .quantity-btn:disabled {
@@ -432,11 +490,11 @@ h2 {
   font-weight: 500;
   margin: 20px 0;
   padding-top: 20px;
-  border-top: 1px solid #C41E3A;
+  border-top: 1px solid #007bff;
 }
 
 .total-amount {
-  color: #C41E3A;
+  color: #007bff;
   font-size: 24px;
   font-weight: bold;
 }
@@ -444,7 +502,7 @@ h2 {
 .checkout-button {
   width: 100%;
   padding: 15px;
-  background: #C41E3A;
+  background: #007bff;
   color: white;
   border: none;
   border-radius: 4px;
@@ -455,7 +513,7 @@ h2 {
 }
 
 .checkout-button:hover {
-  background-color: #a01830;
+  background-color: #0056b3;
 }
 
 .checkout-button:active {
@@ -470,13 +528,13 @@ h2 {
 }
 
 .terms a {
-  color: #C41E3A;
+  color: #007bff;
   text-decoration: none;
   transition: color 0.3s ease;
 }
 
 .terms a:hover {
-  color: #a01830;
+  color: #0056b3;
 }
 
 @media (max-width: 1024px) {
@@ -530,7 +588,8 @@ h2 {
     padding: 10px;
   }
 
-  .main-content, .order-summary {
+  .main-content,
+  .order-summary {
     padding: 15px;
   }
 
@@ -543,4 +602,3 @@ h2 {
   }
 }
 </style>
-

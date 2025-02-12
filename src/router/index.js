@@ -22,6 +22,7 @@ import Login2View from '@/views/Auth/Login2View.vue'
 import Unauthorized from '@/views/Unauthorized.vue'
 import { userAutenticado } from '@/Services/UsuarioService'
 import FavoriteView from '@/views/FavoriteView.vue'
+import CuponesView from '@/Admin/CuponesView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -139,6 +140,11 @@ const router = createRouter({
           name: 'pedidos',
           meta: { requiredRole: 'super-admin' }, // Solo accesible por usuarios con rol 'admin'
           component: PedidosView
+        },
+        {
+          path: '/cupones',
+          name: 'cupones',
+          component: CuponesView
         }
       ]
     },
