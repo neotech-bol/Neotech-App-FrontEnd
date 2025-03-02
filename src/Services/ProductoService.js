@@ -1,4 +1,4 @@
-import { http, httpAsset, httpNotToken, urlBase } from "./Http";
+import { fetchWithCache, http, httpAsset, httpNotToken, urlBase } from "./Http";
 
 
 export const indexProductos = () => {
@@ -23,4 +23,13 @@ export const deleteImage = (idProducto, idImagen) => {
 
 export const detalleProducto = (idProducto) => {
     return httpNotToken().get(`${urlBase}producto-ver/${idProducto}`);
+}
+
+export const recientesProductos = () => {
+    return httpNotToken().get(`${urlBase}productos-recientes`);
+}
+
+
+export const filtrosProductos = (categoriaID, catalogoID, search) => {
+    return httpNotToken().get(`${urlBase}productos/filtrar?categoria_id=${categoriaID}&catalogo_id=${catalogoID}&search=${search}`);
 }

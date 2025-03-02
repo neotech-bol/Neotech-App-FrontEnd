@@ -22,6 +22,8 @@
                                             <tr class="text-center">
                                                 <th>ID</th>
                                                 <th>Nombre</th>
+                                                <th>Titulo</th>
+                                                <th>Subtitulo</th>
                                                 <th>Descripción</th>
                                                 <th>Productos</th>
                                                 <th>Estado</th>
@@ -36,6 +38,8 @@
                                             <tr v-for="(item, index) in categorias" :key="item.id" class="text-center">
                                                 <td>{{ item.id }}</td>
                                                 <td>{{ item.nombre }}</td>
+                                                <td>{{ item.titulo }}</td>
+                                                <td>{{ item.subtitulo }}</td>
                                                 <td>{{ item.descripcion }}</td>
                                                 <td>{{ item.productos?.length }}</td>
                                                 <td>
@@ -84,6 +88,22 @@
                                 v-model="formulario.nombre" required :class="{ 'border-danger': errors.nombre }">
                             <small class="text-danger fst-italic text-xs" v-if="errors.nombre"><i
                                     class="fas fa-times me-1"></i>{{ errors.nombre[0] }}</small>
+                        </div>
+                        <div class="col-12">
+                            <label for="titulo" class="label-form fw-bold">Titulo <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="titulo" name="titulo"
+                                v-model="formulario.titulo" required :class="{ 'border-danger': errors.titulo }">
+                            <small class="text-danger fst-italic text-xs" v-if="errors.titulo"><i
+                                    class="fas fa-times me-1"></i>{{ errors.titulo[0] }}</small>
+                        </div>
+                        <div class="col-12">
+                            <label for="subtitulo" class="label-form fw-bold">Subtitulo <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="subtitulo" name="subtitulo"
+                                v-model="formulario.subtitulo" required :class="{ 'border-danger': errors.subtitulo }">
+                            <small class="text-danger fst-italic text-xs" v-if="errors.subtitulo"><i
+                                    class="fas fa-times me-1"></i>{{ errors.subtitulo[0] }}</small>
                         </div>
                         <div class="col-12 col-md-12">
                             <label for="categoria" class="label-form fw-bold">Catalogo</label>
@@ -159,6 +179,8 @@ const abrirModal = () => {
     posicion.value = '';
     formulario.value = {
         nombre: '',
+        titulo: '',
+        subtitulo: '',
         descripcion: '',
         banner: '',
         catalogo_id: ''
@@ -184,6 +206,8 @@ const guardarCategoria = async () => {
     try {
         const formData = new FormData();
         formData.append('nombre', formulario.value.nombre);
+        formData.append('titulo', formulario.value.titulo);
+        formData.append('subtitulo', formulario.value.subtitulo);
         formData.append('descripcion', formulario.value.descripcion);
         formData.append('catalogo_id', formulario.value.catalogo_id);
         // Solo agregar el archivo de imagen si se seleccionó uno nuevo
@@ -226,6 +250,8 @@ const mostrarCategoria = async (id) => {
         console.log(data);
         formulario.value = {
             nombre: data.dato.nombre,
+            titulo: data.dato.titulo,
+            subtitulo: data.dato.subtitulo,
             descripcion: data.dato.descripcion,
             banner: data.dato.banner,
             catalogo_id: data.dato.catalogo_id
@@ -239,7 +265,8 @@ const mostrarCategoria = async (id) => {
 }
 const mostrarCatalogos = async () => {
     try {
-        const {data} = await indexCatalogoItems();
+        const {data} = await indexCatalogoItems('');
+        console.log(data);
         catalogos.value = data.datos;
         console.log(catalogos.value);
     } catch (error) {

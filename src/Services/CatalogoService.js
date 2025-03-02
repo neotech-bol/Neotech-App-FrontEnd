@@ -1,4 +1,4 @@
-import { http, httpAsset, httpNotToken, urlBase } from "./Http"
+import { fetchWithCache, http, httpAsset, httpNotToken, urlBase } from "./Http"
 
 export const indexCatalogos = () => {
     return http().get(`${urlBase}catalogos`)
@@ -19,5 +19,16 @@ export const destroyCatalogo = (id) => {
 }
 
 export const indexCatalogoItems = () => {
-    return httpNotToken().get(`${urlBase}catalogos-activos`)
+    return fetchWithCache(`${urlBase}catalogos-activos`); // Usar fetchWithCache
+}
+export const indexCatalogoCategorias = () => {
+    return httpNotToken().get(`${urlBase}catalogos-con-categorias`)
+}
+
+export const indexCatalogosactives = () => {
+    return httpNotToken().get(`${urlBase}catalogos-activos-ids`)
+}
+
+export const showCatalogoActive = (id) => {
+    return httpNotToken().get(`${urlBase}catalogo-activo/${id}`)
 }

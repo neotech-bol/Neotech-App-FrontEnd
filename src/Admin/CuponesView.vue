@@ -36,7 +36,7 @@
                                             <tr v-for="(item, index) in datos" :key="item.id" class="text-center">
                                                 <td>{{ index + 1}}</td>
                                                 <td>{{ item.codigo }}</td>
-                                                <td>{{ item.descuento }}</td>
+                                                <td>{{ item.descuento }} %</td>
                                                 <td>{{ item.tipo }}</td>
                                                 <td>{{ formatDate(item.fecha_inicio)  }}</td>
                                                 <td>{{ formatDate(item.fecha_fin) }}</td>

@@ -8,6 +8,7 @@ export const useCartStore = defineStore('cart', () => {
   const descuento = ref(0); // Nueva propiedad para almacenar el descuento aplicado
   const tipoDescuento = ref('');
   const montoPorcentaje = ref('');
+  const cupon_id = ref(null); // Agrega esta línea para definir cupon_id
   // Función para cargar el carrito desde el almacenamiento local
   function loadCartFromStorage() {
     const savedCart = localStorage.getItem('cart'); // Intenta obtener el carrito guardado
@@ -51,42 +52,43 @@ export const useCartStore = defineStore('cart', () => {
 
 
   // Función para agregar un producto al carrito
-  // Función para agregar un producto al carrito
-function addToCart(product) {
-  const existingItem = productos.value.find(item => item.id === product.id && item.modeloId === product.modeloId);
-  
-  if (existingItem) {
-    // Si ya existe, verifica si se puede incrementar la cantidad
-    if (existingItem.cantidad < existingItem.cantidad_maxima) {
-      existingItem.cantidad += 1; // Aumenta la cantidad
+  function addToCart(product) {
+    console.log(product);  
+    const existingItem = productos.value.find(item => item.id === product.id && item.modeloId === product.modeloId);
+    console.log(existingItem);
+    if (existingItem) {
+      // Si ya existe, verifica si se puede incrementar la cantidad
+      if (existingItem.cantidad < existingItem.cantidad_maxima) {
+        existingItem.cantidad += 1; // Aumenta la cantidad
+      } else {
+        console.warn(`No se puede aumentar la cantidad del producto ${existingItem.nombre} más allá de ${existingItem.cantidad_maxima}.`);
+      }
     } else {
-      console.warn(`No se puede aumentar la cantidad del producto ${existingItem.nombre} más allá de ${existingItem.cantidad_maxima}.`);
+      // Si no existe, se agrega con una cantidad inicial de cantidad_minima
+      productos.value.push({
+        id: product.id,
+        nombre: product.nombre,
+        precio: product.precio, // Precio del modelo seleccionado
+        cantidad: product.cantidad_minima || 1, // Comenzar con la cantidad mínima
+        cantidad_minima: product.cantidad_minima, // Agregar cantidad mínima
+        cantidad_maxima: product.cantidad_maxima, // Agregar cantidad máxima
+        image: product.imagen_principal,
+        modeloId: product.modeloId, // Agregar el ID del modelo
+        modelo: product.nombreModelo // Agregar el modelo seleccionado
+      });
     }
-  } else {
-    // Si no existe, se agrega con una cantidad inicial de cantidad_minima
-    productos.value.push({
-      id: product.id,
-      nombre: product.nombre,
-      precio: product.precio, // Precio del modelo seleccionado
-      cantidad: product.cantidad_minima, // Comenzar con la cantidad mínima
-      cantidad_minima: product.cantidad_minima, // Agregar cantidad mínima
-      cantidad_maxima: product.cantidad_maxima, // Agregar cantidad máxima
-      image: product.imagen_principal,
-      modeloId: product.modeloId // Agregar el ID del modelo
-    });
+    
+    saveCartToStorage();
   }
-  
-  saveCartToStorage();
-}
 // Función para eliminar un producto del carrito
-function removeFromCart(productId) {
-  productos.value = productos.value.filter(item => item.id !== productId);
+function removeFromCart(productId, modeloId) {
+  productos.value = productos.value.filter(item => !(item.id === productId && item.modeloId === modeloId));
   saveCartToStorage();
 }
-
 // Función para actualizar la cantidad de un producto en el carrito
-function updateQuantity(productId, cantidad) {
-  const item = productos.value.find(item => item.id === productId);
+function updateQuantity(productId, modeloId, cantidad) {
+  const item = productos.value.find(item => item.id === productId && item.modeloId === modeloId);
+  console.log(item);
   if (item) {
     // Asegúrate de que la cantidad no sea menor a la cantidad mínima
     if (cantidad >= item.cantidad_minima) {
@@ -96,7 +98,7 @@ function updateQuantity(productId, cantidad) {
     }
 
     if (item.cantidad <= 0) {
-      removeFromCart(productId);
+      removeFromCart(productId, modeloId); // Elimina el producto si la cantidad es 0 o menor
     }
   }
   saveCartToStorage();
@@ -124,6 +126,8 @@ function applyCoupon(cupon) {
   } else {
     console.warn('Tipo de cupón no reconocido.');
   }
+  // Almacena el cupon_id en el store
+  cupon_id.value = cupon.id; // Asegúrate de que cupon_id esté definido en el store
 }
 
   // Función para eliminar el descuento
@@ -149,6 +153,7 @@ return {
   removeCoupon,
   descuento, // Agregado para que puedas acceder al descuento aplicado
   tipoDescuento,
-  montoPorcentaje
+  montoPorcentaje,
+  cupon_id 
 };
 });

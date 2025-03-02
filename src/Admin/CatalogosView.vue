@@ -24,6 +24,7 @@
                                                 <th>Nombre</th>
                                                 <th>Descripción</th>
                                                 <th>Categorias</th>
+                                                <th>Orden</th>
                                                 <th>Estado</th>
                                                 <th>Acciones</th>
                                             </tr>
@@ -34,10 +35,11 @@
                                                     registrados</td>
                                             </tr>
                                             <tr v-for="(item, index) in datos" :key="item.id" class="text-center">
-                                                <td>{{ index + 1 }}</td>
+                                                <td>{{ item.id}}</td>
                                                 <td>{{ item.nombre }}</td>
                                                 <td>{{ item.descripcion }}</td>
                                                 <td>{{ item.categorias?.length }}</td>
+                                                <td>{{ item.orden }}</td>
                                                 <td>
                                                     <span class="badge"
                                                         :class="item.estado == true ? 'bg-success' : 'bg-danger'">

@@ -24,3 +24,11 @@ export const destroyCategoria = (id) => {
 export const indexActivosCategorias = () => {
     return http().get(`${urlBase}categorias-activas`);
 }
+
+export const indexCategoriasConProductos = () => {
+    return httpNotToken().get(`${urlBase}categorias-acticas-users`);
+}
+
+export const activesCategoriasTrue = () => {
+    return httpNotToken().get(`${urlBase}categorias-activas-home`);
+}

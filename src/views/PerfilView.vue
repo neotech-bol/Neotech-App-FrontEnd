@@ -1,366 +1,1125 @@
 <template>
-    <div class="contenedor-perfil">
-      <header class="encabezado-perfil">
-        <div class="avatar-perfil">
-          {{ inicialesUsuario }}
-        </div>
-        <div class="titulo-perfil">
-          <h1>{{ usuario.nombre }}</h1>
-          <p>{{ usuario.email }}</p>
-        </div>
-      </header>
-      <main class="contenido-perfil">
-        <section class="info-perfil">
+  <div class="contenedor-perfil">
+    <header class="encabezado-perfil">
+      <div class="avatar-perfil" @mouseover="avatarHover = true" @mouseleave="avatarHover = false"
+        :class="{ 'avatar-hover': avatarHover }">
+        {{ inicialesUsuario }}
+      </div>
+      <div class="titulo-perfil">
+        <h1 class="gradient-text">{{ user.nombre }} {{ user.apellido }}</h1>
+        <p>{{ user.email }}</p>
+      </div>
+    </header>
+    <main class="contenido-perfil">
+      <section class="info-perfil">
+        <div class="section-header">
           <h2>Información del Perfil</h2>
-          <div class="grid-info">
-            <div class="item-info" v-for="(valor, clave) in camposEditables" :key="clave">
-              <strong>{{ formatearEtiqueta(clave) }}:</strong>
-              <span v-if="!editando">{{ valor }}</span>
-              <input v-else v-model="usuarioEditado[clave]" :placeholder="formatearEtiqueta(clave)" />
-            </div>
-            <div class="item-info">
-              <strong>Miembro desde:</strong>
-              <span>{{ usuario.miembroDesde }}</span>
-            </div>
-            <div class="item-info">
-              <strong>Total de pedidos:</strong>
-              <span>{{ usuario.totalPedidos }}</span>
+          <div class="badge-container">
+            <span class="member-badge">
+              <i class="fas fa-crown"></i> Cliente Premium
+            </span>
+          </div>
+        </div>
+        <div class="grid-info">
+          <div class="item-info" v-for="(valor, clave) in camposEditables" :key="clave">
+            <strong>{{ formatearEtiqueta(clave) }}:</strong>
+            <div class="input-container">
+              <span v-if="!editando" class="info-value">
+                {{ clave === 'genero' ? formatearGenero(valor) : (valor || 'No especificado') }}
+              </span>
+              <template v-else>
+                <select v-if="clave === 'genero'" v-model="usuarioEditado[clave]" class="input-animated">
+                  <option value="M">Masculino</option>
+                  <option value="F">Femenino</option>
+                  <option value="Otro">Otro</option>
+                </select>
+                <input v-else v-model="usuarioEditado[clave]" :placeholder="formatearEtiqueta(clave)"
+                  class="input-animated" :class="{ 'input-error': validationErrors[clave] }" />
+              </template>
+              <span v-if="validationErrors[clave]" class="error-message">{{ validationErrors[clave][0] }}</span>
             </div>
           </div>
-          <div class="botones-edicion">
-            <button v-if="!editando" @click="iniciarEdicion" class="boton-editar">Editar Perfil</button>
-            <template v-else>
-              <button @click="guardarCambios" class="boton-guardar">Guardar Cambios</button>
-              <button @click="cancelarEdicion" class="boton-cancelar">Cancelar</button>
-            </template>
-          </div>
-        </section>
-        <section class="historial-pedidos">
+        </div>
+        <div class="botones-edicion">
+          <button v-if="!editando" @click="iniciarEdicion" class="boton-principal">
+            <i class="fas fa-pencil-alt"></i>
+            <span>Editar Perfil</span>
+          </button>
+          <template v-else>
+            <button @click="guardarCambios" class="boton-principal" :disabled="guardando">
+              <i class="fas" :class="guardando ? 'fa-spinner fa-spin' : 'fa-check'"></i>
+              <span>{{ guardando ? 'Guardando...' : 'Guardar Cambios' }}</span>
+            </button>
+            <button @click="cancelarEdicion" class="boton-secundario">
+              <i class="fas fa-times"></i>
+              <span>Cancelar</span>
+            </button>
+          </template>
+        </div>
+      </section>
+      <section class="historial-pedidos">
+        <div class="section-header">
           <h2>Historial de Pedidos</h2>
-          <div class="lista-pedidos">
-            <div v-for="pedido in usuario.pedidos" :key="pedido.id" class="item-pedido">
-              <div class="encabezado-pedido">
-                <span class="id-pedido">Pedido #{{ pedido.id }}</span>
-                <span class="fecha-pedido">{{ formatearFecha(pedido.fecha) }}</span>
-              </div>
-              <div class="detalles-pedido">
-                <span class="total-pedido">{{ formatearPrecio(pedido.total) }}</span>
-                <span class="estado-pedido" :class="pedido.estado.toLowerCase()">
-                  {{ pedido.estado }}
-                </span>
-              </div>
-              <div class="progreso-pedido">
-                <div class="barra-progreso" :style="{ width: obtenerProgresoPedido(pedido.estado) }"></div>
+          <div class="filtros-pedidos">
+            <button class="filtro-btn" :class="{ active: filtroActual === 'todos' }" @click="filtrarPedidos('todos')">
+              Todos
+            </button>
+            <button class="filtro-btn" :class="{ active: filtroActual === 'entregados' }"
+              @click="filtrarPedidos('entregados')">
+              Entregados
+            </button>
+            <button class="filtro-btn" :class="{ active: filtroActual === 'proceso' }"
+              @click="filtrarPedidos('proceso')">
+              En Proceso
+            </button>
+          </div>
+        </div>
+        <div class="paginacion-superior">
+          <button @click="cambiarPagina(paginaActual - 1)" :disabled="paginaActual === 1" class="boton-pagina">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <div class="paginas-info">
+            <span class="pagina-actual">{{ paginaActual }}</span>
+            <span class="separador">/</span>
+            <span class="total-paginas">{{ totalPaginas }}</span>
+          </div>
+          <button @click="cambiarPagina(paginaActual + 1)" :disabled="paginaActual === totalPaginas"
+            class="boton-pagina">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+        <div class="lista-pedidos">
+          <div v-for="pedido in pedidosPaginados" :key="pedido.id" class="item-pedido"
+            :class="{ 'item-hover': hoveredPedido === pedido.id }" @mouseover="hoveredPedido = pedido.id"
+            @mouseleave="hoveredPedido = null">
+            <div class="encabezado-pedido">
+              <span class="id-pedido">
+                <i class="fas fa-shopping-bag"></i>
+                Pedido #{{ pedido.id }}
+              </span>
+              <span class="fecha-pedido">
+                <i class="fas fa-calendar-alt"></i>
+                {{ formatearFecha(pedido.created_at) }}
+              </span>
+            </div>
+            <div class="detalles-pedido">
+              <span class="total-pedido">{{ formatearPrecio(pedido.total_amount) }}</span>
+              <span class="estado-pedido" :class="pedido.estado === 1 ? 'entregado' : 'proceso'">
+                <i class="fas" :class="pedido.estado === 1 ? 'fa-check-circle' : 'fa-clock'"></i>
+                {{ pedido.estado === 1 ? 'Entregado' : 'En Proceso' }}
+              </span>
+            </div>
+            <div class="progreso-pedido">
+              <div class="barra-progreso" :style="{ width: obtenerProgresoPedido(pedido.estado) }">
+                <div class="progreso-animation"></div>
               </div>
             </div>
+            <div class="acciones-pedido">
+              <button @click="descargarDetallePedido(pedido.id)" class="boton-accion descargar"
+                v-if="pedido.estado == 1">
+                <i class="fas fa-download"></i>
+                <span>Descargar Detalle</span>
+              </button>
+              <button @click="repetirPedido(pedido.id)" class="boton-accion repetir">
+                <i class="fas fa-redo"></i>
+                <span>Pedir de Nuevo</span>
+              </button>
+            </div>
           </div>
-        </section>
-      </main>
-    </div>
-  </template>
-  
-  <script setup>
-  import { ref, computed } from 'vue'
-  
-  const usuario = ref({
-    nombre: 'Juan Pérez',
-    email: 'juan.perez@ejemplo.com',
-    nombreUsuario: 'juanperez',
-    miembroDesde: '1 de enero de 2023',
-    ubicacion: 'Madrid, España',
-    telefono: '+34 123 456 789',
-    totalPedidos: 15,
-    pedidos: [
-      { id: 1001, fecha: '2023-06-15', total: 125.99, estado: 'Entregado' },
-      { id: 1002, fecha: '2023-06-02', total: 79.50, estado: 'Enviado' },
-      { id: 1003, fecha: '2023-05-18', total: 249.99, estado: 'En proceso' },
-      { id: 1004, fecha: '2023-05-01', total: 59.99, estado: 'Entregado' },
-      { id: 1005, fecha: '2023-04-15', total: 149.95, estado: 'Cancelado' },
-    ]
-  })
-  
-  const editando = ref(false)
-  const usuarioEditado = ref({})
-  
-  const camposEditables = computed(() => {
-    const { nombre, nombreUsuario, ubicacion, telefono } = usuario.value
-    return { nombre, nombreUsuario, ubicacion, telefono }
-  })
-  
-  const inicialesUsuario = computed(() => {
-    return usuario.value.nombre
-      .split(' ')
-      .map(nombre => nombre[0])
-      .join('')
-      .toUpperCase()
-  })
-  
-  function iniciarEdicion() {
-    usuarioEditado.value = { ...camposEditables.value }
-    editando.value = true
+          <div v-if="pedidosPaginados.length === 0" class="no-pedidos">
+            <i class="fas fa-shopping-cart"></i>
+            <p>No hay pedidos que mostrar</p>
+            <button class="boton-principal">Ir a comprar</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted, watch } from 'vue'
+import { updateUserWeb, userAutenticado } from '@/Services/UsuarioService'
+import { generaPDFPedidoID, repitOrder } from '@/Services/PedidoService';
+
+// Estado reactivo
+const user = ref({});
+const paginaActual = ref(1);
+const pedidosPorPagina = 5;
+const editando = ref(false);
+const usuarioEditado = ref({});
+const guardando = ref(false);
+const hoveredPedido = ref(null);
+const avatarHover = ref(false);
+const filtroActual = ref('todos');
+const validationErrors = ref({})
+// Mounted hook
+onMounted(() => {
+  userAuth();
+});
+
+// Funciones
+const userAuth = async () => {
+  try {
+    const { data } = await userAutenticado();
+    user.value = data.datos;
+  } catch (error) {
+    console.error(error);
   }
-  
-  function guardarCambios() {
-    Object.assign(usuario.value, usuarioEditado.value)
+};
+
+const filtrarPedidos = (filtro) => {
+  filtroActual.value = filtro;
+  paginaActual.value = 1;
+};
+
+const pedidosFiltrados = computed(() => {
+  if (!user.value.pedidos) return [];
+
+  switch (filtroActual.value) {
+    case 'entregados':
+      return user.value.pedidos.filter(p => p.estado === 1);
+    case 'proceso':
+      return user.value.pedidos.filter(p => p.estado === 0);
+    default:
+      return user.value.pedidos;
+  }
+});
+
+// Computed properties
+const pedidosPaginados = computed(() => {
+  const inicio = (paginaActual.value - 1) * pedidosPorPagina;
+  const fin = inicio + pedidosPorPagina;
+  return pedidosFiltrados.value.slice(inicio, fin);
+});
+
+const totalPaginas = computed(() => {
+  return Math.max(1, Math.ceil(pedidosFiltrados.value.length / pedidosPorPagina));
+});
+
+const inicialesUsuario = computed(() => {
+  const nombreCompleto = `${user.value.nombre || ''} ${user.value.apellido || ''}`.trim();
+  return nombreCompleto
+    ? nombreCompleto.split(' ').map(nombre => nombre[0]).join('').toUpperCase()
+    : '';
+});
+
+const camposEditables = computed(() => {
+  const { nombre, apellido, direccion, telefono, genero, email, ci, nit } = user.value;
+  return { nombre, apellido, direccion, telefono, genero, email, ci, nit };
+});
+
+// Métodos
+const iniciarEdicion = () => {
+  usuarioEditado.value = { ...camposEditables.value };
+  editando.value = true;
+};
+
+const guardarCambios = async () => {
+  guardando.value = true
+  validationErrors.value = {}
+  try {
+    const { data } = await updateUserWeb(usuarioEditado.value)
+    console.log(data)
+    userAuth()
     editando.value = false
-  }
-  
-  function cancelarEdicion() {
-    editando.value = false
-  }
-  
-  function formatearEtiqueta(clave) {
-    const etiquetas = {
-      nombre: 'Nombre',
-      nombreUsuario: 'Nombre de usuario',
-      ubicacion: 'Ubicación',
-      telefono: 'Teléfono'
+  } catch (error) {
+    if (error.response && error.response.data && error.response.data.errors) {
+      validationErrors.value = error.response.data.errors
+    } else {
+      console.error(error)
     }
-    return etiquetas[clave] || clave
+  } finally {
+    guardando.value = false
   }
-  
-  function formatearFecha(fechaString) {
-    const opciones = { year: 'numeric', month: 'long', day: 'numeric' }
-    return new Date(fechaString).toLocaleDateString('es-ES', opciones)
+}
+
+
+const cancelarEdicion = () => {
+  validationErrors.value = {};
+  editando.value = false;
+};
+
+const cambiarPagina = (nuevaPagina) => {
+  if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas.value) {
+    paginaActual.value = nuevaPagina;
   }
-  
-  function formatearPrecio(precio) {
-    return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(precio)
+};
+const descargarDetallePedido = async (id) => {
+  try {
+    const response = await generaPDFPedidoID(id);
+    // Crea un objeto URL a partir de la respuesta
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `pedido_${id}.pdf`); // Nombre del archivo a descargar
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url); // Liberar el objeto URL
+  } catch (error) {
+    console.log(error);
   }
-  
-  function obtenerProgresoPedido(estado) {
-    const mapaProgreso = {
-      'En proceso': '25%',
-      'Enviado': '75%',
-      'Entregado': '100%',
-      'Cancelado': '100%'
-    }
-    return mapaProgreso[estado] || '0%'
+}
+const repetirPedido = async (pedido) => {
+  try {
+    console.log('Repitiendo pedido:', pedido.id);
+    const { data } = await repitOrder(pedido);
+    console.log('Pedido repetido:', data);
+  } catch (error) {
+    console.error('Error al repetir el pedido:', error);
   }
-  </script>
-  
-  <style scoped>
+};
+const formatearGenero = (genero) => {
+  const generos = {
+    'M': 'Masculino',
+    'F': 'Femenino',
+    'Otro': 'Otro'
+  }
+  return generos[genero] || 'No especificado'
+}
+const formatearEtiqueta = (clave) => {
+  const etiquetas = {
+    nombre: 'Nombre',
+    apellido: 'Apellidos',
+    direccion: 'Dirección',
+    telefono: 'Teléfono',
+    genero: 'Género',
+    email: 'Correo Electrónico',
+    ci: 'Cédula de Identidad',
+    nit: 'NIT',
+  };
+  return etiquetas[clave] || clave;
+};
+
+const formatearFecha = (fechaString) => {
+  const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
+  return new Date(fechaString).toLocaleDateString('es-ES', opciones);
+};
+
+const formatearPrecio = (precio) => {
+  return new Intl.NumberFormat('es-BO', {
+    style: 'currency',
+    currency: 'BOB',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(precio);
+};
+
+const obtenerProgresoPedido = (estado) => {
+  return estado === 1 ? '100%' : '60%';
+};
+
+// Watchers
+watch(filtroActual, () => {
+  paginaActual.value = 1;
+});
+</script>
+
+<style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css');
+
+/* Base Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  color: #1f2937;
+  line-height: 1.5;
+  background-color: #f9fafb;
+}
+
+/* Container */
+.contenedor-perfil {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 2rem;
+  color: #1f2937;
+  font-family: 'Inter', sans-serif;
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Header */
+.encabezado-perfil {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 2rem;
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.encabezado-perfil::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(90deg, #3B82F6, #10B981);
+}
+
+.encabezado-perfil:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+.avatar-perfil {
+  width: 110px;
+  height: 110px;
+  background: linear-gradient(135deg, #3B82F6, #2563EB);
+  color: white;
+  font-size: 2.5rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin-right: 2rem;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+  position: relative;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+}
+
+.avatar-perfil::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  background: linear-gradient(135deg, #3B82F6, #2563EB);
+  border-radius: 50%;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.avatar-hover {
+  transform: scale(1.08);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+}
+
+.avatar-hover::after {
+  opacity: 0.3;
+}
+
+.titulo-perfil h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, #3B82F6, #10B981);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+.titulo-perfil p {
+  font-size: 1.25rem;
+  color: #4b5563;
+  font-weight: 400;
+}
+
+/* Main Content */
+.contenido-perfil {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.member-badge {
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 2px 8px rgba(213, 119, 6, 0.3);
+  transition: all 0.3s ease;
+}
+
+.member-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(213, 119, 6, 0.4);
+}
+
+.info-perfil,
+.historial-pedidos {
+  background-color: #fff;
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.info-perfil::before,
+.historial-pedidos::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(90deg, #3B82F6, #10B981);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.info-perfil:hover::before,
+.historial-pedidos:hover::before {
+  opacity: 1;
+}
+
+.info-perfil:hover,
+.historial-pedidos:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+h2 {
+  font-size: 1.75rem;
+  color: #1f2937;
+  margin: 0;
+  font-weight: 700;
+  position: relative;
+  display: inline-block;
+}
+
+h2::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, #3B82F6, #10B981);
+  border-radius: 3px;
+}
+
+.grid-info {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+
+.item-info:hover {
+  background-color: #f9fafb;
+  transform: translateY(-2px);
+}
+
+.item-info strong {
+  font-size: 0.875rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.info-value {
+  font-size: 1rem;
+  color: #1f2937;
+  padding: 0.5rem 0;
+  font-weight: 500;
+}
+
+.input-container {
+  position: relative;
+}
+
+.input-animated {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: #f9fafb;
+  font-family: 'Inter', sans-serif;
+}
+
+.input-animated:focus {
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  background: white;
+  outline: none;
+}
+
+.input-error {
+  border-color: #ef4444;
+  background-color: #fef2f2;
+}
+
+.input-error:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+  display: block;
+  font-weight: 500;
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}
+
+.botones-edicion {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+.boton-principal,
+.boton-secundario {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+}
+
+.boton-principal {
+  background: linear-gradient(135deg, #3B82F6, #2563EB);
+  color: white;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+}
+
+.boton-secundario {
+  background: #f3f4f6;
+  color: #4b5563;
+  border: 2px solid #e5e7eb;
+}
+
+.boton-principal:hover,
+.boton-secundario:hover {
+  transform: translateY(-3px) scale(1.03);
+}
+
+.boton-principal:hover {
+  box-shadow: 0 6px 15px rgba(37, 99, 235, 0.4);
+}
+
+.boton-secundario:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border-color: #d1d5db;
+}
+
+.boton-principal:active,
+.boton-secundario:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.boton-principal:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Filters */
+.filtros-pedidos {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.filtro-btn {
+  padding: 0.5rem 1.25rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 2rem;
+  background: white;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  font-size: 0.875rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.filtro-btn.active {
+  background: linear-gradient(135deg, #3B82F6, #2563EB);
+  border-color: #3B82F6;
+  color: white;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+.filtro-btn:hover:not(.active) {
+  border-color: #3B82F6;
+  color: #3B82F6;
+  transform: translateY(-2px);
+}
+
+/* Pagination */
+.paginacion-superior {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 0.5rem;
+  background-color: #f9fafb;
+  border-radius: 2rem;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.boton-pagina {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 50%;
+  background: white;
+  color: #4b5563;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  font-size: 0.875rem;
+}
+
+.boton-pagina:not(:disabled):hover {
+  border-color: #3B82F6;
+  color: #3B82F6;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
+}
+
+.boton-pagina:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.paginas-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.pagina-actual {
+  color: #3B82F6;
+  font-size: 1.125rem;
+}
+
+.separador {
+  color: #6b7280;
+}
+
+/* Orders List */
+.lista-pedidos {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.item-pedido {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #f3f4f6;
+}
+
+.item-pedido::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(to bottom, #3B82F6, #10B981);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.item-hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  border-color: #e5e7eb;
+}
+
+.item-hover::before {
+  opacity: 1;
+}
+
+.encabezado-pedido {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.id-pedido {
+  font-weight: 600;
+  color: #3B82F6;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+}
+
+.fecha-pedido {
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.detalles-pedido {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.total-pedido {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.estado-pedido {
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.estado-pedido.entregado {
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: white;
+}
+
+.estado-pedido.proceso {
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  color: white;
+}
+
+.progreso-pedido {
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.barra-progreso {
+  height: 100%;
+  background: linear-gradient(90deg, #3B82F6, #10B981);
+  border-radius: 3px;
+  transition: width 0.5s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.progreso-animation {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.4) 50%,
+      rgba(255, 255, 255, 0) 100%);
+  animation: shine 2s infinite;
+}
+
+@keyframes shine {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.acciones-pedido {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.boton-accion {
+  flex: 1;
+  min-width: 140px;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+}
+
+.boton-accion.descargar {
+  background: linear-gradient(135deg, #4B5563, #374151);
+  color: white;
+  box-shadow: 0 4px 10px rgba(55, 65, 81, 0.3);
+}
+
+.boton-accion.repetir {
+  background: linear-gradient(135deg, #3B82F6, #2563EB);
+  color: white;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+}
+
+.boton-accion:hover {
+  transform: translateY(-3px) scale(1.03);
+}
+
+.boton-accion.descargar:hover {
+  box-shadow: 0 6px 15px rgba(55, 65, 81, 0.4);
+}
+
+.boton-accion.repetir:hover {
+  box-shadow: 0 6px 15px rgba(37, 99, 235, 0.4);
+}
+
+.boton-accion:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Empty state */
+.no-pedidos {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  background-color: #f9fafb;
+  border-radius: 1rem;
+  border: 2px dashed #e5e7eb;
+  gap: 1rem;
+  text-align: center;
+}
+
+.no-pedidos i {
+  font-size: 3rem;
+  color: #9ca3af;
+  margin-bottom: 1rem;
+}
+
+.no-pedidos p {
+  font-size: 1.125rem;
+  color: #4b5563;
+  margin-bottom: 1.5rem;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
   .contenedor-perfil {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
-    background-color: #ffffff;
-    color: #333;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }
-  
-  .encabezado-perfil {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    margin-bottom: 2rem;
-    background-color: #fff;
     padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
-  
-  .avatar-perfil {
-    width: 80px;
-    height: 80px;
-    background-color: #3498db;
-    color: white;
-    font-size: 2rem;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    margin-right: 1.5rem;
-  }
-  
-  .titulo-perfil h1 {
-    font-size: 2rem;
-    color: #2c3e50;
-    margin-bottom: 0.25rem;
-  }
-  
-  .titulo-perfil p {
-    font-size: 1rem;
-    color: #7f8c8d;
-  }
-  
+}
+
+@media (max-width: 1024px) {
   .contenido-perfil {
-    display: grid;
     grid-template-columns: 1fr;
     gap: 2rem;
   }
   
-  @media (min-width: 768px) {
-    .contenido-perfil {
-      grid-template-columns: 1fr 1fr;
-    }
+  .info-perfil, 
+  .historial-pedidos {
+    width: 100%;
   }
   
-  .info-perfil, .historial-pedidos {
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  .encabezado-perfil {
     padding: 1.5rem;
   }
   
-  h2 {
-    font-size: 1.5rem;
-    color: #2c3e50;
-    margin-bottom: 1rem;
-    border-bottom: 2px solid #3498db;
-    padding-bottom: 0.5rem;
+  .titulo-perfil h1 {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .contenedor-perfil {
+    padding: 1rem;
   }
   
   .grid-info {
-    display: grid;
     grid-template-columns: 1fr;
-    gap: 1rem;
   }
   
-  @media (min-width: 480px) {
-    .grid-info {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-  
-  .item-info {
-    display: flex;
+  .acciones-pedido {
     flex-direction: column;
   }
   
-  .item-info strong {
-    font-weight: bold;
-    margin-bottom: 0.25rem;
-    color: #34495e;
+  .boton-accion {
+    width: 100%;
   }
   
-  .item-info input {
-    padding: 0.5rem;
-    border: 1px solid #bdc3c7;
-    border-radius: 4px;
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .filtros-pedidos {
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 1rem;
+  }
+  
+  .filtro-btn {
+    flex: 1;
+    text-align: center;
+    padding: 0.5rem 0.75rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .encabezado-perfil {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.5rem 1rem;
+  }
+  
+  .avatar-perfil {
+    margin: 0 0 1.5rem 0;
+  }
+  
+  .titulo-perfil h1 {
+    font-size: 1.75rem;
+  }
+  
+  .titulo-perfil p {
     font-size: 1rem;
   }
   
   .botones-edicion {
-    margin-top: 1rem;
-    display: flex;
-    gap: 1rem;
-  }
-  
-  .boton-editar, .boton-guardar, .boton-cancelar {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
-  }
-  
-  .boton-editar {
-    background-color: #3498db;
-    color: white;
-  }
-  
-  .boton-guardar {
-    background-color: #2ecc71;
-    color: white;
-  }
-  
-  .boton-cancelar {
-    background-color: #e74c3c;
-    color: white;
-  }
-  
-  .boton-editar:hover, .boton-guardar:hover, .boton-cancelar:hover {
-    opacity: 0.9;
-  }
-  
-  .lista-pedidos {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+    justify-content: center;
   }
   
   .item-pedido {
-    border: 1px solid #ecf0f1;
-    border-radius: 8px;
-    padding: 1rem;
-    transition: box-shadow 0.3s ease;
-    background-color: #f9f9f9;
+    padding: 1.25rem 1rem;
   }
   
-  .item-pedido:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  .encabezado-pedido {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem;
-  }
-  
-  .id-pedido {
-    font-weight: bold;
-    color: #3498db;
-  }
-  
-  .fecha-pedido {
-    color: #7f8c8d;
-  }
-  
+  .encabezado-pedido,
   .detalles-pedido {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-  }
-  
-  .total-pedido {
-    font-weight: bold;
-    font-size: 1.1rem;
-    color: #2c3e50;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
   }
   
   .estado-pedido {
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    font-weight: bold;
-    text-transform: uppercase;
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .contenedor-perfil {
+    padding: 0.75rem;
   }
   
-  .estado-pedido.entregado {
-    background-color: #2ecc71;
-    color: white;
+  .paginacion-superior {
+    width: 100%;
   }
   
-  .estado-pedido.enviado {
-    background-color: #f39c12;
-    color: white;
+  .filtro-btn {
+    font-size: 0.75rem;
+    padding: 0.5rem;
   }
   
-  .estado-pedido.en {
-    background-color: #3498db;
-    color: white;
+  .boton-principal,
+  .boton-secundario,
+  .boton-accion {
+    width: 100%;
+    justify-content: center;
   }
   
-  .estado-pedido.cancelado {
-    background-color: #e74c3c;
-    color: white;
+  .botones-edicion {
+    flex-direction: column;
+    width: 100%;
   }
-  
-  .progreso-pedido {
-    height: 4px;
-    background-color: #ecf0f1;
-    border-radius: 2px;
-    overflow: hidden;
-  }
-  
-  .barra-progreso {
-    height: 100%;
-    background-color: #3498db;
-    transition: width 0.3s ease;
-  }
-  </style>
+}
+</style>

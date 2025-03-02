@@ -1,6 +1,7 @@
 <template>
   <div class="font-container">
     <CarruselDeImagenesComponent />
+    <ProductsRecienLlegadosView />
     <ProductsBannerComponent />
   </div>
 </template>
@@ -8,6 +9,7 @@
 <script setup>
 import CarruselDeImagenesComponent from '@/Components/InicioComponents/CarruselDeImagenesComponent.vue';
 import ProductsBannerComponent from '@/Components/InicioComponents/ProductsBannerComponent.vue';
+import ProductsRecienLlegadosView from '@/Components/InicioComponents/ProductsRecienLlegadosView.vue';
 </script>
 
 <style>

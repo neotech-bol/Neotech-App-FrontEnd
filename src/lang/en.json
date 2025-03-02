@@ -1,0 +1,44 @@
+{
+    "announcement": "The fastest shopping experience in the country",
+    "header": {
+        "account": "Account",
+        "login": "Log in",
+        "favorites": "Favorites",
+        "cart": "Cart",
+        "searchPlaceholder": "What are you looking for this cycle?",
+        "catalog": "View catalog",
+        "help": "Help",
+        "trackOrder": "Track Order"
+    },
+    "nav": {
+        "home": "Home",
+        "products": "Products",
+        "categories": "Categories",
+        "about": "About Us",
+        "contact": "Contact"
+    },
+    "categories": [
+        { "id": 1, "name": "Electronics" },
+        { "id": 2, "name": "Clothing" },
+        { "id": 3, "name": "Home" },
+        { "id": 4, "name": "Sports" },
+        { "id": 5, "name": "Books" },
+        { "id": 6, "name": "Toys" },
+        { "id": 7, "name": "Beauty" },
+        { "id": 8, "name": "Food" }
+    ],
+    "carousel": [
+        {
+            "alt": "Image 1",
+            "ofertas_disponibles": "Limited time offers available! <br/>",
+            "description": "Product Description 1"
+        },
+        {
+            "alt": "Image 1",
+            "descuentos_disponibles": "Limited time offers available! <br/>",
+            "description": "Product Description 1"
+        }
+    ]
+
+    
+}

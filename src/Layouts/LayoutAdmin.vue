@@ -3,7 +3,7 @@
     <nav :class="['sidebar', { 'open': sidebarOpen }]">
       <div class="sidebar-header">
         <h3>Admin Panel</h3>
-        <button @click="toggleSidebar" class="close-sidebar">
+        <button @click="toggleSidebar" class="close-sidebar d-md-none">
           <i class="bi bi-x-lg"></i>
         </button>
       </div>
@@ -32,17 +32,17 @@
     <div class="content-wrapper" :class="{ 'sidebar-open': sidebarOpen }">
       <header class="top-navbar">
         <div class="container-fluid">
-          <button class="sidebar-toggle" @click="toggleSidebar">
+          <button class="sidebar-toggle d-md-none" @click="toggleSidebar">
             <i :class="['bi', sidebarOpen ? 'bi-x-lg' : 'bi-list']"></i>
           </button>
           <router-link to="/" class="home-link">
             <i class="bi bi-house-door"></i>
-            <span>Home</span>
+            <span class="d-none d-md-inline">Home</span>
           </router-link>
           <div class="user-menu">
             <button class="user-menu-toggle" @click="toggleUserMenu">
               <i class="bi bi-person-circle"></i>
-              <span>{{ currentUser.name }}</span>
+              <span class="d-none d-md-inline">{{ currentUser.name }}</span>
               <i class="bi bi-chevron-down"></i>
             </button>
             <transition name="fade">
@@ -59,7 +59,7 @@
           </div>
         </div>
       </header>
-      <main class="main-content">
+      <main class="main-content" @click="closeRouterViewOnMobile">
         <RouterView />
       </main>
     </div>
@@ -72,7 +72,7 @@ import { useRouter, useRoute } from 'vue-router';
 
 const router = useRouter();
 const route = useRoute();
-const sidebarOpen = ref(window.innerWidth > 768);
+const sidebarOpen = ref(window.innerWidth >= 768);
 const userMenuOpen = ref(false);
 
 const toggleSidebar = () => {
@@ -84,8 +84,15 @@ const toggleUserMenu = () => {
 };
 
 const closeSidebarOnMobile = () => {
-  if (window.innerWidth <= 768) {
+  if (window.innerWidth < 768) {
     sidebarOpen.value = false;
+  }
+};
+
+const closeRouterViewOnMobile = () => {
+  if (window.innerWidth < 768) {
+    sidebarOpen.value = false;
+    userMenuOpen.value = false;
   }
 };
 
@@ -96,32 +103,31 @@ const menuItems = ref([
     icon: 'bi-speedometer2'
   },
   {
-    name: 'Usuarios',
-    path: '/usuarios',
-    icon: 'bi-people',
-  },
-  {
-    name: 'Usuarios',
+    name: 'Users',
     path: '/usuarios',
     icon: 'bi-people',
     subItems: [
-      { name: 'Lista de Usuarios', path: '/usuarios', icon: 'bi-list-ul' },
-      { name: 'Agregar Usuario', path: '/usuarios/agregar', icon: 'bi-person-plus' },
+      { name: 'User List', path: '/usuarios', icon: 'bi-list-ul' },
+      { name: 'Add User', path: '/users/add', icon: 'bi-person-plus' },
     ]
   },
   {
     name: 'Catalogos',
-    path: '/catalogos',
+/*     path: '/catalogos', */
     icon: 'bi-collection',
+    subItems: [
+      { name: 'Catalogos Activos', path: '/catalogos', icon: 'bi-list-ul' },
+      { name: 'Istorial de Catalogos', path: '/catalgos-historiales', icon: 'bi-plus-circle' },
+    ]
   },
   {
-    name: 'Categorias',
-    path: '/categorias',
+    name: 'Categories',
+    path: '/categorias-panel',
     icon: 'bi-tags'
   },
   {
-    name: 'Productos',
-    path: '/productos',
+    name: 'Products',
+    path: '/productos-admin',
     icon: 'bi-box-seam',
   },
   {
@@ -138,6 +144,11 @@ const menuItems = ref([
     name: 'Cupones',
     path: '/cupones',
     icon: 'bi-bell-fill'
+  },
+  {
+    name:'Contactanos',
+    path: '/contactanos-admin',
+    icon: 'bi-envelope',
   }
 ]);
 
@@ -176,7 +187,7 @@ const logout = () => {
 };
 
 const handleResize = () => {
-  sidebarOpen.value = window.innerWidth > 768;
+  sidebarOpen.value = window.innerWidth >= 768;
 };
 
 onMounted(() => {
@@ -189,17 +200,19 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@import 'bootstrap-icons/font/bootstrap-icons.css';
+
 .admin-layout {
   display: flex;
   min-height: 100vh;
   background-color: #f8f9fa;
-  position: relative;
 }
 
 .sidebar {
   width: 250px;
-  background-color: #2c3e50;
-  color: #ecf0f1;
+  background-color: #343a40;
+  color: #fff;
   transition: all 0.3s ease;
   overflow-y: auto;
   position: fixed;
@@ -215,8 +228,7 @@ onUnmounted(() => {
 
 .sidebar-header {
   padding: 1rem;
-  background-color: #34495e;
-  text-align: center;
+  background-color: #212529;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -231,7 +243,7 @@ onUnmounted(() => {
 .close-sidebar {
   background: none;
   border: none;
-  color: #ecf0f1;
+  color: #fff;
   font-size: 1.2rem;
   cursor: pointer;
 }
@@ -246,7 +258,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   padding: 0.75rem 1rem;
-  color: #ecf0f1;
+  color: #fff;
   text-decoration: none;
   transition: all 0.2s ease;
   cursor: pointer;
@@ -254,7 +266,7 @@ onUnmounted(() => {
 
 .sidebar-link:hover,
 .sidebar-link.active {
-  background-color: #34495e;
+  background-color: #495057;
 }
 
 .sidebar-link i {
@@ -274,21 +286,21 @@ onUnmounted(() => {
 .submenu {
   list-style-type: none;
   padding-left: 2rem;
-  background-color: #34495e;
+  background-color: #495057;
 }
 
 .submenu-link {
   display: flex;
   align-items: center;
   padding: 0.5rem 1rem;
-  color: #ecf0f1;
+  color: #fff;
   text-decoration: none;
   transition: all 0.2s ease;
 }
 
 .submenu-link:hover,
 .submenu-link.active {
-  background-color: #2c3e50;
+  background-color: #6c757d;
 }
 
 .submenu-link i {
@@ -300,16 +312,18 @@ onUnmounted(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  margin-left: 250px;
+  margin-left: 0;
   transition: all 0.3s ease;
 }
 
-.content-wrapper.sidebar-open {
-  margin-left: 250px;
+@media (min-width: 768px) {
+  .content-wrapper {
+    margin-left: 250px;
+  }
 }
 
 .top-navbar {
-  background-color: #ffffff;
+  background-color: #fff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 0.5rem 1rem;
 }
@@ -324,7 +338,7 @@ onUnmounted(() => {
 .user-menu-toggle {
   background: none;
   border: none;
-  color: #2c3e50;
+  color: #343a40;
   font-size: 1rem;
   cursor: pointer;
   display: flex;
@@ -335,7 +349,7 @@ onUnmounted(() => {
 
 .home-link:hover,
 .user-menu-toggle:hover {
-  color: #3498db;
+  color: #007bff;
 }
 
 .home-link {
@@ -359,7 +373,7 @@ onUnmounted(() => {
   position: absolute;
   top: 100%;
   right: 0;
-  background-color: #ffffff;
+  background-color: #fff;
   border: 1px solid #e0e0e0;
   border-radius: 4px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -374,7 +388,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   padding: 0.5rem 1rem;
-  color: #2c3e50;
+  color: #343a40;
   text-decoration: none;
   transition: all 0.2s ease;
 }
@@ -393,7 +407,7 @@ onUnmounted(() => {
 }
 
 .logout-link {
-  color: #e74c3c !important;
+  color: #dc3545 !important;
 }
 
 .logout-link:hover {
@@ -409,7 +423,7 @@ onUnmounted(() => {
 
 .sidebar-toggle {
   background-color: transparent;
-  color: #2c3e50;
+  color: #343a40;
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
@@ -441,19 +455,18 @@ onUnmounted(() => {
   opacity: 0;
 }
 
-@media (max-width: 768px) {
-  .sidebar {
+/* Responsive styles for Bootstrap tables */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 767.98px) {
+  .table-responsive-md {
+    display: block;
     width: 100%;
-    max-width: 300px;
-  }
-
-  .content-wrapper {
-    margin-left: 0 !important;
-  }
-
-  .home-link span,
-  .user-menu-toggle span {
-    display: none;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 </style>

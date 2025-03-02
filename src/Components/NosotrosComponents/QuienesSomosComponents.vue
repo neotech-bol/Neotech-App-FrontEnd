@@ -1,191 +1,416 @@
 <template>
-    <div class="about-container">
-      <div class="about-grid">
-        <div class="image-grid">
-          <!-- Imagen del trabajador (Tamaño recomendado: 600x800px) -->
-          <div class="image-card large">
-            <img src="../../../public/imagenes/working-business-project-qjpx3orx3fd4or633iazgbh68w89ipbg1fzbd65f0g.jpg" alt="Trabajador con tablet" />
-            <span class="image-size-note">Tamaño recomendado: 600x800px</span>
-          </div>
-          <!-- Imagen de contenedores (Tamaño recomendado: 400x300px) -->
-          <div class="image-card small">
-            <img src="../../../public/imagenes/sobre-nosotros-400x300.jpg" alt="Contenedores" />
-            <span class="image-size-note">Tamaño recomendado: 400x300px</span>
-          </div>
-          <!-- Imagen del barco (Tamaño recomendado: 400x300px) -->
-          <div class="image-card small">
-            <img src="../../../public/imagenes/depositphotos_39479909-stock-photo-about-us-blue-marker.jpg" alt="Barco de carga" />
-            <span class="image-size-note">Tamaño recomendado: 400x300px</span>
+  <div class="about-container">
+    <div class="about-grid">
+      <div class="image-gallery">
+        <div 
+          v-for="(image, index) in images" 
+          :key="index" 
+          :class="['image-card', image.size]"
+          @mouseenter="hoveredImage = index"
+          @mouseleave="hoveredImage = null"
+        >
+          <img 
+            :src="image.src" 
+            :alt="image.alt" 
+            loading="lazy"
+            :class="['gallery-image', `img-${index + 1}`]"
+          />
+          <div class="image-overlay" :class="{ active: hoveredImage === index }">
+            <span class="image-size-note">{{ image.sizeText }}</span>
           </div>
         </div>
-  
-        <div class="content-section">
+      </div>
+
+      <div class="content-section" :class="{ 'fade-in': contentLoaded }">
+        <div class="section-header">
           <h2 class="title">¿Quiénes <span class="highlight">Somos</span>?</h2>
           <h3 class="subtitle">LIDERANDO LA IMPORTACIÓN INTELIGENTE EN BOLIVIA DESDE 2019</h3>
+        </div>
+
+        <div class="description">
+          <div v-for="(paragraph, index) in paragraphs" :key="index" class="paragraph-container">
+            <p>{{ paragraph }}</p>
+          </div>
           
-          <div class="description">
-            <p>
-              NeoTech - Bol fue fundada en 2019 por Jaime Jaldín Ninavia con el objetivo de ofrecer a los bolivianos una forma 
-              innovadora y accesible de adquirir productos de calidad internacional. Nos especializamos en la Importación de 
-              bienes por ciclos, adaptándonos a las necesidades de nuestros clientes y asegurando siempre las mejores 
-              condiciones en precio y disponibilidad. Desde nuestros inicios, nos hemos comprometido a combinar tecnología y 
-              eficiencia logística para conectar a Bolivia con las mejores ofertas del mercado global.
-            </p>
-            
-            <p>
-              Actualmente, contamos con una base de más de 2,400 clientes satisfechos en todo el país, quienes confían en 
-              nuestra experiencia y profesionalismo. Aunque operamos principalmente de forma virtual a través de redes sociales, 
-              también ofrecemos atención personalizada en nuestra oficina ubicada en Cochabamba. En NeoTech - Bol, nuestro 
-              propósito es ser el puente entre las oportunidades del comercio internacional y las familias bolivianas, haciendo que 
-              cada compra sea sencilla, confiable y beneficiosa.
-            </p>
+          <div class="stats-container">
+            <div v-for="(stat, index) in stats" :key="index" class="stat-item">
+              <div class="stat-value">{{ stat.value }}</div>
+              <div class="stat-label">{{ stat.label }}</div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </template>
+  </div>
+</template>
+
+<script setup>
+import { ref, inject, watchEffect, onMounted } from 'vue'
+
+const selectedLocation = inject('selectedLocation', ref('cochabamba'));
+const hoveredImage = ref(null);
+const contentLoaded = ref(false);
+
+// Datos dinámicos para las imágenes
+const images = ref([
+  {
+    src: "/imagenes/working-business-project.jpg",
+    alt: "Trabajador con tablet",
+    size: "large",
+    sizeText: "Tamaño recomendado: 600x800px"
+  },
+  {
+    src: "/imagenes/sobre-nosotros.jpg",
+    alt: "Contenedores",
+    size: "small",
+    sizeText: "Tamaño recomendado: 400x300px"
+  },
+  {
+    src: "/imagenes/about-us-marker.jpg",
+    alt: "Barco de carga",
+    size: "small",
+    sizeText: "Tamaño recomendado: 400x300px"
+  }
+]);
+
+// Texto para los párrafos
+const paragraphs = ref([
+  "NeoTech - Bol fue fundada en 2019 por Jaime Jaldín Ninavia con el objetivo de ofrecer a los bolivianos una forma innovadora y accesible de adquirir productos de calidad internacional. Nos especializamos en la Importación de bienes por ciclos, adaptándonos a las necesidades de nuestros clientes y asegurando siempre las mejores condiciones en precio y disponibilidad.",
+  "Actualmente, contamos con una base de más de 2,400 clientes satisfechos en todo el país, quienes confían en nuestra experiencia y profesionalismo. Aunque operamos principalmente de forma virtual a través de redes sociales, también ofrecemos atención personalizada en nuestra oficina ubicada en Cochabamba."
+]);
+
+// Estadísticas destacadas
+const stats = ref([
+  { value: "2,400+", label: "Clientes Satisfechos" },
+  { value: "5", label: "Años de Experiencia" },
+  { value: "3", label: "Ciudades Principales" }
+]);
+
+const updateColors = (location) => {
+  let primaryColor, hoverColor;
   
-  <style scoped>
-  .about-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 40px 20px;
+  switch(location) {
+    case 'la-paz':
+      primaryColor = '#f8a812';
+      hoverColor = '#e69711';
+      break;
+    case 'santa-cruz':
+      primaryColor = '#4CAF50';
+      hoverColor = '#388E3C';
+      break;
+    default: // cochabamba
+      primaryColor = '#3B82F6';
+      hoverColor = '#2563eb';
   }
   
+  document.documentElement.style.setProperty('--primary-color', primaryColor);
+  document.documentElement.style.setProperty('--primary-hover-color', hoverColor);
+};
+
+const preloadImages = () => {
+  const imagePromises = images.value.map(image => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.src = image.src;
+      img.onload = resolve;
+      img.onerror = reject;
+    });
+  });
+  
+  Promise.all(imagePromises)
+    .then(() => {
+      contentLoaded.value = true;
+    })
+    .catch(error => {
+      console.error('Error al cargar imágenes:', error);
+      contentLoaded.value = true; // Mostrar el contenido de todas formas
+    });
+};
+
+watchEffect(() => {
+  if (selectedLocation && selectedLocation.value) {
+    updateColors(selectedLocation.value);
+  }
+});
+
+onMounted(() => {
+  if (selectedLocation && selectedLocation.value) {
+    updateColors(selectedLocation.value);
+  }
+  preloadImages();
+});
+</script>
+
+<style scoped>
+.about-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 60px 20px;
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+}
+
+/* Galería de imágenes mejorada */
+.image-gallery {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 200px);
+  gap: 20px;
+}
+
+.image-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.image-card.large {
+  grid-row: 1 / 3;
+  grid-column: 1;
+  height: 420px;
+}
+
+.image-card.small {
+  height: 200px;
+}
+
+.gallery-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.image-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.image-card:hover .gallery-image {
+  transform: scale(1.08);
+}
+
+.image-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  padding: 15px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.image-overlay.active {
+  opacity: 1;
+}
+
+.image-size-note {
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* Sección de contenido */
+.content-section {
+  padding: 20px 0;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.content-section.fade-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.section-header {
+  margin-bottom: 40px;
+}
+
+.title {
+  font-size: 2.75rem;
+  font-weight: 800;
+  color: #333;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.title::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  width: 80px;
+  height: 4px;
+  background-color: var(--primary-color);
+  border-radius: 2px;
+}
+
+.highlight {
+  color: var(--primary-color);
+  position: relative;
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  color: #666;
+  margin-top: 20px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.description {
+  color: #555;
+  line-height: 1.8;
+}
+
+.paragraph-container {
+  margin-bottom: 25px;
+}
+
+.paragraph-container p {
+  text-align: justify;
+  font-size: 1.05rem;
+}
+
+/* Estadísticas */
+.stats-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 40px;
+  text-align: center;
+}
+
+.stat-item {
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+}
+
+/* Diseño Responsive */
+@media (max-width: 1024px) {
   .about-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
     gap: 40px;
-    align-items: center; /* Cambiado de start a center */
-  }
-  
-  .image-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(2, 200px);
-    gap: 20px;
-  }
-  
-  .image-card {
-    position: relative;
-    overflow: hidden;
-    border-radius: 8px;
-  }
-  
-  .image-card.large {
-    grid-row: 1 / 3;
-    grid-column: 1;
-    height: 420px;
-  }
-  
-  .image-card.small {
-    height: 200px;
-  }
-  
-  .image-card img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s ease;
-  }
-  
-  .image-card:hover img {
-    transform: scale(1.05);
-  }
-
-  .image-size-note {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: rgba(0,0,0,0.7);
-    color: white;
-    padding: 5px;
-    font-size: 0.8rem;
-    text-align: center;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-
-  .image-card:hover .image-size-note {
-    opacity: 1;
-  }
-  
-  .content-section {
-    padding: 20px 0;
   }
   
   .title {
-    font-size: 2.5rem;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 1rem;
+    font-size: 2.25rem;
+  }
+}
+
+@media (max-width: 968px) {
+  .about-grid {
+    grid-template-columns: 1fr;
+    gap: 50px;
+  }
+
+  .image-gallery {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 350px 200px;
+    order: 1;
+  }
+
+  .content-section {
+    order: 0;
+  }
+
+  .image-card.large {
+    grid-row: auto;
+    grid-column: span 2;
+    height: 350px;
+  }
+
+  .image-card.small {
+    height: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .stats-container {
+    grid-template-columns: repeat(2, 1fr);
   }
   
-  .highlight {
-    color: #007bff;
+  .stat-item:last-child {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 640px) {
+  .about-container {
+    padding: 40px 20px;
   }
   
+  .title {
+    font-size: 2rem;
+  }
+
   .subtitle {
-    font-size: 1.2rem;
-    color: #666;
-    margin-bottom: 2rem;
-    font-weight: 500;
+    font-size: 1rem;
   }
-  
-  .description {
-    color: #555;
-    line-height: 1.6;
-  }
-  
-  .description p {
-    margin-bottom: 1.5rem;
-    text-align: justify;
-  }
-  
-  /* Responsive Design */
-  @media (max-width: 968px) {
-    .about-grid {
-      grid-template-columns: 1fr;
-    }
-  
-    .image-grid {
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: 300px 150px;
-    }
-  
-    .image-card.large {
-      grid-row: auto;
-      grid-column: span 2;
-      height: 300px;
-    }
 
-    .image-card.small {
-      height: 150px;
-    }
+  .image-gallery {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(3, auto);
+    gap: 15px;
   }
-  
-  @media (max-width: 640px) {
-    .title {
-      font-size: 2rem;
-    }
-  
-    .subtitle {
-      font-size: 1rem;
-    }
-  
-    .image-grid {
-      grid-template-columns: 1fr;
-      grid-template-rows: 250px 150px 150px;
-    }
-  
-    .image-card.large {
-      grid-column: span 1;
-      height: 250px;
-    }
 
-    .image-card.small {
-      height: 150px;
-    }
+  .image-card.large {
+    grid-column: span 1;
+    height: 250px;
   }
-  </style>
+
+  .image-card.small {
+    height: 180px;
+  }
+  
+  .stats-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .stat-item {
+    padding: 15px;
+  }
+  
+  .stat-item:last-child {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .image-card.large,
+  .image-card.small {
+    height: 200px;
+  }
+}
+</style>
