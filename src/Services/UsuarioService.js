@@ -32,3 +32,7 @@ export const updateUserWeb = (formulario) => {
 export const obtenerPermisos = () => {
     return http().get(`${urlBase}usuario-permiso`);
 }
+
+export const updateDatosInfoUser = (formulario) => {
+    return http().put(`${urlBase}user/update-basic-info`, formulario)
+}

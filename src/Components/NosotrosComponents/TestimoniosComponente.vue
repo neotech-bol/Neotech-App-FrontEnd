@@ -116,7 +116,7 @@ onMounted(() => {
 </script>
 <style scoped>
 .testimonials {
-  max-width: 1200px;
+  max-width: 1440px;
   margin: 60px auto;
   padding: 0 20px;
   position: relative;

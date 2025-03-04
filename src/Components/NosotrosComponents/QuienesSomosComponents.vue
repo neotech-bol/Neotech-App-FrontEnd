@@ -2,19 +2,9 @@
   <div class="about-container">
     <div class="about-grid">
       <div class="image-gallery">
-        <div 
-          v-for="(image, index) in images" 
-          :key="index" 
-          :class="['image-card', image.size]"
-          @mouseenter="hoveredImage = index"
-          @mouseleave="hoveredImage = null"
-        >
-          <img 
-            :src="image.src" 
-            :alt="image.alt" 
-            loading="lazy"
-            :class="['gallery-image', `img-${index + 1}`]"
-          />
+        <div v-for="(image, index) in images" :key="index" :class="['image-card', image.size]"
+          @mouseenter="hoveredImage = index" @mouseleave="hoveredImage = null">
+          <img :src="image.src" :alt="image.alt" loading="lazy" :class="['gallery-image', `img-${index + 1}`]" />
           <div class="image-overlay" :class="{ active: hoveredImage === index }">
             <span class="image-size-note">{{ image.sizeText }}</span>
           </div>
@@ -31,7 +21,7 @@
           <div v-for="(paragraph, index) in paragraphs" :key="index" class="paragraph-container">
             <p>{{ paragraph }}</p>
           </div>
-          
+
           <div class="stats-container">
             <div v-for="(stat, index) in stats" :key="index" class="stat-item">
               <div class="stat-value">{{ stat.value }}</div>
@@ -46,8 +36,6 @@
 
 <script setup>
 import { ref, inject, watchEffect, onMounted } from 'vue'
-
-const selectedLocation = inject('selectedLocation', ref('cochabamba'));
 const hoveredImage = ref(null);
 const contentLoaded = ref(false);
 
@@ -86,26 +74,6 @@ const stats = ref([
   { value: "3", label: "Ciudades Principales" }
 ]);
 
-const updateColors = (location) => {
-  let primaryColor, hoverColor;
-  
-  switch(location) {
-    case 'la-paz':
-      primaryColor = '#f8a812';
-      hoverColor = '#e69711';
-      break;
-    case 'santa-cruz':
-      primaryColor = '#4CAF50';
-      hoverColor = '#388E3C';
-      break;
-    default: // cochabamba
-      primaryColor = '#3B82F6';
-      hoverColor = '#2563eb';
-  }
-  
-  document.documentElement.style.setProperty('--primary-color', primaryColor);
-  document.documentElement.style.setProperty('--primary-hover-color', hoverColor);
-};
 
 const preloadImages = () => {
   const imagePromises = images.value.map(image => {
@@ -116,7 +84,7 @@ const preloadImages = () => {
       img.onerror = reject;
     });
   });
-  
+
   Promise.all(imagePromises)
     .then(() => {
       contentLoaded.value = true;
@@ -127,23 +95,15 @@ const preloadImages = () => {
     });
 };
 
-watchEffect(() => {
-  if (selectedLocation && selectedLocation.value) {
-    updateColors(selectedLocation.value);
-  }
-});
 
 onMounted(() => {
-  if (selectedLocation && selectedLocation.value) {
-    updateColors(selectedLocation.value);
-  }
   preloadImages();
 });
 </script>
 
 <style scoped>
 .about-container {
-  max-width: 1200px;
+  max-width: 1440px;
   margin: 0 auto;
   padding: 60px 20px;
 }
@@ -318,12 +278,12 @@ onMounted(() => {
   font-weight: 500;
 }
 
-/* Diseño Responsive */
+/* Diseño Responsive Mejorado */
 @media (max-width: 1024px) {
   .about-grid {
     gap: 40px;
   }
-  
+
   .title {
     font-size: 2.25rem;
   }
@@ -360,9 +320,20 @@ onMounted(() => {
   .stats-container {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .stat-item:last-child {
     grid-column: span 2;
+  }
+
+  .image-gallery {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(3, auto);
+  }
+
+  .image-card.large,
+  .image-card.small {
+    height: 250px;
+    grid-column: span 1;
   }
 }
 
@@ -370,7 +341,7 @@ onMounted(() => {
   .about-container {
     padding: 40px 20px;
   }
-  
+
   .title {
     font-size: 2rem;
   }
@@ -379,38 +350,53 @@ onMounted(() => {
     font-size: 1rem;
   }
 
-  .image-gallery {
-    grid-template-columns: 1fr;
-    grid-template-rows: repeat(3, auto);
-    gap: 15px;
-  }
-
-  .image-card.large {
-    grid-column: span 1;
-    height: 250px;
-  }
-
-  .image-card.small {
-    height: 180px;
-  }
-  
   .stats-container {
     grid-template-columns: 1fr;
   }
-  
+
   .stat-item {
     padding: 15px;
   }
-  
+
   .stat-item:last-child {
     grid-column: span 1;
+  }
+
+  .image-card.large,
+  .image-card.small {
+    height: 200px;
   }
 }
 
 @media (max-width: 480px) {
-  .image-card.large,
-  .image-card.small {
-    height: 200px;
+  .title {
+    font-size: 1.75rem;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+  }
+
+  .paragraph-container p {
+    font-size: 0.95rem;
+  }
+
+  .stat-value {
+    font-size: 1.75rem;
+  }
+
+  .stat-label {
+    font-size: 0.8rem;
+  }
+}
+
+/* Mejoras de accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  .image-card,
+  .gallery-image,
+  .content-section,
+  .stat-item {
+    transition: none;
   }
 }
 </style>

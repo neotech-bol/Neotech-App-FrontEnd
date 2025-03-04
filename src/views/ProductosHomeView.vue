@@ -1,3 +1,257 @@
+<template>
+  <div class="catalog-container">
+    <!-- Main Title -->
+    <h1 class="main-title">
+      Explora Nuestros <span class="text-accent">Productos</span>
+    </h1>
+
+    <!-- View Mode Toggle -->
+    <div class="view-mode-toggle">
+      <button @click="toggleViewMode" :class="['view-mode-button', { active: viewMode === 'categories' }]">
+        <i class="fas fa-th-large"></i> Ver por Categorías
+      </button>
+      <button @click="toggleViewMode" :class="['view-mode-button', { active: viewMode === 'products' }]">
+        <i class="fas fa-th"></i> Ver Todos los Productos
+      </button>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-wrapper">
+      <div v-if="viewMode === 'categories'" class="search-filter-bar">
+        <div class="search-wrapper">
+          <i class="fas fa-search search-icon"></i>
+          <input v-model="searchQuery" type="text" placeholder="Buscar productos..." class="search-input"
+            aria-label="Buscar productos" />
+        </div>
+        <div class="select-wrapper">
+          <select v-model="selectedCategory" class="category-select" aria-label="Filtrar por categoría">
+            <option value="">Todas las Categorías</option>
+            <option v-for="category in uniqueCategories" :key="category" :value="category">
+              {{ category }}
+            </option>
+          </select>
+          <i class="fas fa-chevron-down select-arrow"></i>
+        </div>
+      </div>
+
+      <div v-else class="filters">
+        <select v-model="filtroCategoria" @change="listarProductos" class="filter-select">
+          <option value="">Todas las categorías</option>
+          <option :value="item.id" v-for="item in categorias" :key="item.id">{{ item.nombre }}</option>
+        </select>
+        <select v-model="filtroCatalogo" @change="listarProductos" class="filter-select">
+          <option value="">Todos los catálogos</option>
+          <!-- Add options based on your catalogs -->
+        </select>
+        <div class="search-container">
+          <input v-model="searchQuery" @input="listarProductos" placeholder="Buscar productos..." class="search-input">
+          <span class="search-icon">
+            <i class="fas fa-search"></i>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div v-if="loading" class="loading-overlay">
+      <div class="spinner"></div>
+      <p>Cargando catálogo...</p>
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="error-message">
+      <i class="fas fa-exclamation-circle error-icon"></i>
+      <p>{{ error }}</p>
+      <button @click="viewMode === 'categories' ? listarCategorias() : listarProductos()" class="retry-button">
+        <i class="fas fa-sync-alt"></i> Reintentar
+      </button>
+    </div>
+
+    <!-- Categories View -->
+    <div v-else-if="viewMode === 'categories'" class="categories-wrapper">
+      <div v-for="(categoria, index) in filteredCategorias" :key="categoria.id" class="category-section"
+        :style="{ '--index': index }">
+        <!-- Full-width Banner -->
+        <div class="category-banner" @click="viewAllProducts(categoria.id)">
+          <img :src="categoria.banner" :alt="categoria.nombre" loading="lazy" />
+          <div class="banner-overlay">
+            <div class="banner-content">
+              <h2>
+                {{ categoria.nombre }}
+              </h2>
+              <p>{{ categoria.descripcion }}</p>
+              <button class="banner-cta">Explorar Colección</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Category Header -->
+        <div class="category-header">
+          <h2>
+            {{ categoria.titulo ? categoria.titulo.split(" ").slice(0, -1).join(" ") : '' }}
+            <span class="text-accent">{{ categoria.titulo ? getLastWord(categoria.titulo) : categoria.nombre }}</span>
+          </h2>
+          <p>{{ categoria.subtitulo }}</p>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="products-grid">
+          <div v-for="product in categoria.productos" :key="product.id" class="product-card"
+            @click="viewProductDetails(product.id)">
+            <div class="product-image-wrapper">
+              <div class="product-image">
+                <transition name="fade" mode="out-in">
+                  <img :src="getCurrentImage(product)" :alt="product.nombre" loading="lazy"
+                    :key="currentImageIndex[product.id]" />
+                </transition>
+
+                <!-- Navigation Buttons -->
+                <button v-if="getProductImages(product).length > 1" class="nav-button prev"
+                  @click.stop="prevImage(product)" aria-label="Imagen anterior">
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+                <button v-if="getProductImages(product).length > 1" class="nav-button next"
+                  @click.stop="nextImage(product)" aria-label="Imagen siguiente">
+                  <i class="fas fa-chevron-right"></i>
+                </button>
+
+                <!-- Badge -->
+                <span v-if="product.badge" :class="['badge', product.badge === 'LIMITADO' ? 'badge-limited' : 'badge-new']">
+                  {{ product.badge }}
+                </span>
+
+                <!-- Product Actions -->
+                <div class="product-actions-bottom">
+                  <button @click.stop="addToCart(product)" class="action-button cart-button" aria-label="Agregar al carrito"
+                    :class="{ 'adding': addingToCart === product.id }">
+                    <i class="fas" :class="addingToCart === product.id ? 'fa-spinner fa-spin' : 'fa-shopping-cart'"></i>
+                  </button>
+                  <button @click.stop="viewProductDetails(product.id)" class="action-button view-button" aria-label="Ver producto">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button @click.stop="favoriteUser(product.id)" class="action-button favorite-button" aria-label="Agregar a favoritos"
+                    :class="{ 'in-favorites': favoriteProducts.includes(product.id) }">
+                    <i class="fas fa-heart"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Product Info -->
+            <div class="product-info">
+              <div class="category">{{ product.categoria?.nombre || categoria.nombre }}</div>
+              <h3 class="product-name">{{ product.nombre }}</h3>
+              <div class="rating-container">
+                <div class="rating">
+                  <span v-for="star in 5" :key="star" class="star"
+                    :class="{ filled: star <= (userRatings.find(r => r.producto_id === product.id)?.rating || 0) }"
+                    @click.stop="storeRatingUser(product.id, star)">
+                    ★
+                  </span>
+                </div>
+                <span class="rating-count">
+                  ({{userRatings.find(r => r.producto_id === product.id)?.total_users || 0}})
+                </span>
+              </div>
+              <div class="price">
+                <span class="current-price">{{ formatPrice(product.precio) }}</span>
+                <span v-if="product.precio_anterior" class="old-price">{{ formatPrice(product.precio_anterior) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Products View -->
+    <div v-else class="main-catalog">
+      <div class="products-grid">
+        <div v-for="product in productos" :key="product.id" class="product-card"
+          @click="viewProductDetails(product.id)">
+          <div class="product-image-wrapper">
+            <div class="product-image">
+              <transition name="fade" mode="out-in">
+                <img :key="currentImageIndex[product.id]" :src="getCurrentImage(product)" :alt="product.nombre"
+                  loading="lazy">
+              </transition>
+
+              <button class="nav-button prev" @click.stop="prevImage(product)"
+                v-if="getProductImages(product).length > 1">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <button class="nav-button next" @click.stop="nextImage(product)"
+                v-if="getProductImages(product).length > 1">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+
+              <!-- Badge -->
+              <span v-if="product.badge" :class="['badge', product.badge === 'LIMITADO' ? 'badge-limited' : 'badge-new']">
+                {{ product.badge }}
+              </span>
+
+              <div class="product-actions-bottom">
+                <button class="action-button cart-button" @click.stop="addToCart(product)" aria-label="Agregar al carrito"
+                  :class="{ 'adding': addingToCart === product.id }">
+                  <i class="fas" :class="addingToCart === product.id ? 'fa-spinner fa-spin' : 'fa-shopping-cart'"></i>
+                </button>
+                <button class="action-button view-button" @click.stop="viewProductDetails(product.id)"
+                  aria-label="Ver producto">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="action-button favorite-button" @click.stop="favoriteUser(product.id)"
+                  aria-label="Agregar a favoritos" :class="{ 'in-favorites': favoriteProducts.includes(product.id) }">
+                  <i class="fas fa-heart"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="product-info">
+            <div class="category">{{ product.categoria?.nombre || 'Sin categoría' }}</div>
+            <h3 class="product-name">{{ product.nombre }}</h3>
+
+            <div class="rating-container">
+              <div class="rating">
+                <span v-for="star in 5" :key="star" class="star"
+                  :class="{ 'filled': star <= (userRatings.find(r => r.producto_id === product.id)?.rating || 0) }"
+                  @click.stop="storeRatingUser(product.id, star)">
+                  ★
+                </span>
+              </div>
+              <span class="rating-count">
+                ({{userRatings.find(r => r.producto_id === product.id)?.total_users || 0}})
+              </span>
+            </div>
+
+            <div class="price">
+              <span class="current-price">{{ formatPrice(product.precio) }}</span>
+              <button class="add-to-cart-button" @click.stop="addToCart(product)">
+                <i class="fas fa-cart-plus"></i> Agregar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="productos.length === 0" class="no-products">
+        <i class="fas fa-box-open no-products-icon"></i>
+        <p>No se encontraron productos</p>
+        <button @click="resetFilters" class="reset-filters-button">
+          <i class="fas fa-undo"></i> Restablecer filtros
+        </button>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div v-if="viewMode === 'categories' && totalPages > 1" class="pagination">
+      <button v-for="page in totalPages" :key="page" @click="changePage(page)"
+        :class="['page-button', { active: currentPage === page }]" :aria-label="`Ir a página ${page}`">
+        {{ page }}
+      </button>
+    </div>
+  </div>
+</template>
+
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { indexCategoriasConProductos } from '@/Services/CategoriaService';
@@ -244,307 +498,13 @@ onMounted(async () => {
 });
 </script>
 
-<template>
-  <div class="catalog-container">
-    <!-- Main Title -->
-    <h1 class="main-title">
-      Explora Nuestros <span class="text-accent">Productos</span>
-    </h1>
-
-    <!-- View Mode Toggle -->
-    <div class="view-mode-toggle">
-      <button 
-        @click="toggleViewMode" 
-        :class="['view-mode-button', { active: viewMode === 'categories' }]"
-      >
-        <i class="fas fa-th-large"></i> Ver por Categorías
-      </button>
-      <button 
-        @click="toggleViewMode" 
-        :class="['view-mode-button', { active: viewMode === 'products' }]"
-      >
-        <i class="fas fa-th"></i> Ver Todos los Productos
-      </button>
-    </div>
-
-    <!-- Filters Section -->
-    <div class="filters-wrapper">
-      <div v-if="viewMode === 'categories'" class="search-filter-bar">
-        <div class="search-wrapper">
-          <i class="fas fa-search search-icon"></i>
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Buscar productos..."
-            class="search-input"
-            aria-label="Buscar productos"
-          />
-        </div>
-        <div class="select-wrapper">
-          <select v-model="selectedCategory" class="category-select" aria-label="Filtrar por categoría">
-            <option value="">Todas las Categorías</option>
-            <option v-for="category in uniqueCategories" :key="category" :value="category">
-              {{ category }}
-            </option>
-          </select>
-          <i class="fas fa-chevron-down select-arrow"></i>
-        </div>
-      </div>
-
-      <div v-else class="filters">
-        <select v-model="filtroCategoria" @change="listarProductos" class="filter-select">
-          <option value="">Todas las categorías</option>
-          <option :value="item.id" v-for="item in categorias" :key="item.id">{{ item.nombre }}</option>
-        </select>
-        <select v-model="filtroCatalogo" @change="listarProductos" class="filter-select">
-          <option value="">Todos los catálogos</option>
-          <!-- Add options based on your catalogs -->
-        </select>
-        <div class="search-container">
-          <input v-model="searchQuery" @input="listarProductos" placeholder="Buscar productos..." class="search-input">
-          <span class="search-icon">
-            <i class="fas fa-search"></i>
-          </span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Loading State -->
-    <div v-if="loading" class="loading-overlay">
-      <div class="spinner"></div>
-      <p>Cargando catálogo...</p>
-    </div>
-
-    <!-- Error State -->
-    <div v-else-if="error" class="error-message">
-      <i class="fas fa-exclamation-circle error-icon"></i>
-      <p>{{ error }}</p>
-      <button @click="viewMode === 'categories' ? listarCategorias() : listarProductos()" class="retry-button">
-        <i class="fas fa-sync-alt"></i> Reintentar
-      </button>
-    </div>
-
-    <!-- Categories View -->
-    <div v-else-if="viewMode === 'categories'" class="categories-wrapper">
-      <div v-for="(categoria, index) in filteredCategorias" :key="categoria.id" 
-           class="category-section"
-           :style="{ '--index': index }">
-        <!-- Full-width Banner -->
-        <div class="category-banner" @click="viewAllProducts(categoria.id)">
-          <img :src="categoria.banner" :alt="categoria.nombre" loading="lazy" />
-          <div class="banner-overlay">
-            <div class="banner-content">
-              <h2>
-                {{ categoria.nombre }}
-              </h2>
-              <p>{{ categoria.descripcion }}</p>
-              <button class="banner-cta">Explorar Colección</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Category Header -->
-        <div class="category-header">
-          <h2>
-            {{ categoria.titulo ? categoria.titulo.split(" ").slice(0, -1).join(" ") : '' }}
-            <span class="text-accent">{{ categoria.titulo ? getLastWord(categoria.titulo) : categoria.nombre }}</span>
-          </h2>
-          <p>{{ categoria.subtitulo }}</p>
-        </div>
-
-        <!-- Products Grid -->
-        <div class="products-grid">
-          <div v-for="product in categoria.productos" :key="product.id" class="product-card">
-            <div class="product-image-container">
-              <transition name="fade" mode="out-in">
-                <img
-                  :src="getCurrentImage(product)"
-                  :alt="product.nombre"
-                  loading="lazy"
-                  :key="currentImageIndex[product.id]"
-                />
-              </transition>
-
-              <!-- Navigation Buttons -->
-              <button
-                v-if="getProductImages(product).length > 1"
-                class="nav-button prev"
-                @click.stop="prevImage(product)"
-                aria-label="Imagen anterior"
-              >
-                <i class="fas fa-chevron-left"></i>
-              </button>
-              <button
-                v-if="getProductImages(product).length > 1"
-                class="nav-button next"
-                @click.stop="nextImage(product)"
-                aria-label="Imagen siguiente"
-              >
-                <i class="fas fa-chevron-right"></i>
-              </button>
-
-              <!-- Badge -->
-              <span v-if="product.badge" :class="['badge', product.badge === 'LIMITADO' ? 'limited' : 'new']">
-                {{ product.badge }}
-              </span>
-
-              <!-- Product Actions -->
-              <div class="product-actions">
-                <button @click.stop="addToCart(product)" class="action-button" aria-label="Agregar al carrito"
-                        :class="{ 'adding': addingToCart === product.id }">
-                  <i class="fas" :class="addingToCart === product.id ? 'fa-spinner fa-spin' : 'fa-shopping-cart'"></i>
-                </button>
-                <button @click.stop="viewProductDetails(product.id)" class="action-button" aria-label="Ver producto">
-                  <i class="fas fa-eye"></i>
-                </button>
-                <button @click.stop="favoriteUser(product.id)" class="action-button" aria-label="Agregar a favoritos"
-                        :class="{ 'in-favorites': favoriteProducts.includes(product.id) }">
-                  <i class="fas fa-heart"></i>
-                </button>
-              </div>
-            </div>
-
-            <!-- Product Info -->
-            <div class="product-info">
-              <span class="category-label">{{ product.categoria?.nombre || categoria.nombre }}</span>
-              <h3 class="product-title">{{ product.nombre }}</h3>
-              <div class="rating-container">
-                <div class="stars">
-                  <span
-                    v-for="star in 5"
-                    :key="star"
-                    class="star"
-                    :class="{ filled: star <= (userRatings.find(r => r.producto_id === product.id)?.rating || 0) }"
-                    @click="storeRatingUser(product.id, star)"
-                  >
-                    ★
-                  </span>
-                </div>
-                <span class="rating-count">
-                  ({{ userRatings.find(r => r.producto_id === product.id)?.total_users || 0 }})
-                </span>
-              </div>
-              <div class="price-container">
-                <span class="current-price">{{ formatPrice(product.precio) }}</span>
-                <span v-if="product.precio_anterior" class="old-price">{{ formatPrice(product.precio_anterior) }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Products View -->
-    <div v-else class="main-catalog">
-      <div class="products-grid">
-        <div v-for="product in productos" 
-             :key="product.id" 
-             class="product-card"
-             @click="viewProductDetails(product.id)">
-          <div class="product-image-container">
-            <transition name="fade" mode="out-in">
-              <img :key="currentImageIndex[product.id]"
-                   :src="getCurrentImage(product)" 
-                   :alt="product.nombre"
-                   loading="lazy">
-            </transition>
-            
-            <button class="nav-button prev" @click.stop="prevImage(product)" 
-                    v-if="getProductImages(product).length > 1">
-              <i class="fas fa-chevron-left"></i>
-            </button>
-            <button class="nav-button next" @click.stop="nextImage(product)"
-                    v-if="getProductImages(product).length > 1">
-              <i class="fas fa-chevron-right"></i>
-            </button>
-
-            <!-- Badge -->
-            <span v-if="product.badge" :class="['badge', product.badge === 'LIMITADO' ? 'limited' : 'new']">
-              {{ product.badge }}
-            </span>
-
-            <div class="product-actions-vertical">
-              <button class="action-button cart-button" 
-                      @click.stop="addToCart(product)" 
-                      aria-label="Agregar al carrito"
-                      :class="{ 'adding': addingToCart === product.id }">
-                <i class="fas" :class="addingToCart === product.id ? 'fa-spinner fa-spin' : 'fa-shopping-cart'"></i>
-              </button>
-              <button class="action-button view-button" 
-                      @click.stop="viewProductDetails(product.id)" 
-                      aria-label="Ver producto">
-                <i class="fas fa-eye"></i>
-              </button>
-              <button class="action-button favorite-button" 
-                      @click.stop="favoriteUser(product.id)" 
-                      aria-label="Agregar a favoritos"
-                      :class="{ 'in-favorites': favoriteProducts.includes(product.id) }">
-                <i class="fas fa-heart"></i>
-              </button>
-            </div>
-          </div>
-
-          <div class="product-info">
-            <div class="category-label">{{ product.categoria?.nombre || 'Sin categoría' }}</div>
-            <h3 class="product-title">{{ product.nombre }}</h3>
-
-            <div class="rating-container">
-              <div class="stars">
-                <span v-for="star in 5" 
-                      :key="star" 
-                      class="star"
-                      :class="{ 'filled': star <= (userRatings.find(r => r.producto_id === product.id)?.rating || 0) }"
-                      @click.stop="storeRatingUser(product.id, star)">
-                  ★
-                </span>
-              </div>
-              <span class="rating-count">
-                ({{ userRatings.find(r => r.producto_id === product.id)?.total_users || 0 }})
-              </span>
-            </div>
-
-            <div class="price-action-container">
-              <span class="current-price">{{ formatPrice(product.precio) }}</span>
-              <button class="add-to-cart-button" @click.stop="addToCart(product)">
-                <i class="fas fa-cart-plus"></i> Agregar
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div v-if="productos.length === 0" class="no-products">
-        <i class="fas fa-box-open no-products-icon"></i>
-        <p>No se encontraron productos</p>
-        <button @click="resetFilters" class="reset-filters-button">
-          <i class="fas fa-undo"></i> Restablecer filtros
-        </button>
-      </div>
-    </div>
-
-    <!-- Pagination -->
-    <div v-if="viewMode === 'categories' && totalPages > 1" class="pagination">
-      <button
-        v-for="page in totalPages"
-        :key="page"
-        @click="changePage(page)"
-        :class="['page-button', { active: currentPage === page }]"
-        :aria-label="`Ir a página ${page}`"
-      >
-        {{ page }}
-      </button>
-    </div>
-  </div>
-</template>
-
 <style scoped>
 /* Base Container */
 .catalog-container {
   max-width: 1440px;
   margin: 0 auto;
   padding: 2rem;
-  font-family: 'Poppins', sans-serif;
-  background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
 /* Main Title */
@@ -656,12 +616,12 @@ onMounted(async () => {
   border-radius: 12px;
   font-size: 1rem;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .search-input:focus {
   border-color: #3182ce;
-  box-shadow: 0 0 0 3px rgba(49,130,206,0.2);
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.2);
   outline: none;
 }
 
@@ -680,12 +640,12 @@ onMounted(async () => {
   appearance: none;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .category-select:focus {
   border-color: #3182ce;
-  box-shadow: 0 0 0 3px rgba(49,130,206,0.2);
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.2);
   outline: none;
 }
 
@@ -700,7 +660,7 @@ onMounted(async () => {
   transition: transform 0.3s ease;
 }
 
-.category-select:focus + .select-arrow {
+.category-select:focus+.select-arrow {
   transform: translateY(-50%) rotate(180deg);
 }
 
@@ -738,7 +698,7 @@ onMounted(async () => {
 .filter-select:focus {
   outline: none;
   border-color: #3182ce;
-  box-shadow: 0 0 0 3px rgba(49,130,206,0.2);
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.2);
 }
 
 .search-container {
@@ -757,7 +717,7 @@ onMounted(async () => {
   background: #ffffff;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   opacity: 0;
   transform: translateY(20px);
   animation: fadeInUp 0.6s forwards;
@@ -787,11 +747,11 @@ onMounted(async () => {
 /* Full-width Responsive Banner */
 .category-banner {
   position: relative;
-  width: 100%;
   height: clamp(300px, 50vh, 500px);
   cursor: pointer;
   overflow: hidden;
-  background: #f7fafc;
+  border-radius: 12px;
+  margin-bottom: 2rem;
 }
 
 .category-banner img {
@@ -808,9 +768,12 @@ onMounted(async () => {
 .banner-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, rgba(0,0,0,0.7), transparent);
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.7), transparent);
+  padding: 2rem;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  color: #fff;
 }
 
 .banner-content {
@@ -819,17 +782,17 @@ onMounted(async () => {
   padding: 2rem;
 }
 
-.banner-content h2 {
+.banner-overlay h2 {
   font-size: clamp(1.8rem, 4vw, 3rem);
   font-weight: 700;
   margin-bottom: 1rem;
   line-height: 1.2;
 }
 
-.banner-content p {
+.banner-overlay p {
   font-size: clamp(1rem, 2vw, 1.25rem);
+  max-width: 60ch;
   margin-bottom: 1.5rem;
-  line-height: 1.6;
 }
 
 .banner-cta {
@@ -841,31 +804,33 @@ onMounted(async () => {
   font-weight: 600;
   font-size: 1rem;
   transition: all 0.3s ease;
+  width: fit-content;
 }
 
 .banner-cta:hover {
   background: #2f855a;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 /* Category Header */
 .category-header {
   text-align: center;
-  padding: 2rem;
+  margin-bottom: 2rem;
 }
 
 .category-header h2 {
-  font-size: clamp(1.8rem, 3vw, 2.2rem);
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
   font-weight: 700;
-  color: #2d3748;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
 }
 
 .category-header p {
-  font-size: clamp(1rem, 2vw, 1.1rem);
-  color: #718096;
-  max-width: 600px;
-  margin: 0.5rem auto 0;
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  color: #666;
+  max-width: 700px;
+  margin: 0 auto;
 }
 
 /* Products Grid */
@@ -873,64 +838,80 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 2rem;
-  padding: 2rem;
+  margin-bottom: 4rem;
+  padding: 0 1rem;
 }
 
+/* Product Card */
 .product-card {
-  background: #ffffff;
+  position: relative;
+  background-color: white;
   border-radius: 12px;
   overflow: hidden;
-  transition: all 0.3s ease;
-  border: 1px solid #edf2f7;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.6s forwards;
+  animation-delay: calc(var(--index, 0) * 0.1s);
 }
 
 .product-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 /* Product Image */
-.product-image-container {
+.product-image-wrapper {
   position: relative;
-  aspect-ratio: 1 / 1;
-  background: #f7fafc;
+  width: 100%;
+  padding-bottom: 100%;
+  background-color: #ffffff;
   overflow: hidden;
 }
 
-.product-image-container img {
+.product-image {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  transition: transform 0.4s ease;
-}
-
-.product-card:hover .product-image-container img {
-  transform: scale(1.08);
-}
-
-.nav-button {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(255,255,255,0.95);
-  border: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  opacity: 0;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  z-index: 2;
-  color: #2d3748;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.product-card:hover .nav-button {
-  opacity: 1;
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.product-card:hover .product-image img {
+  transform: scale(1.08);
+}
+
+/* Navigation Buttons */
+.nav-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(255, 255, 255, 0.9);
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 2;
+  color: #2d3748;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .nav-button.prev {
@@ -941,31 +922,38 @@ onMounted(async () => {
   right: 1rem;
 }
 
-.nav-button:hover {
-  background: #ffffff;
-  transform: translateY(-50%) scale(1.05);
-  color: #3182ce;
+.product-card:hover .nav-button {
+  opacity: 1;
 }
 
+.nav-button:hover {
+  background-color: white;
+  transform: translateY(-50%) scale(1.1);
+  color: #3498db;
+}
+
+/* Badge */
 .badge {
   position: absolute;
   top: 1rem;
   right: 1rem;
   padding: 0.5rem 1rem;
   border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #ffffff;
-  z-index: 1;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1;
 }
 
-.badge.limited {
-  background: #e53e3e;
+.badge-limited {
+  background-color: #e53e3e;
 }
 
-.badge.new {
-  background: #38a169;
+.badge-new {
+  background-color: #38a169;
   animation: pulse 2s infinite;
 }
 
@@ -981,66 +969,44 @@ onMounted(async () => {
   }
 }
 
-/* Product Actions */
-.product-actions {
+/* Product Actions Bottom */
+.product-actions-bottom {
   position: absolute;
-  bottom: 1rem;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 0;
+  left: 0;
+  right: 0;
   display: flex;
-  gap: 0.75rem;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 20%, transparent);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: all 0.3s ease;
   z-index: 2;
 }
 
-.product-actions-vertical {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  opacity: 0;
-  transform: translateX(10px);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 10;
-}
-
-.product-card:hover .product-actions,
-.product-card:hover .product-actions-vertical {
+.product-image:hover .product-actions-bottom {
   opacity: 1;
-  transform: translateX(0);
 }
 
 .action-button {
-  width: 44px;
-  height: 44px;
-  background: #ffffff;
+  background-color: rgba(255, 255, 255, 0.9);
   border: none;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  transition: all 0.3s ease;
-  color: #4a5568;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  color: #2d3748;
 }
 
 .action-button:hover {
-  background: #3182ce;
-  color: #ffffff;
   transform: scale(1.1);
-}
-
-.action-button.in-favorites {
-  background: #e53e3e;
-  color: #ffffff;
-}
-
-.action-button.adding {
-  pointer-events: none;
 }
 
 .action-button.cart-button:hover {
@@ -1058,27 +1024,39 @@ onMounted(async () => {
   color: white;
 }
 
+.action-button.in-favorites {
+  background: #e53e3e;
+  color: #ffffff;
+}
+
+.action-button.adding {
+  pointer-events: none;
+}
+
 /* Product Info */
 .product-info {
   padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 2rem;
 }
 
-.category-label {
-  font-size: 0.85rem;
-  color: #a0aec0;
-  text-transform: uppercase;
+.category {
+  font-size: 0.8rem;
+  color: #718096;
   margin-bottom: 0.5rem;
-  display: block;
+  text-transform: uppercase;
   letter-spacing: 0.5px;
   font-weight: 600;
 }
 
-.product-title {
-  font-size: 1.2rem;
-  font-weight: 600;
+.product-name {
+  font-size: 1.1rem;
+  font-weight: 700;
   color: #2d3748;
   margin-bottom: 0.75rem;
   line-height: 1.4;
+  transition: color 0.3s ease;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -1086,63 +1064,58 @@ onMounted(async () => {
   height: 3rem;
 }
 
-.product-card:hover .product-title {
-  color: #3182ce;
+.product-card:hover .product-name {
+  color: #3498db;
 }
 
+/* Rating System */
 .rating-container {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
 }
 
-.stars {
+.rating {
   display: flex;
   gap: 4px;
+  margin-bottom: 0.25rem;
 }
 
 .star {
-  font-size: 1.1rem;
   color: #e2e8f0;
+  font-size: 1.25rem;
   cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.star.filled {
-  color: #ecc94b;
+  transition: transform 0.2s ease, color 0.2s ease;
 }
 
 .star:hover {
-  transform: scale(1.15);
+  transform: scale(1.2);
+}
+
+.star.filled {
+  color: #f6ad55;
 }
 
 .rating-count {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: #718096;
 }
 
-.price-container {
+/* Price Section */
+.price {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-}
-
-.price-action-container {
-  display: flex;
-  align-items: center;
+  margin-bottom: 1rem;
   justify-content: space-between;
-  margin-top: 1rem;
 }
 
 .current-price {
-  font-size: 1.3rem;
   font-weight: 700;
+  font-size: 1.25rem;
   color: #2d3748;
 }
 
 .old-price {
-  font-size: 0.95rem;
+  font-size: 0.875rem;
   color: #a0aec0;
   text-decoration: line-through;
 }
@@ -1201,46 +1174,46 @@ onMounted(async () => {
 /* Loading Overlay */
 .loading-overlay {
   position: fixed;
-  inset: 0;
-  background: rgba(255,255,255,0.95);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.9);
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   z-index: 1000;
   backdrop-filter: blur(5px);
 }
 
 .spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid #edf2f7;
-  border-top: 4px solid #3182ce;
+  border: 4px solid rgba(52, 152, 219, 0.2);
+  border-top: 4px solid #3498db;
   border-radius: 50%;
+  width: 50px;
+  height: 50px;
   animation: spin 1s linear infinite;
   margin-bottom: 1rem;
 }
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-/* Error Message */
+/* Error State */
 .error-message {
-  padding: 2rem;
-  background: #fefcbf;
-  border-radius: 12px;
   text-align: center;
-  margin: 2rem auto;
-  max-width: 600px;
-  border: 1px solid #fbd38d;
+  padding: 3rem 2rem;
+  background-color: #fff5f5;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  border: 1px solid #fed7d7;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  animation: shakeX 0.75s cubic-bezier(.36,.07,.19,.97) both;
 }
 
 .error-icon {
@@ -1248,37 +1221,25 @@ onMounted(async () => {
   color: #e53e3e;
 }
 
-@keyframes shakeX {
-  10%, 90% {
-    transform: translateX(-1px);
-  }
-  20%, 80% {
-    transform: translateX(2px);
-  }
-  30%, 50%, 70% {
-    transform: translateX(-4px);
-  }
-  40%, 60% {
-    transform: translateX(4px);
-  }
-}
-
 .retry-button {
-  padding: 0.75rem 1.5rem;
-  background: #3182ce;
-  color: #ffffff;
+  background-color: #3498db;
+  color: white;
   border: none;
+  padding: 0.75rem 1.5rem;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
+  font-weight: 600;
+  margin-top: 1rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
 .retry-button:hover {
-  background: #2b6cb0;
+  background-color: #2980b9;
   transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 /* No Products State */
@@ -1332,229 +1293,122 @@ onMounted(async () => {
   opacity: 0;
 }
 
-/* Responsive Design */
-@media (max-width: 1024px) {
+/* Responsive Styles */
+@media (max-width: 1200px) {
   .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
   }
+}
 
-  .banner-content {
-    max-width: 60%;
+@media (max-width: 992px) {
+  .catalog-container {
+    padding: 1.25rem;
+  }
+  
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.25rem;
+  }
+  
+  .product-info {
+    padding: 1.25rem;
   }
 }
 
 @media (max-width: 768px) {
   .catalog-container {
-    padding: 1.5rem;
-  }
-
-  .view-mode-toggle {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .search-filter-bar,
-  .filters {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .filter-select, 
-  .search-container,
-  .search-wrapper,
-  .select-wrapper {
-    width: 100%;
-  }
-
-  .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1.5rem;
-  }
-
-  .banner-content {
-    max-width: 70%;
-  }
-
-  .banner-content h2 {
-    font-size: clamp(1.5rem, 3vw, 2rem);
-  }
-
-  .banner-cta {
-    padding: 0.75rem 1.5rem;
-  }
-
-  .nav-button,
-  .product-actions,
-  .product-actions-vertical {
-    opacity: 1;
-    transform: translateX(0);
+    padding: 1rem;
   }
   
   .category-banner {
     height: 300px;
   }
+  
+  .banner-overlay {
+    padding: 1.5rem;
+  }
+  
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+  
+  .nav-button {
+    opacity: 0.8;
+    width: 35px;
+    height: 35px;
+  }
+  
+  .product-info {
+    padding: 1rem;
+  }
+  
+  .product-name {
+    font-size: 1rem;
+  }
+  
+  .product-actions-bottom {
+    opacity: 1;
+    padding: 0.75rem;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.5) 30%, transparent);
+  }
+  
+  .action-button {
+    width: 35px;
+    height: 35px;
+  }
+}
 
-  .price-action-container {
-    flex-direction: column;
-    align-items: flex-start;
+@media (max-width: 576px) {
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
     gap: 0.75rem;
   }
   
-  .add-to-cart-button {
-    width: 100%;
-    justify-content: center;
+  .product-card:hover {
+    transform: translateY(-4px);
   }
-}
-
-@media (max-width: 480px) {
-  .catalog-container {
-    padding: 1rem;
+  
+  .product-info {
+    padding: 0.75rem;
   }
-
-  .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 1rem;
+  
+  .category {
+    font-size: 0.7rem;
   }
-
-  .banner-content {
-    max-width: 100%;
-    padding: 1rem;
-  }
-
-  .banner-content h2 {
-    font-size: 1.5rem;
-  }
-
-  .banner-content p {
+  
+  .product-name {
     font-size: 0.9rem;
-  }
-
-  .product-title {
-    font-size: 1rem;
-  }
-
-  .current-price {
-    font-size: 1.1rem;
-  }
-
-  .action-button {
-    width: 36px;
-    height: 36px;
-  }
-
-  .nav-button {
-    width: 32px;
-    height: 32px;
-  }
-  
-  .add-to-cart-button {
-    padding: 0.4rem 0.75rem;
-    font-size: 0.8rem;
-  }
-}
-
-@media (max-width: 360px) {
-  .products-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .product-image-container {
-    aspect-ratio: 4 / 3;
-  }
-}
-
-/* Dark Mode Support */
-@media (prefers-color-scheme: dark) {
-  .catalog-container {
-    background: linear-gradient(to bottom, #1a202c 0%, #2d3748 100%);
-  }
-  
-  .category-section {
-    background: #2d3748;
-  }
-  
-  .main-title,
-  .category-header h2 {
-    color: #e2e8f0;
-  }
-  
-  .category-header p {
-    color: #a0aec0;
-  }
-  
-  .product-card {
-    background-color: #2d3748;
-    border-color: #4a5568;
-  }
-  
-  .product-image-container {
-    background-color: #1a202c;
-  }
-  
-  .product-title {
-    color: #e2e8f0;
-  }
-  
-  .product-card:hover .product-title {
-    color: #63b3ed;
-  }
-  
-  .category-label {
-    color: #a0aec0;
-  }
-  
-  .current-price {
-    color: #e2e8f0;
-  }
-  
-  .old-price {
-    color: #718096;
+    margin-bottom: 0.5rem;
+    height: 2.5rem;
   }
   
   .star {
-    color: #4a5568;
+    font-size: 1rem;
   }
   
-  .search-input,
-  .category-select,
-  .filter-select {
-    background: #2d3748;
-    border-color: #4a5568;
-    color: #e2e8f0;
+  .current-price {
+    font-size: 1.1rem;
   }
   
-  .search-icon,
-  .select-arrow {
-    color: #a0aec0;
+  .action-button {
+    width: 35px;
+    height: 35px;
+  }
+}
+
+@media (max-width: 400px) {
+  .products-grid {
+    grid-template-columns: 1fr;
   }
   
-  .loading-overlay {
-    background-color: rgba(26, 32, 44, 0.9);
-    color: #e2e8f0;
+  .product-image-wrapper {
+    padding-bottom: 75%;
   }
   
-  .filters-wrapper {
-    background-color: rgba(26, 32, 44, 0.98);
-    border-bottom: 1px solid rgba(45, 55, 72, 0.8);
-  }
-  
-  .view-mode-button {
-    background: #2d3748;
-    border-color: #4a5568;
-    color: #e2e8f0;
-  }
-  
-  .view-mode-button:hover:not(.active) {
-    background: #4a5568;
-  }
-  
-  .no-products {
-    background-color: #2d3748;
-    color: #e2e8f0;
-  }
-  
-  .no-products-icon {
-    color: #718096;
+  .category-banner {
+    height: 200px;
   }
 }
 
@@ -1570,7 +1424,7 @@ onMounted(async () => {
     transform: none;
   }
   
-  .product-card:hover .product-image-container img {
+  .product-card:hover .product-image img {
     transform: none;
   }
   
@@ -1578,15 +1432,13 @@ onMounted(async () => {
     animation: none;
   }
   
-  .badge.new {
+  .badge-new {
     animation: none;
   }
   
   .retry-button:hover,
   .action-button:hover,
-  .banner-cta:hover,
-  .add-to-cart-button:hover,
-  .reset-filters-button:hover {
+  .banner-cta:hover {
     transform: none;
   }
   
@@ -1595,10 +1447,11 @@ onMounted(async () => {
     transition: none;
   }
   
-  .category-section {
+  .skeleton-banner,
+  .skeleton-header,
+  .skeleton-image,
+  .skeleton-details {
     animation: none;
-    opacity: 1;
-    transform: none;
   }
 }
 </style>

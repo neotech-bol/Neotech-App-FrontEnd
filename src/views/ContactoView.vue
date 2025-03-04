@@ -248,20 +248,18 @@ watchEffect(() => {
 
 <style scoped>
 .contact-section {
-  padding: 80px 0;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+  padding: 60px 20px;
   min-height: 100vh;
 }
 
 .contact-container {
   max-width: 1300px;
   margin: 0 auto;
-  padding: 0 20px;
 }
 
 .section-header {
   text-align: center;
-  margin-bottom: 50px;
+  margin-bottom: 40px;
 }
 
 .section-header h2 {
@@ -281,9 +279,8 @@ watchEffect(() => {
 }
 
 .highlight {
-  color: #007bff;
-  background: linear-gradient(120deg, transparent 40%, rgba(0,123,255,0.1) 40%);
-  padding: 0 10px;
+  color: var(--primary-color);
+  padding: 0 8px;
 }
 
 /* Improved Department Selector */
@@ -343,7 +340,6 @@ watchEffect(() => {
 }
 
 .contact-card {
-  background: #ffffff;
   padding: 30px;
   border-radius: 20px;
   text-align: center;
@@ -359,7 +355,7 @@ watchEffect(() => {
 .contact-card .icon {
   width: 60px;
   height: 60px;
-  background: #007bff;
+  background: var(--primary-color);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -367,7 +363,6 @@ watchEffect(() => {
   margin: 0 auto 20px;
   color: white;
   font-size: 24px;
-  
   transition: transform 0.3s ease;
 }
 
@@ -479,7 +474,7 @@ watchEffect(() => {
 }
 
 .submit-btn {
-  background: #007bff;
+  background: var(--primary-color);
   color: white;
   padding: 14px 30px;
   border: none;
@@ -493,7 +488,7 @@ watchEffect(() => {
 }
 
 .submit-btn:hover {
-  background: #0056b3;
+  background: var(--primary-hover-color);
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(0,123,255,0.3);
 }
@@ -551,7 +546,7 @@ watchEffect(() => {
 
 @media (max-width: 768px) {
   .contact-section {
-    padding: 60px 0;
+    padding: 40px 15px;
   }
   
   .form-container {
@@ -583,6 +578,77 @@ watchEffect(() => {
   
   .contact-cards {
     grid-template-columns: 1fr;
+  }
+
+  .contact-card {
+    padding: 20px;
+  }
+
+  .contact-card .icon {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+
+  .contact-card h3 {
+    font-size: 1.2rem;
+  }
+
+  .contact-link,
+  .contact-card p {
+    font-size: 1rem;
+  }
+
+  .form-group input,
+  .form-group textarea {
+    padding: 12px 12px 12px 35px;
+    font-size: 0.9rem;
+  }
+
+  .input-icon {
+    font-size: 14px;
+    left: 12px;
+  }
+}
+
+/* Accessibility Improvements */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Focus styles for keyboard navigation */
+a:focus,
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+/* High contrast mode adjustments */
+@media (forced-colors: active) {
+  .contact-card,
+  .form-container,
+  .submit-btn {
+    border: 2px solid currentColor;
   }
 }
 </style>

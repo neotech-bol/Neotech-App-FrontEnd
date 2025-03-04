@@ -58,36 +58,6 @@ const teamMembers = [
     position: 'Technical Lead'
   }
 ]
-//colores 
-// Función para obtener el valor inicial del localStorage o usar el valor por defecto
-const getInitialLocation = () => {
-  const storedLocation = localStorage.getItem('selectedLocation');
-  return storedLocation || 'cochabamba';
-};
-
-const selectedLocation = inject('selectedLocation');
-const updateColors = (location) => {
-  if (location === 'la-paz') {
-    document.documentElement.style.setProperty('--primary-color', '#f8a812');
-    document.documentElement.style.setProperty('--primary-hover-color', '#e69711');
-  } else {
-    document.documentElement.style.setProperty('--primary-color', '#3B82F6');
-    document.documentElement.style.setProperty('--primary-hover-color', '#2563eb');
-  }
-};
-// Watch for changes in selectedLocation
-watchEffect(() => {
-  if (selectedLocation && selectedLocation.value) {
-    updateColors(selectedLocation.value);
-  }
-});
-
-// Asegurarse de que los colores se actualicen cuando el componente se monta
-onMounted(() => {
-  if (selectedLocation && selectedLocation.value) {
-    updateColors(selectedLocation.value);
-  }
-});
 </script>
 
 <template>
@@ -144,7 +114,7 @@ main {
 }
 
 .stats-container {
-  max-width: 1200px;
+  max-width: 1440px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -191,7 +161,7 @@ main {
 }
 
 .team-container {
-  max-width: 1200px;
+  max-width: 1440px;
   margin: 0 auto;
   padding: 0 20px;
 }

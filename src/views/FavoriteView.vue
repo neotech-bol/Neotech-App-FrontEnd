@@ -1,15 +1,15 @@
 <template>
   <div class="favorites-container">
     <header class="favorites-header">
-      <h1>Favoritos</h1>
+      <h1>Mis Favoritos</h1>
       <span class="favorites-count">{{ favorites.length }} items</span>
     </header>
 
     <transition-group name="fade" tag="div" class="products-grid">
       <div v-for="product in favorites" :key="product.producto.id" class="product-card">
         <div class="image-container">
-          <img :src="product.producto.imagen_principal" :alt="product.producto.nombre">
-          <button @click="removeFromFavorites(product.id)" class="remove-button" title="Eliminar de favoritos">
+          <img :src="product.producto.imagen_principal" :alt="product.producto.nombre" loading="lazy">
+          <button @click="removeFromFavorites(product.id)" class="remove-button" aria-label="Eliminar de favoritos">
             <i class="fas fa-heart-broken"></i>
           </button>
           <div class="product-badges" v-if="product.producto.estado === 1">
@@ -21,17 +21,22 @@
           <h3 :title="product.producto.nombre">{{ product.producto.nombre }}</h3>
           <p class="price">{{ formatPrice(product.producto.precio) }} Bs</p>
           <button @click="addToCart(product.producto)" class="add-to-cart-button">
-            <i class="fas fa-shopping-cart"></i> Añadir al carrito
+            <i class="fas fa-shopping-cart"></i> 
+            <span class="button-text">Añadir al carrito</span>
           </button>
         </div>
       </div>
     </transition-group>
 
-    <div v-if="favorites.length === 0" class="empty-state">
-      <i class="fas fa-heart"></i>
-      <p>No hay favoritos guardados</p>
+    <div v-if="loading" class="loading-container">
+      <div class="loading-spinner"></div>
+    </div>
+
+    <div v-if="favorites.length === 0 && !loading" class="empty-state">
+      <i class="fas fa-heart-broken"></i>
+      <p>No tienes favoritos guardados</p>
       <button @click="goToProducts" class="browse-products-button">
-        Explorar productos
+        <i class="fas fa-search"></i> Explorar productos
       </button>
     </div>
 
@@ -50,7 +55,6 @@ import { useCartStore } from '@/stores/cart'
 import { onMounted, ref, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
-
 const router = useRouter()
 const cartStore = useCartStore()
 const favorites = ref([])
@@ -59,7 +63,6 @@ const notificationMessage = ref('')
 const notificationType = ref('success')
 const loading = ref(true)
 const error = ref(null)
-const isMobile = computed(() => window.innerWidth <= 640)
 
 onMounted(() => {
   userFavorites()
@@ -71,17 +74,18 @@ onUnmounted(() => {
 })
 
 const handleResize = () => {
-  // You can add additional responsive logic here if needed
+  // Implement any responsive logic here if needed
 }
 
 const removeFromFavorites = async (productId) => {
   try {
-   /*  await removeFavorite(productId) */
+    // Implement the actual removal logic here
+    // await removeFavorite(productId)
     favorites.value = favorites.value.filter(product => product.id !== productId)
-    showNotificationMessage('favorites.removedNotification', 'success')
+    showNotificationMessage('Producto eliminado de favoritos', 'success')
   } catch (error) {
     console.error(error)
-    showNotificationMessage('favorites.errorRemoving', 'error')
+    showNotificationMessage('Error al eliminar el producto', 'error')
   }
 }
 
@@ -106,7 +110,7 @@ const userFavorites = async () => {
     console.error(err)
     error.value = err
     loading.value = false
-    showNotificationMessage('favorites.errorLoading', 'error')
+    showNotificationMessage('Error al cargar los favoritos', 'error')
   }
 }
 
@@ -117,7 +121,7 @@ const formatPrice = (price) => {
 
 const addToCart = (product) => {
   cartStore.addToCart(product)
-  showNotificationMessage('favorites.addedToCart', 'success')
+  showNotificationMessage('Producto añadido al carrito', 'success')
 }
 
 const goToProducts = () => {
@@ -176,6 +180,7 @@ const goToProducts = () => {
   position: relative;
   padding-top: 100%;
   background-color: #f7fafc;
+  overflow: hidden;
 }
 
 .image-container img {
@@ -384,6 +389,12 @@ const goToProducts = () => {
 }
 
 /* Responsive styles */
+@media (max-width: 1024px) {
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+}
+
 @media (max-width: 768px) {
   .favorites-container {
     padding: 15px;
@@ -438,6 +449,14 @@ const goToProducts = () => {
     padding: 8px 12px;
   }
 
+  .button-text {
+    display: none;
+  }
+
+  .add-to-cart-button i {
+    margin-right: 0;
+  }
+
   .notification {
     width: 90%;
     font-size: 14px;
@@ -452,5 +471,81 @@ const goToProducts = () => {
     padding: 10px 20px;
     font-size: 14px;
   }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .product-card,
+  .remove-button,
+  .add-to-cart-button,
+  .browse-products-button {
+    transition: none;
+  }
+
+  .loading-spinner {
+    animation: none;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .product-card {
+    border: 2px solid #000;
+  }
+
+  .badge.in-stock {
+    background-color: #000;
+    color: #fff;
+    outline: 1px solid #fff;
+  }
+
+  .add-to-cart-button,
+  .browse-products-button {
+    background-color: #000;
+    color: #fff;
+    border: 2px solid #fff;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) {
+  .product-card:hover {
+    transform: none;
+  }
+
+  .product-card:active {
+    transform: translateY(-2px);
+  }
+
+  .remove-button:hover,
+  .add-to-cart-button:hover,
+  .browse-products-button:hover {
+    transform: none;
+  }
+
+  .remove-button:active,
+  .add-to-cart-button:active,
+  .browse-products-button:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Improved focus styles for keyboard navigation */
+.remove-button:focus,
+.add-to-cart-button:focus,
+.browse-products-button:focus {
+  outline: 2px solid #4299e1;
+  outline-offset: 2px;
+}
+
+/* Smooth scrolling for the entire page */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Prevent text size adjustment on orientation change */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 </style>

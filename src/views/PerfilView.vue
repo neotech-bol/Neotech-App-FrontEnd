@@ -367,7 +367,7 @@ body {
   left: 0;
   width: 100%;
   height: 5px;
-  background: linear-gradient(90deg, #3B82F6, #10B981);
+  background: var(--primary-color);
 }
 
 .encabezado-perfil:hover {
@@ -378,7 +378,7 @@ body {
 .avatar-perfil {
   width: 110px;
   height: 110px;
-  background: linear-gradient(135deg, #3B82F6, #2563EB);
+  background: var(--primary-color);
   color: white;
   font-size: 2.5rem;
   font-weight: bold;
@@ -400,7 +400,7 @@ body {
   left: -4px;
   right: -4px;
   bottom: -4px;
-  background: linear-gradient(135deg, #3B82F6, #2563EB);
+  background: var(--primary-color);
   border-radius: 50%;
   z-index: -1;
   opacity: 0;
@@ -424,7 +424,7 @@ body {
 }
 
 .gradient-text {
-  background: linear-gradient(90deg, #3B82F6, #10B981);
+  background: var(--primary-color);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -491,7 +491,7 @@ body {
   left: 0;
   width: 100%;
   height: 5px;
-  background: linear-gradient(90deg, #3B82F6, #10B981);
+  background: var(--primary-color);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -523,7 +523,7 @@ h2::after {
   left: 0;
   width: 40px;
   height: 3px;
-  background: linear-gradient(90deg, #3B82F6, #10B981);
+  background: var(--primary-color);
   border-radius: 3px;
 }
 
@@ -633,7 +633,7 @@ h2::after {
 }
 
 .boton-principal {
-  background: linear-gradient(135deg, #3B82F6, #2563EB);
+  background: var(--primary-color);
   color: white;
   box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
 }

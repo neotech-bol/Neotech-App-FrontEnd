@@ -2,18 +2,14 @@
   <section class="services-section" :class="{ 'fade-in': contentLoaded }">
     <div class="services-header">
       <h2>Nuestros <span class="highlight">Servicios</span></h2>
-      <p>Nuestro objetivo es simplificar el proceso de importación y garantizar que encuentres exactamente lo que necesitas.</p>
+      <p>Nuestro objetivo es simplificar el proceso de importación y garantizar que encuentres exactamente lo que
+        necesitas.</p>
     </div>
 
     <div class="services-grid">
-      <div 
-        v-for="(service, index) in services" 
-        :key="index" 
-        class="service-card"
-        :class="{ 'active': hoveredService === index }"
-        @mouseenter="hoveredService = index"
-        @mouseleave="hoveredService = null"
-      >
+      <div v-for="(service, index) in services" :key="index" class="service-card"
+        :class="{ 'active': hoveredService === index }" @mouseenter="hoveredService = index"
+        @mouseleave="hoveredService = null">
         <div class="service-content">
           <div class="icon-container">
             <div class="icon" :style="{ backgroundColor: `var(--service-bg-${index})` }">
@@ -22,7 +18,7 @@
           </div>
           <h3>{{ service.title }}</h3>
           <p>{{ service.description }}</p>
-          <div class="service-details" v-if="service.details">
+          <div class="service-details" :class="{ 'expanded': hoveredService === index }">
             <ul>
               <li v-for="(detail, detailIndex) in service.details" :key="detailIndex">
                 {{ detail }}
@@ -31,8 +27,8 @@
           </div>
         </div>
         <div class="card-footer">
-          <button class="learn-more-btn">
-            Conocer más
+          <button class="learn-more-btn" @click="toggleDetails(index)">
+            {{ hoveredService === index ? 'Menos detalles' : 'Conocer más' }}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M5 12h14M12 5l7 7-7 7"></path>
             </svg>
@@ -52,11 +48,8 @@
 <script setup>
 import { inject, ref, watchEffect, onMounted, h } from 'vue'
 
-// Estado reactivo
 const hoveredService = ref(null);
 const contentLoaded = ref(false);
-const selectedLocation = inject('selectedLocation', ref('cochabamba'));
-
 // Definición de iconos como componentes funcionales
 const DownloadIcon = () => h('svg', {
   width: '40',
@@ -142,60 +135,32 @@ const services = ref([
   }
 ]);
 
-// Función para actualizar colores según la ubicación
-const updateColors = (location) => {
-  let primaryColor, hoverColor, serviceBgColors;
-  
-  switch(location) {
-    case 'la-paz':
-      primaryColor = '#f8a812';
-      hoverColor = '#e69711';
-      serviceBgColors = ['#FFF8E1', '#FFF3CD', '#FFEDB8', '#FFE8A3'];
-      break;
-    case 'santa-cruz':
-      primaryColor = '#4CAF50';
-      hoverColor = '#388E3C';
-      serviceBgColors = ['#E8F5E9', '#C8E6C9', '#A5D6A7', '#81C784'];
-      break;
-    default: // cochabamba
-      primaryColor = '#3B82F6';
-      hoverColor = '#2563eb';
-      serviceBgColors = ['#EFF6FF', '#DBEAFE', '#BFDBFE', '#93C5FD'];
-  }
-  
-  document.documentElement.style.setProperty('--primary-color', primaryColor);
-  document.documentElement.style.setProperty('--primary-hover-color', hoverColor);
-  
-  // Establecer colores de fondo para los servicios
-  serviceBgColors.forEach((color, index) => {
-    document.documentElement.style.setProperty(`--service-bg-${index}`, color);
-  });
+
+
+const hexToRgb = (hex) => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : null;
 };
 
-// Simular carga de contenido para animación
 const simulateLoading = () => {
   setTimeout(() => {
     contentLoaded.value = true;
   }, 300);
 };
 
-watchEffect(() => {
-  if (selectedLocation && selectedLocation.value) {
-    updateColors(selectedLocation.value);
-  }
-});
+const toggleDetails = (index) => {
+  hoveredService.value = hoveredService.value === index ? null : index;
+};
+
 
 onMounted(() => {
-  if (selectedLocation && selectedLocation.value) {
-    updateColors(selectedLocation.value);
-  }
   simulateLoading();
 });
 </script>
 
 <style scoped>
 .services-section {
-  max-width: 1200px;
+  max-width: 1440px;
   margin: 80px auto;
   padding: 0 20px;
   opacity: 0;
@@ -340,14 +305,14 @@ onMounted(() => {
 }
 
 .service-details {
-  height: 0;
+  max-height: 0;
   overflow: hidden;
-  transition: height 0.3s ease, opacity 0.3s ease;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
   opacity: 0;
 }
 
-.service-card.active .service-details {
-  height: auto;
+.service-details.expanded {
+  max-height: 500px;
   opacity: 1;
 }
 
@@ -455,7 +420,7 @@ onMounted(() => {
   .services-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .services-cta {
     padding: 40px 30px;
   }
@@ -465,11 +430,11 @@ onMounted(() => {
   .services-header h2 {
     font-size: 2.2rem;
   }
-  
+
   .services-cta h3 {
     font-size: 1.6rem;
   }
-  
+
   .service-card h3 {
     font-size: 1.2rem;
   }
@@ -483,20 +448,20 @@ onMounted(() => {
   .services-header {
     margin-bottom: 40px;
   }
-  
+
   .services-header h2 {
     font-size: 1.9rem;
   }
-  
+
   .services-cta {
     padding: 30px 20px;
     margin-top: 60px;
   }
-  
+
   .service-content {
     padding: 25px 20px 15px;
   }
-  
+
   .icon {
     width: 70px;
     height: 70px;
@@ -511,22 +476,34 @@ onMounted(() => {
   .services-section {
     margin: 60px auto;
   }
-  
+
   .services-header h2 {
     font-size: 1.7rem;
   }
-  
+
   .services-header p {
     font-size: 1rem;
   }
-  
+
   .services-cta h3 {
     font-size: 1.4rem;
   }
-  
+
   .contact-btn {
     padding: 12px 25px;
     font-size: 0.95rem;
+  }
+}
+
+/* Accessibility Improvements */
+@media (prefers-reduced-motion: reduce) {
+  .services-section,
+  .service-card,
+  .icon,
+  .service-icon,
+  .learn-more-btn,
+  .contact-btn {
+    transition: none;
   }
 }
 </style>

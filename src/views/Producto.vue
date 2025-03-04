@@ -1,14 +1,37 @@
 <template>
   <div class="product-detail">
+    <!-- Mobile Header (visible only on small screens) -->
+    <div class="mobile-header">
+      <div class="badge-container">
+        <span v-if="discountPercentage > 0" class="sale-badge">
+          <i class="fas fa-bolt"></i> OFERTA
+        </span>
+        <span v-if="isNewProduct" class="new-badge">
+          <i class="fas fa-star"></i> NUEVO
+        </span>
+      </div>
+      <h1 class="product-title" :style="gradientStyle">{{ dato.nombre }}</h1>
+      
+      <!-- Mobile Price Quick View -->
+      <div class="mobile-price-preview">
+        <span class="current-price">{{ formatPrice(selectedModelPrice) }}</span>
+        <div class="price-details" v-if="originalPrice > selectedModelPrice">
+          <span class="original-price">{{ formatPrice(originalPrice) }}</span>
+          <span class="discount-badge">-{{ discountPercentage }}%</span>
+        </div>
+      </div>
+    </div>
+
     <div class="product-container">
       <!-- Product Images Section -->
       <div class="product-images">
+        <!-- Swipeable Main Image for Mobile -->
         <div class="main-image-wrapper">
           <div class="main-image-container" 
                @mousemove="handleImageZoom" 
                @mouseleave="resetZoom"
-               @touchstart="handleTouchZoom" 
-               @touchmove="handleTouchZoom" 
+               @touchstart="handleTouchStart" 
+               @touchmove="handleTouchMove" 
                @touchend="resetZoom">
             <img :src="currentImage" :alt="dato.nombre" class="main-image-img" ref="mainImage">
             <div class="image-overlay">
@@ -17,8 +40,27 @@
                 <span>Zoom</span>
               </span>
             </div>
+            
+            <!-- Image Navigation Arrows -->
+            <button class="image-nav prev" @click="prevImage" v-if="allImages.length > 1">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="image-nav next" @click="nextImage" v-if="allImages.length > 1">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+            
+            <!-- Image Pagination Dots for Mobile -->
+            <div class="image-pagination">
+              <span 
+                v-for="(_, index) in allImages" 
+                :key="index" 
+                :class="['pagination-dot', { active: selectedImage === index }]"
+                @click="selectThumbnail(index)">
+              </span>
+            </div>
           </div>
         </div>
+        
         <div class="thumbnail-list" ref="thumbnailScroll">
           <button class="scroll-btn left" @click="scrollThumbnails('left')" v-show="showScrollButtons">
             <i class="fas fa-chevron-left"></i>
@@ -41,7 +83,7 @@
 
       <!-- Product Info Section -->
       <div class="product-info">
-        <div class="sticky-header">
+        <div class="sticky-header desktop-only">
           <div class="badge-container">
             <span v-if="discountPercentage > 0" class="sale-badge">
               <i class="fas fa-bolt"></i> OFERTA DEL DÍA
@@ -53,6 +95,9 @@
           <h1 class="product-title" :style="gradientStyle">{{ dato.nombre }}</h1>
           <h2 class="product-subtitle">{{ dato.subtitulo || 'Producto de Alta Calidad' }}</h2>
         </div>
+
+        <!-- Mobile Only Subtitle -->
+        <h2 class="product-subtitle mobile-only">{{ dato.subtitulo || 'Producto de Alta Calidad' }}</h2>
 
         <div class="info-content">
           <!-- Enhanced Rating -->
@@ -72,13 +117,14 @@
               <span class="reviews-count">{{ dato.total_reviews || 0 }} valoraciones</span>
               <button class="write-review-btn" @click="openReviewModal">
                 <i class="fas fa-pen"></i>
-                Escribir reseña
+                <span class="desktop-only">Escribir reseña</span>
+                <span class="mobile-only">Reseña</span>
               </button>
             </div>
           </div>
 
-          <!-- Price Section -->
-          <div class="price-section">
+          <!-- Price Section (Desktop) -->
+          <div class="price-section desktop-only">
             <div class="price-container">
               <div class="price-info">
                 <span class="current-price">{{ formatPrice(selectedModelPrice) }}</span>
@@ -104,8 +150,80 @@
             <span>{{ stockMessage }}</span>
           </div>
 
-          <!-- Features Section -->
-          <div class="features-section">
+          <!-- Accordion Sections for Mobile -->
+          <div class="accordion-sections">
+            <!-- Features Section -->
+            <div class="accordion-section" :class="{ 'expanded': expandedSection === 'features' }">
+              <div class="accordion-header" @click="toggleSection('features')">
+                <h3 class="section-title">Características Destacadas</h3>
+                <i class="fas" :class="expandedSection === 'features' ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+              </div>
+              <div class="accordion-content">
+                <ul class="features">
+                  <li 
+                    v-for="caracteristica in dato.caracteristicas" 
+                    :key="caracteristica.id" 
+                    class="feature-item"
+                    :class="{ 'feature-hover': hoveredFeature === caracteristica.id }"
+                    @mouseover="hoveredFeature = caracteristica.id" 
+                    @mouseleave="hoveredFeature = null">
+                    <i class="fas fa-check-circle"></i>
+                    <span>{{ caracteristica.caracteristica }}</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            
+            <!-- Colores Disponibles -->
+            <div class="accordion-section" :class="{ 'expanded': expandedSection === 'colors' }">
+              <div class="accordion-header" @click="toggleSection('colors')">
+                <h3 class="section-title">Colores Disponibles</h3>
+                <i class="fas" :class="expandedSection === 'colors' ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+              </div>
+              <div class="accordion-content">
+                <div class="color-options">
+                  <button 
+                    v-for="(image, index) in dato.images" 
+                    :key="index" 
+                    class="color-swatch"
+                    :style="{ backgroundColor: image.color }" 
+                    @click="selectColor(index)"
+                    :class="{ active: selectedImage === index + 1 }">
+                    <div class="color-checkmark" v-if="selectedImage === index + 1">
+                      <i class="fas fa-check"></i>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Model Selection -->
+            <div class="accordion-section" :class="{ 'expanded': expandedSection === 'models' }">
+              <div class="accordion-header" @click="toggleSection('models')">
+                <h3 class="section-title">Selecciona el Modelo</h3>
+                <i class="fas" :class="expandedSection === 'models' ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+              </div>
+              <div class="accordion-content">
+                <div class="model-grid">
+                  <button 
+                    v-for="model in dato.modelos" 
+                    :key="model.id"
+                    :class="['model-card', { active: selectedModel === model.id }]" 
+                    @click="selectModel(model)">
+                    <span class="model-name">{{ model.nombre }}</span>
+                    <span class="model-price">{{ formatPrice(model.precio) }}</span>
+                    <div class="model-stock" v-if="model.cantidad_maxima <= 5">
+                      <i class="fas fa-exclamation-circle"></i>
+                      Últimas unidades
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Desktop Features Section -->
+          <div class="features-section desktop-only">
             <h3 class="section-title">Características Destacadas</h3>
             <ul class="features">
               <li 
@@ -121,8 +239,8 @@
             </ul>
           </div>
           
-          <!-- Colores Disponibles -->
-          <div class="color-section">
+          <!-- Desktop Color Section -->
+          <div class="color-section desktop-only">
             <h3 class="section-title">Colores Disponibles</h3>
             <div class="color-options">
               <button 
@@ -139,8 +257,8 @@
             </div>
           </div>
           
-          <!-- Model Selection -->
-          <div class="model-section">
+          <!-- Desktop Model Selection -->
+          <div class="model-section desktop-only">
             <h3 class="section-title">Selecciona el Modelo</h3>
             <div class="model-grid">
               <button 
@@ -214,6 +332,22 @@
         </div>
       </div>
     </div>
+    
+    <!-- Mobile Sticky Add to Cart Bar -->
+    <div class="mobile-sticky-bar">
+      <div class="mobile-price">
+        <span class="current-price">{{ formatPrice(selectedModelPrice) }}</span>
+        <span class="original-price" v-if="originalPrice > selectedModelPrice">{{ formatPrice(originalPrice) }}</span>
+      </div>
+      <button 
+        class="mobile-add-to-cart" 
+        @click="addToCart" 
+        :disabled="!selectedModel || addingToCart"
+        :class="{ 'loading': addingToCart }">
+        <i class="fas" :class="addingToCart ? 'fa-spinner fa-spin' : 'fa-shopping-cart'"></i>
+        <span>{{ addingToCart ? 'Agregando...' : 'Agregar' }}</span>
+      </button>
+    </div>
   </div>
 </template>
 
@@ -243,6 +377,9 @@ const showScrollButtons = ref(false);
 const thumbnailScroll = ref(null);
 const hoveredFeature = ref(null);
 const animatePrice = ref(false);
+const expandedSection = ref('features'); // Para acordeón móvil
+const touchStartX = ref(0);
+const touchEndX = ref(0);
 
 // Computed properties
 const allImages = computed(() => {
@@ -292,7 +429,6 @@ const verProducto = async () => {
   try {
     const { data } = await detalleProducto(idProducto);
     dato.value = data.dato;
-    console.log(dato.value);
     originalPrice.value = dato.value.precio;
     if (dato.value.modelos?.length > 0) {
       selectModel(dato.value.modelos[0]);
@@ -412,14 +548,40 @@ const handleImageZoom = (event) => {
   mainImage.value.style.transform = 'scale(1.8)';
 };
 
-const handleTouchZoom = (event) => {
-  if (!mainImage.value || event.touches.length !== 1) return;
-  const touch = event.touches[0];
-  const { left, top, width, height } = mainImage.value.getBoundingClientRect();
-  const x = (touch.clientX - left) / width;
-  const y = (touch.clientY - top) / height;
-  mainImage.value.style.transformOrigin = `${x * 100}% ${y * 100}%`;
-  mainImage.value.style.transform = 'scale(1.8)';
+const handleTouchStart = (event) => {
+  touchStartX.value = event.touches[0].clientX;
+};
+
+const handleTouchMove = (event) => {
+  // Para zoom
+  if (event.touches.length === 2) {
+    // Implementación de zoom con dos dedos
+    if (!mainImage.value) return;
+    const touch = event.touches[0];
+    const { left, top, width, height } = mainImage.value.getBoundingClientRect();
+    const x = (touch.clientX - left) / width;
+    const y = (touch.clientY - top) / height;
+    mainImage.value.style.transformOrigin = `${x * 100}% ${y * 100}%`;
+    mainImage.value.style.transform = 'scale(1.8)';
+    return;
+  }
+  
+  // Para deslizar
+  touchEndX.value = event.touches[0].clientX;
+  const diffX = touchStartX.value - touchEndX.value;
+  
+  // Si el deslizamiento es significativo (más de 50px)
+  if (Math.abs(diffX) > 50) {
+    if (diffX > 0) {
+      // Deslizamiento a la izquierda, mostrar siguiente imagen
+      nextImage();
+    } else {
+      // Deslizamiento a la derecha, mostrar imagen anterior
+      prevImage();
+    }
+    // Reiniciar valores para evitar múltiples cambios
+    touchStartX.value = touchEndX.value;
+  }
 };
 
 const resetZoom = () => {
@@ -461,6 +623,22 @@ const selectThumbnail = (index) => {
   }
 };
 
+const nextImage = () => {
+  if (selectedImage.value < allImages.value.length - 1) {
+    selectThumbnail(selectedImage.value + 1);
+  } else {
+    selectThumbnail(0); // Volver al principio
+  }
+};
+
+const prevImage = () => {
+  if (selectedImage.value > 0) {
+    selectThumbnail(selectedImage.value - 1);
+  } else {
+    selectThumbnail(allImages.value.length - 1); // Ir al final
+  }
+};
+
 const toggleWishlist = () => {
   // Animar corazón
   const heartBtn = document.querySelector('.add-to-wishlist');
@@ -492,6 +670,11 @@ const openReviewModal = () => {
   console.log('Open review modal');
 };
 
+// Método para controlar el acordeón en móvil
+const toggleSection = (section) => {
+  expandedSection.value = expandedSection.value === section ? null : section;
+};
+
 // Lifecycle hooks
 onMounted(() => {
   verProducto();
@@ -502,6 +685,13 @@ onMounted(() => {
   setTimeout(() => {
     document.querySelector('.product-detail').classList.add('loaded');
   }, 100);
+  
+  // Detectar si es móvil para expandir la primera sección
+  if (window.innerWidth <= 768) {
+    expandedSection.value = 'features';
+  } else {
+    expandedSection.value = null;
+  }
 });
 
 // Watchers
@@ -530,6 +720,23 @@ watch(quantity, validateQuantity);
   display: grid;
   grid-template-columns: minmax(300px, 2fr) 3fr;
   gap: 2rem;
+}
+
+/* Utility Classes */
+.desktop-only {
+  display: block;
+}
+
+.mobile-only {
+  display: none;
+}
+
+/* Mobile Header */
+.mobile-header {
+  display: none;
+  padding: 1rem 0;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #eee;
 }
 
 /* Animation Classes */
@@ -623,6 +830,71 @@ watch(quantity, validateQuantity);
 
 .main-image-container:hover .image-overlay {
   opacity: 1;
+}
+
+/* Image Navigation */
+.image-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.8);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.main-image-container:hover .image-nav {
+  opacity: 1;
+}
+
+.image-nav.prev {
+  left: 10px;
+}
+
+.image-nav.next {
+  right: 10px;
+}
+
+.image-nav:hover {
+  background: white;
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* Image Pagination for Mobile */
+.image-pagination {
+  position: absolute;
+  bottom: 15px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  z-index: 5;
+}
+
+.pagination-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.pagination-dot.active {
+  background: white;
+  transform: scale(1.3);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
 }
 
 .zoom-hint {
@@ -743,6 +1015,14 @@ watch(quantity, validateQuantity);
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
 }
 
+/* Mobile Price Preview */
+.mobile-price-preview {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
 /* Info Section */
 .product-info {
   display: flex;
@@ -766,6 +1046,7 @@ watch(quantity, validateQuantity);
   display: flex;
   gap: 0.75rem;
   margin-bottom: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .sale-badge, .new-badge {
@@ -810,6 +1091,55 @@ watch(quantity, validateQuantity);
   color: #666;
   margin: 0.375rem 0 0;
   font-weight: 500;
+}
+
+/* Accordion Sections for Mobile */
+.accordion-sections {
+  display: none;
+}
+
+.accordion-section {
+  border: 1px solid #e0e0e0;
+  border-radius: 0.75rem;
+  margin-bottom: 1rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.accordion-section.expanded {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border-color: #007bff;
+}
+
+.accordion-header {
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  background: #f8f9fa;
+  transition: background 0.3s ease;
+}
+
+.accordion-section.expanded .accordion-header {
+  background: rgba(0, 123, 255, 0.05);
+}
+
+.accordion-header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  padding: 0 1rem;
+}
+
+.accordion-section.expanded .accordion-content {
+  max-height: 500px;
+  padding: 1rem;
 }
 
 /* Rating Section */
@@ -1432,6 +1762,57 @@ watch(quantity, validateQuantity);
   transform: translateX(-50%) translateY(-4px);
 }
 
+/* Mobile Sticky Bar */
+.mobile-sticky-bar {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: white;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mobile-price {
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-price .current-price {
+  font-size: 1.25rem;
+}
+
+.mobile-price .original-price {
+  font-size: 0.875rem;
+}
+
+.mobile-add-to-cart {
+  height: 2.5rem;
+  padding: 0 1.25rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: linear-gradient(45deg, #007bff, #0056b3);
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.mobile-add-to-cart:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 /* Loading State */
 .loading {
   position: relative;
@@ -1475,7 +1856,27 @@ watch(quantity, validateQuantity);
 
 @media (max-width: 768px) {
   .product-detail {
-    padding: 1rem;
+    padding: 0.75rem;
+  }
+  
+  .desktop-only {
+    display: none;
+  }
+  
+  .mobile-only {
+    display: block;
+  }
+  
+  .mobile-header {
+    display: block;
+  }
+  
+  .mobile-price-preview {
+    display: flex;
+  }
+  
+  .mobile-sticky-bar {
+    display: flex;
   }
   
   .product-title {
@@ -1483,7 +1884,7 @@ watch(quantity, validateQuantity);
   }
   
   .current-price {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
   }
   
   .rating-section {
@@ -1492,8 +1893,23 @@ watch(quantity, validateQuantity);
     gap: 0.75rem;
   }
   
-  .model-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .reviews-summary {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .accordion-sections {
+    display: block;
+  }
+  
+  .features-section,
+  .color-section,
+  .model-section {
+    display: none;
+  }
+  
+  .image-pagination {
+    display: flex;
   }
   
   .quantity-section {
@@ -1508,11 +1924,24 @@ watch(quantity, validateQuantity);
     flex: 1;
     max-width: 200px;
   }
+  
+  /* Adjust purchase section for mobile */
+  .purchase-section {
+    position: static;
+    box-shadow: none;
+    padding-bottom: 5rem; /* Space for sticky bar */
+  }
+  
+  /* Make thumbnails smaller on mobile */
+  .thumbnail {
+    flex: 0 0 50px;
+    height: 50px;
+  }
 }
 
 @media (max-width: 480px) {
   .product-detail {
-    padding: 0.75rem;
+    padding: 0.5rem;
   }
   
   .badge-container {
@@ -1548,9 +1977,7 @@ watch(quantity, validateQuantity);
     width: 100%;
     height: 3rem;
   }
-}
-
-@media (max-width: 360px) {
+  
   .model-grid {
     grid-template-columns: 1fr;
   }
@@ -1591,6 +2018,16 @@ watch(quantity, validateQuantity);
   
   .model-card:active {
     background: rgba(0, 123, 255, 0.05);
+  }
+  
+  /* Hide zoom hint on touch devices */
+  .zoom-hint {
+    display: none;
+  }
+  
+  /* Make image navigation always visible on touch */
+  .image-nav {
+    opacity: 0.8;
   }
 }
 

@@ -8,7 +8,7 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 import 'sweetalert2/dist/sweetalert2.min.css'
 import 'bootstrap-icons/font/bootstrap-icons.css'
-
+import { useThemeStore } from './stores/themeStore'
 // Crear la instancia de la aplicación
 const app = createApp(App)
 
@@ -22,6 +22,10 @@ const head = createHead()
 app.use(pinia)
 app.use(router)
 app.use(head)
+// Initialize the theme store before mounting the app
+// This ensures the theme is applied immediately
+const themeStore = useThemeStore()
+themeStore.applyTheme(themeStore.currentDepartment)
 
 // Configurar el manejo dinámico de metadatos SEO desde el router
 router.beforeEach((to, from, next) => {

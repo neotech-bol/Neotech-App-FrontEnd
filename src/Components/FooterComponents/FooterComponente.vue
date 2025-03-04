@@ -49,9 +49,9 @@
         <transition name="slide">
           <div v-show="contactSectionOpen || !isMobile" class="contact-content">
             <div class="contact-info">
-              <p><i class="fas fa-map-marker-alt"></i> Avenida América y Libertador, Zona Cala Cala Cochabamba, Bolivia.</p>
-              <p><i class="fas fa-phone-alt"></i> +591 759-01415</p>
-              <p><i class="fas fa-envelope"></i> contacto@neotechbo.com</p>
+              <p><i class="fas fa-map-marker-alt" style="color: var(--primary-color);"></i> Avenida América y Libertador, Zona Cala Cala Cochabamba, Bolivia.</p>
+              <p><i class="fas fa-phone-alt" style="color: var(--primary-color);"></i> +591 759-01415</p>
+              <p><i class="fas fa-envelope" style="color: var(--primary-color);"></i> contacto@neotechbo.com</p>
             </div>
             <div class="social-links">
               <a href="#" class="social-link">
@@ -177,7 +177,7 @@ onUnmounted(() => {
 }
 
 .footer-content {
-  max-width: 1200px;
+  max-width: 1440px;
   margin: 0 auto;
   padding: 0 20px;
   display: grid;
@@ -234,12 +234,12 @@ onUnmounted(() => {
   left: 0;
   width: 0;
   height: 2px;
-  background-color: #007bff;
+  background-color: var(--primary-color);
   transition: all 0.3s ease;
 }
 
 .footer-link:hover {
-  color: #007bff;
+  color: var(--primary-color);
 }
 
 .footer-link:hover::before {
@@ -254,7 +254,7 @@ onUnmounted(() => {
 .contact-info p {
   color: #6c757d;
   margin-bottom: 12px;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
 }
 
 .contact-info i {
@@ -284,7 +284,7 @@ onUnmounted(() => {
 
 .social-link:hover {
   color: #fff;
-  background-color: #007bff;
+  background-color: var(--primary-color);
   transform: translateY(-3px);
   box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
 }

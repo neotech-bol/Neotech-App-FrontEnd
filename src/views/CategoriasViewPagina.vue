@@ -178,29 +178,27 @@ onMounted(() => {
     <h1 class="main-title">
       Explora Nuestras <span class="text-accent">Categorías</span>
     </h1>
-
-    <!-- Search and Filter -->
-    <div class="search-filter-bar">
-      <div class="search-wrapper">
-        <i class="fas fa-search search-icon"></i>
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Buscar productos..."
-          class="search-input"
-          aria-label="Buscar productos"
-        />
-      </div>
-      <div class="select-wrapper">
-        <select v-model="selectedCategory" class="category-select" aria-label="Filtrar por categoría">
-          <option value="">Todas las Categorías</option>
-          <option v-for="category in uniqueCategories" :key="category" :value="category">
-            {{ category }}
-          </option>
-        </select>
-        <i class="fas fa-chevron-down select-arrow"></i>
+    <!-- Filters Section -->
+    <div class="filters-wrapper">
+      <div class="filters">
+        <div class="search-container">
+          <div class="search-wrapper">
+            <i class="fas fa-search search-icon"></i>
+            <input v-model="searchQuery" type="text" placeholder="Buscar productos..." class="search-input" aria-label="Buscar productos" />
+          </div>
+        </div>
+        <div class="select-wrapper">
+          <select v-model="selectedCategory" class="category-select" aria-label="Filtrar por categoría">
+            <option value="">Todas las Categorías</option>
+            <option v-for="category in uniqueCategories" :key="category" :value="category">
+              {{ category }}
+            </option>
+          </select>
+          <i class="fas fa-chevron-down select-arrow"></i>
+        </div>
       </div>
     </div>
+
 
     <!-- Loading State -->
     <div v-if="loading" class="loading-overlay">
@@ -219,20 +217,14 @@ onMounted(() => {
 
     <!-- Catalog Content -->
     <div v-else class="categories-wrapper">
-      <div v-for="(categoria, index) in filteredCategorias" :key="categoria.id" 
-           class="category-section"
-           :style="{ '--index': index }">
+      <div v-for="(categoria, index) in filteredCategorias" :key="categoria.id" class="category-section" :style="{ '--index': index }">
         <!-- Full-width Banner -->
         <div class="category-banner" @click="viewAllProducts(categoria.id)">
           <img :src="categoria.banner" :alt="categoria.nombre" loading="lazy" />
           <div class="banner-overlay">
-            <div class="banner-content">
-              <h2>
-                {{ categoria.nombre }}
-              </h2>
-              <p>{{ categoria.descripcion }}</p>
-              <button class="banner-cta">Explorar Colección</button>
-            </div>
+            <h2>{{ categoria.nombre }}</h2>
+            <p>{{ categoria.descripcion }}</p>
+            <button class="banner-cta">Explorar Colección</button>
           </div>
         </div>
 
@@ -247,77 +239,54 @@ onMounted(() => {
 
         <!-- Products Grid -->
         <div class="products-grid">
-          <div v-for="product in categoria.productos" :key="product.id" class="product-card">
-            <div class="product-image-container">
-              <transition name="fade" mode="out-in">
-                <img
-                  :src="getCurrentImage(product)"
-                  :alt="product.nombre"
-                  loading="lazy"
-                  :key="currentImageIndex[product.id]"
-                />
-              </transition>
+          <div v-for="product in categoria.productos" :key="product.id" class="product-card" :style="{ '--index': index }">
+            <div class="product-image-wrapper">
+              <div class="product-image">
+                <transition name="fade" mode="out-in">
+                  <img :src="getCurrentImage(product)" :alt="product.nombre" loading="lazy" :key="currentImageIndex[product.id]" />
+                </transition>
 
-              <!-- Navigation Buttons -->
-              <button
-                v-if="getProductImages(product).length > 1"
-                class="nav-button prev"
-                @click.stop="prevImage(product)"
-                aria-label="Imagen anterior"
-              >
-                <i class="fas fa-chevron-left"></i>
-              </button>
-              <button
-                v-if="getProductImages(product).length > 1"
-                class="nav-button next"
-                @click.stop="nextImage(product)"
-                aria-label="Imagen siguiente"
-              >
-                <i class="fas fa-chevron-right"></i>
-              </button>
+                <!-- Navigation Buttons -->
+                <button v-if="getProductImages(product).length > 1" class="nav-button prev" @click.stop="prevImage(product)" aria-label="Imagen anterior">
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+                <button v-if="getProductImages(product).length > 1" class="nav-button next" @click.stop="nextImage(product)" aria-label="Imagen siguiente">
+                  <i class="fas fa-chevron-right"></i>
+                </button>
 
-              <!-- Badge -->
-              <span v-if="product.badge" :class="['badge', product.badge === 'LIMITADO' ? 'limited' : 'new']">
-                {{ product.badge }}
-              </span>
+                <!-- Badge -->
+                <span v-if="product.badge" :class="['badge', product.badge === 'LIMITADO' ? 'badge-limited' : 'badge-new']">
+                  {{ product.badge }}
+                </span>
 
-              <!-- Product Actions -->
-              <div class="product-actions">
-                <button @click.stop="addToCart(product)" class="action-button" aria-label="Agregar al carrito"
-                        :class="{ 'adding': addingToCart === product.id }">
-                  <i class="fas" :class="addingToCart === product.id ? 'fa-spinner fa-spin' : 'fa-shopping-cart'"></i>
-                </button>
-                <button @click.stop="viewProductDetails(product.id)" class="action-button" aria-label="Ver producto">
-                  <i class="fas fa-eye"></i>
-                </button>
-                <button @click.stop="favoriteUser(product.id)" class="action-button" aria-label="Agregar a favoritos"
-                        :class="{ 'in-favorites': favoriteProducts.includes(product.id) }">
-                  <i class="fas fa-heart"></i>
-                </button>
+                <!-- Product Actions Bottom -->
+                <div class="product-actions-bottom">
+                  <button @click.stop="addToCart(product)" class="action-button cart-button" aria-label="Agregar al carrito" :class="{ 'adding': addingToCart === product.id }">
+                    <i class="fas" :class="addingToCart === product.id ? 'fa-spinner fa-spin' : 'fa-shopping-cart'"></i>
+                  </button>
+                  <button @click.stop="viewProductDetails(product.id)" class="action-button view-button" aria-label="Ver producto">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button @click.stop="favoriteUser(product.id)" class="action-button favorite-button" aria-label="Agregar a favoritos" :class="{ 'in-favorites': favoriteProducts.includes(product.id) }">
+                    <i class="fas fa-heart"></i>
+                  </button>
+                </div>
               </div>
             </div>
 
             <!-- Product Info -->
             <div class="product-info">
-              <span class="category-label">{{ product.categoria?.nombre || categoria.nombre }}</span>
-              <h3 class="product-title">{{ product.nombre }}</h3>
+              <span class="category">{{ product.categoria?.nombre || categoria.nombre }}</span>
+              <h3 class="product-name">{{ product.nombre }}</h3>
               <div class="rating-container">
-                <div class="stars">
-                  <span
-                    v-for="star in 5"
-                    :key="star"
-                    class="star"
-                    :class="{ filled: star <= (userRatings.find(r => r.producto_id === product.id)?.rating || 0) }"
-                    @click="storeRatingUser(product.id, star)"
-                  >
+                <div class="rating">
+                  <span v-for="star in 5" :key="star" class="star" :class="{ filled: star <= (userRatings.find(r => r.producto_id === product.id)?.rating || 0) }" @click="storeRatingUser(product.id, star)">
                     ★
                   </span>
                 </div>
-                <span class="rating-count">
-                  ({{ userRatings.find(r => r.producto_id === product.id)?.total_users || 0 }})
-                </span>
+                <span class="rating-count">({{ userRatings.find(r => r.producto_id === product.id)?.total_users || 0 }})</span>
               </div>
-              <div class="price-container">
+              <div class="price">
                 <span class="current-price">{{ formatPrice(product.precio) }}</span>
                 <span v-if="product.precio_anterior" class="old-price">{{ formatPrice(product.precio_anterior) }}</span>
               </div>
@@ -329,13 +298,7 @@ onMounted(() => {
 
     <!-- Pagination -->
     <div v-if="totalPages > 1" class="pagination">
-      <button
-        v-for="page in totalPages"
-        :key="page"
-        @click="changePage(page)"
-        :class="['page-button', { active: currentPage === page }]"
-        :aria-label="`Ir a página ${page}`"
-      >
+      <button v-for="page in totalPages" :key="page" @click="changePage(page)" :class="['page-button', { active: currentPage === page }]" :aria-label="`Ir a página ${page}`">
         {{ page }}
       </button>
     </div>
@@ -362,8 +325,7 @@ onMounted(() => {
   max-width: 1440px;
   margin: 0 auto;
   padding: 2rem;
-  font-family: 'Poppins', sans-serif;
-  background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
 /* Main Title */
@@ -372,7 +334,7 @@ onMounted(() => {
   font-weight: 700;
   color: #1a202c;
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
   letter-spacing: -0.5px;
 }
 
@@ -398,11 +360,25 @@ onMounted(() => {
   transform: scaleX(1);
 }
 
-/* Search and Filter Bar */
+
+
+
+/* Filters Section */
+.filters-wrapper {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(10px);
+  padding: 1rem 0;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
 .search-filter-bar {
   display: flex;
   gap: 1.5rem;
-  margin-bottom: 3rem;
   max-width: 900px;
   margin-left: auto;
   margin-right: auto;
@@ -431,12 +407,12 @@ onMounted(() => {
   border-radius: 12px;
   font-size: 1rem;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .search-input:focus {
   border-color: #3182ce;
-  box-shadow: 0 0 0 3px rgba(49,130,206,0.2);
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.2);
   outline: none;
 }
 
@@ -455,12 +431,12 @@ onMounted(() => {
   appearance: none;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .category-select:focus {
   border-color: #3182ce;
-  box-shadow: 0 0 0 3px rgba(49,130,206,0.2);
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.2);
   outline: none;
 }
 
@@ -475,8 +451,24 @@ onMounted(() => {
   transition: transform 0.3s ease;
 }
 
-.category-select:focus + .select-arrow {
+.category-select:focus+.select-arrow {
   transform: translateY(-50%) rotate(180deg);
+}
+
+/* Advanced Filters */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.search-container {
+  position: relative;
+  flex-grow: 1;
 }
 
 /* Category Section */
@@ -487,10 +479,8 @@ onMounted(() => {
 }
 
 .category-section {
-  background: #ffffff;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
   opacity: 0;
   transform: translateY(20px);
   animation: fadeInUp 0.6s forwards;
@@ -520,11 +510,11 @@ onMounted(() => {
 /* Full-width Responsive Banner */
 .category-banner {
   position: relative;
-  width: 100%;
   height: clamp(300px, 50vh, 500px);
   cursor: pointer;
   overflow: hidden;
-  background: #f7fafc;
+  border-radius: 12px;
+  margin-bottom: 2rem;
 }
 
 .category-banner img {
@@ -541,28 +531,25 @@ onMounted(() => {
 .banner-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, rgba(0,0,0,0.7), transparent);
-  display: flex;
-  align-items: center;
-}
-
-.banner-content {
-  max-width: 50%;
-  color: #ffffff;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.7), transparent);
   padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: #fff;
 }
 
-.banner-content h2 {
+.banner-overlay h2 {
   font-size: clamp(1.8rem, 4vw, 3rem);
   font-weight: 700;
   margin-bottom: 1rem;
   line-height: 1.2;
 }
 
-.banner-content p {
+.banner-overlay p {
   font-size: clamp(1rem, 2vw, 1.25rem);
+  max-width: 60ch;
   margin-bottom: 1.5rem;
-  line-height: 1.6;
 }
 
 .banner-cta {
@@ -574,31 +561,33 @@ onMounted(() => {
   font-weight: 600;
   font-size: 1rem;
   transition: all 0.3s ease;
+  width: fit-content;
 }
 
 .banner-cta:hover {
   background: #2f855a;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 /* Category Header */
 .category-header {
   text-align: center;
-  padding: 2rem;
+  margin-bottom: 2rem;
 }
 
 .category-header h2 {
-  font-size: clamp(1.8rem, 3vw, 2.2rem);
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
   font-weight: 700;
-  color: #2d3748;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
 }
 
 .category-header p {
-  font-size: clamp(1rem, 2vw, 1.1rem);
-  color: #718096;
-  max-width: 600px;
-  margin: 0.5rem auto 0;
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  color: #666;
+  max-width: 700px;
+  margin: 0 auto;
 }
 
 /* Products Grid */
@@ -606,64 +595,80 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 2rem;
-  padding: 2rem;
+  margin-bottom: 4rem;
+  padding: 0 1rem;
 }
 
+/* Product Card */
 .product-card {
-  background: #ffffff;
+  position: relative;
+  background-color: white;
   border-radius: 12px;
   overflow: hidden;
-  transition: all 0.3s ease;
-  border: 1px solid #edf2f7;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.6s forwards;
+  animation-delay: calc(var(--index, 0) * 0.1s);
 }
 
 .product-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 /* Product Image */
-.product-image-container {
+.product-image-wrapper {
   position: relative;
-  aspect-ratio: 1 / 1;
-  background: #f7fafc;
+  width: 100%;
+  padding-bottom: 100%;
+  background-color: #ffffff;
   overflow: hidden;
 }
 
-.product-image-container img {
+.product-image {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  transition: transform 0.4s ease;
-}
-
-.product-card:hover .product-image-container img {
-  transform: scale(1.08);
-}
-
-.nav-button {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(255,255,255,0.95);
-  border: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  opacity: 0;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  z-index: 2;
-  color: #2d3748;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.product-card:hover .nav-button {
-  opacity: 1;
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.product-card:hover .product-image img {
+  transform: scale(1.08);
+}
+
+/* Navigation Buttons */
+.nav-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(255, 255, 255, 0.9);
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 2;
+  color: #2d3748;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .nav-button.prev {
@@ -674,31 +679,38 @@ onMounted(() => {
   right: 1rem;
 }
 
-.nav-button:hover {
-  background: #ffffff;
-  transform: translateY(-50%) scale(1.05);
-  color: #3182ce;
+.product-card:hover .nav-button {
+  opacity: 1;
 }
 
+.nav-button:hover {
+  background-color: white;
+  transform: translateY(-50%) scale(1.1);
+  color: #3498db;
+}
+
+/* Badge */
 .badge {
   position: absolute;
   top: 1rem;
   right: 1rem;
   padding: 0.5rem 1rem;
   border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #ffffff;
-  z-index: 1;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1;
 }
 
-.badge.limited {
-  background: #e53e3e;
+.badge-limited {
+  background-color: #e53e3e;
 }
 
-.badge.new {
-  background: #38a169;
+.badge-new {
+  background-color: #38a169;
   animation: pulse 2s infinite;
 }
 
@@ -714,42 +726,59 @@ onMounted(() => {
   }
 }
 
-/* Product Actions */
-.product-actions {
+/* Product Actions Bottom */
+.product-actions-bottom {
   position: absolute;
-  bottom: 1rem;
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: 0;
+  left: 0;
+  right: 0;
   display: flex;
-  gap: 0.75rem;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 20%, transparent);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: all 0.3s ease;
   z-index: 2;
 }
 
-.product-card:hover .product-actions {
+.product-image:hover .product-actions-bottom {
   opacity: 1;
 }
 
 .action-button {
-  width: 44px;
-  height: 44px;
-  background: #ffffff;
+  background-color: rgba(255, 255, 255, 0.9);
   border: none;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  transition: all 0.3s ease;
-  color: #4a5568;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  color: #2d3748;
 }
 
 .action-button:hover {
-  background: #3182ce;
-  color: #ffffff;
   transform: scale(1.1);
+}
+
+.action-button.cart-button:hover {
+  background-color: #3498db;
+  color: white;
+}
+
+.action-button.view-button:hover {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.action-button.favorite-button:hover {
+  background-color: #e74c3c;
+  color: white;
 }
 
 .action-button.in-favorites {
@@ -764,24 +793,27 @@ onMounted(() => {
 /* Product Info */
 .product-info {
   padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 2rem;
 }
 
-.category-label {
-  font-size: 0.85rem;
-  color: #a0aec0;
-  text-transform: uppercase;
+.category {
+  font-size: 0.8rem;
+  color: #718096;
   margin-bottom: 0.5rem;
-  display: block;
+  text-transform: uppercase;
   letter-spacing: 0.5px;
   font-weight: 600;
 }
 
-.product-title {
-  font-size: 1.2rem;
-  font-weight: 600;
+.product-name {
+  font-size: 1.1rem;
+  font-weight: 700;
   color: #2d3748;
   margin-bottom: 0.75rem;
   line-height: 1.4;
+  transition: color 0.3s ease;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -789,58 +821,83 @@ onMounted(() => {
   height: 3rem;
 }
 
-.product-card:hover .product-title {
-  color: #3182ce;
+.product-card:hover .product-name {
+  color: #3498db;
 }
 
+/* Rating System */
 .rating-container {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
 }
 
-.stars {
+.rating {
   display: flex;
   gap: 4px;
+  margin-bottom: 0.2rem;
+  display: flex;
+  gap: 4px;
+  margin-bottom: 0.25rem;
 }
 
 .star {
-  font-size: 1.1rem;
   color: #e2e8f0;
+  font-size: 1.25rem;
   cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.star.filled {
-  color: #ecc94b;
+  transition: transform 0.2s ease, color 0.2s ease;
 }
 
 .star:hover {
-  transform: scale(1.15);
+  transform: scale(1.2);
+}
+
+.star.filled {
+  color: #f6ad55;
 }
 
 .rating-count {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: #718096;
 }
 
-.price-container {
+/* Price Section */
+.price {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  margin-bottom: 1rem;
+  justify-content: space-between;
 }
 
 .current-price {
-  font-size: 1.3rem;
   font-weight: 700;
+  font-size: 1.25rem;
   color: #2d3748;
 }
 
 .old-price {
-  font-size: 0.95rem;
+  font-size: 0.875rem;
   color: #a0aec0;
   text-decoration: line-through;
+}
+
+.add-to-cart-button {
+  background-color: #3182ce;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.add-to-cart-button:hover {
+  background-color: #2c5282;
+  transform: translateY(-2px);
 }
 
 /* Pagination */
@@ -877,46 +934,46 @@ onMounted(() => {
 /* Loading Overlay */
 .loading-overlay {
   position: fixed;
-  inset: 0;
-  background: rgba(255,255,255,0.95);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.9);
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   z-index: 1000;
   backdrop-filter: blur(5px);
 }
 
 .spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid #edf2f7;
-  border-top: 4px solid #3182ce;
+  border: 4px solid rgba(52, 152, 219, 0.2);
+  border-top: 4px solid #3498db;
   border-radius: 50%;
+  width: 50px;
+  height: 50px;
   animation: spin 1s linear infinite;
   margin-bottom: 1rem;
 }
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-/* Error Message */
+/* Error State */
 .error-message {
-  padding: 2rem;
-  background: #fefcbf;
-  border-radius: 12px;
   text-align: center;
-  margin: 2rem auto;
-  max-width: 600px;
-  border: 1px solid #fbd38d;
+  padding: 3rem 2rem;
+  background-color: #fff5f5;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  border: 1px solid #fed7d7;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  animation: shakeX 0.75s cubic-bezier(.36,.07,.19,.97) both;
 }
 
 .error-icon {
@@ -924,87 +981,65 @@ onMounted(() => {
   color: #e53e3e;
 }
 
-@keyframes shakeX {
-  10%, 90% {
-    transform: translateX(-1px);
-  }
-  20%, 80% {
-    transform: translateX(2px);
-  }
-  30%, 50%, 70% {
-    transform: translateX(-4px);
-  }
-  40%, 60% {
-    transform: translateX(4px);
-  }
-}
-
 .retry-button {
-  padding: 0.75rem 1.5rem;
-  background: #3182ce;
-  color: #ffffff;
+  background-color: #3498db;
+  color: white;
   border: none;
+  padding: 0.75rem 1.5rem;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
+  font-weight: 600;
+  margin-top: 1rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
 .retry-button:hover {
-  background: #2b6cb0;
+  background-color: #2980b9;
   transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Skeleton Loader */
-.skeleton-loader {
-  padding: 1rem;
-}
-
-.skeleton-category {
-  margin-bottom: 3rem;
-}
-
-.skeleton-banner {
-  height: clamp(200px, 40vh, 400px);
-  background: #eee;
+/* No Products State */
+.no-products {
+  text-align: center;
+  padding: 4rem 2rem;
+  background-color: #f7fafc;
   border-radius: 12px;
-  margin-bottom: 1.5rem;
-  animation: pulse 1.5s infinite;
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
 }
 
-.skeleton-header {
-  height: 60px;
-  background: #eee;
+.no-products-icon {
+  font-size: 4rem;
+  color: #a0aec0;
+  margin-bottom: 1rem;
+}
+
+.reset-filters-button {
+  background-color: #4a5568;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
   border-radius: 8px;
-  margin-bottom: 1.5rem;
-  animation: pulse 1.5s infinite;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.skeleton-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 1.5rem;
-}
-
-.skeleton-card {
-  background: #f5f5f5;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.skeleton-image {
-  aspect-ratio: 1 / 1;
-  background: #eee;
-  animation: pulse 1.5s infinite;
-}
-
-.skeleton-details {
-  padding: 1rem;
-  height: 80px;
-  background: #eee;
-  animation: pulse 1.5s infinite;
+.reset-filters-button:hover {
+  background-color: #2d3748;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 /* Transitions */
@@ -1018,78 +1053,98 @@ onMounted(() => {
   opacity: 0;
 }
 
-/* Responsive Design */
-@media (max-width: 1024px) {
+/* Responsive Styles */
+@media (max-width: 1200px) {
   .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .catalog-container {
+    padding: 1.25rem;
   }
 
-  .banner-content {
-    max-width: 60%;
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .product-info {
+    padding: 1.25rem;
   }
 }
 
 @media (max-width: 768px) {
   .catalog-container {
-    padding: 1.5rem;
+    padding: 1rem;
   }
 
-  .search-filter-bar {
-    flex-direction: column;
-    gap: 1rem;
+  .category-banner {
+    height: 300px;
+  }
+
+  .banner-overlay {
+    padding: 1.5rem;
   }
 
   .products-grid {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1.5rem;
-  }
-
-  .banner-content {
-    max-width: 70%;
-  }
-
-  .banner-content h2 {
-    font-size: clamp(1.5rem, 3vw, 2rem);
-  }
-
-  .banner-cta {
-    padding: 0.75rem 1.5rem;
-  }
-
-  .nav-button,
-  .product-actions {
-    opacity: 1;
-  }
-  
-  .category-banner {
-    height: 300px;
-  }
-}
-
-@media (max-width: 480px) {
-  .catalog-container {
-    padding: 1rem;
-  }
-
-  .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 1rem;
   }
 
-  .banner-content {
-    max-width: 100%;
+  .nav-button {
+    opacity: 0.8;
+    width: 35px;
+    height: 35px;
+  }
+
+  .product-info {
     padding: 1rem;
   }
 
-  .banner-content h2 {
-    font-size: 1.5rem;
+  .product-name {
+    font-size: 1rem;
   }
 
-  .banner-content p {
+  .product-actions-bottom {
+    opacity: 1;
+    padding: 0.75rem;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.5) 30%, transparent);
+  }
+
+  .action-button {
+    width: 35px;
+    height: 35px;
+  }
+}
+
+@media (max-width: 576px) {
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .product-card:hover {
+    transform: translateY(-4px);
+  }
+
+  .product-info {
+    padding: 0.75rem;
+  }
+
+  .category {
+    font-size: 0.7rem;
+  }
+
+  .product-name {
     font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    height: 2.5rem;
   }
 
-  .product-title {
+  .star {
     font-size: 1rem;
   }
 
@@ -1098,93 +1153,22 @@ onMounted(() => {
   }
 
   .action-button {
-    width: 36px;
-    height: 36px;
-  }
-
-  .nav-button {
-    width: 32px;
-    height: 32px;
+    width: 35px;
+    height: 35px;
   }
 }
 
-@media (max-width: 360px) {
+@media (max-width: 400px) {
   .products-grid {
     grid-template-columns: 1fr;
   }
 
-  .product-image-container {
-    aspect-ratio: 4 / 3;
+  .product-image-wrapper {
+    padding-bottom: 75%;
   }
-}
 
-/* Dark Mode Support */
-@media (prefers-color-scheme: dark) {
-  .catalog-container {
-    background: linear-gradient(to bottom, #1a202c 0%, #2d3748 100%);
-  }
-  
-  .category-section {
-    background: #2d3748;
-  }
-  
-  .main-title,
-  .category-header h2 {
-    color: #e2e8f0;
-  }
-  
-  .category-header p {
-    color: #a0aec0;
-  }
-  
-  .product-card {
-    background-color: #2d3748;
-    border-color: #4a5568;
-  }
-  
-  .product-image-container {
-    background-color: #1a202c;
-  }
-  
-  .product-title {
-    color: #e2e8f0;
-  }
-  
-  .product-card:hover .product-title {
-    color: #63b3ed;
-  }
-  
-  .category-label {
-    color: #a0aec0;
-  }
-  
-  .current-price {
-    color: #e2e8f0;
-  }
-  
-  .old-price {
-    color: #718096;
-  }
-  
-  .star {
-    color: #4a5568;
-  }
-  
-  .search-input,
-  .category-select {
-    background: #2d3748;
-    border-color: #4a5568;
-    color: #e2e8f0;
-  }
-  
-  .search-icon,
-  .select-arrow {
-    color: #a0aec0;
-  }
-  
-  .loading-overlay {
-    background-color: rgba(26, 32, 44, 0.9);
-    color: #e2e8f0;
+  .category-banner {
+    height: 200px;
   }
 }
 
@@ -1195,45 +1179,39 @@ onMounted(() => {
     opacity: 1;
     transform: none;
   }
-  
+
   .product-card:hover {
     transform: none;
   }
-  
-  .product-card:hover .product-image-container img {
+
+  .product-card:hover .product-image img {
     transform: none;
   }
-  
+
   .spinner {
     animation: none;
   }
-  
-  .badge.new {
+
+  .badge-new {
     animation: none;
   }
-  
+
   .retry-button:hover,
   .action-button:hover,
   .banner-cta:hover {
     transform: none;
   }
-  
+
   .fade-enter-active,
   .fade-leave-active {
     transition: none;
   }
-  
+
   .skeleton-banner,
   .skeleton-header,
   .skeleton-image,
   .skeleton-details {
     animation: none;
-  }
-  
-  .category-section {
-    animation: none;
-    opacity: 1;
-    transform: none;
   }
 }
 </style>

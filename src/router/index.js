@@ -233,7 +233,7 @@ const router = createRouter({
         {
           path: '/roles',
           name: 'roles',
-          meta: { requiredRole: 'cliente' },
+          meta: { requiredRole: 'super-admin' },
           component: RolesView
         },
         {

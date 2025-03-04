@@ -322,7 +322,7 @@ const getLastWord = (title) => {
 
 .banner-cta {
   padding: 0.75rem 1.5rem;
-  background: #3498db;
+  background: var(--primary-color);
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -332,7 +332,7 @@ const getLastWord = (title) => {
 }
 
 .banner-cta:hover {
-  background: #2980b9;
+  background: var(--primary-hover-color);
   transform: translateY(-2px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
@@ -351,7 +351,7 @@ const getLastWord = (title) => {
 }
 
 .text-accent {
-  color: #3498db;
+  color: var(--primary-color);
   position: relative;
 }
 
@@ -362,7 +362,7 @@ const getLastWord = (title) => {
   left: 0;
   width: 100%;
   height: 2px;
-  background-color: #3498db;
+  background-color: var(--primary-color);
   transform: scaleX(0);
   transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   transform-origin: left;
@@ -915,98 +915,6 @@ const getLastWord = (title) => {
     height: 200px;
   }
 }
-
-/* Dark Mode Support */
-@media (prefers-color-scheme: dark) {
-  .category-header h2 {
-    color: #e2e8f0;
-  }
-  
-  .category-header p {
-    color: #a0aec0;
-  }
-  
-  .product-card {
-    background-color: #2d3748;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
-  }
-  
-  .product-image-wrapper {
-    background-color: #1a202c;
-  }
-  
-  .product-name {
-    color: #e2e8f0;
-  }
-  
-  .product-card:hover .product-name {
-    color: #63b3ed;
-  }
-  
-  .category {
-    color: #a0aec0;
-  }
-  
-  .current-price {
-    color: #e2e8f0;
-  }
-  
-  .old-price {
-    color: #718096;
-  }
-  
-  .star {
-    color: #4a5568;
-  }
-  
-  .star.filled {
-    color: #f6ad55;
-  }
-  
-  .rating-count {
-    color: #a0aec0;
-  }
-  
-  .action-button {
-    background-color: #4a5568;
-    color: #e2e8f0;
-  }
-  
-  .nav-button {
-    background-color: rgba(74, 85, 104, 0.9);
-    color: #e2e8f0;
-  }
-  
-  .nav-button:hover {
-    background-color: #4a5568;
-  }
-  
-  .loading-overlay {
-    background-color: rgba(26, 32, 44, 0.9);
-  }
-  
-  .error-message {
-    background-color: #742a2a;
-    border-color: #9b2c2c;
-    color: #fed7d7;
-  }
-  
-  .error-icon {
-    color: #fc8181;
-  }
-  
-  .skeleton-banner,
-  .skeleton-header,
-  .skeleton-image,
-  .skeleton-details {
-    background-color: #4a5568;
-  }
-  
-  .skeleton-card {
-    background-color: #2d3748;
-  }
-}
-
 /* Accessibility Improvements */
 @media (prefers-reduced-motion: reduce) {
   .product-card {

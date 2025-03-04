@@ -2,11 +2,11 @@ import axios from "axios";
 import { Buffer } from "buffer";
 
 // Configuración de URLs base usando variables de entorno
-/* export const urlBase = import.meta.env.VITE_API_URL || 'http://neotechbol.test/api/';
-export const urlBaseAsset = import.meta.env.VITE_ASSET_URL || 'http://neotechbol.test/';  */
+export const urlBase = import.meta.env.VITE_API_URL || 'http://neotechbol.test/api/';
+export const urlBaseAsset = import.meta.env.VITE_ASSET_URL || 'http://neotechbol.test/'; 
 //production
-export const urlBase = import.meta.env.VITE_API_URL || 'https://adm.neotechbol.com/api/';
-export const urlBaseAsset = import.meta.env.VITE_ASSET_URL || 'https://adm.neotechbol.com/'; 
+/* export const urlBase = import.meta.env.VITE_API_URL || 'https://adm.neotechbol.com/api/';
+export const urlBaseAsset = import.meta.env.VITE_ASSET_URL || 'https://adm.neotechbol.com/';  */
 /* export const urlBase = import.meta.env.VITE_API_URL || 'https://admin.neotechbol.com/api/';
 export const urlBaseAsset = import.meta.env.VITE_ASSET_URL || 'https://admin.neotechbol.com/'; */
 
