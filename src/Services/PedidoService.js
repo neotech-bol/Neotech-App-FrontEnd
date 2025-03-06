@@ -20,3 +20,7 @@ export const generaPDFPedidoID = (id) => {
 export const repitOrder = (id) => {
     return httpNotToken().post(`${urlBase}pedidos/${id}/repetir`)
 }
+
+export const modelsAll = () => {
+    return http().get(`${urlBase}modelos-productos`);
+}

@@ -11,7 +11,7 @@
         </span>
       </div>
       <h1 class="product-title" :style="gradientStyle">{{ dato.nombre }}</h1>
-      
+
       <!-- Mobile Price Quick View -->
       <div class="mobile-price-preview">
         <span class="current-price">{{ formatPrice(selectedModelPrice) }}</span>
@@ -27,12 +27,8 @@
       <div class="product-images">
         <!-- Swipeable Main Image for Mobile -->
         <div class="main-image-wrapper">
-          <div class="main-image-container" 
-               @mousemove="handleImageZoom" 
-               @mouseleave="resetZoom"
-               @touchstart="handleTouchStart" 
-               @touchmove="handleTouchMove" 
-               @touchend="resetZoom">
+          <div class="main-image-container" @mousemove="handleImageZoom" @mouseleave="resetZoom"
+            @touchstart="handleTouchStart" @touchmove="handleTouchMove" @touchend="resetZoom">
             <img :src="currentImage" :alt="dato.nombre" class="main-image-img" ref="mainImage">
             <div class="image-overlay">
               <span class="zoom-hint">
@@ -40,7 +36,7 @@
                 <span>Zoom</span>
               </span>
             </div>
-            
+
             <!-- Image Navigation Arrows -->
             <button class="image-nav prev" @click="prevImage" v-if="allImages.length > 1">
               <i class="fas fa-chevron-left"></i>
@@ -48,29 +44,23 @@
             <button class="image-nav next" @click="nextImage" v-if="allImages.length > 1">
               <i class="fas fa-chevron-right"></i>
             </button>
-            
+
             <!-- Image Pagination Dots for Mobile -->
             <div class="image-pagination">
-              <span 
-                v-for="(_, index) in allImages" 
-                :key="index" 
-                :class="['pagination-dot', { active: selectedImage === index }]"
-                @click="selectThumbnail(index)">
+              <span v-for="(_, index) in allImages" :key="index"
+                :class="['pagination-dot', { active: selectedImage === index }]" @click="selectThumbnail(index)">
               </span>
             </div>
           </div>
         </div>
-        
+
         <div class="thumbnail-list" ref="thumbnailScroll">
           <button class="scroll-btn left" @click="scrollThumbnails('left')" v-show="showScrollButtons">
             <i class="fas fa-chevron-left"></i>
           </button>
           <div class="thumbnail-container">
-            <button 
-              v-for="(image, index) in allImages" 
-              :key="index" 
-              :class="['thumbnail', { active: selectedImage === index }]" 
-              @click="selectThumbnail(index)">
+            <button v-for="(image, index) in allImages" :key="index"
+              :class="['thumbnail', { active: selectedImage === index }]" @click="selectThumbnail(index)">
               <img :src="image" :alt="`Vista ${index + 1}`" loading="lazy">
               <div class="thumbnail-overlay"></div>
             </button>
@@ -160,20 +150,16 @@
               </div>
               <div class="accordion-content">
                 <ul class="features">
-                  <li 
-                    v-for="caracteristica in dato.caracteristicas" 
-                    :key="caracteristica.id" 
-                    class="feature-item"
+                  <li v-for="caracteristica in dato.caracteristicas" :key="caracteristica.id" class="feature-item"
                     :class="{ 'feature-hover': hoveredFeature === caracteristica.id }"
-                    @mouseover="hoveredFeature = caracteristica.id" 
-                    @mouseleave="hoveredFeature = null">
+                    @mouseover="hoveredFeature = caracteristica.id" @mouseleave="hoveredFeature = null">
                     <i class="fas fa-check-circle"></i>
                     <span>{{ caracteristica.caracteristica }}</span>
                   </li>
                 </ul>
               </div>
             </div>
-            
+
             <!-- Colores Disponibles -->
             <div class="accordion-section" :class="{ 'expanded': expandedSection === 'colors' }">
               <div class="accordion-header" @click="toggleSection('colors')">
@@ -182,12 +168,8 @@
               </div>
               <div class="accordion-content">
                 <div class="color-options">
-                  <button 
-                    v-for="(image, index) in dato.images" 
-                    :key="index" 
-                    class="color-swatch"
-                    :style="{ backgroundColor: image.color }" 
-                    @click="selectColor(index)"
+                  <button v-for="(image, index) in dato.images" :key="index" class="color-swatch"
+                    :style="{ backgroundColor: image.color }" @click="selectColor(index)"
                     :class="{ active: selectedImage === index + 1 }">
                     <div class="color-checkmark" v-if="selectedImage === index + 1">
                       <i class="fas fa-check"></i>
@@ -196,7 +178,7 @@
                 </div>
               </div>
             </div>
-            
+
             <!-- Model Selection -->
             <div class="accordion-section" :class="{ 'expanded': expandedSection === 'models' }">
               <div class="accordion-header" @click="toggleSection('models')">
@@ -205,11 +187,8 @@
               </div>
               <div class="accordion-content">
                 <div class="model-grid">
-                  <button 
-                    v-for="model in dato.modelos" 
-                    :key="model.id"
-                    :class="['model-card', { active: selectedModel === model.id }]" 
-                    @click="selectModel(model)">
+                  <button v-for="model in dato.modelos" :key="model.id"
+                    :class="['model-card', { active: selectedModel === model.id }]" @click="selectModel(model)">
                     <span class="model-name">{{ model.nombre }}</span>
                     <span class="model-price">{{ formatPrice(model.precio) }}</span>
                     <div class="model-stock" v-if="model.cantidad_maxima <= 5">
@@ -226,29 +205,21 @@
           <div class="features-section desktop-only">
             <h3 class="section-title">Características Destacadas</h3>
             <ul class="features">
-              <li 
-                v-for="caracteristica in dato.caracteristicas" 
-                :key="caracteristica.id" 
-                class="feature-item"
+              <li v-for="caracteristica in dato.caracteristicas" :key="caracteristica.id" class="feature-item"
                 :class="{ 'feature-hover': hoveredFeature === caracteristica.id }"
-                @mouseover="hoveredFeature = caracteristica.id" 
-                @mouseleave="hoveredFeature = null">
+                @mouseover="hoveredFeature = caracteristica.id" @mouseleave="hoveredFeature = null">
                 <i class="fas fa-check-circle"></i>
                 <span>{{ caracteristica.caracteristica }}</span>
               </li>
             </ul>
           </div>
-          
+
           <!-- Desktop Color Section -->
           <div class="color-section desktop-only">
             <h3 class="section-title">Colores Disponibles</h3>
             <div class="color-options">
-              <button 
-                v-for="(image, index) in dato.images" 
-                :key="index" 
-                class="color-swatch"
-                :style="{ backgroundColor: image.color }" 
-                @click="selectColor(index)"
+              <button v-for="(image, index) in dato.images" :key="index" class="color-swatch"
+                :style="{ backgroundColor: image.color }" @click="selectColor(index)"
                 :class="{ active: selectedImage === index + 1 }">
                 <div class="color-checkmark" v-if="selectedImage === index + 1">
                   <i class="fas fa-check"></i>
@@ -256,16 +227,13 @@
               </button>
             </div>
           </div>
-          
+
           <!-- Desktop Model Selection -->
           <div class="model-section desktop-only">
             <h3 class="section-title">Selecciona el Modelo</h3>
             <div class="model-grid">
-              <button 
-                v-for="model in dato.modelos" 
-                :key="model.id"
-                :class="['model-card', { active: selectedModel === model.id }]" 
-                @click="selectModel(model)">
+              <button v-for="model in dato.modelos" :key="model.id"
+                :class="['model-card', { active: selectedModel === model.id }]" @click="selectModel(model)">
                 <span class="model-name">{{ model.nombre }}</span>
                 <span class="model-price">{{ formatPrice(model.precio) }}</span>
                 <div class="model-stock" v-if="model.cantidad_maxima <= 5">
@@ -281,24 +249,13 @@
             <div class="quantity-section">
               <span class="quantity-label">Cantidad:</span>
               <div class="quantity-controls">
-                <button 
-                  @click="decreaseQuantity" 
-                  :disabled="quantity <= cantMinimaModel" 
-                  class="quantity-btn"
+                <button @click="decreaseQuantity" :disabled="quantity <= cantMinimaModel" class="quantity-btn"
                   :class="{ 'pulse': quantity > cantMinimaModel }">
                   <i class="fas fa-minus"></i>
                 </button>
-                <input 
-                  type="number" 
-                  v-model="quantity" 
-                  :min="cantMinimaModel" 
-                  :max="cantMaximaModel"
-                  class="quantity-input" 
-                  @change="validateQuantity">
-                <button 
-                  @click="increaseQuantity" 
-                  :disabled="quantity >= cantMaximaModel" 
-                  class="quantity-btn"
+                <input type="number" v-model="quantity" :min="cantMinimaModel" :max="cantMaximaModel"
+                  class="quantity-input" @change="validateQuantity">
+                <button @click="increaseQuantity" :disabled="quantity >= cantMaximaModel" class="quantity-btn"
                   :class="{ 'pulse': quantity < cantMaximaModel }">
                   <i class="fas fa-plus"></i>
                 </button>
@@ -309,19 +266,13 @@
             </div>
 
             <div class="action-buttons">
-              <button 
-                class="add-to-cart" 
-                @click="addToCart" 
-                :disabled="!selectedModel || addingToCart"
+              <button class="add-to-cart" @click="addToCart" :disabled="!selectedModel || addingToCart"
                 :class="{ 'loading': addingToCart }">
                 <i class="fas" :class="addingToCart ? 'fa-spinner fa-spin' : 'fa-shopping-cart'"></i>
                 <span>{{ addingToCart ? 'Agregando...' : 'Agregar al carrito' }}</span>
                 <span class="btn-shine"></span>
               </button>
-              <button 
-                class="add-to-wishlist" 
-                :class="{ 'in-wishlist': isInWishlist }" 
-                @click="toggleWishlist">
+              <button class="add-to-wishlist" :class="{ 'in-wishlist': isInWishlist }" @click="toggleWishlist">
                 <i class="fas" :class="isInWishlist ? 'fa-heart' : 'fa-heart'"></i>
                 <div class="tooltip">
                   {{ isInWishlist ? 'Quitar de favoritos' : 'Agregar a favoritos' }}
@@ -332,17 +283,14 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Mobile Sticky Add to Cart Bar -->
     <div class="mobile-sticky-bar">
       <div class="mobile-price">
         <span class="current-price">{{ formatPrice(selectedModelPrice) }}</span>
         <span class="original-price" v-if="originalPrice > selectedModelPrice">{{ formatPrice(originalPrice) }}</span>
       </div>
-      <button 
-        class="mobile-add-to-cart" 
-        @click="addToCart" 
-        :disabled="!selectedModel || addingToCart"
+      <button class="mobile-add-to-cart" @click="addToCart" :disabled="!selectedModel || addingToCart"
         :class="{ 'loading': addingToCart }">
         <i class="fas" :class="addingToCart ? 'fa-spinner fa-spin' : 'fa-shopping-cart'"></i>
         <span>{{ addingToCart ? 'Agregando...' : 'Agregar' }}</span>
@@ -357,7 +305,6 @@ import { useRouter } from 'vue-router';
 import { detalleProducto } from '@/Services/ProductoService';
 import { useCartStore } from '@/stores/cart';
 
-// Estado reactivo
 const dato = ref({});
 const router = useRouter();
 const selectedImage = ref(0);
@@ -375,13 +322,13 @@ const isInWishlist = ref(false);
 const mainImage = ref(null);
 const showScrollButtons = ref(false);
 const thumbnailScroll = ref(null);
-const hoveredFeature = ref(null);
 const animatePrice = ref(false);
-const expandedSection = ref('features'); // Para acordeón móvil
+const expandedSection = ref('features');
 const touchStartX = ref(0);
 const touchEndX = ref(0);
+const selectedColor = ref(null); // Para almacenar el color seleccionado
+const selectedColorImage = ref(''); // Para almacenar la imagen del color seleccionado
 
-// Computed properties
 const allImages = computed(() => {
   return [dato.value.imagen_principal, ...(dato.value.images?.map(img => img.imagen) || [])];
 });
@@ -424,7 +371,6 @@ const stockMessage = computed(() => {
   return 'En Stock';
 });
 
-// Métodos
 const verProducto = async () => {
   try {
     const { data } = await detalleProducto(idProducto);
@@ -435,8 +381,6 @@ const verProducto = async () => {
     } else {
       selectedModelPrice.value = originalPrice.value;
     }
-    
-    // Iniciar animaciones después de cargar los datos
     nextTick(() => {
       animateElements();
     });
@@ -446,7 +390,6 @@ const verProducto = async () => {
 };
 
 const animateElements = () => {
-  // Añadir clase para animar elementos
   const elements = document.querySelectorAll('.product-detail .animate-on-load');
   elements.forEach((el, index) => {
     setTimeout(() => {
@@ -463,8 +406,6 @@ const checkThumbnailScroll = () => {
 
 const selectModel = (model) => {
   selectedModel.value = model.id;
-  
-  // Animar cambio de precio
   animatePrice.value = true;
   setTimeout(() => {
     selectedModelPrice.value = model.precio;
@@ -472,7 +413,6 @@ const selectModel = (model) => {
     cantMinimaModel.value = model.cantidad_minima;
     cantMaximaModel.value = model.cantidad_maxima;
     quantity.value = cantMinimaModel.value;
-    
     setTimeout(() => {
       animatePrice.value = false;
     }, 300);
@@ -480,7 +420,9 @@ const selectModel = (model) => {
 };
 
 const selectColor = (index) => {
-  selectedImage.value = index + 1; // +1 porque la primera imagen es la principal
+  selectedImage.value = index + 1;
+  selectedColor.value = dato.value.images[index].color; // Guarda el color seleccionado
+  selectedColorImage.value = dato.value.images[index].imagen; // Guarda la imagen del color seleccionado
 };
 
 const validateQuantity = () => {
@@ -488,39 +430,37 @@ const validateQuantity = () => {
 };
 
 const increaseQuantity = () => {
-  if (quantity.value < cantMaximaModel.value) {
-    quantity.value++;
-  }
+  if (quantity.value < cantMaximaModel.value) quantity.value++;
 };
 
 const decreaseQuantity = () => {
-  if (quantity.value > cantMinimaModel.value) {
-    quantity.value--;
-  }
+  if (quantity.value > cantMinimaModel.value) quantity.value--;
 };
 
 const addToCart = async () => {
   if (addingToCart.value) return;
   addingToCart.value = true;
-  
   try {
     const productWithModelPrice = {
       ...dato.value,
+      // Usar la imagen del color seleccionado o la principal
+      imagen_principal: selectedColorImage.value || dato.value.imagen_principal,
       precio: selectedModelPrice.value,
       modeloId: selectedModel.value,
       nombreModelo: nameModel.value,
       cantidad: quantity.value,
       cantidad_minima: cantMinimaModel.value,
-      cantidad_maxima: cantMaximaModel.value
+      cantidad_maxima: cantMaximaModel.value,
+      color: selectedColor.value,
+      colorImage: selectedColorImage.value,
+      // Crear un ID único combinando producto, modelo y color
+      uniqueId: `${dato.value.id}-${selectedModel.value}-${selectedColor.value || 'default'}`
     };
     
     await cartStore.addToCart(productWithModelPrice);
-    
-    // Mostrar animación de éxito
     showAddedToCartAnimation();
   } catch (error) {
     console.error('Error al agregar al carrito:', error);
-    // Mostrar mensaje de error
   } finally {
     setTimeout(() => {
       addingToCart.value = false;
@@ -529,7 +469,6 @@ const addToCart = async () => {
 };
 
 const showAddedToCartAnimation = () => {
-  // Implementar animación de éxito
   const cartBtn = document.querySelector('.add-to-cart');
   if (cartBtn) {
     cartBtn.classList.add('success');
@@ -553,9 +492,7 @@ const handleTouchStart = (event) => {
 };
 
 const handleTouchMove = (event) => {
-  // Para zoom
   if (event.touches.length === 2) {
-    // Implementación de zoom con dos dedos
     if (!mainImage.value) return;
     const touch = event.touches[0];
     const { left, top, width, height } = mainImage.value.getBoundingClientRect();
@@ -565,29 +502,17 @@ const handleTouchMove = (event) => {
     mainImage.value.style.transform = 'scale(1.8)';
     return;
   }
-  
-  // Para deslizar
   touchEndX.value = event.touches[0].clientX;
   const diffX = touchStartX.value - touchEndX.value;
-  
-  // Si el deslizamiento es significativo (más de 50px)
   if (Math.abs(diffX) > 50) {
-    if (diffX > 0) {
-      // Deslizamiento a la izquierda, mostrar siguiente imagen
-      nextImage();
-    } else {
-      // Deslizamiento a la derecha, mostrar imagen anterior
-      prevImage();
-    }
-    // Reiniciar valores para evitar múltiples cambios
+    if (diffX > 0) nextImage();
+    else prevImage();
     touchStartX.value = touchEndX.value;
   }
 };
 
 const resetZoom = () => {
-  if (mainImage.value) {
-    mainImage.value.style.transform = 'scale(1)';
-  }
+  if (mainImage.value) mainImage.value.style.transform = 'scale(1)';
 };
 
 const scrollThumbnails = (direction) => {
@@ -602,7 +527,6 @@ const scrollThumbnails = (direction) => {
 };
 
 const selectThumbnail = (index) => {
-  // Animar cambio de imagen
   const imgElement = mainImage.value;
   if (imgElement) {
     imgElement.classList.add('changing');
@@ -615,19 +539,13 @@ const selectThumbnail = (index) => {
   } else {
     selectedImage.value = index;
   }
-  
-  // Si es una imagen de color, actualizar el color seleccionado
-  if (index > 0) {
-    const colorIndex = index - 1;
-    // Opcional: agregar lógica adicional si es necesario
-  }
 };
 
 const nextImage = () => {
   if (selectedImage.value < allImages.value.length - 1) {
     selectThumbnail(selectedImage.value + 1);
   } else {
-    selectThumbnail(0); // Volver al principio
+    selectThumbnail(0);
   }
 };
 
@@ -635,12 +553,11 @@ const prevImage = () => {
   if (selectedImage.value > 0) {
     selectThumbnail(selectedImage.value - 1);
   } else {
-    selectThumbnail(allImages.value.length - 1); // Ir al final
+    selectThumbnail(allImages.value.length - 1);
   }
 };
 
 const toggleWishlist = () => {
-  // Animar corazón
   const heartBtn = document.querySelector('.add-to-wishlist');
   if (heartBtn) {
     heartBtn.classList.add('animate-heart');
@@ -653,8 +570,6 @@ const toggleWishlist = () => {
   } else {
     isInWishlist.value = !isInWishlist.value;
   }
-  
-  // Aquí normalmente llamarías a una API para actualizar el estado de la lista de deseos
 };
 
 const formatPrice = (price) => {
@@ -666,70 +581,54 @@ const formatPrice = (price) => {
 };
 
 const openReviewModal = () => {
-  // Implementar la lógica para abrir un modal de reseñas
   console.log('Open review modal');
 };
 
-// Método para controlar el acordeón en móvil
 const toggleSection = (section) => {
   expandedSection.value = expandedSection.value === section ? null : section;
 };
 
-// Lifecycle hooks
 onMounted(() => {
   verProducto();
   checkThumbnailScroll();
   window.addEventListener('resize', checkThumbnailScroll);
-  
-  // Iniciar animaciones de entrada
   setTimeout(() => {
     document.querySelector('.product-detail').classList.add('loaded');
   }, 100);
-  
-  // Detectar si es móvil para expandir la primera sección
-  if (window.innerWidth <= 768) {
-    expandedSection.value = 'features';
-  } else {
-    expandedSection.value = null;
-  }
+  if (window.innerWidth <= 768) expandedSection.value = 'features';
 });
 
-// Watchers
 watch(quantity, validateQuantity);
 </script>
 
 <style scoped>
 /* Base Styles */
+/* Estructura principal */
 .product-detail {
-  padding: 1.5rem;
+  padding: 2rem 1.5rem;
   background: #fff;
   min-height: 100vh;
   opacity: 0;
-  transform: translateY(10px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  animation: fadeIn 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  animation-delay: 0.2s;
 }
 
 .product-detail.loaded {
   opacity: 1;
   transform: translateY(0);
 }
-
 .product-container {
-  max-width: 1200px;
+  max-width: 1440px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(300px, 2fr) 3fr;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 2rem;
+  align-items: start;
 }
 
 /* Utility Classes */
-.desktop-only {
-  display: block;
-}
-
-.mobile-only {
-  display: none;
-}
+.desktop-only { display: block; }
+.mobile-only { display: none; }
 
 /* Mobile Header */
 .mobile-header {
@@ -752,48 +651,48 @@ watch(quantity, validateQuantity);
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
-@keyframes scaleIn {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+@keyframes slideIn {
+  from { transform: translateX(20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }
 
 @keyframes slideInRight {
-  from { transform: translateX(20px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 /* Image Section */
 .product-images {
   position: sticky;
-  top: 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  animation: fadeIn 0.6s ease forwards;
+  top: 1rem;
+  display: grid;
+  gap: 1.5rem;
 }
 
 .main-image-wrapper {
-  position: relative;
-  width: 100%;
-  border-radius: 0.75rem;
+  border-radius: 1.5rem;
   overflow: hidden;
   background: #f8f9fa;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .main-image-wrapper:hover {
-  transform: translateY(-5px);
+  transform: translateY(-2px);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
 }
-
 .main-image-container {
   position: relative;
-  width: 100%;
   padding-top: 75%;
   overflow: hidden;
 }
@@ -834,21 +733,18 @@ watch(quantity, validateQuantity);
 
 /* Image Navigation */
 .image-nav {
-  position: absolute;
+position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.9);
   border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   cursor: pointer;
   z-index: 5;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  opacity: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  opacity: 0.8;
   transition: all 0.3s ease;
 }
 
@@ -874,27 +770,23 @@ watch(quantity, validateQuantity);
 .image-pagination {
   position: absolute;
   bottom: 15px;
-  left: 0;
   width: 100%;
   display: flex;
   justify-content: center;
-  gap: 8px;
-  z-index: 5;
+  gap: 10px;
 }
-
 .pagination-dot {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.6);
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .pagination-dot.active {
   background: white;
-  transform: scale(1.3);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+  transform: scale(1.4);
 }
 
 .zoom-hint {
@@ -905,13 +797,8 @@ watch(quantity, validateQuantity);
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  transform: translateY(10px);
-  opacity: 0;
-  transition: all 0.3s ease;
-  font-size: 0.875rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  font-size: 0.9rem;
 }
-
 .main-image-container:hover .zoom-hint {
   transform: translateY(0);
   opacity: 1;
@@ -920,75 +807,53 @@ watch(quantity, validateQuantity);
 .thumbnail-list {
   position: relative;
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
+/* Thumbnails interactivos */
 .thumbnail-container {
   display: flex;
-  gap: 0.5rem;
+  gap: 1rem;
   overflow-x: auto;
-  scroll-behavior: smooth;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  padding: 0.5rem 0;
+  scroll-snap-type: x mandatory;
+  padding: 1rem 0;
+  margin: 0 -1.5rem;
+  padding: 0 1.5rem;
 }
-
-.thumbnail-container::-webkit-scrollbar {
-  display: none;
-}
+.thumbnail-container::-webkit-scrollbar { display: none; }
 
 .scroll-btn {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 2rem;
-  height: 2rem;
+  width: 2.5rem;
+  height: 2.5rem;
   border-radius: 50%;
   background: white;
   border: 1px solid #e0e0e0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   cursor: pointer;
   z-index: 1;
   transition: all 0.2s ease;
-  font-size: 0.75rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-size: 0.9rem;
 }
-
-.scroll-btn:hover {
-  background: #f8f9fa;
-  border-color: #007bff;
-  color: #007bff;
-  transform: translateY(-50%) scale(1.1);
-}
-
-.scroll-btn.left {
-  left: -0.5rem;
-}
-
-.scroll-btn.right {
-  right: -0.5rem;
-}
-
+.scroll-btn.left { left: -0.75rem; }
+.scroll-btn.right { right: -0.75rem; }
+.scroll-btn:hover { background: #f8f9fa; border-color: #007bff; color: #007bff; }
 .thumbnail {
-  flex: 0 0 60px;
-  height: 60px;
+  flex: 0 0 100px;
+  height: 100px;
+  border-radius: 1rem;
   border: 2px solid transparent;
-  border-radius: 0.5rem;
-  overflow: hidden;
-  cursor: pointer;
   transition: all 0.2s ease;
-  position: relative;
-  background: white;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  scroll-snap-align: start;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .thumbnail img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
 }
 
 .thumbnail-overlay {
@@ -1019,47 +884,43 @@ watch(quantity, validateQuantity);
 .mobile-price-preview {
   display: none;
   align-items: center;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 12px;
+  margin-top: 0.75rem;
 }
 
 /* Info Section */
 .product-info {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
   animation: fadeIn 0.8s ease forwards;
   animation-delay: 0.2s;
   opacity: 0;
 }
-
 .sticky-header {
   position: sticky;
   top: 0;
   background: white;
   padding: 1rem 0;
   z-index: 10;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .badge-container {
   display: flex;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
-  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
-.sale-badge, .new-badge {
-  padding: 0.375rem 0.75rem;
-  border-radius: 1.5rem;
-  font-size: 0.8125rem;
+.sale-badge,
+.new-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  font-size: 0.875rem;
   font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 0.375rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  gap: 0.5rem;
 }
-
 .sale-badge {
   background: linear-gradient(45deg, #ff4444, #ff6b6b);
   color: white;
@@ -1072,9 +933,17 @@ watch(quantity, validateQuantity);
 }
 
 @keyframes pulseSale {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 .product-title {
@@ -1082,14 +951,12 @@ watch(quantity, validateQuantity);
   line-height: 1.2;
   margin: 0;
   font-weight: 700;
-  transition: all 0.3s ease;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .product-subtitle {
-  font-size: 1rem;
-  color: #666;
-  margin: 0.375rem 0 0;
+  font-size: 1.1rem;
+  color: #555;
+  margin: 0.5rem 0 0;
   font-weight: 500;
 }
 
@@ -1099,9 +966,9 @@ watch(quantity, validateQuantity);
 }
 
 .accordion-section {
-  border: 1px solid #e0e0e0;
+  border: 1px solid #e5e5e5;
   border-radius: 0.75rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   overflow: hidden;
   transition: all 0.3s ease;
 }
@@ -1127,28 +994,25 @@ watch(quantity, validateQuantity);
 
 .accordion-header h3 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
 .accordion-content {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.3s ease;
-  padding: 0 1rem;
+  transition: max-height 0.4s ease;
+  padding: 0 1.25rem;
 }
 
 .accordion-section.expanded .accordion-content {
-  max-height: 500px;
-  padding: 1rem;
+  max-height: 600px;
+  padding: 1rem 1.25rem;
 }
-
 /* Rating Section */
 .rating-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   padding: 0.75rem 0;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e5e5e5;
 }
 
 .rating-stars {
@@ -1156,57 +1020,37 @@ watch(quantity, validateQuantity);
   align-items: center;
   gap: 0.75rem;
 }
-
 .stars-container {
   position: relative;
-  display: inline-block;
-  font-size: 0.875rem;
+  font-size: 1rem;
 }
 
-.stars-background {
-  color: #e0e0e0;
-}
-
+.stars-background { color: #e0e0e0; }
 .stars-foreground {
   position: absolute;
   top: 0;
   left: 0;
-  white-space: nowrap;
   overflow: hidden;
   color: #ffc107;
-  transition: width 0.5s ease;
 }
-
-.rating-value {
-  font-weight: 600;
-  color: #333;
-  font-size: 0.875rem;
-}
+.rating-value { font-weight: 600; font-size: 1rem; }
 
 .reviews-summary {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
-
-.reviews-count {
-  font-size: 0.875rem;
-  color: #666;
-}
-
+.reviews-count { font-size: 0.9rem; color: #666; }
 .write-review-btn {
-  padding: 0.375rem 0.75rem;
+  padding: 0.5rem 1rem;
   border: 1px solid #e0e0e0;
-  border-radius: 1.5rem;
+  border-radius: 2rem;
   background: white;
-  color: #666;
   cursor: pointer;
-  transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 0.375rem;
-  font-size: 0.8125rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  gap: 0.5rem;
+  font-size: 0.9rem;
 }
 
 .write-review-btn:hover {
@@ -1217,10 +1061,8 @@ watch(quantity, validateQuantity);
 }
 
 /* Price Section */
-.price-section {
-  padding: 1rem 0;
-  border-bottom: 1px solid #e0e0e0;
-}
+/* Price Section */
+.price-section { padding: 1rem 0; border-bottom: 1px solid #e0e0e0; }
 
 .price-info {
   display: flex;
@@ -1228,15 +1070,10 @@ watch(quantity, validateQuantity);
   gap: 0.75rem;
   margin-bottom: 0.75rem;
 }
-
 .current-price {
   font-size: 2rem;
   font-weight: 700;
   color: #333;
-  background: linear-gradient(45deg, #333, #666);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
 .price-info.animate .current-price {
@@ -1247,17 +1084,15 @@ watch(quantity, validateQuantity);
 .original-price {
   color: #999;
   text-decoration: line-through;
-  font-size: 1rem;
+  font-size: 1.1rem;
 }
 
 .discount-badge {
   background: #ff4444;
   color: white;
-  padding: 0.25rem 0.625rem;
-  border-radius: 1.5rem;
-  font-weight: 600;
-  font-size: 0.8125rem;
-  box-shadow: 0 2px 6px rgba(255, 68, 68, 0.2);
+  padding: 0.3rem 0.75rem;
+  border-radius: 2rem;
+  font-size: 0.9rem;
 }
 
 .price-tags {
@@ -1266,37 +1101,30 @@ watch(quantity, validateQuantity);
   margin-top: 0.5rem;
 }
 
-.shipping-tag, .warranty-tag {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  padding: 0.375rem 0.75rem;
-  border-radius: 1.5rem;
-  font-size: 0.8125rem;
-  background: #f8f9fa;
+.shipping-tag,
+.warranty-tag {
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  font-size: 0.875rem;
+  background: #f0f0f0;
   color: #666;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s ease;
 }
 
-.shipping-tag:hover, .warranty-tag:hover {
+.shipping-tag:hover,
+.warranty-tag:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
-
 /* Stock Status */
 .stock-status {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
-  padding: 0.625rem;
+  gap: 0.5rem;
+  padding: 0.75rem;
   border-radius: 0.5rem;
   background: #e8f5e9;
   color: #2e7d32;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  font-size: 0.875rem;
-  box-shadow: 0 2px 6px rgba(46, 125, 50, 0.1);
+  font-size: 0.9rem;
 }
 
 .stock-status.low-stock {
@@ -1307,9 +1135,17 @@ watch(quantity, validateQuantity);
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.02); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.02);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* Features Section */
@@ -1575,9 +1411,17 @@ watch(quantity, validateQuantity);
 }
 
 @keyframes btnPulse {
-  0% { background: #f8f9fa; }
-  50% { background: rgba(0, 123, 255, 0.1); }
-  100% { background: #f8f9fa; }
+  0% {
+    background: #f8f9fa;
+  }
+
+  50% {
+    background: rgba(0, 123, 255, 0.1);
+  }
+
+  100% {
+    background: #f8f9fa;
+  }
 }
 
 .quantity-btn i {
@@ -1656,19 +1500,25 @@ watch(quantity, validateQuantity);
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.2) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
+  background: linear-gradient(90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.2) 50%,
+      rgba(255, 255, 255, 0) 100%);
   animation: shine 3s infinite;
 }
 
 @keyframes shine {
-  0% { left: -100%; }
-  20% { left: 100%; }
-  100% { left: 100%; }
+  0% {
+    left: -100%;
+  }
+
+  20% {
+    left: 100%;
+  }
+
+  100% {
+    left: 100%;
+  }
 }
 
 .add-to-cart.success {
@@ -1719,12 +1569,29 @@ watch(quantity, validateQuantity);
 }
 
 @keyframes heartBeat {
-  0% { transform: scale(1); }
-  15% { transform: scale(1.3); }
-  30% { transform: scale(0.9); }
-  45% { transform: scale(1.2); }
-  60% { transform: scale(0.9); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+
+  15% {
+    transform: scale(1.3);
+  }
+
+  30% {
+    transform: scale(0.9);
+  }
+
+  45% {
+    transform: scale(1.2);
+  }
+
+  60% {
+    transform: scale(0.9);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 .tooltip {
@@ -1831,222 +1698,218 @@ watch(quantity, validateQuantity);
 }
 
 @keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
 }
 
-/* Responsive Design */
+/* Diseño responsivo dinámico */
 @media (max-width: 1024px) {
   .product-container {
-    grid-template-columns: 1fr;
     gap: 1.5rem;
   }
   
   .product-images {
     position: relative;
     top: 0;
-    max-width: 600px;
-    margin: 0 auto;
   }
   
-  .sticky-header {
-    position: static;
+  .product-title {
+    font-size: 1.75rem;
   }
 }
-
 @media (max-width: 768px) {
   .product-detail {
-    padding: 0.75rem;
+    padding: 1rem;
   }
   
-  .desktop-only {
-    display: none;
+  .main-image-wrapper {
+    border-radius: 1rem;
   }
   
-  .mobile-only {
-    display: block;
+  .thumbnail {
+    flex: 0 0 80px;
+    height: 80px;
   }
   
-  .mobile-header {
-    display: block;
-  }
-  
-  .mobile-price-preview {
-    display: flex;
+  .action-buttons {
+    grid-template-columns: 1fr;
   }
   
   .mobile-sticky-bar {
     display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    padding: 1rem;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 100;
   }
-  
+}
+
+@media (max-width: 480px) {
   .product-title {
     font-size: 1.5rem;
   }
   
   .current-price {
-    font-size: 1.5rem;
-  }
-  
-  .rating-section {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
-  }
-  
-  .reviews-summary {
-    width: 100%;
-    justify-content: space-between;
-  }
-  
-  .accordion-sections {
-    display: block;
-  }
-  
-  .features-section,
-  .color-section,
-  .model-section {
-    display: none;
-  }
-  
-  .image-pagination {
-    display: flex;
-  }
-  
-  .quantity-section {
-    flex-wrap: wrap;
-  }
-  
-  .quantity-label {
-    width: 100%;
-  }
-  
-  .quantity-controls {
-    flex: 1;
-    max-width: 200px;
-  }
-  
-  /* Adjust purchase section for mobile */
-  .purchase-section {
-    position: static;
-    box-shadow: none;
-    padding-bottom: 5rem; /* Space for sticky bar */
-  }
-  
-  /* Make thumbnails smaller on mobile */
-  .thumbnail {
-    flex: 0 0 50px;
-    height: 50px;
-  }
-}
-
-@media (max-width: 480px) {
-  .product-detail {
-    padding: 0.5rem;
-  }
-  
-  .badge-container {
-    flex-wrap: wrap;
-  }
-  
-  .price-tags {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .quantity-section {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .quantity-controls {
-    width: 100%;
-    max-width: none;
-  }
-  
-  .action-buttons {
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
+    font-size: 2rem;
   }
   
   .add-to-cart {
-    height: 3rem;
-    font-size: 1rem;
+    height: 48px;
   }
   
-  .add-to-wishlist {
-    width: 100%;
-    height: 3rem;
-  }
-  
-  .model-grid {
-    grid-template-columns: 1fr;
+  .thumbnail {
+    flex: 0 0 70px;
+    height: 70px;
   }
 }
 
+/* Mejoras de interacción */
+.quantity-controls {
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.quantity-btn:active {
+  transform: scale(0.95);
+}
+
+/* Efectos de hover modernos */
+.model-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 123, 255, 0.1);
+}
+/* Touch Device Optimizations */
 /* Touch Device Optimizations */
 @media (hover: none) {
   .add-to-cart:hover:not(:disabled),
   .model-card:hover,
-  .quantity-btn:hover:not(:disabled) {
-    transform: none;
-    box-shadow: none;
+  .quantity-btn:hover:not(:disabled) { transform: none; box-shadow: none; }
+  .add-to-wishlist:hover i { transform: none; }
+  .tooltip { display: none; }
+  .zoom-hint { display: none; }
+  .image-nav { opacity: 1; }
+  .add-to-cart:active:not(:disabled) { transform: scale(0.98); }
+  .add-to-wishlist:active { transform: scale(0.95); }
+  .model-card:active { background: rgba(0, 123, 255, 0.05); }
+}
+/* Optimizaciones táctiles */
+@media (pointer: coarse) {
+  .thumbnail {
+    flex: 0 0 90px;
+    height: 90px;
   }
   
-  .add-to-wishlist:hover i {
-    transform: none;
-  }
-  
-  .tooltip {
-    display: none;
-  }
-  
-  .quantity-controls,
-  .add-to-cart,
-  .add-to-wishlist,
-  .model-card {
-    -webkit-tap-highlight-color: transparent;
-  }
-  
-  /* Add active states for touch */
-  .add-to-cart:active:not(:disabled) {
-    transform: scale(0.98);
-  }
-  
-  .add-to-wishlist:active {
-    transform: scale(0.95);
-  }
-  
-  .model-card:active {
-    background: rgba(0, 123, 255, 0.05);
-  }
-  
-  /* Hide zoom hint on touch devices */
-  .zoom-hint {
-    display: none;
-  }
-  
-  /* Make image navigation always visible on touch */
-  .image-nav {
-    opacity: 0.8;
+  .action-buttons {
+    gap: 0.75rem;
   }
 }
 
+/* Transiciones suaves */
+.product-info > * {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Mejora en la visualización móvil */
+.mobile-price-preview {
+  display: none;
+  padding: 1rem;
+  background: #fff;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 100;
+}
 /* Enhanced Animations */
 @keyframes floatIn {
-  0% { opacity: 0; transform: translateY(20px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.info-content > * {
+.info-content>* {
   animation: floatIn 0.5s ease forwards;
   opacity: 0;
 }
 
-.info-content > *:nth-child(1) { animation-delay: 0.1s; }
-.info-content > *:nth-child(2) { animation-delay: 0.2s; }
-.info-content > *:nth-child(3) { animation-delay: 0.3s; }
-.info-content > *:nth-child(4) { animation-delay: 0.4s; }
-.info-content > *:nth-child(5) { animation-delay: 0.5s; }
-.info-content > *:nth-child(6) { animation-delay: 0.6s; }
-.info-content > *:nth-child(7) { animation-delay: 0.7s; }
+.info-content>*:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.info-content>*:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.info-content>*:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.info-content>*:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+.info-content>*:nth-child(5) {
+  animation-delay: 0.5s;
+}
+
+.info-content>*:nth-child(6) {
+  animation-delay: 0.6s;
+}
+
+.info-content>*:nth-child(7) {
+  animation-delay: 0.7s;
+}
+/* Efectos de carga mejorados */
+.loading::after {
+  animation: shimmer 1.5s infinite linear;
+  background: linear-gradient(
+    90deg,
+    rgba(248, 250, 252, 0) 25%,
+    rgba(241, 245, 249, 0.5) 50%,
+    rgba(248, 250, 252, 0) 75%
+  );
+  background-size: 200% 100%;
+}
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none !important;
+  }
+  
+  .mobile-only {
+    display: block !important;
+  }
+  
+  .accordion-sections {
+    display: block;
+    margin-top: 1.5rem;
+  }
+  
+  .features-section,
+  .color-section {
+    display: none;
+  }
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
 </style>

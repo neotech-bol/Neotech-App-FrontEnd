@@ -518,7 +518,7 @@ onMounted(async () => {
 }
 
 .text-accent {
-  color: #3182ce;
+  color: var(--primary-color);
   position: relative;
 }
 
@@ -562,9 +562,9 @@ onMounted(async () => {
 }
 
 .view-mode-button.active {
-  background: #3182ce;
+  background:  var(--primary-color);
   color: white;
-  border-color: #3182ce;
+  border-color:  var(--primary-color);
 }
 
 .view-mode-button:hover:not(.active) {

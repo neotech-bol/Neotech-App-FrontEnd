@@ -7,21 +7,14 @@
           <img src="/logo/Logo Neofetch PNG.png" alt="Neo Tech Bol" />
         </div>
         <p class="description">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque molestie eu dolor at eleifend. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque molestie eu dolor at eleifend. Lorem
+          ipsum dolor sit amet, consectetur adipiscing elit.
         </p>
       </div>
 
       <!-- Secciones colapsables -->
-      <div 
-        v-for="(section, index) in footerSections" 
-        :key="index" 
-        class="footer-section"
-      >
-        <div 
-          class="section-header" 
-          @click="toggleSection(index)"
-          :class="{ 'active': section.isOpen }"
-        >
+      <div v-for="(section, index) in footerSections" :key="index" class="footer-section">
+        <div class="section-header" @click="toggleSection(index)" :class="{ 'active': section.isOpen }">
           <h3>{{ section.title }}</h3>
           <span class="toggle-icon">{{ section.isOpen ? '−' : '+' }}</span>
         </div>
@@ -38,18 +31,16 @@
 
       <!-- Contacto -->
       <div class="footer-section contact-section">
-        <div 
-          class="section-header" 
-          @click="toggleSection(footerSections.length)"
-          :class="{ 'active': contactSectionOpen }"
-        >
+        <div class="section-header" @click="toggleSection(footerSections.length)"
+          :class="{ 'active': contactSectionOpen }">
           <h3>Contacto</h3>
           <span class="toggle-icon">{{ contactSectionOpen ? '−' : '+' }}</span>
         </div>
         <transition name="slide">
           <div v-show="contactSectionOpen || !isMobile" class="contact-content">
             <div class="contact-info">
-              <p><i class="fas fa-map-marker-alt" style="color: var(--primary-color);"></i> Avenida América y Libertador, Zona Cala Cala Cochabamba, Bolivia.</p>
+              <p><i class="fas fa-map-marker-alt" style="color: var(--primary-color);"></i> Avenida América y
+                Libertador, Zona Cala Cala Cochabamba, Bolivia.</p>
               <p><i class="fas fa-phone-alt" style="color: var(--primary-color);"></i> +591 759-01415</p>
               <p><i class="fas fa-envelope" style="color: var(--primary-color);"></i> contacto@neotechbo.com</p>
             </div>
@@ -84,7 +75,7 @@ import { ref, onMounted, onUnmounted } from 'vue';
 
 // Estado para controlar las secciones colapsables
 const footerSections = ref([
-  {
+/*   {
     title: 'Categorías',
     isOpen: false,
     links: [
@@ -95,7 +86,7 @@ const footerSections = ref([
       { text: 'Paneles Solares', url: '/categorias/paneles-solares' },
       { text: 'Secadores de Cabello', url: '/categorias/secadores-cabello' }
     ]
-  },
+  }, */
   {
     title: 'Neotech Bol',
     isOpen: false,
@@ -127,7 +118,7 @@ const isMobile = ref(false);
 // Función para alternar la visibilidad de las secciones
 const toggleSection = (index) => {
   if (!isMobile.value) return;
-  
+
   if (index === footerSections.value.length) {
     contactSectionOpen.value = !contactSectionOpen.value;
   } else {
@@ -138,7 +129,7 @@ const toggleSection = (index) => {
 // Función para verificar si es dispositivo móvil
 const checkIfMobile = () => {
   isMobile.value = window.innerWidth <= 768;
-  
+
   // Si no es móvil, asegurarse de que todas las secciones estén abiertas
   if (!isMobile.value) {
     footerSections.value.forEach(section => {

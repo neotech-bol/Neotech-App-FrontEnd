@@ -3,13 +3,18 @@
     <div class="top-bar">
       <div class="top-bar-inner">
         <div class="contact">
-          <a href="tel:+59177997694" style="text-decoration: none; color: #838384;"><i class="fas fa-phone-alt"></i> +591 77997694</a>
+          <a href="tel:+59177997694" style="text-decoration: none; color: #838384;"><i class="fas fa-phone-alt"></i>
+            +591 77997694</a>
         </div>
         <div class="announcement">
-          La experiencia de compra más veloz del país
+          {{ translate('experience') }}
         </div>
         <div class="top-links">
-          <a href="#" style="text-decoration: none; color: #838384;">Ayuda</a>
+<!--           <select v-model="currentLanguage" @change="handleLanguageChange" class="language-select">
+            <option value="es">Español</option>
+            <option value="en">English</option>
+          </select> -->
+          <a href="#" style="text-decoration: none; color: #838384;">{{ translate('help') }}</a>
         </div>
       </div>
     </div>
@@ -18,7 +23,7 @@
         <img src="/logo/Logo Neofetch PNG.png" alt="Logo" />
       </div>
       <div class="search-bar">
-        <input v-model="searchQuery" type="text" placeholder="¿Qué estás buscando en este ciclo?" />
+        <input v-model="searchQuery" type="text" :placeholder="translate('search_placeholder')" />
         <button class="search-button" @click="performSearch">
           <i class="fas fa-search"></i>
         </button>
@@ -26,15 +31,15 @@
       <div class="user-actions">
         <button class="icon-button" @click="handleAccountClick">
           <img src="/svg/icono-header-cuenta.svg" alt="Account" />
-          <span class="label">{{ isLoggedIn ? 'Cuenta' : 'Iniciar sesión' }}</span>
+          <span class="label">{{ translate(isLoggedIn ? 'account' : 'login') }}</span>
         </button>
         <button class="icon-button" @click="goFavorites">
           <img src="/svg/icono-header-favoritos.svg" alt="Favorites" />
-          <span class="label">Favoritos</span>
+          <span class="label">{{ translate('favorites') }}</span>
         </button>
         <button class="icon-button cart-button" @click="carritoView">
           <img src="/svg/icono-header-carrito.svg" alt="Cart" />
-          <span class="label">Carrito</span>
+          <span class="label">{{ translate('cart') }}</span>
           <span class="cart-count" v-if="cartItemCount > 0">{{ cartItemCount }}</span>
         </button>
       </div>
@@ -54,13 +59,13 @@
       </div>
       <button class="catalog-button" @click="toggleSidebar">
         <i class="fas fa-th-large"></i>
-        Ver catálogo
+        {{ translate('view_catalog') }} <!-- Traducción aquí -->
       </button>
       <ul class="nav-links">
         <li v-for="item in navItems" :key="item.path">
           <router-link :to="item.path" :class="{ 'active': $route.path === item.path }" @click="closeMobileMenu">
             <i :class="item.icon"></i>
-            <span class="link-text">{{ item.nombre }}</span>
+            <span class="link-text">{{ translate(item.nombre) }}</span> <!-- Traducción aquí -->
           </router-link>
         </li>
       </ul>
@@ -86,15 +91,15 @@
       <div class="mobile-user-actions" v-if="isMobileMenuOpen">
         <button class="mobile-action-button" @click="handleAccountClick">
           <i class="fas fa-user"></i>
-          <span>{{ isLoggedIn ? 'Mi Cuenta' : 'Iniciar sesión' }}</span>
+          <span>{{ translate(isLoggedIn ? 'account' : 'login') }}</span> <!-- Traducción aquí -->
         </button>
         <button class="mobile-action-button" @click="goFavorites">
           <i class="fas fa-heart"></i>
-          <span>Favoritos</span>
+          <span>{{ translate('favorites') }}</span> <!-- Traducción aquí -->
         </button>
         <button class="mobile-action-button" @click="carritoView">
           <i class="fas fa-shopping-cart"></i>
-          <span>Carrito</span>
+          <span>{{ translate('cart') }}</span> <!-- Traducción aquí -->
           <span class="mobile-cart-count" v-if="cartItemCount > 0">{{ cartItemCount }}</span>
         </button>
       </div>
@@ -104,7 +109,7 @@
 
   <div :class="['sidebar', { 'open': isSidebarOpen }]">
     <div class="sidebar-header">
-      <h2>Catálogos</h2>
+      <h2>{{ translate('catalogs') }}</h2> <!-- Traducción aquí -->
       <button class="close-sidebar" @click="toggleSidebar">
         <i class="fas fa-times"></i>
       </button>
@@ -174,10 +179,10 @@ import { idCatalogoHistorial } from '@/Services/CatalogoHistorialesService';
 import { indexCatalogosactives } from '@/Services/CatalogoService';
 import { useUserStore } from '@/stores/userAuht';
 import { useThemeStore } from '@/stores/themeStore';
+import useLanguageStore from '@/stores/languageStore';
 
 const router = useRouter();
 const cartStore = useCartStore();
-const language = ref(localStorage.getItem('lang') || 'es');
 const searchQuery = ref('');
 const currency = ref('bs');
 const isSidebarOpen = ref(false);
@@ -189,6 +194,13 @@ const catalogosActivos = ref([]);
 const themeStore = useThemeStore();
 const userStore = useUserStore();
 
+const languageStore = useLanguageStore();
+// Language related computeds and methods
+const currentLanguage = computed(() => languageStore.currentLanguage);
+const translate = (key) => languageStore.translate(key);
+const handleLanguageChange = (event) => {
+  languageStore.setLanguage(event.target.value);
+};
 
 const getInitialLocation = () => {
   return localStorage.getItem('departamento') || userStore.user.departamento || 'cochabamba';
@@ -213,17 +225,18 @@ const updateDepartment = async () => {
 };
 
 const navItems = [
-  { nombre: 'Inicio', path: '/', icon: 'fas fa-home' },
-  { nombre: 'Productos', path: '/productos', icon: 'fas fa-box-open' },
-  { nombre: 'Categorías', path: '/categorias', icon: 'fas fa-th-list' },
-  { nombre: 'Nosotros', path: '/nosotros', icon: 'fas fa-info-circle' },
-  { nombre: 'Contacto', path: '/contacto', icon: 'fas fa-envelope' },
+  { nombre: 'home', path: '/', icon: 'fas fa-home' },
+  { nombre: 'products', path: '/productos', icon: 'fas fa-box-open' },
+  { nombre: 'categories', path: '/categorias', icon: 'fas fa-th-list' },
+  { nombre: 'about', path: '/nosotros', icon: 'fas fa-info-circle' },
+  { nombre: 'contact', path: '/contacto', icon: 'fas fa-envelope' },
 ];
 
+// Función para listar catálogos históricos
 const listarCatalogosHistoriales = async () => {
   try {
-    const { data } = await idCatalogoHistorial();
-    catalogosAnteriores.value = data.datos;
+    const { data } = await idCatalogoHistorial(); // Realiza la petición a la API
+    catalogosAnteriores.value = languageStore.translateApiData(data.datos); // Traduce los datos antes de almacenarlos
   } catch (error) {
     console.log(error);
   }
@@ -232,7 +245,8 @@ const listarCatalogosHistoriales = async () => {
 const listarCatalogosActivos = async () => {
   try {
     const { data } = await indexCatalogosactives();
-    catalogosActivos.value = data.datos;
+    catalogosActivos.value = languageStore.translateApiData(data.datos); // Traduce los datos antes de almacenarlos
+    console.log(catalogosActivos.value); // Actual);
   } catch (error) {
     console.log(error);
   }
@@ -251,10 +265,6 @@ const viewCatalogoActivo = (idCatalogo) => {
 const viewCategoria = (idCategoria) => {
   router.push({ path: `/categoria/${idCategoria}` });
   toggleSidebar();
-};
-
-const changeLanguage = () => {
-  localStorage.setItem('lang', language.value);
 };
 
 const toggleMobileMenu = () => {
@@ -326,6 +336,14 @@ const activeSections = ref({
 const toggleSection = (section) => {
   activeSections.value[section] = !activeSections.value[section];
 };
+//api
+/* import { useLanguageStore } from '../stores/languageStore'
+
+const { translateApiData } = useLanguageStore()
+
+// When fetching data
+const response = await axios.get('/api/endpoint')
+const translatedData = translateApiData(response.data) */
 </script>
 
 <style scoped>
@@ -371,7 +389,7 @@ hr {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 1440px;
+  max-width: 1500px;
   margin: 0 auto;
   padding: 0 16px;
 }
@@ -390,7 +408,7 @@ hr {
 
 /* Main Header */
 .main-header {
-  max-width: 1440px;
+  max-width: 1510px;
   margin: 0 auto;
   padding: 12px 16px;
   display: grid;
@@ -530,7 +548,7 @@ hr {
 .main-nav {
   display: none;
   padding: 12px 16px;
-  max-width: 1440px;
+  max-width: 1500px;
   margin: 0 auto;
   background: #fff;
 }
@@ -543,7 +561,8 @@ hr {
   left: 0;
   width: 100%;
   height: 100vh;
-  z-index: 1001; /* Mayor que el overlay */
+  z-index: 1001;
+  /* Mayor que el overlay */
   padding: 0;
   overflow-y: auto;
   background-color: #fff;
@@ -663,9 +682,11 @@ hr {
   -webkit-appearance: none;
   -moz-appearance: none;
 }
+
 .location-select option {
   color: #000;
 }
+
 .location-select:focus {
   outline: none;
 }
@@ -839,7 +860,8 @@ hr {
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 1000; /* Menor que el menú móvil */
+  z-index: 1000;
+  /* Menor que el menú móvil */
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s ease;
@@ -874,6 +896,7 @@ hr {
     transform: translateY(100%);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -916,12 +939,12 @@ hr {
   .main-header {
     grid-template-columns: auto 1fr auto;
   }
-  
+
   .search-bar {
     grid-column: 1 / -1;
     grid-row: 2;
   }
-  
+
   .logo img {
     height: 40px;
   }
@@ -932,11 +955,11 @@ hr {
   .top-bar-inner {
     padding: 0 20px;
   }
-  
+
   .main-header {
     padding: 12px 20px;
   }
-  
+
   .search-bar input {
     font-size: 15px;
   }
@@ -947,23 +970,23 @@ hr {
   .top-bar-inner {
     padding: 0 24px;
   }
-  
+
   .contact {
     display: block;
   }
-  
+
   .main-header {
     grid-template-columns: auto 1fr auto auto;
     padding: 16px 24px;
     gap: 16px;
   }
-  
+
   .search-bar {
     grid-column: 2;
     grid-row: 1;
     margin-top: 0;
   }
-  
+
   .logo img {
     height: 42px;
   }
@@ -975,35 +998,35 @@ hr {
     padding: 8px 0;
     font-size: 14px;
   }
-  
+
   .top-bar-inner {
     padding: 0 32px;
   }
-  
+
   .contact,
   .top-links {
     display: block;
   }
-  
+
   .main-header {
     padding: 16px 32px;
     grid-template-columns: auto 1fr auto;
     gap: 24px;
   }
-  
+
   .logo img {
     height: 44px;
   }
-  
+
   .mobile-toggle {
     display: none;
   }
-  
+
   .user-actions {
     display: flex;
     gap: 16px;
   }
-  
+
   .main-nav {
     display: flex;
     flex-direction: row;
@@ -1011,50 +1034,50 @@ hr {
     align-items: center;
     padding: 12px 32px;
   }
-  
+
   .main-nav.mobile-nav-open {
     position: static;
     height: auto;
     padding: 12px 32px;
   }
-  
+
   .nav-header {
     display: none;
   }
-  
+
   .catalog-button {
     margin: 0;
     width: auto;
     padding: 10px 16px;
   }
-  
+
   .nav-links {
     flex-direction: row;
     gap: 16px;
     padding: 0;
   }
-  
+
   .nav-links li {
     border-bottom: none;
   }
-  
+
   .nav-links a {
     padding: 8px 12px;
   }
-  
+
   .nav-links a i {
     display: none;
   }
-  
+
   .location-selector {
     margin: 0;
     padding: 8px 12px;
   }
-  
+
   .mobile-user-actions {
     display: none;
   }
-  
+
   .sidebar {
     max-width: 350px;
   }
@@ -1062,63 +1085,64 @@ hr {
 
 /* Desktop (1024px and up) */
 @media (min-width: 1024px) {
+
   .top-bar-inner,
   .main-header,
   .main-nav {
     padding-left: 40px;
     padding-right: 40px;
   }
-  
+
   .main-header {
     padding-top: 20px;
     padding-bottom: 20px;
     gap: 32px;
   }
-  
+
   .logo img {
     height: 48px;
   }
-  
+
   .search-bar {
     max-width: 500px;
   }
-  
+
   .search-bar input {
     padding: 14px 44px 14px 20px;
     font-size: 16px;
   }
-  
+
   .icon-button {
     padding: 8px 12px;
   }
-  
+
   .icon-button img {
     width: 28px;
     height: 28px;
   }
-  
+
   .icon-button .label {
     font-size: 13px;
   }
-  
+
   .nav-links {
     gap: 24px;
   }
-  
+
   .nav-links a {
     padding: 8px 16px;
     font-size: 15px;
   }
-  
+
   .catalog-button {
     padding: 12px 20px;
     font-size: 15px;
   }
-  
+
   .location-selector {
     padding: 10px 16px;
   }
-  
+
   .location-select {
     font-size: 15px;
   }
@@ -1126,44 +1150,66 @@ hr {
 
 /* Large Desktop (1280px and up) */
 @media (min-width: 1280px) {
+
   .top-bar-inner,
   .main-header,
   .main-nav {
     padding-left: 48px;
     padding-right: 48px;
   }
-  
+
   .main-header {
     gap: 40px;
   }
-  
+
   .logo img {
     height: 52px;
   }
-  
+
   .search-bar {
     max-width: 600px;
   }
-  
+
   .user-actions {
     gap: 24px;
   }
-  
+
   .icon-button img {
     width: 30px;
     height: 30px;
   }
-  
+
   .icon-button .label {
     font-size: 14px;
   }
-  
+
   .nav-links {
     gap: 32px;
   }
-  
+
   .nav-links a {
     font-size: 16px;
   }
+}
+
+.language-select {
+  padding: 4px 8px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  background-color: white;
+  color: #838384;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.language-select:hover {
+  border-color: #007bff;
+}
+
+.language-select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 </style>

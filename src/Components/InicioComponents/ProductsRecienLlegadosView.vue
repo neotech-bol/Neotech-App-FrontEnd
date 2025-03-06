@@ -453,7 +453,6 @@ const showNotification = (message, type) => {
   position: relative;
   width: 100%;
   padding-bottom: 100%;
-  background-color: #f7fafc;
   overflow: hidden;
 }
 

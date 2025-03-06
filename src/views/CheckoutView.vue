@@ -100,9 +100,17 @@
                         <span class="detail-label">Cantidad máxima:</span>
                         <span class="detail-value">{{ product.cantidad_maxima }} und.</span>
                       </div>
-                      <div class="detail-item">
+                      <div class="detail-item" v-if="product.modelo">
                         <span class="detail-label">Modelo:</span>
                         <span class="detail-value">{{ product.modelo }}</span>
+                      </div>
+                      <div class="detail-item" v-if="product.color">
+                        <span class="detail-label">Color:</span>
+                        <span class="detail-value" :style="{ color: product.color }">{{ product.color }}</span>
+                      </div>
+                      <div class="detail-item" v-if="product.colorImage">
+                        <span class="detail-label">Imagen del Color:</span>
+                        <img :src="product.colorImage" alt="Color seleccionado" class="color-image" />
                       </div>
                     </div>
 
@@ -135,7 +143,6 @@
               </div>
             </div>
           </div>
-
           <!-- Step 3: Coupon -->
           <div class="step" :class="{ 'active-step': activeStep === 2, 'completed-step': activeStep > 2 }">
             <div class="step-header">
@@ -160,12 +167,11 @@
                 </p>
                 <div v-if="cartStore.descuento > 0" class="discount-info">
                   <p>
-                    <i class="fas fa-percentage"></i> Descuento aplicado:
-                    {{ cartStore.tipoDescuento === 'porcentaje' ? cartStore.descuento + '%' :
-                      formatPrice(cartStore.descuento) }}
+                    <i class="fas fa-money-bill-wave"></i> Descuento aplicado:
+                    {{ formatPrice(cartStore.montoDescuento) }}
                   </p>
-                  <p>
-                    <i class="fas fa-calculator"></i> Monto de descuento en porcentaje: {{ cartStore.montoPorcentaje }}%
+                  <p v-if="cartStore.tipoDescuento === 'porcentaje'">
+                    <i class="fas fa-percentage"></i> Porcentaje de descuento: {{ cartStore.descuento }}%
                   </p>
                   <button @click="removeCoupon" class="remove-coupon-btn">
                     <i class="fas fa-times"></i> Eliminar Cupón
@@ -203,7 +209,7 @@
                   <div v-if="paymentMethod === 'qr'" class="payment-details">
                     <p>Escanea el siguiente código QR para realizar el pago:</p>
                     <div class="qr-payment-image">
-                      <img src="../../public/QrDueño/payment-qr.png" alt="QR Code para pago">
+                      <img src="#" alt="QR Code para pago">
                     </div>
                     <div class="voucher-upload">
                       <label for="voucher-file">Subir comprobante de pago (requerido)</label>
@@ -299,28 +305,39 @@
           <div class="summary-items">
             <div class="summary-item">
               <span>Total en Productos:</span>
-              <span>{{ formatPrice(totalAmount) }}</span>
+              <span>{{ formatPrice(cartStore.totalAmount) }}</span>
             </div>
-            <div class="summary-item" v-if="cartStore.descuento > 0">
-              <span>Descuento:</span>
-              <span>-{{ cartStore.tipoDescuento === 'porcentaje' ? cartStore.descuento + '%' :
-                formatPrice(cartStore.descuento) }}</span>
+            <!-- Mostrar descuento según tipo -->
+            <div class="summary-item" v-if="cartStore.montoDescuento > 0">
+              <span v-if="cartStore.tipoDescuento === 'porcentaje'">
+                Descuento ({{ cartStore.descuento }}%):
+              </span>
+              <span v-else>
+                Descuento:
+              </span>
+              <span>-{{ formatPrice(cartStore.montoDescuento) }}</span>
+            </div>
+
+            <div class="summary-item">
+              <span>Total después del descuento:</span>
+              <span>{{ formatPrice(cartStore.totalAfterDiscount) }}</span>
+            </div>
+
+            <!-- Resto del resumen permanece igual -->
+            <div class="summary-item">
+              <span>Monto a cancelar (70%):</span>
+              <span>{{ formatPrice(cartStore.totalToPay) }}</span>
             </div>
             <div class="summary-item">
-              <span>Monto a cancelar:</span>
-              <span>{{ formatPrice(totalToPay) }}</span>
-            </div>
-            <div class="summary-item">
-              <span>Pendiente:</span>
-              <span>{{ formatPrice(pending) }}</span>
+              <span>Pendiente (30%):</span>
+              <span>{{ formatPrice(cartStore.pending) }}</span>
             </div>
           </div>
 
           <div class="total">
             <span>Monto final:</span>
-            <span class="total-amount">{{ formatPrice(totalAmount) }}</span>
+            <span class="total-amount">{{ formatPrice(cartStore.totalAfterDiscount) }}</span>
           </div>
-
           <div class="checkout-progress desktop-only">
             <div class="progress-bar">
               <div class="progress" :style="{ width: progressPercentage + '%' }"></div>
@@ -526,7 +543,7 @@ const totalAmount = computed(() => cartStore.totalAmount);
 const totalToPay = computed(() => cartStore.totalToPay);
 const pending = computed(() => cartStore.pending);
 const items = computed(() => cartStore.productos);
-
+console.log(items.value);
 const increaseQuantity = (product) => {
   const item = cartStore.productos.find(item => item.id === product.id && item.modeloId === product.modeloId);
   if (item && item.cantidad < item.cantidad_maxima) {
@@ -565,11 +582,18 @@ const removeProduct = (product) => {
     cancelButtonText: "Cancelar"
   }).then((result) => {
     if (result.isConfirmed) {
-      cartStore.removeFromCart(product.id, product.modeloId);
+      // Usar el uniqueId que ya viene con el producto en lugar de generarlo nuevamente
+      cartStore.removeFromCart(product.uniqueId);
+      
+      // Alternativamente, si el producto no tiene uniqueId, generarlo así:
+      // const uniqueId = `${product.id}-${product.modeloId || 'default'}-${product.color || 'default'}`;
+      // cartStore.removeFromCart(uniqueId);
     }
   });
 };
-
+function generarUniqueId(product) {
+  return `${product.id}-${product.modeloId || 'default'}-${product.color || 'default'}`;
+}
 const formatPrice = (price) => {
   return price ? `${price.toLocaleString()} Bs` : '0 Bs';
 };
@@ -588,6 +612,7 @@ const applyCoupon = async () => {
   try {
     const response = await validateCuponBE(cuponForm.value);
     if (response.data.success) {
+      console.log(response.data.cupon);
       cartStore.applyCoupon(response.data.cupon);
       couponMessage.value = `Cupón aplicado: ${response.data.cupon.codigo}`;
       couponError.value = false;
@@ -683,7 +708,13 @@ const finalizeOrder = async () => {
   items.value.forEach((producto, index) => {
     formData.append(`productos[${index}][id]`, producto.id);
     formData.append(`productos[${index}][cantidad]`, producto.cantidad);
-    // Si necesitas enviar más campos de cada producto, agrégalos aquí
+    formData.append(`productos[${index}][precio]`, producto.precio); // Añadir el precio
+    if (producto.modeloId) {
+      formData.append(`productos[${index}][modelo_id]`, producto.modeloId);
+    }
+    if (producto.color) {
+      formData.append(`productos[${index}][color]`, producto.color);
+    }
   });
 
   // Agregar otros datos del pedido
@@ -705,6 +736,12 @@ const finalizeOrder = async () => {
   // Agregar el archivo del voucher si existe
   if (voucherFile.value && paymentMethod.value === 'qr') {
     formData.append('voucher', voucherFile.value);
+  }
+
+  // Log de todos los datos que se están enviando
+  console.log("Datos que se enviarán:");
+  for (const [key, value] of formData.entries()) {
+    console.log(`${key}:`, value);
   }
 
   Swal.fire({
@@ -745,7 +782,6 @@ const finalizeOrder = async () => {
     }
   });
 };
-
 const clearOrderData = () => {
   // Limpiar el carrito
   if (typeof cartStore.clearCart === 'function') {
@@ -872,7 +908,7 @@ body {
 }
 
 .checkout-container {
-  max-width: 1440px;
+  max-width: 1480px;
   margin: 0 auto;
   padding: 20px;
   width: 100%;

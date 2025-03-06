@@ -339,7 +339,7 @@ onMounted(() => {
 }
 
 .text-accent {
-  color: #3182ce;
+  color:  var(--primary-color);
   position: relative;
 }
 

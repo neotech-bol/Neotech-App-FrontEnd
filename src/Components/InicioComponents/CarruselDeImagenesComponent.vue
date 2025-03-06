@@ -229,7 +229,7 @@ onUnmounted(() => {
 .carousel-container {
   max-width: 100%;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0;
   position: relative;
   outline: none;
 }
@@ -237,6 +237,7 @@ onUnmounted(() => {
 @media (min-width: 1440px) {
   .carousel-container {
     max-width: 1440px;
+    padding: 0 1rem; /* Less padding on small screens */
   }
 }
 
@@ -468,7 +469,7 @@ onUnmounted(() => {
   }
 
   .carousel-container {
-    padding: 0 0.5rem; /* Less padding on small screens */
+    padding: 0 0.4rem; /* Less padding on small screens */
   }
 
   .carousel-overlay {
