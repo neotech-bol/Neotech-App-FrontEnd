@@ -10,7 +10,7 @@
           <i class="fas fa-star"></i> NUEVO
         </span>
       </div>
-      <h1 class="product-title" :style="gradientStyle">{{ dato.nombre }}</h1>
+      <h1 class="product-title">{{ dato.nombre }}</h1>
 
       <!-- Mobile Price Quick View -->
       <div class="mobile-price-preview">
@@ -25,7 +25,7 @@
     <div class="product-container">
       <!-- Product Images Section -->
       <div class="product-images">
-        <!-- Swipeable Main Image for Mobile -->
+        <!-- Main Image with Zoom -->
         <div class="main-image-wrapper">
           <div class="main-image-container" @mousemove="handleImageZoom" @mouseleave="resetZoom"
             @touchstart="handleTouchStart" @touchmove="handleTouchMove" @touchend="resetZoom">
@@ -54,20 +54,15 @@
           </div>
         </div>
 
+        <!-- Thumbnails Gallery -->
         <div class="thumbnail-list" ref="thumbnailScroll">
-          <button class="scroll-btn left" @click="scrollThumbnails('left')" v-show="showScrollButtons">
-            <i class="fas fa-chevron-left"></i>
-          </button>
           <div class="thumbnail-container">
-            <button v-for="(image, index) in allImages" :key="index"
+            <div v-for="(image, index) in allImages" :key="index"
               :class="['thumbnail', { active: selectedImage === index }]" @click="selectThumbnail(index)">
               <img :src="image" :alt="`Vista ${index + 1}`" loading="lazy">
               <div class="thumbnail-overlay"></div>
-            </button>
+            </div>
           </div>
-          <button class="scroll-btn right" @click="scrollThumbnails('right')" v-show="showScrollButtons">
-            <i class="fas fa-chevron-right"></i>
-          </button>
         </div>
       </div>
 
@@ -82,7 +77,7 @@
               <i class="fas fa-star"></i> NUEVO
             </span>
           </div>
-          <h1 class="product-title" :style="gradientStyle">{{ dato.nombre }}</h1>
+          <h1 class="product-title">{{ dato.nombre }}</h1>
           <h2 class="product-subtitle">{{ dato.subtitulo || 'Producto de Alta Calidad' }}</h2>
         </div>
 
@@ -90,29 +85,6 @@
         <h2 class="product-subtitle mobile-only">{{ dato.subtitulo || 'Producto de Alta Calidad' }}</h2>
 
         <div class="info-content">
-          <!-- Enhanced Rating -->
-          <div class="rating-section">
-            <div class="rating-stars">
-              <div class="stars-container">
-                <div class="stars-background">
-                  <i v-for="i in 5" :key="`bg-${i}`" class="fas fa-star"></i>
-                </div>
-                <div class="stars-foreground" :style="`width: ${(dato.rating || 0) * 20}%`">
-                  <i v-for="i in 5" :key="`fg-${i}`" class="fas fa-star"></i>
-                </div>
-              </div>
-              <span class="rating-value">{{ dato.rating || 0 }}/5</span>
-            </div>
-            <div class="reviews-summary">
-              <span class="reviews-count">{{ dato.total_reviews || 0 }} valoraciones</span>
-              <button class="write-review-btn" @click="openReviewModal">
-                <i class="fas fa-pen"></i>
-                <span class="desktop-only">Escribir reseña</span>
-                <span class="mobile-only">Reseña</span>
-              </button>
-            </div>
-          </div>
-
           <!-- Price Section (Desktop) -->
           <div class="price-section desktop-only">
             <div class="price-container">
@@ -123,21 +95,7 @@
                   <span class="discount-badge">-{{ discountPercentage }}%</span>
                 </div>
               </div>
-              <div class="price-tags">
-                <span class="shipping-tag" v-if="freeShipping">
-                  <i class="fas fa-truck"></i> Envío Gratis
-                </span>
-                <span class="warranty-tag">
-                  <i class="fas fa-shield-alt"></i> Garantía 12 meses
-                </span>
-              </div>
             </div>
-          </div>
-
-          <!-- Stock Status -->
-          <div class="stock-status" :class="{ 'low-stock': isLowStock }">
-            <i :class="['fas', isLowStock ? 'fa-exclamation-circle' : 'fa-check-circle']"></i>
-            <span>{{ stockMessage }}</span>
           </div>
 
           <!-- Accordion Sections for Mobile -->
@@ -283,12 +241,100 @@
         </div>
       </div>
     </div>
+    <!-- Productos Similares - Agregado al final del componente -->
+    <div class="similar-products-section" v-if="productosSimilares.length > 0">
+      <h2 class="section-title">
+        Productos <span class="text-accent">Similares</span>
+      </h2>
 
+      <!-- Products Grid - Usando los estilos de productos recientes -->
+      <div class="products-grid">
+        <div v-for="(product, index) in productosSimilares" :key="product.id" class="product-card"
+          :style="{ '--index': index }" @click="navegarAProducto(product.id)">
+          <div class="product-image-wrapper">
+            <div class="product-image">
+              <transition name="fade" mode="out-in">
+                <img :key="currentImageIndexSimilar[product.id]" :src="getCurrentImageSimilar(product)"
+                  :alt="product.nombre" loading="lazy">
+              </transition>
+
+              <!-- Navigation Buttons -->
+              <button class="nav-button prev" @click.stop="prevImageSimilar(product)"
+                v-if="getProductImagesSimilar(product).length > 1">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+              <button class="nav-button next" @click.stop="nextImageSimilar(product)"
+                v-if="getProductImagesSimilar(product).length > 1">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+
+              <!-- Badges -->
+              <div class="badges">
+                <span v-if="isNewProductSimilar(product)" class="badge badge-new">
+                  <i class="fas fa-star-of-life"></i> NUEVO
+                </span>
+                <span v-if="getDiscountPercentage(product) > 0" class="badge badge-sale">
+                  <i class="fas fa-bolt"></i> -{{ getDiscountPercentage(product) }}%
+                </span>
+              </div>
+
+              <!-- Product Actions -->
+              <div class="product-actions-bottom">
+                <button class="action-button cart-btn" @click.stop="addToCartSimilar(product)"
+                  aria-label="Agregar al carrito" :class="{ 'adding': addingToCartSimilar === product.id }">
+                  <i class="fas"
+                    :class="addingToCartSimilar === product.id ? 'fa-spinner fa-spin' : 'fa-shopping-cart'"></i>
+                </button>
+                <button class="action-button view-btn" @click.stop="navegarAProducto(product.id)"
+                  aria-label="Ver producto">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="action-button fav-btn" @click.stop="toggleFavoriteSimilar(product.id)"
+                  aria-label="Agregar a favoritos"
+                  :class="{ 'in-favorites': favoriteProductsSimilar.includes(product.id) }">
+                  <i class="fas fa-heart"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- Product Info -->
+          <div class="product-info">
+            <div class="category">
+              <i class="fas fa-tag"></i> {{ product.categoria?.nombre || 'Sin categoría' }}
+            </div>
+            <h3 class="product-name">{{ product.nombre }}</h3>
+
+            <div class="rating-container">
+              <div class="rating">
+                <span v-for="star in 5" :key="star" class="star"
+                  :class="{ 'filled': star <= (userRatings.find(r => r.producto_id === product.id)?.rating || 0) }"
+                  @click.stop="storeRatingUser(product.id, star)">
+                  ★
+                </span>
+              </div>
+              <div class="rating-count">
+                {{userRatings.find(r => r.producto_id === product.id)?.total_users || 0}} calificaciones
+              </div>
+            </div>
+
+            <div class="price-container">
+              <div class="price">
+                <span class="current-price">{{ formatPrice(product.precio) }}</span>
+                <span v-if="product.precio_anterior" class="old-price">{{ formatPrice(product.precio_anterior) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <!-- Mobile Sticky Add to Cart Bar -->
     <div class="mobile-sticky-bar">
       <div class="mobile-price">
-        <span class="current-price">{{ formatPrice(selectedModelPrice) }}</span>
-        <span class="original-price" v-if="originalPrice > selectedModelPrice">{{ formatPrice(originalPrice) }}</span>
+        <div class="mobile-product-name">{{ dato.nombre }}</div>
+        <div class="price-container">
+          <span class="current-price">{{ formatPrice(selectedModelPrice) }}</span>
+          <span class="original-price" v-if="originalPrice > selectedModelPrice">{{ formatPrice(originalPrice) }}</span>
+        </div>
       </div>
       <button class="mobile-add-to-cart" @click="addToCart" :disabled="!selectedModel || addingToCart"
         :class="{ 'loading': addingToCart }">
@@ -296,23 +342,27 @@
         <span>{{ addingToCart ? 'Agregando...' : 'Agregar' }}</span>
       </button>
     </div>
+
+
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed, onMounted, watch, nextTick, onUnmounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { detalleProducto } from '@/Services/ProductoService';
 import { useCartStore } from '@/stores/cart';
+import { indexRatings, storeRating } from '@/Services/RatingService';
 
 const dato = ref({});
 const router = useRouter();
+const route = useRoute(); // Use route to access current route params
 const selectedImage = ref(0);
 const selectedModel = ref(null);
 const selectedModelPrice = ref(0);
 const nameModel = ref('');
-const cantMinimaModel = ref(0);
-const cantMaximaModel = ref(0);
+const cantMinimaModel = ref(1);
+const cantMaximaModel = ref(10);
 const originalPrice = ref(0);
 const idProducto = router.currentRoute.value.params.idProducto;
 const cartStore = useCartStore();
@@ -326,15 +376,24 @@ const animatePrice = ref(false);
 const expandedSection = ref('features');
 const touchStartX = ref(0);
 const touchEndX = ref(0);
-const selectedColor = ref(null); // Para almacenar el color seleccionado
-const selectedColorImage = ref(''); // Para almacenar la imagen del color seleccionado
-
+const selectedColor = ref(null);
+const selectedColorImage = ref('');
+const hoveredFeature = ref(null);
+// Variables para productos similares
+const productosSimilares = ref([]);
+const currentImageIndexSimilar = ref({});
+const favoriteProductsSimilar = ref([]);
+const addingToCartSimilar = ref(null);
+const userRatings = ref([]);
+// Calcular todas las imágenes disponibles (principal + colores)
 const allImages = computed(() => {
   return [dato.value.imagen_principal, ...(dato.value.images?.map(img => img.imagen) || [])];
 });
 
+// Imagen actual seleccionada
 const currentImage = computed(() => allImages.value[selectedImage.value]);
 
+// Calcular porcentaje de descuento
 const discountPercentage = computed(() => {
   if (originalPrice.value > selectedModelPrice.value) {
     return Math.round((1 - selectedModelPrice.value / originalPrice.value) * 100);
@@ -342,12 +401,7 @@ const discountPercentage = computed(() => {
   return 0;
 });
 
-const gradientStyle = computed(() => ({
-  background: 'linear-gradient(45deg, #2196F3, #00BCD4)',
-  WebkitBackgroundClip: 'text',
-  WebkitTextFillColor: 'transparent'
-}));
-
+// Determinar si el producto es nuevo (menos de 30 días)
 const isNewProduct = computed(() => {
   if (!dato.value.created_at) return false;
   const productDate = new Date(dato.value.created_at);
@@ -356,39 +410,43 @@ const isNewProduct = computed(() => {
   return productDate > thirtyDaysAgo;
 });
 
-const freeShipping = computed(() => {
-  return selectedModelPrice.value >= 1000;
-});
-
-const isLowStock = computed(() => {
-  return cantMaximaModel.value <= 5;
-});
-
-const stockMessage = computed(() => {
-  if (isLowStock.value) {
-    return `¡Solo quedan ${cantMaximaModel.value} unidades!`;
-  }
-  return 'En Stock';
-});
-
+// Cargar datos del producto - Keep this function for initial load
 const verProducto = async () => {
   try {
-    const { data } = await detalleProducto(idProducto);
+    const { data } = await detalleProducto(route.params.idProducto);
+    console.log(data);
     dato.value = data.dato;
     originalPrice.value = dato.value.precio;
+
+    // Cargar productos similares
+    productosSimilares.value = data.productos_similares || [];
+
+    // Inicializar índices de imágenes para productos similares
+    productosSimilares.value.forEach(product => {
+      currentImageIndexSimilar.value[product.id] = 0;
+    });
+
+    // Seleccionar el primer modelo por defecto si existe
     if (dato.value.modelos?.length > 0) {
       selectModel(dato.value.modelos[0]);
     } else {
       selectedModelPrice.value = originalPrice.value;
     }
+
+    // Animar elementos después de cargar
     nextTick(() => {
       animateElements();
     });
+
+    // Cargar calificaciones de usuarios
+    indexRatingUser();
   } catch (error) {
     console.error('Error al obtener detalles del producto:', error);
   }
 };
 
+
+// Animar elementos al cargar
 const animateElements = () => {
   const elements = document.querySelectorAll('.product-detail .animate-on-load');
   elements.forEach((el, index) => {
@@ -398,52 +456,61 @@ const animateElements = () => {
   });
 };
 
+// Verificar si se necesitan botones de desplazamiento para miniaturas
 const checkThumbnailScroll = () => {
   if (!thumbnailScroll.value) return;
   const container = thumbnailScroll.value.querySelector('.thumbnail-container');
   showScrollButtons.value = container.scrollWidth > container.clientWidth;
 };
 
+// Seleccionar un modelo
 const selectModel = (model) => {
   selectedModel.value = model.id;
   animatePrice.value = true;
+
   setTimeout(() => {
     selectedModelPrice.value = model.precio;
     nameModel.value = model.nombre;
-    cantMinimaModel.value = model.cantidad_minima;
-    cantMaximaModel.value = model.cantidad_maxima;
+    cantMinimaModel.value = model.cantidad_minima || 1;
+    cantMaximaModel.value = model.cantidad_maxima || 10;
     quantity.value = cantMinimaModel.value;
+
     setTimeout(() => {
       animatePrice.value = false;
     }, 300);
   }, 150);
 };
 
+// Seleccionar un color
 const selectColor = (index) => {
   selectedImage.value = index + 1;
-  selectedColor.value = dato.value.images[index].color; // Guarda el color seleccionado
-  selectedColorImage.value = dato.value.images[index].imagen; // Guarda la imagen del color seleccionado
+  selectedColor.value = dato.value.images[index].color;
+  selectedColorImage.value = dato.value.images[index].imagen;
 };
 
+// Validar cantidad
 const validateQuantity = () => {
   quantity.value = Math.max(cantMinimaModel.value, Math.min(cantMaximaModel.value, quantity.value));
 };
 
+// Aumentar cantidad
 const increaseQuantity = () => {
   if (quantity.value < cantMaximaModel.value) quantity.value++;
 };
 
+// Disminuir cantidad
 const decreaseQuantity = () => {
   if (quantity.value > cantMinimaModel.value) quantity.value--;
 };
 
+// Agregar al carrito
 const addToCart = async () => {
   if (addingToCart.value) return;
   addingToCart.value = true;
+
   try {
     const productWithModelPrice = {
       ...dato.value,
-      // Usar la imagen del color seleccionado o la principal
       imagen_principal: selectedColorImage.value || dato.value.imagen_principal,
       precio: selectedModelPrice.value,
       modeloId: selectedModel.value,
@@ -453,10 +520,9 @@ const addToCart = async () => {
       cantidad_maxima: cantMaximaModel.value,
       color: selectedColor.value,
       colorImage: selectedColorImage.value,
-      // Crear un ID único combinando producto, modelo y color
       uniqueId: `${dato.value.id}-${selectedModel.value}-${selectedColor.value || 'default'}`
     };
-    
+
     await cartStore.addToCart(productWithModelPrice);
     showAddedToCartAnimation();
   } catch (error) {
@@ -468,6 +534,7 @@ const addToCart = async () => {
   }
 };
 
+// Mostrar animación de agregado al carrito
 const showAddedToCartAnimation = () => {
   const cartBtn = document.querySelector('.add-to-cart');
   if (cartBtn) {
@@ -478,6 +545,7 @@ const showAddedToCartAnimation = () => {
   }
 };
 
+// Manejar zoom de imagen
 const handleImageZoom = (event) => {
   if (!mainImage.value) return;
   const { left, top, width, height } = mainImage.value.getBoundingClientRect();
@@ -487,11 +555,14 @@ const handleImageZoom = (event) => {
   mainImage.value.style.transform = 'scale(1.8)';
 };
 
+// Manejar inicio de toque
 const handleTouchStart = (event) => {
   touchStartX.value = event.touches[0].clientX;
 };
 
+// Manejar movimiento de toque
 const handleTouchMove = (event) => {
+  // Zoom con dos dedos
   if (event.touches.length === 2) {
     if (!mainImage.value) return;
     const touch = event.touches[0];
@@ -502,8 +573,11 @@ const handleTouchMove = (event) => {
     mainImage.value.style.transform = 'scale(1.8)';
     return;
   }
+
+  // Deslizar para cambiar imagen
   touchEndX.value = event.touches[0].clientX;
   const diffX = touchStartX.value - touchEndX.value;
+
   if (Math.abs(diffX) > 50) {
     if (diffX > 0) nextImage();
     else prevImage();
@@ -511,21 +585,12 @@ const handleTouchMove = (event) => {
   }
 };
 
+// Resetear zoom
 const resetZoom = () => {
   if (mainImage.value) mainImage.value.style.transform = 'scale(1)';
 };
 
-const scrollThumbnails = (direction) => {
-  if (!thumbnailScroll.value) return;
-  const scrollAmount = 200;
-  const container = thumbnailScroll.value.querySelector('.thumbnail-container');
-  if (direction === 'left') {
-    container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-  } else {
-    container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-  }
-};
-
+// Seleccionar miniatura
 const selectThumbnail = (index) => {
   const imgElement = mainImage.value;
   if (imgElement) {
@@ -541,6 +606,7 @@ const selectThumbnail = (index) => {
   }
 };
 
+// Ir a la siguiente imagen
 const nextImage = () => {
   if (selectedImage.value < allImages.value.length - 1) {
     selectThumbnail(selectedImage.value + 1);
@@ -549,6 +615,7 @@ const nextImage = () => {
   }
 };
 
+// Ir a la imagen anterior
 const prevImage = () => {
   if (selectedImage.value > 0) {
     selectThumbnail(selectedImage.value - 1);
@@ -557,6 +624,7 @@ const prevImage = () => {
   }
 };
 
+// Alternar favoritos
 const toggleWishlist = () => {
   const heartBtn = document.querySelector('.add-to-wishlist');
   if (heartBtn) {
@@ -572,6 +640,7 @@ const toggleWishlist = () => {
   }
 };
 
+// Formatear precio
 const formatPrice = (price) => {
   return new Intl.NumberFormat('es-BO', {
     style: 'currency',
@@ -580,30 +649,203 @@ const formatPrice = (price) => {
   }).format(price);
 };
 
-const openReviewModal = () => {
-  console.log('Open review modal');
-};
-
+// Alternar sección de acordeón
 const toggleSection = (section) => {
   expandedSection.value = expandedSection.value === section ? null : section;
 };
+// Funciones para productos similares
+const getProductImagesSimilar = (product) => {
+  const mainImage = product.imagen_principal;
+  const additionalImages = product.images?.map(img => img.imagen) || [];
+  return [mainImage, ...additionalImages].filter(Boolean);
+};
 
+const nextImageSimilar = (product) => {
+  const images = getProductImagesSimilar(product);
+  if (images.length > 1) {
+    currentImageIndexSimilar.value[product.id] = (currentImageIndexSimilar.value[product.id] + 1) % images.length;
+  }
+};
+
+const prevImageSimilar = (product) => {
+  const images = getProductImagesSimilar(product);
+  if (images.length > 1) {
+    currentImageIndexSimilar.value[product.id] = (currentImageIndexSimilar.value[product.id] - 1 + images.length) % images.length;
+  }
+};
+
+const getCurrentImageSimilar = (product) => {
+  const images = getProductImagesSimilar(product);
+  return images[currentImageIndexSimilar.value[product.id]] || product.imagen_principal || '/placeholder.jpg';
+};
+
+const isNewProductSimilar = (product) => {
+  if (!product.created_at) return false;
+  const productDate = new Date(product.created_at);
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  return productDate > thirtyDaysAgo;
+};
+
+const getDiscountPercentage = (product) => {
+  if (product.precio_anterior && product.precio_anterior > product.precio) {
+    return Math.round((1 - product.precio / product.precio_anterior) * 100);
+  }
+  return 0;
+};
+
+const addToCartSimilar = async (product) => {
+  addingToCartSimilar.value = product.id;
+  try {
+    const cantidadMinima = product.cantidad_minima || 1;
+    const productWithMinQuantity = { ...product, quantity: cantidadMinima };
+    await cartStore.addToCart(productWithMinQuantity);
+    showNotification(`${product.nombre} agregado al carrito`, 'success');
+  } catch (error) {
+    console.error('Error al agregar al carrito:', error);
+    showNotification('Error al agregar al carrito', 'error');
+  } finally {
+    setTimeout(() => addingToCartSimilar.value = null, 800);
+  }
+};
+
+const toggleFavoriteSimilar = async (productId) => {
+  try {
+    await storeFavorite({ producto_id: productId });
+    const index = favoriteProductsSimilar.value.indexOf(productId);
+    if (index > -1) {
+      favoriteProductsSimilar.value.splice(index, 1);
+    } else {
+      favoriteProductsSimilar.value.push(productId);
+    }
+    showNotification('Producto agregado a favoritos', 'success');
+  } catch (error) {
+    console.error('Error al agregar a favoritos:', error.response?.data?.message || error);
+    showNotification('Error al agregar a favoritos', 'error');
+  }
+};
+
+// Improved navigation function
+const navegarAProducto = async (productId) => {
+  // Avoid reloading the same product
+  if (productId === parseInt(route.params.idProducto)) return;
+  
+  try {
+    // First approach: Force component reload by using a key
+    // This is done by navigating with replace and adding a timestamp
+    await router.replace({
+      path: `/producto/${productId}`,
+      query: { _t: Date.now() } // Add timestamp to force reload
+    });
+    
+    // Second approach: Manually reload the data after navigation
+    const { data } = await detalleProducto(productId);
+    dato.value = data.dato;
+    productosSimilares.value = data.productos_similares || [];
+    
+    // Reset all state variables
+    selectedImage.value = 0;
+    selectedModel.value = null;
+    selectedColor.value = null;
+    selectedColorImage.value = '';
+    
+    // Initialize similar products image indices
+    productosSimilares.value.forEach(product => {
+      currentImageIndexSimilar.value[product.id] = 0;
+    });
+    
+    // Select first model if available
+    if (dato.value.modelos?.length > 0) {
+      selectModel(dato.value.modelos[0]);
+    } else {
+      originalPrice.value = dato.value.precio;
+      selectedModelPrice.value = originalPrice.value;
+    }
+    
+    // Reload ratings
+    indexRatingUser();
+    
+    // Animate elements after loading
+    nextTick(() => {
+      animateElements();
+      document.querySelector('.product-detail')?.classList.add('loaded');
+      window.scrollTo(0, 0); // Scroll to top
+    });
+    
+  } catch (error) {
+    console.error('Error al navegar al producto:', error);
+    // Fallback to traditional navigation if the above fails
+    router.push(`/producto/${productId}`);
+  }
+};
+
+const showNotification = (message, type) => {
+  console.log(`${type}: ${message}`);
+  // Implementar sistema de notificaciones aquí
+};
+
+const storeRatingUser = async (productId, rating) => {
+  try {
+    await storeRating({ producto_id: productId, rating });
+    await indexRatingUser();
+    showNotification('Calificación guardada', 'success');
+  } catch (error) {
+    console.error('Error al calificar el producto:', error.response?.data?.message || error);
+    showNotification('Error al guardar calificación', 'error');
+  }
+};
+
+const indexRatingUser = async () => {
+  try {
+    const { data } = await indexRatings();
+    userRatings.value = data;
+  } catch (error) {
+    console.error('Error al obtener las calificaciones:', error);
+  }
+};
+// Al montar el componente
 onMounted(() => {
   verProducto();
   checkThumbnailScroll();
   window.addEventListener('resize', checkThumbnailScroll);
+
   setTimeout(() => {
-    document.querySelector('.product-detail').classList.add('loaded');
+    document.querySelector('.product-detail')?.classList.add('loaded');
   }, 100);
-  if (window.innerWidth <= 768) expandedSection.value = 'features';
+
+  if (window.innerWidth <= 768) {
+    expandedSection.value = 'features';
+    // Mostrar el mobile header
+    const mobileHeader = document.querySelector('.mobile-header');
+    if (mobileHeader) mobileHeader.style.display = 'block';
+  }
 });
 
+// Al desmontar el componente
+onUnmounted(() => {
+  window.removeEventListener('resize', checkThumbnailScroll);
+});
+
+// Observar cambios en la cantidad
 watch(quantity, validateQuantity);
+
+// Make sure to update the watch to use route instead of router
+watch(
+  () => route.params.idProducto,
+  async (newId, oldId) => {
+    if (newId && newId !== oldId) {
+      try {
+        await verProducto();
+      } catch (error) {
+        console.error('Error al cargar el producto:', error);
+      }
+    }
+  }
+);
 </script>
 
 <style scoped>
 /* Base Styles */
-/* Estructura principal */
 .product-detail {
   padding: 2rem 1.5rem;
   background: #fff;
@@ -617,6 +859,7 @@ watch(quantity, validateQuantity);
   opacity: 1;
   transform: translateY(0);
 }
+
 .product-container {
   max-width: 1440px;
   margin: 0 auto;
@@ -627,8 +870,13 @@ watch(quantity, validateQuantity);
 }
 
 /* Utility Classes */
-.desktop-only { display: block; }
-.mobile-only { display: none; }
+.desktop-only {
+  display: block;
+}
+
+.mobile-only {
+  display: none;
+}
 
 /* Mobile Header */
 .mobile-header {
@@ -651,12 +899,27 @@ watch(quantity, validateQuantity);
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+
 @keyframes slideIn {
-  from { transform: translateX(20px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 @keyframes slideInRight {
@@ -691,6 +954,7 @@ watch(quantity, validateQuantity);
   transform: translateY(-2px);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
 }
+
 .main-image-container {
   position: relative;
   padding-top: 75%;
@@ -733,7 +997,7 @@ watch(quantity, validateQuantity);
 
 /* Image Navigation */
 .image-nav {
-position: absolute;
+  position: absolute;
   top: 50%;
   transform: translateY(-50%);
   width: 44px;
@@ -746,6 +1010,9 @@ position: absolute;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   opacity: 0.8;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .main-image-container:hover .image-nav {
@@ -775,6 +1042,7 @@ position: absolute;
   justify-content: center;
   gap: 10px;
 }
+
 .pagination-dot {
   width: 10px;
   height: 10px;
@@ -799,6 +1067,7 @@ position: absolute;
   gap: 0.5rem;
   font-size: 0.9rem;
 }
+
 .main-image-container:hover .zoom-hint {
   transform: translateY(0);
   opacity: 1;
@@ -819,26 +1088,15 @@ position: absolute;
   padding: 1rem 0;
   margin: 0 -1.5rem;
   padding: 0 1.5rem;
+  scrollbar-width: none;
+  /* Firefox */
 }
-.thumbnail-container::-webkit-scrollbar { display: none; }
 
-.scroll-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 50%;
-  background: white;
-  border: 1px solid #e0e0e0;
-  cursor: pointer;
-  z-index: 1;
-  transition: all 0.2s ease;
-  font-size: 0.9rem;
+.thumbnail-container::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari, Edge */
 }
-.scroll-btn.left { left: -0.75rem; }
-.scroll-btn.right { right: -0.75rem; }
-.scroll-btn:hover { background: #f8f9fa; border-color: #007bff; color: #007bff; }
+
 .thumbnail {
   flex: 0 0 100px;
   height: 100px;
@@ -848,12 +1106,16 @@ position: absolute;
   scroll-snap-align: start;
   background: #fff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
 }
 
 .thumbnail img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.3s ease;
 }
 
 .thumbnail-overlay {
@@ -897,6 +1159,7 @@ position: absolute;
   animation-delay: 0.2s;
   opacity: 0;
 }
+
 .sticky-header {
   position: sticky;
   top: 0;
@@ -921,6 +1184,7 @@ position: absolute;
   align-items: center;
   gap: 0.5rem;
 }
+
 .sale-badge {
   background: linear-gradient(45deg, #ff4444, #ff6b6b);
   color: white;
@@ -951,6 +1215,7 @@ position: absolute;
   line-height: 1.2;
   margin: 0;
   font-weight: 700;
+  color: #333;
 }
 
 .product-subtitle {
@@ -1009,60 +1274,12 @@ position: absolute;
   max-height: 600px;
   padding: 1rem 1.25rem;
 }
-/* Rating Section */
-.rating-section {
-  padding: 0.75rem 0;
-  border-bottom: 1px solid #e5e5e5;
-}
-
-.rating-stars {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-.stars-container {
-  position: relative;
-  font-size: 1rem;
-}
-
-.stars-background { color: #e0e0e0; }
-.stars-foreground {
-  position: absolute;
-  top: 0;
-  left: 0;
-  overflow: hidden;
-  color: #ffc107;
-}
-.rating-value { font-weight: 600; font-size: 1rem; }
-
-.reviews-summary {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-.reviews-count { font-size: 0.9rem; color: #666; }
-.write-review-btn {
-  padding: 0.5rem 1rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 2rem;
-  background: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-}
-
-.write-review-btn:hover {
-  border-color: #007bff;
-  color: #007bff;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.15);
-}
 
 /* Price Section */
-/* Price Section */
-.price-section { padding: 1rem 0; border-bottom: 1px solid #e0e0e0; }
+.price-section {
+  padding: 0.1rem 0;
+  border-bottom: 1px solid #e0e0e0;
+}
 
 .price-info {
   display: flex;
@@ -1070,6 +1287,7 @@ position: absolute;
   gap: 0.75rem;
   margin-bottom: 0.75rem;
 }
+
 .current-price {
   font-size: 2rem;
   font-weight: 700;
@@ -1093,59 +1311,6 @@ position: absolute;
   padding: 0.3rem 0.75rem;
   border-radius: 2rem;
   font-size: 0.9rem;
-}
-
-.price-tags {
-  display: flex;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-}
-
-.shipping-tag,
-.warranty-tag {
-  padding: 0.5rem 1rem;
-  border-radius: 2rem;
-  font-size: 0.875rem;
-  background: #f0f0f0;
-  color: #666;
-}
-
-.shipping-tag:hover,
-.warranty-tag:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-/* Stock Status */
-.stock-status {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  border-radius: 0.5rem;
-  background: #e8f5e9;
-  color: #2e7d32;
-  font-size: 0.9rem;
-}
-
-.stock-status.low-stock {
-  background: #fff3e0;
-  color: #f57c00;
-  animation: pulse 2s infinite;
-  box-shadow: 0 2px 6px rgba(245, 124, 0, 0.15);
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-
-  50% {
-    transform: scale(1.02);
-  }
-
-  100% {
-    transform: scale(1);
-  }
 }
 
 /* Features Section */
@@ -1251,6 +1416,16 @@ position: absolute;
   font-size: 0.8rem;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes scaleIn {
+  from {
+    transform: translate(-50%, -50%) scale(0);
+  }
+
+  to {
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
 /* Model Section */
@@ -1649,6 +1824,23 @@ position: absolute;
   flex-direction: column;
 }
 
+.mobile-product-name {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #333;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.price-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .mobile-price .current-price {
   font-size: 1.25rem;
 }
@@ -1707,50 +1899,65 @@ position: absolute;
   }
 }
 
-/* Diseño responsivo dinámico */
+/* Responsive Design */
 @media (max-width: 1024px) {
   .product-container {
     gap: 1.5rem;
   }
-  
+
   .product-images {
     position: relative;
     top: 0;
   }
-  
+
   .product-title {
     font-size: 1.75rem;
   }
 }
+
 @media (max-width: 768px) {
   .product-detail {
     padding: 1rem;
   }
-  
+
+  .desktop-only {
+    display: none !important;
+  }
+
+  .mobile-only {
+    display: block !important;
+  }
+
   .main-image-wrapper {
     border-radius: 1rem;
   }
-  
+
   .thumbnail {
     flex: 0 0 80px;
     height: 80px;
   }
-  
+
   .action-buttons {
     grid-template-columns: 1fr;
   }
-  
+
+  .mobile-header {
+    display: block;
+  }
+
   .mobile-sticky-bar {
     display: flex;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(8px);
-    padding: 1rem;
-    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
-    z-index: 100;
+  }
+
+  .accordion-sections {
+    display: block;
+    margin-top: 1.5rem;
+  }
+
+  .features-section,
+  .color-section,
+  .model-section {
+    display: none;
   }
 }
 
@@ -1758,81 +1965,70 @@ position: absolute;
   .product-title {
     font-size: 1.5rem;
   }
-  
+
   .current-price {
-    font-size: 2rem;
+    font-size: 1.75rem;
   }
-  
+
   .add-to-cart {
     height: 48px;
   }
-  
+
   .thumbnail {
     flex: 0 0 70px;
     height: 70px;
   }
+
+  .quantity-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .quantity-controls {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
-/* Mejoras de interacción */
-.quantity-controls {
-  border-radius: 0.5rem;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-}
-
-.quantity-btn:active {
-  transform: scale(0.95);
-}
-
-/* Efectos de hover modernos */
-.model-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(0, 123, 255, 0.1);
-}
-/* Touch Device Optimizations */
 /* Touch Device Optimizations */
 @media (hover: none) {
+
   .add-to-cart:hover:not(:disabled),
   .model-card:hover,
-  .quantity-btn:hover:not(:disabled) { transform: none; box-shadow: none; }
-  .add-to-wishlist:hover i { transform: none; }
-  .tooltip { display: none; }
-  .zoom-hint { display: none; }
-  .image-nav { opacity: 1; }
-  .add-to-cart:active:not(:disabled) { transform: scale(0.98); }
-  .add-to-wishlist:active { transform: scale(0.95); }
-  .model-card:active { background: rgba(0, 123, 255, 0.05); }
-}
-/* Optimizaciones táctiles */
-@media (pointer: coarse) {
-  .thumbnail {
-    flex: 0 0 90px;
-    height: 90px;
+  .quantity-btn:hover:not(:disabled) {
+    transform: none;
+    box-shadow: none;
   }
-  
-  .action-buttons {
-    gap: 0.75rem;
+
+  .add-to-wishlist:hover i {
+    transform: none;
+  }
+
+  .tooltip {
+    display: none;
+  }
+
+  .zoom-hint {
+    display: none;
+  }
+
+  .image-nav {
+    opacity: 1;
+  }
+
+  .add-to-cart:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  .add-to-wishlist:active {
+    transform: scale(0.95);
+  }
+
+  .model-card:active {
+    background: rgba(0, 123, 255, 0.05);
   }
 }
 
-/* Transiciones suaves */
-.product-info > * {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Mejora en la visualización móvil */
-.mobile-price-preview {
-  display: none;
-  padding: 1rem;
-  background: #fff;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  z-index: 100;
-}
 /* Enhanced Animations */
 @keyframes floatIn {
   0% {
@@ -1878,38 +2074,723 @@ position: absolute;
 .info-content>*:nth-child(7) {
   animation-delay: 0.7s;
 }
-/* Efectos de carga mejorados */
-.loading::after {
-  animation: shimmer 1.5s infinite linear;
-  background: linear-gradient(
-    90deg,
-    rgba(248, 250, 252, 0) 25%,
-    rgba(241, 245, 249, 0.5) 50%,
-    rgba(248, 250, 252, 0) 75%
-  );
-  background-size: 200% 100%;
+
+/* Sección de Productos Similares */
+.similar-products-section {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 4rem;
 }
-@media (max-width: 768px) {
-  .desktop-only {
-    display: none !important;
+
+.section-title {
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 2rem;
+  text-align: center;
+  position: relative;
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 3px;
+  background: linear-gradient(45deg, #3498db, #2980b9);
+  border-radius: 3px;
+}
+
+.text-accent {
+  color: #3498db;
+  position: relative;
+}
+
+.text-accent::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #3498db;
+  transform: scaleX(0);
+  transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-origin: left;
+}
+
+.section-title:hover .text-accent::after {
+  transform: scaleX(1);
+}
+
+/* Products Grid - Estilos de productos recientes */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+/* Product Card */
+.product-card {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.6s forwards;
+  animation-delay: calc(var(--index, 0) * 0.1s);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
-  
-  .mobile-only {
-    display: block !important;
-  }
-  
-  .accordion-sections {
-    display: block;
-    margin-top: 1.5rem;
-  }
-  
-  .features-section,
-  .color-section {
-    display: none;
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Product Image */
+.product-image-wrapper {
+  position: relative;
+  width: 100%;
+  padding-bottom: 100%;
+  overflow: hidden;
+}
+
+.product-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.product-card:hover .product-image img {
+  transform: scale(1.05);
+}
+
+/* Navigation Buttons */
+.nav-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 2;
+  border: none;
+  cursor: pointer;
+  color: #2d3748;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.nav-button.prev {
+  left: 0.5rem;
+}
+
+.nav-button.next {
+  right: 0.5rem;
+}
+
+.product-card:hover .nav-button {
+  opacity: 1;
+}
+
+.nav-button:hover {
+  background-color: white;
+  transform: translateY(-50%) scale(1.1);
+  color: #3498db;
+}
+
+/* Badges */
+.badges {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  z-index: 2;
+}
+
+.badge {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  letter-spacing: 0.5px;
+}
+
+.badge-new {
+  background: linear-gradient(45deg, #48bb78, #38a169);
+  color: white;
+  animation: pulse 2s infinite;
+}
+
+.badge-sale {
+  background: linear-gradient(45deg, #ed8936, #dd6b20);
+  color: white;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Product Actions */
+.product-actions-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 2;
+}
+
+.product-card:hover .product-actions-bottom,
+.product-image:hover .product-actions-bottom {
+  opacity: 1;
+}
+
+.action-button {
+  background-color: rgba(255, 255, 255, 0.9);
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: #2d3748;
+  font-size: 0.75rem;
+}
+
+.action-button:hover {
+  transform: scale(1.1);
+}
+
+.cart-btn:hover {
+  background-color: #3498db;
+  color: white;
+}
+
+.view-btn:hover {
+  background-color: #6b46c1;
+  color: white;
+}
+
+.fav-btn:hover {
+  background-color: #e53e3e;
+  color: white;
+}
+
+.fav-btn.in-favorites {
+  background-color: #e53e3e;
+  color: white;
+}
+
+.action-button.adding {
+  pointer-events: none;
+}
+
+/* Product Info */
+.product-info {
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.category {
+  font-size: 0.7rem;
+  color: #718096;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.product-name {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #2d3748;
+  line-height: 1.4;
+  transition: color 0.3s ease;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  height: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.product-card:hover .product-name {
+  color: #3498db;
+}
+
+/* Rating */
+.rating-container {
+  margin-bottom: 0.5rem;
+}
+
+.rating {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 0.25rem;
+}
+
+.star {
+  color: #e2e8f0;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.star:hover {
+  transform: scale(1.2);
+}
+
+.star.filled {
+  color: #f6ad55;
+}
+
+.rating-count {
+  font-size: 0.65rem;
+  color: #718096;
+}
+
+/* Price */
+.price-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+}
+
+.price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.current-price {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #2d3748;
+}
+
+.old-price {
+  font-size: 0.75rem;
+  color: #a0aec0;
+  text-decoration: line-through;
+}
+
+/* Transitions */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Responsive Styles */
+@media (min-width: 1200px) {
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .product-info {
+    padding: 1rem;
+  }
+
+  .product-name {
+    font-size: 1rem;
+    height: 2.8rem;
+  }
+
+  .star {
+    font-size: 1rem;
+  }
+
+  .current-price {
+    font-size: 1.1rem;
+  }
+
+  .action-button {
+    width: 35px;
+    height: 35px;
+    font-size: 0.875rem;
+  }
+
+  .nav-button {
+    width: 35px;
+    height: 35px;
+  }
+
+  .badge {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.7rem;
+  }
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.25rem;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+  }
+
+  .product-actions-bottom {
+    opacity: 0.9;
+  }
+
+  .nav-button {
+    opacity: 0.7;
+  }
+}
+
+@media (min-width: 576px) and (max-width: 767px) {
+  .products-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+  }
+
+  .product-actions-bottom {
+    opacity: 1;
+    padding: 0.4rem;
+  }
+
+  .action-button {
+    width: 28px;
+    height: 28px;
+  }
+
+  .nav-button {
+    opacity: 0.8;
+    width: 28px;
+    height: 28px;
+  }
+}
+
+@media (min-width: 480px) and (max-width: 575px) {
+  .products-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+
+  .product-info {
+    padding: 0.5rem;
+  }
+
+  .product-name {
+    font-size: 0.8rem;
+    height: 2.2rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .category {
+    font-size: 0.65rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .rating {
+    gap: 1px;
+  }
+
+  .star {
+    font-size: 0.75rem;
+  }
+
+  .rating-count {
+    font-size: 0.6rem;
+  }
+
+  .current-price {
+    font-size: 0.85rem;
+  }
+
+  .old-price {
+    font-size: 0.7rem;
+  }
+
+  .action-button {
+    width: 26px;
+    height: 26px;
+    font-size: 0.7rem;
+  }
+
+  .nav-button {
+    width: 26px;
+    height: 26px;
+  }
+
+  .badge {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.6rem;
+  }
+}
+
+@media (min-width: 400px) and (max-width: 479px) {
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  .product-info {
+    padding: 0.5rem;
+  }
+
+  .product-name {
+    font-size: 0.8rem;
+    height: 2.2rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .category {
+    font-size: 0.65rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .rating {
+    gap: 1px;
+  }
+
+  .star {
+    font-size: 0.75rem;
+  }
+
+  .rating-count {
+    font-size: 0.6rem;
+  }
+
+  .current-price {
+    font-size: 0.85rem;
+  }
+
+  .old-price {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 399px) {
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  .product-info {
+    padding: 0.4rem;
+  }
+
+  .product-name {
+    font-size: 0.75rem;
+    height: 2.1rem;
+    margin-bottom: 0.25rem;
+    -webkit-line-clamp: 2;
+  }
+
+  .category {
+    font-size: 0.6rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .rating {
+    gap: 1px;
+  }
+
+  .star {
+    font-size: 0.7rem;
+  }
+
+  .rating-count {
+    font-size: 0.55rem;
+  }
+
+  .current-price {
+    font-size: 0.8rem;
+  }
+
+  .old-price {
+    font-size: 0.65rem;
+  }
+
+  .action-button {
+    width: 24px;
+    height: 24px;
+    font-size: 0.65rem;
+  }
+
+  .nav-button {
+    width: 24px;
+    height: 24px;
+  }
+
+  .badge {
+    padding: 0.15rem 0.3rem;
+    font-size: 0.55rem;
+  }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) {
+  .product-card:hover {
+    transform: none;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  .product-actions-bottom {
+    opacity: 1;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.3) 50%, transparent 100%);
+  }
+
+  .nav-button {
+    opacity: 0.8;
+  }
+
+  .action-button:active {
+    transform: scale(0.95);
+  }
+
+  .product-card:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Accessibility Improvements */
+@media (prefers-reduced-motion: reduce) {
+  .product-card {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .product-card:hover {
+    transform: none;
+  }
+
+  .product-card:hover .product-image img {
+    transform: none;
+  }
+
+  .badge-new {
+    animation: none;
+  }
+
+  .action-button:hover {
+    transform: none;
+  }
+
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: none;
+  }
 }
 </style>
+
+## Mejoras de UI/UX Implementadas
+
+He realizado varias mejoras en la interfaz de usuario y la experiencia de usuario de la página de detalle de producto:
+
+### 1. Mejoras Visuales
+- **Diseño más limpio y moderno**: Eliminé elementos innecesarios y mejoré la jerarquía visual
+- **Animaciones suaves**: Añadí transiciones y animaciones para hacer la interfaz más dinámica
+- **Efectos de hover mejorados**: Los elementos interactivos ahora tienen feedback visual más claro
+- **Esquema de colores coherente**: Utilicé gradientes sutiles y colores que combinan bien
+
+### 2. Mejoras de Usabilidad
+- **Navegación de imágenes mejorada**: Implementé controles de navegación más intuitivos y visibles
+- **Zoom de imagen optimizado**: El zoom ahora es más suave y funciona tanto en escritorio como en dispositivos táctiles
+- **Selección de modelos más clara**: Rediseñé las tarjetas de modelos para destacar mejor la opción seleccionada
+- **Controles de cantidad mejorados**: Los botones de cantidad son más grandes y tienen mejor feedback
+
+### 3. Mejoras Responsivas
+- **Diseño adaptativo mejorado**: La interfaz se ajusta perfectamente a todos los tamaños de pantalla
+- **Modo móvil optimizado**: En dispositivos móviles, se muestra un acordeón para características, colores y modelos
+- **Barra fija en móvil**: Añadí una barra inferior fija para facilitar la compra en dispositivos móviles
+- **Optimización táctil**: Todos los elementos interactivos tienen tamaños adecuados para uso táctil
+
+### 4. Mejoras de Rendimiento
+- **Carga optimizada de imágenes**: Las miniaturas ahora usan el atributo loading="lazy"
+- **Animaciones eficientes**: Utilicé propiedades CSS que aprovechan la aceleración por hardware
+- **Transiciones suaves**: Implementé transiciones con curvas de aceleración naturales
+
+### 5. Mejoras de Accesibilidad
+- **Contraste mejorado**: Aseguré que todos los textos tengan suficiente contraste con el fondo
+- **Estructura semántica**: Utilicé elementos HTML semánticos para mejorar la accesibilidad
+- **Estados de foco visibles**: Todos los elementos interactivos tienen estados de foco claros
+
+Estas mejoras hacen que la página de detalle de producto sea más atractiva, fácil de usar y accesible para todos los
+usuarios, independientemente del dispositivo que utilicen.

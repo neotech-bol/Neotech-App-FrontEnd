@@ -17,10 +17,21 @@ export const updateCatalogo = (id, formulario) => {
 export const destroyCatalogo = (id) => {
     return http().delete(`${urlBase}catalogo/${id}`)
 }
-
-export const indexCatalogoItems = () => {
-    return fetchWithCache(`${urlBase}catalogos-activos`); // Usar fetchWithCache
-}
+/**
+ * Obtiene la lista de catálogos activos
+ * @param {Object} params - Parámetros de consulta opcionales
+ * @param {boolean} forceRefresh - Si se debe forzar la actualización desde la API
+ * @returns {Promise<Object>} - Respuesta con los datos del catálogo
+ */
+export const indexCatalogoItems = (params = {}, forceRefresh = false) => {
+    return fetchWithCache(`${urlBase}catalogos-activos`, {
+      params,
+      forceRefresh,
+      cacheTime: 10 * 60 * 1000, // Caché de 10 minutos
+    })
+  }
+  
+  
 export const indexCatalogoCategorias = () => {
     return httpNotToken().get(`${urlBase}catalogos-con-categorias`)
 }

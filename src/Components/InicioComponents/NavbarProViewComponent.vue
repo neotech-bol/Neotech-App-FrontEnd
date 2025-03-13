@@ -10,11 +10,8 @@
           {{ translate('experience') }}
         </div>
         <div class="top-links">
-<!--           <select v-model="currentLanguage" @change="handleLanguageChange" class="language-select">
-            <option value="es">Español</option>
-            <option value="en">English</option>
-          </select> -->
-          <a href="#" style="text-decoration: none; color: #838384;">{{ translate('help') }}</a>
+          <router-link to="/contacto" style="text-decoration: none;"><a href="#" style="text-decoration: none; color: #838384;">{{ translate('help') }}</a></router-link>
+          <router-link to="/faq" style="text-decoration: none;" class="ms-2"><a href="#" style="text-decoration: none; color: #838384;">FAQ</a></router-link>
         </div>
       </div>
     </div>
@@ -22,12 +19,40 @@
       <div class="logo">
         <img src="/logo/Logo Neofetch PNG.png" alt="Logo" />
       </div>
-      <div class="search-bar">
-        <input v-model="searchQuery" type="text" :placeholder="translate('search_placeholder')" />
-        <button class="search-button" @click="performSearch">
-          <i class="fas fa-search"></i>
-        </button>
+      
+      <!-- Barra de búsqueda mejorada y centrada -->
+      <div class="search-container">
+        <div class="search-bar">
+          <input 
+            v-model="searchQuery" 
+            type="text" 
+            :placeholder="translate('search_placeholder')"
+            @keyup.enter="performSearch"
+            @focus="searchFocused = true"
+            @blur="setTimeout(() => searchFocused = false, 200)"
+          />
+          <button class="search-button" @click="performSearch">
+            <i class="fas fa-search"></i>
+          </button>
+          
+          <!-- Sugerencias de búsqueda -->
+          <div v-if="searchFocused && searchQuery.length > 0" class="search-suggestions">
+            <div 
+              v-for="(suggestion, index) in filteredSuggestions" 
+              :key="index" 
+              class="suggestion-item"
+              @click="selectSuggestion(suggestion)"
+              :class="{ 'active': selectedSuggestionIndex === index }"
+            >
+              <span>{{ suggestion }}</span>
+            </div>
+            <div v-if="filteredSuggestions.length === 0" class="no-suggestions">
+              No se encontraron resultados
+            </div>
+          </div>
+        </div>
       </div>
+      
       <div class="user-actions">
         <button class="icon-button" @click="handleAccountClick">
           <img src="/svg/icono-header-cuenta.svg" alt="Account" />
@@ -57,15 +82,31 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
+      
+      <!-- Barra de búsqueda móvil -->
+      <div class="mobile-search" v-if="isMobileMenuOpen">
+        <div class="search-bar">
+          <input 
+            v-model="searchQuery" 
+            type="text" 
+            :placeholder="translate('search_placeholder')"
+            @keyup.enter="performSearch"
+          />
+          <button class="search-button" @click="performSearch">
+            <i class="fas fa-search"></i>
+          </button>
+        </div>
+      </div>
+      
       <button class="catalog-button" @click="toggleSidebar">
         <i class="fas fa-th-large"></i>
-        {{ translate('view_catalog') }} <!-- Traducción aquí -->
+        {{ translate('view_catalog') }}
       </button>
       <ul class="nav-links">
         <li v-for="item in navItems" :key="item.path">
           <router-link :to="item.path" :class="{ 'active': $route.path === item.path }" @click="closeMobileMenu">
             <i :class="item.icon"></i>
-            <span class="link-text">{{ translate(item.nombre) }}</span> <!-- Traducción aquí -->
+            <span class="link-text">{{ translate(item.nombre) }}</span>
           </router-link>
         </li>
       </ul>
@@ -91,15 +132,15 @@
       <div class="mobile-user-actions" v-if="isMobileMenuOpen">
         <button class="mobile-action-button" @click="handleAccountClick">
           <i class="fas fa-user"></i>
-          <span>{{ translate(isLoggedIn ? 'account' : 'login') }}</span> <!-- Traducción aquí -->
+          <span>{{ translate(isLoggedIn ? 'account' : 'login') }}</span>
         </button>
         <button class="mobile-action-button" @click="goFavorites">
           <i class="fas fa-heart"></i>
-          <span>{{ translate('favorites') }}</span> <!-- Traducción aquí -->
+          <span>{{ translate('favorites') }}</span>
         </button>
         <button class="mobile-action-button" @click="carritoView">
           <i class="fas fa-shopping-cart"></i>
-          <span>{{ translate('cart') }}</span> <!-- Traducción aquí -->
+          <span>{{ translate('cart') }}</span>
           <span class="mobile-cart-count" v-if="cartItemCount > 0">{{ cartItemCount }}</span>
         </button>
       </div>
@@ -109,7 +150,7 @@
 
   <div :class="['sidebar', { 'open': isSidebarOpen }]">
     <div class="sidebar-header">
-      <h2>{{ translate('catalogs') }}</h2> <!-- Traducción aquí -->
+      <h2>{{ translate('catalogs') }}</h2>
       <button class="close-sidebar" @click="toggleSidebar">
         <i class="fas fa-times"></i>
       </button>
@@ -171,7 +212,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, provide } from 'vue';
+import { ref, computed, onMounted, watch, provide, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useCartStore } from '@/stores/cart';
 import { updateDeparatamento } from '@/Services/UsuarioService';
@@ -193,6 +234,73 @@ const catalogosAnteriores = ref([]);
 const catalogosActivos = ref([]);
 const themeStore = useThemeStore();
 const userStore = useUserStore();
+
+// Nuevas variables para la búsqueda mejorada
+const searchFocused = ref(false);
+const recentSearches = ref([]);
+const popularSearches = ref(['Laptops', 'Smartphones', 'Tablets', 'Accesorios', 'Monitores', 'Teclados']);
+const selectedSuggestionIndex = ref(-1);
+
+// Cargar búsquedas recientes desde localStorage
+const loadRecentSearches = () => {
+  const saved = localStorage.getItem('recentSearches');
+  if (saved) {
+    try {
+      recentSearches.value = JSON.parse(saved).slice(0, 5); // Limitar a 5 búsquedas recientes
+    } catch (e) {
+      console.error('Error loading recent searches:', e);
+      recentSearches.value = [];
+    }
+  }
+};
+
+// Guardar búsqueda reciente
+const saveRecentSearch = (query) => {
+  if (!query || query.trim() === '') return;
+  
+  // Eliminar duplicados y añadir al principio
+  const updatedSearches = [query, ...recentSearches.value.filter(s => s !== query)].slice(0, 5);
+  recentSearches.value = updatedSearches;
+  
+  // Guardar en localStorage
+  localStorage.setItem('recentSearches', JSON.stringify(updatedSearches));
+};
+
+// Filtrar sugerencias basadas en la consulta actual
+const filteredSuggestions = computed(() => {
+  if (!searchQuery.value) return [...recentSearches.value, ...popularSearches.value];
+  
+  const query = searchQuery.value.toLowerCase();
+  const allSuggestions = [...recentSearches.value, ...popularSearches.value];
+  
+  // Eliminar duplicados
+  const uniqueSuggestions = [...new Set(allSuggestions)];
+  
+  return uniqueSuggestions.filter(s => s.toLowerCase().includes(query));
+});
+
+// Seleccionar sugerencia
+const selectSuggestion = (suggestion) => {
+  searchQuery.value = suggestion;
+  performSearch();
+};
+
+// Navegación por teclado en sugerencias
+const handleKeyNavigation = (e) => {
+  if (!searchFocused.value || filteredSuggestions.value.length === 0) return;
+  
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    selectedSuggestionIndex.value = (selectedSuggestionIndex.value + 1) % filteredSuggestions.value.length;
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    selectedSuggestionIndex.value = selectedSuggestionIndex.value <= 0 ? 
+      filteredSuggestions.value.length - 1 : selectedSuggestionIndex.value - 1;
+  } else if (e.key === 'Enter' && selectedSuggestionIndex.value >= 0) {
+    e.preventDefault();
+    selectSuggestion(filteredSuggestions.value[selectedSuggestionIndex.value]);
+  }
+};
 
 const languageStore = useLanguageStore();
 // Language related computeds and methods
@@ -278,9 +386,11 @@ const closeMobileMenu = () => {
 
 const performSearch = () => {
   if (searchQuery.value.trim()) {
+    saveRecentSearch(searchQuery.value.trim());
     router.push({ path: '/search', query: { q: searchQuery.value } });
     searchQuery.value = '';
     closeMobileMenu();
+    searchFocused.value = false;
   }
 };
 
@@ -322,6 +432,15 @@ onMounted(() => {
   isLoggedIn.value = !!token;
   listarCatalogosHistoriales();
   listarCatalogosActivos();
+  loadRecentSearches();
+  
+  // Agregar event listener para navegación por teclado
+  window.addEventListener('keydown', handleKeyNavigation);
+});
+
+// Limpiar event listeners al desmontar
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyNavigation);
 });
 
 watch([isSidebarOpen, isMobileMenuOpen], () => {
@@ -336,14 +455,6 @@ const activeSections = ref({
 const toggleSection = (section) => {
   activeSections.value[section] = !activeSections.value[section];
 };
-//api
-/* import { useLanguageStore } from '../stores/languageStore'
-
-const { translateApiData } = useLanguageStore()
-
-// When fetching data
-const response = await axios.get('/api/endpoint')
-const translatedData = translateApiData(response.data) */
 </script>
 
 <style scoped>
@@ -447,12 +558,20 @@ hr {
   grid-row: 1;
 }
 
-.search-bar {
-  position: relative;
+/* Contenedor de búsqueda mejorado */
+.search-container {
   grid-column: 1 / -1;
   grid-row: 2;
   width: 100%;
   margin-top: 8px;
+  display: flex;
+  justify-content: center;
+}
+
+.search-bar {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
 }
 
 .search-bar input {
@@ -463,6 +582,7 @@ hr {
   font-size: 14px;
   font-weight: 400;
   background-color: #f9fafb;
+  transition: all 0.3s ease;
 }
 
 .search-bar input:focus {
@@ -491,6 +611,58 @@ hr {
 
 .search-button:hover {
   color: #3b82f6;
+}
+
+/* Sugerencias de búsqueda */
+.search-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 4px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.suggestion-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.suggestion-item:hover, .suggestion-item.active {
+  background: #f3f4f6;
+}
+
+.no-suggestions {
+  padding: 12px 16px;
+  color: #6b7280;
+  text-align: center;
+  font-style: italic;
+}
+
+/* Barra de búsqueda móvil */
+.mobile-search {
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.mobile-search .search-bar {
+  width: 100%;
 }
 
 .user-actions {
@@ -940,7 +1112,7 @@ hr {
     grid-template-columns: auto 1fr auto;
   }
 
-  .search-bar {
+  .search-container {
     grid-column: 1 / -1;
     grid-row: 2;
   }
@@ -981,7 +1153,7 @@ hr {
     gap: 16px;
   }
 
-  .search-bar {
+  .search-container {
     grid-column: 2;
     grid-row: 1;
     margin-top: 0;
@@ -1045,6 +1217,10 @@ hr {
     display: none;
   }
 
+  .mobile-search {
+    display: none;
+  }
+
   .catalog-button {
     margin: 0;
     width: auto;
@@ -1085,7 +1261,6 @@ hr {
 
 /* Desktop (1024px and up) */
 @media (min-width: 1024px) {
-
   .top-bar-inner,
   .main-header,
   .main-nav {
@@ -1150,7 +1325,6 @@ hr {
 
 /* Large Desktop (1280px and up) */
 @media (min-width: 1280px) {
-
   .top-bar-inner,
   .main-header,
   .main-nav {
@@ -1166,7 +1340,7 @@ hr {
     height: 52px;
   }
 
-  .search-bar {
+  .search-container {
     max-width: 600px;
   }
 

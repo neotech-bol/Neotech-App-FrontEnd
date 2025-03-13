@@ -24,3 +24,10 @@ export const repitOrder = (id) => {
 export const modelsAll = () => {
     return http().get(`${urlBase}modelos-productos`);
 }
+
+export const pdfPedidosCompletados = () => {
+    return httpDownload().get(`${urlBase}pedidos/pdf/completados`);
+}
+export const pdfPedidosPendientes = () => {
+    return httpDownload().get(`${urlBase}pedidos/pdf/en-proceso`);
+}

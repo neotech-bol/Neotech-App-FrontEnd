@@ -21,29 +21,22 @@
 
       <!-- Products Grid -->
       <div v-else class="products-grid">
-        <div v-for="(product, index) in recentProducts" 
-             :key="product.id" 
-             class="product-card"
-             :style="{ '--index': index }"
-             @click="viewProduct(product.id)">
+        <div v-for="(product, index) in recentProducts" :key="product.id" class="product-card"
+          :style="{ '--index': index }" @click="viewProduct(product.id)">
           <div class="product-image-wrapper">
             <div class="product-image">
               <transition name="fade" mode="out-in">
-                <img :key="currentImageIndex[product.id]" 
-                     :src="getCurrentImage(product)" 
-                     :alt="product.nombre" 
-                     loading="lazy">
+                <img :key="currentImageIndex[product.id]" :src="getCurrentImage(product)" :alt="product.nombre"
+                  loading="lazy">
               </transition>
-              
+
               <!-- Navigation Buttons -->
-              <button class="nav-button prev" 
-                      @click.stop="prevImage(product)" 
-                      v-if="getProductImages(product).length > 1">
+              <button class="nav-button prev" @click.stop="prevImage(product)"
+                v-if="getProductImages(product).length > 1">
                 <i class="fas fa-chevron-left"></i>
               </button>
-              <button class="nav-button next" 
-                      @click.stop="nextImage(product)"
-                      v-if="getProductImages(product).length > 1">
+              <button class="nav-button next" @click.stop="nextImage(product)"
+                v-if="getProductImages(product).length > 1">
                 <i class="fas fa-chevron-right"></i>
               </button>
 
@@ -59,21 +52,15 @@
 
               <!-- Product Actions -->
               <div class="product-actions-bottom">
-                <button class="action-button cart-btn" 
-                        @click.stop="addToCart(product)" 
-                        aria-label="Agregar al carrito"
-                        :class="{ 'adding': addingToCart === product.id }">
+                <button class="action-button cart-btn" @click.stop="addToCart(product)" aria-label="Agregar al carrito"
+                  :class="{ 'adding': addingToCart === product.id }">
                   <i class="fas" :class="addingToCart === product.id ? 'fa-spinner fa-spin' : 'fa-shopping-cart'"></i>
                 </button>
-                <button class="action-button view-btn" 
-                        @click.stop="viewProduct(product.id)" 
-                        aria-label="Ver producto">
+                <button class="action-button view-btn" @click.stop="viewProduct(product.id)" aria-label="Ver producto">
                   <i class="fas fa-eye"></i>
                 </button>
-                <button class="action-button fav-btn" 
-                        @click.stop="addToFavorites(product.id)"
-                        aria-label="Agregar a favoritos" 
-                        :class="{ 'in-favorites': favoriteProducts.includes(product.id) }">
+                <button class="action-button fav-btn" @click.stop="addToFavorites(product.id)"
+                  aria-label="Agregar a favoritos" :class="{ 'in-favorites': favoriteProducts.includes(product.id) }">
                   <i class="fas fa-heart"></i>
                 </button>
               </div>
@@ -88,16 +75,14 @@
 
             <div class="rating-container">
               <div class="rating">
-                <span v-for="star in 5" 
-                      :key="star" 
-                      class="star"
-                      :class="{ 'filled': star <= (userRatings.find(r => r.producto_id === product.id)?.rating || 0 )}"
-                      @click.stop="storeRatingUser(product.id, star)">
+                <span v-for="star in 5" :key="star" class="star"
+                  :class="{ 'filled': star <= (userRatings.find(r => r.producto_id === product.id)?.rating || 0) }"
+                  @click.stop="storeRatingUser(product.id, star)">
                   ★
                 </span>
               </div>
               <div class="rating-count">
-                {{ userRatings.find(r => r.producto_id === product.id)?.total_users || 0 }} calificaciones
+                {{userRatings.find(r => r.producto_id === product.id)?.total_users || 0}} calificaciones
               </div>
             </div>
 
@@ -355,6 +340,7 @@ const showNotification = (message, type) => {
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
@@ -437,6 +423,7 @@ const showNotification = (message, type) => {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -556,9 +543,11 @@ const showNotification = (message, type) => {
   0% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.05);
   }
+
   100% {
     transform: scale(1);
   }
@@ -785,35 +774,35 @@ const showNotification = (message, type) => {
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 1.5rem;
   }
-  
+
   .product-info {
     padding: 1rem;
   }
-  
+
   .product-name {
     font-size: 1rem;
     height: 2.8rem;
   }
-  
+
   .star {
     font-size: 1rem;
   }
-  
+
   .current-price {
     font-size: 1.1rem;
   }
-  
+
   .action-button {
     width: 35px;
     height: 35px;
     font-size: 0.875rem;
   }
-  
+
   .nav-button {
     width: 35px;
     height: 35px;
   }
-  
+
   .badge {
     padding: 0.35rem 0.7rem;
     font-size: 0.7rem;
@@ -832,11 +821,11 @@ const showNotification = (message, type) => {
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 1rem;
   }
-  
+
   .product-actions-bottom {
     opacity: 0.9;
   }
-  
+
   .nav-button {
     opacity: 0.7;
   }
@@ -846,22 +835,22 @@ const showNotification = (message, type) => {
   .recently-arrived {
     padding: 2.5rem 0;
   }
-  
+
   .products-grid {
     grid-template-columns: repeat(3, 1fr);
     gap: 0.75rem;
   }
-  
+
   .product-actions-bottom {
     opacity: 1;
     padding: 0.4rem;
   }
-  
+
   .action-button {
     width: 28px;
     height: 28px;
   }
-  
+
   .nav-button {
     opacity: 0.8;
     width: 28px;
@@ -873,58 +862,58 @@ const showNotification = (message, type) => {
   .recently-arrived {
     padding: 2rem 0;
   }
-  
+
   .products-grid {
     grid-template-columns: repeat(3, 1fr);
     gap: 0.5rem;
   }
-  
+
   .product-info {
     padding: 0.5rem;
   }
-  
+
   .product-name {
     font-size: 0.8rem;
     height: 2.2rem;
     margin-bottom: 0.25rem;
   }
-  
+
   .category {
     font-size: 0.65rem;
     margin-bottom: 0.25rem;
   }
-  
+
   .rating {
     gap: 1px;
   }
-  
+
   .star {
     font-size: 0.75rem;
   }
-  
+
   .rating-count {
     font-size: 0.6rem;
   }
-  
+
   .current-price {
     font-size: 0.85rem;
   }
-  
+
   .old-price {
     font-size: 0.7rem;
   }
-  
+
   .action-button {
     width: 26px;
     height: 26px;
     font-size: 0.7rem;
   }
-  
+
   .nav-button {
     width: 26px;
     height: 26px;
   }
-  
+
   .badge {
     padding: 0.2rem 0.4rem;
     font-size: 0.6rem;
@@ -935,43 +924,43 @@ const showNotification = (message, type) => {
   .recently-arrived {
     padding: 1.5rem 0;
   }
-  
+
   .products-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 0.5rem;
   }
-  
+
   .product-info {
     padding: 0.5rem;
   }
-  
+
   .product-name {
     font-size: 0.8rem;
     height: 2.2rem;
     margin-bottom: 0.25rem;
   }
-  
+
   .category {
     font-size: 0.65rem;
     margin-bottom: 0.25rem;
   }
-  
+
   .rating {
     gap: 1px;
   }
-  
+
   .star {
     font-size: 0.75rem;
   }
-  
+
   .rating-count {
     font-size: 0.6rem;
   }
-  
+
   .current-price {
     font-size: 0.85rem;
   }
-  
+
   .old-price {
     font-size: 0.7rem;
   }
@@ -981,68 +970,68 @@ const showNotification = (message, type) => {
   .recently-arrived {
     padding: 1.5rem 0;
   }
-  
+
   .container {
     padding: 0 0.5rem;
   }
-  
+
   .products-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 0.5rem;
   }
-  
+
   .product-info {
     padding: 0.4rem;
   }
-  
+
   .product-name {
     font-size: 0.75rem;
     height: 2.1rem;
     margin-bottom: 0.25rem;
     -webkit-line-clamp: 2;
   }
-  
+
   .category {
     font-size: 0.6rem;
     margin-bottom: 0.25rem;
   }
-  
+
   .rating {
     gap: 1px;
   }
-  
+
   .star {
     font-size: 0.7rem;
   }
-  
+
   .rating-count {
     font-size: 0.55rem;
   }
-  
+
   .current-price {
     font-size: 0.8rem;
   }
-  
+
   .old-price {
     font-size: 0.65rem;
   }
-  
+
   .action-button {
     width: 24px;
     height: 24px;
     font-size: 0.65rem;
   }
-  
+
   .nav-button {
     width: 24px;
     height: 24px;
   }
-  
+
   .badge {
     padding: 0.15rem 0.3rem;
     font-size: 0.55rem;
   }
-  
+
   .view-all-btn {
     padding: 0.5rem 1rem;
     font-size: 0.8rem;
@@ -1068,7 +1057,7 @@ const showNotification = (message, type) => {
   .action-button:active {
     transform: scale(0.95);
   }
-  
+
   .product-card:active {
     transform: scale(0.98);
   }
@@ -1081,29 +1070,29 @@ const showNotification = (message, type) => {
     opacity: 1;
     transform: none;
   }
-  
+
   .product-card:hover {
     transform: none;
   }
-  
+
   .product-card:hover .product-image img {
     transform: none;
   }
-  
+
   .spinner {
     animation: none;
   }
-  
+
   .badge-new {
     animation: none;
   }
-  
+
   .retry-button:hover,
   .action-button:hover,
   .view-all-btn:hover {
     transform: none;
   }
-  
+
   .fade-enter-active,
   .fade-leave-active {
     transition: none;

@@ -2,8 +2,13 @@
   <div class="checkout-container">
     <header class="checkout-header">
       <h1>Finalizar Pedido <span>({{ totalItems }} ítems)</span></h1>
-      <div class="lock-icon">
-        <i class="fas fa-lock"></i>
+      <div class="actions-container">
+        <button @click="emptyCart" class="empty-cart-btn" :disabled="items.length === 0">
+          <i class="fas fa-trash-alt"></i> Vaciar Carrito
+        </button>
+        <div class="lock-icon">
+          <i class="fas fa-lock"></i>
+        </div>
       </div>
     </header>
 
@@ -80,7 +85,14 @@
               <h2>Revise los Items y Envío</h2>
             </div>
             <div class="step-content" v-show="activeStep === 1 || checkoutSteps[1].completed">
-              <div class="product-list">
+              <div v-if="items.length === 0" class="empty-cart-message">
+                <i class="fas fa-shopping-cart"></i>
+                <p>Tu carrito está vacío</p>
+                <button @click="goShopping" class="go-shopping-btn">
+                  <i class="fas fa-store"></i> Ir a comprar
+                </button>
+              </div>
+              <div v-else class="product-list">
                 <div v-for="product in items" :key="product.id" class="product-item">
                   <div class="product-image-container">
                     <img :src="product.image" :alt="product.nombre" class="product-image">
@@ -302,42 +314,49 @@
         </div>
 
         <div class="summary-content" :class="{ 'summary-hidden': !showSummary }">
-          <div class="summary-items">
-            <div class="summary-item">
-              <span>Total en Productos:</span>
-              <span>{{ formatPrice(cartStore.totalAmount) }}</span>
-            </div>
-            <!-- Mostrar descuento según tipo -->
-            <div class="summary-item" v-if="cartStore.montoDescuento > 0">
-              <span v-if="cartStore.tipoDescuento === 'porcentaje'">
-                Descuento ({{ cartStore.descuento }}%):
-              </span>
-              <span v-else>
-                Descuento:
-              </span>
-              <span>-{{ formatPrice(cartStore.montoDescuento) }}</span>
+          <div v-if="items.length === 0" class="empty-summary">
+            <i class="fas fa-shopping-cart"></i>
+            <p>No hay productos en el carrito</p>
+          </div>
+          <div v-else>
+            <div class="summary-items">
+              <div class="summary-item">
+                <span>Total en Productos:</span>
+                <span>{{ formatPrice(cartStore.totalAmount) }}</span>
+              </div>
+              <!-- Mostrar descuento según tipo -->
+              <div class="summary-item" v-if="cartStore.montoDescuento > 0">
+                <span v-if="cartStore.tipoDescuento === 'porcentaje'">
+                  Descuento ({{ cartStore.descuento }}%):
+                </span>
+                <span v-else>
+                  Descuento:
+                </span>
+                <span>-{{ formatPrice(cartStore.montoDescuento) }}</span>
+              </div>
+
+              <div class="summary-item">
+                <span>Total después del descuento:</span>
+                <span>{{ formatPrice(cartStore.totalAfterDiscount) }}</span>
+              </div>
+
+              <!-- Resto del resumen permanece igual -->
+              <div class="summary-item">
+                <span>Monto a cancelar (70%):</span>
+                <span>{{ formatPrice(cartStore.totalToPay) }}</span>
+              </div>
+              <div class="summary-item">
+                <span>Pendiente (30%):</span>
+                <span>{{ formatPrice(cartStore.pending) }}</span>
+              </div>
             </div>
 
-            <div class="summary-item">
-              <span>Total después del descuento:</span>
-              <span>{{ formatPrice(cartStore.totalAfterDiscount) }}</span>
-            </div>
-
-            <!-- Resto del resumen permanece igual -->
-            <div class="summary-item">
-              <span>Monto a cancelar (70%):</span>
-              <span>{{ formatPrice(cartStore.totalToPay) }}</span>
-            </div>
-            <div class="summary-item">
-              <span>Pendiente (30%):</span>
-              <span>{{ formatPrice(cartStore.pending) }}</span>
+            <div class="total">
+              <span>Monto final:</span>
+              <span class="total-amount">{{ formatPrice(cartStore.totalAfterDiscount) }}</span>
             </div>
           </div>
-
-          <div class="total">
-            <span>Monto final:</span>
-            <span class="total-amount">{{ formatPrice(cartStore.totalAfterDiscount) }}</span>
-          </div>
+          
           <div class="checkout-progress desktop-only">
             <div class="progress-bar">
               <div class="progress" :style="{ width: progressPercentage + '%' }"></div>
@@ -370,6 +389,29 @@
       <i class="fas fa-shopping-cart"></i>
       <span class="floating-total">{{ formatPrice(totalAmount) }}</span>
     </button>
+    
+    <!-- Modal de confirmación para vaciar carrito -->
+    <div v-if="showEmptyCartModal" class="modal-overlay" @click="cancelEmptyCart">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3><i class="fas fa-exclamation-triangle"></i> Vaciar carrito</h3>
+          <button class="close-modal" @click="cancelEmptyCart">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>¿Estás seguro de que deseas vaciar tu carrito? Esta acción no se puede deshacer.</p>
+        </div>
+        <div class="modal-footer">
+          <button class="cancel-btn" @click="cancelEmptyCart">
+            <i class="fas fa-times"></i> Cancelar
+          </button>
+          <button class="confirm-btn" @click="confirmEmptyCart">
+            <i class="fas fa-trash-alt"></i> Vaciar carrito
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -379,9 +421,11 @@ import { storePedido } from '@/Services/PedidoService';
 import { updateDatosInfoUser } from '@/Services/UsuarioService';
 import { useCartStore } from '@/stores/cart';
 import { useThemeStore } from '@/stores/themeStore';
+import { useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted, watch } from 'vue';
 
+const router = useRouter();
 const cartStore = useCartStore();
 const themeStore = useThemeStore();
 const userData = ref({});
@@ -396,6 +440,9 @@ const whatsappLink = computed(() => `https://wa.me/${whatsappNumber}`);
 
 // Estado para controlar la visibilidad del resumen en móvil
 const showSummary = ref(window.innerWidth > 768);
+
+// Estado para el modal de confirmación de vaciar carrito
+const showEmptyCartModal = ref(false);
 
 const deliveryInfo = ref({
   nombre: '',
@@ -461,6 +508,13 @@ const isPaymentValid = computed(() => {
   return false;
 });
 
+// Observar cambios en el carrito para actualizar la UI
+watch(() => cartStore.productos, (newValue) => {
+  if (newValue.length === 0 && activeStep.value === 1) {
+    // Si el carrito está vacío y estamos en el paso de revisión, mostrar mensaje
+    console.log('Carrito vacío en paso de revisión');
+  }
+}, { deep: true });
 
 onMounted(() => {
   // Check if the current department is one of our locations
@@ -543,15 +597,14 @@ const totalAmount = computed(() => cartStore.totalAmount);
 const totalToPay = computed(() => cartStore.totalToPay);
 const pending = computed(() => cartStore.pending);
 const items = computed(() => cartStore.productos);
-console.log(items.value);
+
 const increaseQuantity = (product) => {
-  const item = cartStore.productos.find(item => item.id === product.id && item.modeloId === product.modeloId);
-  if (item && item.cantidad < item.cantidad_maxima) {
-    cartStore.updateQuantity(item.id, item.modeloId, item.cantidad + 1);
-  } else if (item) {
+  if (product.cantidad < product.cantidad_maxima) {
+    cartStore.updateQuantity(product.uniqueId, product.cantidad + 1);
+  } else {
     Swal.fire({
       title: "Advertencia",
-      text: `No se puede aumentar la cantidad del producto ${item.nombre} más allá de ${item.cantidad_maxima}.`,
+      text: `No se puede aumentar la cantidad del producto ${product.nombre} más allá de ${product.cantidad_maxima}.`,
       icon: "warning",
       confirmButtonText: "Aceptar",
     });
@@ -559,13 +612,12 @@ const increaseQuantity = (product) => {
 };
 
 const decreaseQuantity = (product) => {
-  const item = cartStore.productos.find(item => item.id === product.id && item.modeloId === product.modeloId);
-  if (item && item.cantidad > item.cantidad_minima) {
-    cartStore.updateQuantity(item.id, item.modeloId, item.cantidad - 1);
-  } else if (item) {
+  if (product.cantidad > product.cantidad_minima) {
+    cartStore.updateQuantity(product.uniqueId, product.cantidad - 1);
+  } else {
     Swal.fire({
       title: "Advertencia",
-      text: `La cantidad mínima para el producto ${item.nombre} es ${item.cantidad_minima}.`,
+      text: `La cantidad mínima para el producto ${product.nombre} es ${product.cantidad_minima}.`,
       icon: "warning",
       confirmButtonText: "Aceptar",
     });
@@ -584,16 +636,49 @@ const removeProduct = (product) => {
     if (result.isConfirmed) {
       // Usar el uniqueId que ya viene con el producto en lugar de generarlo nuevamente
       cartStore.removeFromCart(product.uniqueId);
-      
-      // Alternativamente, si el producto no tiene uniqueId, generarlo así:
-      // const uniqueId = `${product.id}-${product.modeloId || 'default'}-${product.color || 'default'}`;
-      // cartStore.removeFromCart(uniqueId);
     }
   });
 };
+
+// Función para vaciar el carrito (nueva)
+const emptyCart = () => {
+  if (items.value.length === 0) {
+    return;
+  }
+  showEmptyCartModal.value = true;
+};
+
+const confirmEmptyCart = () => {
+  cartStore.clearCart();
+  showEmptyCartModal.value = false;
+  
+  Swal.fire({
+    title: "Carrito vaciado",
+    text: "Todos los productos han sido eliminados del carrito",
+    icon: "success",
+    confirmButtonText: "Aceptar",
+  });
+  
+  // Si estamos en el paso de revisión de productos, volver al paso 1
+  if (activeStep.value === 1) {
+    activeStep.value = 0;
+    checkoutSteps.value[1].completed = false;
+  }
+};
+
+const cancelEmptyCart = () => {
+  showEmptyCartModal.value = false;
+};
+
+// Función para ir a la tienda
+const goShopping = () => {
+  router.push('/productos');
+};
+
 function generarUniqueId(product) {
   return `${product.id}-${product.modeloId || 'default'}-${product.color || 'default'}`;
 }
+
 const formatPrice = (price) => {
   return price ? `${price.toLocaleString()} Bs` : '0 Bs';
 };
@@ -738,12 +823,6 @@ const finalizeOrder = async () => {
     formData.append('voucher', voucherFile.value);
   }
 
-  // Log de todos los datos que se están enviando
-  console.log("Datos que se enviarán:");
-  for (const [key, value] of formData.entries()) {
-    console.log(`${key}:`, value);
-  }
-
   Swal.fire({
     title: "¿Deseas terminar el proceso del pedido?",
     text: "Puedes continuar con el proceso o cancelar.",
@@ -782,6 +861,7 @@ const finalizeOrder = async () => {
     }
   });
 };
+
 const clearOrderData = () => {
   // Limpiar el carrito
   if (typeof cartStore.clearCart === 'function') {
@@ -820,14 +900,6 @@ const clearOrderData = () => {
 
   // Marcar que el pedido se ha finalizado
   orderFinalized.value = true;
-
-  // Opcional: mostrar mensaje de confirmación
-  Swal.fire({
-    title: "Datos limpiados",
-    text: "Tu carrito, cupón y datos de pago han sido eliminados",
-    icon: "success",
-    confirmButtonText: "Aceptar",
-  });
 };
 
 const toggleEdit = async (index) => {
@@ -886,9 +958,12 @@ const toggleEdit = async (index) => {
 </script>
 
 <style scoped>
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
+
 /* Base Styles */
 :root {
   --primary-color: #007bff;
+  --primary-hover-color: #0069d9;
   --secondary-color: #6c757d;
   --success-color: #28a745;
   --danger-color: #dc3545;
@@ -927,12 +1002,16 @@ body {
   flex-wrap: wrap;
 }
 
+.actions-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
 h1 {
   font-size: clamp(20px, 4vw, 28px);
   font-weight: 700;
   margin: 0;
-  text-align: center;
-  flex-grow: 1;
   color: var(--primary-color);
 }
 
@@ -945,6 +1024,32 @@ h1 span {
 .lock-icon {
   color: var(--primary-color);
   font-size: clamp(18px, 3vw, 24px);
+}
+
+/* Empty Cart Button */
+.empty-cart-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 15px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.empty-cart-btn:hover:not(:disabled) {
+  background-color: #c82333;
+  transform: translateY(-2px);
+}
+
+.empty-cart-btn:disabled {
+  background-color: #e9ecef;
+  color: #6c757d;
+  cursor: not-allowed;
 }
 
 /* Mobile Progress Indicator */
@@ -1112,6 +1217,50 @@ h2 {
   color: var(--primary-color);
   width: 20px;
   min-width: 20px;
+}
+
+/* Empty Cart Message */
+.empty-cart-message, .empty-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  text-align: center;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.empty-cart-message i, .empty-summary i {
+  font-size: 48px;
+  color: #adb5bd;
+  margin-bottom: 15px;
+}
+
+.empty-cart-message p, .empty-summary p {
+  color: #6c757d;
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+.go-shopping-btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.go-shopping-btn:hover {
+  background-color: var(--primary-hover-color);
+  transform: translateY(-2px);
 }
 
 /* Form Styles */
@@ -1874,6 +2023,115 @@ select:focus {
   color: #28a745;
 }
 
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid #f8f9fa;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  color: var(--danger-color);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.close-modal {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #6c757d;
+  transition: color 0.3s ease;
+}
+
+.close-modal:hover {
+  color: var(--danger-color);
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 15px 20px;
+  border-top: 1px solid #f8f9fa;
+}
+
+.cancel-btn, .confirm-btn {
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cancel-btn {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #dee2e6;
+}
+
+.cancel-btn:hover {
+  background-color: #e9ecef;
+}
+
+.confirm-btn {
+  background-color: var(--danger-color);
+  color: white;
+  border: none;
+}
+
+.confirm-btn:hover {
+  background-color: #c82333;
+  transform: translateY(-2px);
+}
+
 /* Utility Classes */
 .mobile-only {
   display: none;
@@ -2013,6 +2271,10 @@ select:focus {
   .store-info-item i {
     margin-bottom: 5px;
   }
+  
+  .modal-content {
+    width: 95%;
+  }
 }
 
 @media (max-width: 480px) {
@@ -2057,6 +2319,24 @@ select:focus {
 
   .file-name {
     font-size: 11px;
+  }
+  
+  .modal-header h3 {
+    font-size: 18px;
+  }
+  
+  .modal-body {
+    padding: 15px;
+  }
+  
+  .modal-footer {
+    padding: 10px 15px;
+    flex-direction: column;
+  }
+  
+  .cancel-btn, .confirm-btn {
+    width: 100%;
+    justify-content: center;
   }
 }
 

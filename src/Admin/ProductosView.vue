@@ -1,7 +1,8 @@
 <template>
   <div class="container-fluid py-4">
     <div class="card shadow">
-      <div class="card-header bg-primary bg-opacity-10 d-flex justify-content-between align-items-center flex-wrap gap-3 p-3">
+      <div
+        class="card-header bg-primary bg-opacity-10 d-flex justify-content-between align-items-center flex-wrap gap-3 p-3">
         <h2 class="card-title h4 m-0">Gestión de Productos</h2>
         <div>
           <button class="btn btn-primary me-2" @click="abrirModal()">
@@ -18,13 +19,8 @@
             <span class="input-group-text bg-light">
               <i class="fas fa-search"></i>
             </span>
-            <input 
-              type="text" 
-              class="form-control" 
-              placeholder="Buscar producto..." 
-              v-model="search" 
-              @input="filtrarProductos"
-            >
+            <input type="text" class="form-control" placeholder="Buscar producto..." v-model="search"
+              @input="filtrarProductos">
           </div>
         </div>
 
@@ -78,7 +74,7 @@
                 <strong>Precio:</strong> {{ formatearPrecio(item.precio) }}<br>
                 <strong>Categoría:</strong> {{ item.categoria?.nombre || 'N/A' }}<br>
                 <strong>Stock:</strong> {{ item.cantidad || 'N/A' }}<br>
-                <strong>Estado:</strong> 
+                <strong>Estado:</strong>
                 <span class="badge" :class="item.estado ? 'bg-success' : 'bg-danger'">
                   {{ item.estado ? 'Activo' : 'Inactivo' }}
                 </span>
@@ -106,167 +102,413 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <form @submit.prevent="guardarProducto">
+            <!-- Alerta de campos requeridos -->
+            <div class="alert alert-info mb-4" role="alert">
+              <div class="d-flex">
+                <div class="me-3">
+                  <i class="fas fa-info-circle fa-2x"></i>
+                </div>
+                <div>
+                  <h5 class="alert-heading">Información importante</h5>
+                  <p class="mb-0">Los campos marcados con <span class="text-danger fw-bold">*</span> son obligatorios.</p>
+                </div>
+              </div>
+            </div>
+
+            <form @submit.prevent="guardarProducto" id="productoForm" class="needs-validation" novalidate>
               <div class="row g-3">
-                <div class="col-md-6">
-                  <label for="nombre" class="form-label">Nombre <span class="text-danger">*</span></label>
-                  <input 
-                    type="text" 
-                    class="form-control" 
-                    :class="{ 'is-invalid': errors.nombre }"
-                    id="nombre" 
-                    v-model="formulario.nombre" 
-                    required
-                  >
-                  <div class="invalid-feedback" v-if="errors.nombre">
-                    {{ errors.nombre[0] }}
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <label for="precio" class="form-label">Precio <span class="text-danger">*</span></label>
-                  <input 
-                    type="number" 
-                    class="form-control" 
-                    :class="{ 'is-invalid': errors.precio }"
-                    id="precio" 
-                    v-model="formulario.precio" 
-                    required
-                  >
-                  <div class="invalid-feedback" v-if="errors.precio">
-                    {{ errors.precio[0] }}
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <label for="categoria" class="form-label">Categoría</label>
-                  <select 
-                    class="form-select" 
-                    id="categoria" 
-                    v-model="formulario.categoria_id"
-                  >
-                    <option value="">Seleccione una categoría</option>
-                    <option :value="item.id" v-for="item in categorias" :key="item.id">
-                      {{ item.nombre }}
-                    </option>
-                  </select>
-                </div>
-                <div class="col-md-6">
-                  <label for="cantidad" class="form-label">Cantidad</label>
-                  <input 
-                    type="number" 
-                    class="form-control" 
-                    id="cantidad" 
-                    v-model="formulario.cantidad"
-                  >
-                </div>
+                <!-- Información básica -->
                 <div class="col-12">
-                  <label for="descripcion" class="form-label">Descripción</label>
-                  <textarea 
-                    class="form-control" 
-                    id="descripcion" 
-                    v-model="formulario.descripcion"
-                    rows="3"
-                  ></textarea>
-                </div>
-                <div class="col-md-6">
-                  <label for="cantidad_minima" class="form-label">Cantidad Mínima</label>
-                  <input 
-                    type="number" 
-                    class="form-control" 
-                    id="cantidad_minima" 
-                    v-model="formulario.cantidad_minima"
-                  >
-                </div>
-                <div class="col-md-6">
-                  <label for="cantidad_maxima" class="form-label">Cantidad Máxima</label>
-                  <input 
-                    type="number" 
-                    class="form-control" 
-                    id="cantidad_maxima" 
-                    v-model="formulario.cantidad_maxima"
-                  >
-                </div>
-                <div class="col-12">
-                  <label for="imagen_principal" class="form-label">Imagen Principal</label>
-                  <input 
-                    type="file" 
-                    class="form-control" 
-                    id="imagen_principal" 
-                    @change="obtenerImagen($event)"
-                  >
-                  <img v-if="imagenPreview" :src="imagenPreview" alt="Vista previa" class="img-fluid mt-2" style="max-height: 200px;">
-                </div>
-                <div class="col-12">
-                  <h5>Características</h5>
-                  <div v-for="(caracteristica, index) in formulario.caracteristicas" :key="index" class="mb-2">
-                    <div class="input-group">
-                      <input 
-                        type="text" 
-                        class="form-control" 
-                        v-model="formulario.caracteristicas[index]" 
-                        placeholder="Característica"
-                      >
-                      <button type="button" class="btn btn-outline-danger" @click="eliminarCaracteristica(index)">
-                        <i class="fas fa-trash-alt"></i>
-                      </button>
+                  <div class="card border-0 bg-light">
+                    <div class="card-header bg-primary bg-opacity-10">
+                      <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Información básica
+                      </h5>
                     </div>
-                  </div>
-                  <button type="button" class="btn btn-outline-secondary mt-2" @click="agregarCaracteristica">
-                    <i class="fas fa-plus"></i> Agregar Característica
-                  </button>
-                </div>
-                <div class="col-12">
-                  <h5>Modelos</h5>
-                  <div v-for="(modelo, index) in formulario.modelos" :key="index" class="card mb-3">
                     <div class="card-body">
-                      <div class="row g-2">
+                      <div class="row g-3">
                         <div class="col-md-6">
-                          <input type="text" class="form-control" v-model="modelo.nombre" placeholder="Nombre del modelo">
+                          <label for="nombre" class="form-label fw-bold">Nombre <span class="text-danger">*</span></label>
+                          <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-tag"></i></span>
+                            <input 
+                              type="text" 
+                              class="form-control" 
+                              :class="{ 'is-invalid': errors.nombre }" 
+                              id="nombre"
+                              v-model="formulario.nombre" 
+                              placeholder="Ej: Motocicleta eléctrica"
+                              required
+                            >
+                            <div class="invalid-feedback" v-if="errors.nombre">
+                              {{ errors.nombre[0] }}
+                            </div>
+                            <div class="invalid-feedback" v-else>
+                              El nombre del producto es obligatorio
+                            </div>
+                          </div>
                         </div>
                         <div class="col-md-6">
-                          <input type="number" class="form-control" v-model="modelo.precio" placeholder="Precio">
+                          <label for="precio" class="form-label fw-bold">Precio <span class="text-danger">*</span></label>
+                          <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-dollar-sign"></i></span>
+                            <input 
+                              type="number" 
+                              class="form-control" 
+                              :class="{ 'is-invalid': errors.precio }" 
+                              id="precio"
+                              v-model="formulario.precio" 
+                              placeholder="Ej: 2500.00"
+                              min="0.01" 
+                              step="0.01"
+                              required
+                            >
+                            <div class="invalid-feedback" v-if="errors.precio">
+                              {{ errors.precio[0] }}
+                            </div>
+                            <div class="invalid-feedback" v-else>
+                              El precio del producto es obligatorio
+                            </div>
+                          </div>
+                          <small class="text-muted">Ingrese el precio en bolivianos (BOB)</small>
                         </div>
                         <div class="col-md-6">
-                          <input type="number" class="form-control" v-model="modelo.cantidad_minima" placeholder="Cantidad mínima">
+                          <label for="categoria" class="form-label fw-bold">Categoría</label>
+                          <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-folder"></i></span>
+                            <select class="form-select" id="categoria" v-model="formulario.categoria_id">
+                              <option value="">Seleccione una categoría</option>
+                              <option :value="item.id" v-for="item in categorias" :key="item.id">
+                                {{ item.nombre }}
+                              </option>
+                            </select>
+                          </div>
                         </div>
                         <div class="col-md-6">
-                          <input type="number" class="form-control" v-model="modelo.cantidad_maxima" placeholder="Cantidad máxima">
+                          <label for="cantidad" class="form-label fw-bold">Cantidad</label>
+                          <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-boxes"></i></span>
+                            <input 
+                              type="number" 
+                              class="form-control" 
+                              id="cantidad" 
+                              v-model="formulario.cantidad"
+                              min="0"
+                              placeholder="Ej: 50"
+                            >
+                          </div>
+                        </div>
+                        <div class="col-12">
+                          <label for="descripcion" class="form-label fw-bold">Descripción</label>
+                          <textarea 
+                            class="form-control" 
+                            id="descripcion" 
+                            v-model="formulario.descripcion" 
+                            rows="3"
+                            placeholder="Describa el producto..."
+                          ></textarea>
                         </div>
                       </div>
-                      <button type="button" class="btn btn-outline-danger mt-2" @click="eliminarModelo(index)">
-                        <i class="fas fa-trash-alt"></i> Eliminar Modelo
-                      </button>
                     </div>
                   </div>
-                  <button type="button" class="btn btn-outline-secondary" @click="agregarModelo">
-                    <i class="fas fa-plus"></i> Agregar Modelo
-                  </button>
                 </div>
+
+                <!-- Cantidades -->
                 <div class="col-12">
-                  <h5>Imágenes Adicionales</h5>
-                  <div class="row g-3">
-                    <div class="col-md-4" v-for="(imagen, index) in formulario.images" :key="index">
-                      <div class="card">
-                        <div class="card-body">
-                          <input type="file" class="form-control mb-2" @change="(event) => handleFileUpload(event, index)">
-                          <div class="d-flex align-items-center mb-2">
-                            <label :for="'color-' + index" class="me-2">Color:</label>
-                            <input type="color" class="form-control form-control-color" :id="'color-' + index" v-model="imagen.color">
+                  <div class="card border-0 bg-light">
+                    <div class="card-header bg-primary bg-opacity-10">
+                      <h5 class="mb-0">
+                        <i class="fas fa-sort-numeric-up-alt me-2"></i>Cantidades
+                      </h5>
+                    </div>
+                    <div class="card-body">
+                      <div class="row g-3">
+                        <div class="col-md-6">
+                          <label for="cantidad_minima" class="form-label fw-bold">Cantidad Mínima <span class="text-danger">*</span></label>
+                          <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-arrow-down"></i></span>
+                            <input 
+                              type="number" 
+                              class="form-control" 
+                              :class="{ 'is-invalid': errors.cantidad_minima }" 
+                              id="cantidad_minima" 
+                              v-model="formulario.cantidad_minima"
+                              min="1"
+                              placeholder="Ej: 10"
+                              required
+                            >
+                            <div class="invalid-feedback" v-if="errors.cantidad_minima">
+                              {{ errors.cantidad_minima[0] }}
+                            </div>
+                            <div class="invalid-feedback" v-else>
+                              La cantidad mínima es obligatoria
+                            </div>
                           </div>
-                          <img v-if="imagen.preview" :src="imagen.preview" class="img-fluid rounded mb-2" alt="Preview">
-                          <button type="button" class="btn btn-outline-danger btn-sm w-100" @click="eliminarImagen(index)">
-                            <i class="fas fa-trash-alt"></i> Eliminar
-                          </button>
+                          <small class="text-muted">Cantidad mínima que se puede comprar</small>
+                        </div>
+                        <div class="col-md-6">
+                          <label for="cantidad_maxima" class="form-label fw-bold">Cantidad Máxima <span class="text-danger">*</span></label>
+                          <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-arrow-up"></i></span>
+                            <input 
+                              type="number" 
+                              class="form-control" 
+                              :class="{ 'is-invalid': errors.cantidad_maxima }" 
+                              id="cantidad_maxima" 
+                              v-model="formulario.cantidad_maxima"
+                              min="1"
+                              placeholder="Ej: 100"
+                              required
+                            >
+                            <div class="invalid-feedback" v-if="errors.cantidad_maxima">
+                              {{ errors.cantidad_maxima[0] }}
+                            </div>
+                            <div class="invalid-feedback" v-else>
+                              La cantidad máxima es obligatoria
+                            </div>
+                          </div>
+                          <small class="text-muted">Cantidad máxima que se puede comprar</small>
                         </div>
                       </div>
                     </div>
-                    <div class="col-md-4">
-                      <div class="card h-100">
-                        <div class="card-body d-flex align-items-center justify-content-center">
-                          <button type="button" class="btn btn-outline-secondary" @click="agregarImagen">
-                            <i class="fas fa-plus"></i> Agregar Imagen
-                          </button>
+                  </div>
+                </div>
+
+                <!-- Imagen principal -->
+                <div class="col-12">
+                  <div class="card border-0 bg-light">
+                    <div class="card-header bg-primary bg-opacity-10">
+                      <h5 class="mb-0">
+                        <i class="fas fa-image me-2"></i>Imagen Principal
+                      </h5>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-md-8">
+                          <label for="imagen_principal" class="form-label fw-bold">Seleccionar imagen <span class="text-danger">*</span></label>
+                          <div class="input-group mb-3">
+                            <span class="input-group-text"><i class="fas fa-upload"></i></span>
+                            <input 
+                              type="file" 
+                              class="form-control" 
+                              id="imagen_principal" 
+                              @change="obtenerImagen($event)"
+                              accept="image/*"
+                              :class="{ 'is-invalid': !imagenPreview && !posicion }"
+                              required
+                            >
+                            <div class="invalid-feedback">
+                              La imagen principal es obligatoria
+                            </div>
+                          </div>
+                          <small class="text-muted">Formatos recomendados: JPG, PNG. Tamaño máximo: 2MB</small>
+                        </div>
+                        <div class="col-md-4 text-center">
+                          <div v-if="imagenPreview" class="border p-2 rounded bg-white">
+                            <img :src="imagenPreview" alt="Vista previa" class="img-fluid" style="max-height: 150px;">
+                          </div>
+                          <div v-else class="border p-2 rounded bg-white d-flex align-items-center justify-content-center" style="height: 150px;">
+                            <span class="text-muted">Vista previa no disponible</span>
+                          </div>
                         </div>
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Características -->
+                <div class="col-12">
+                  <div class="card border-0 bg-light">
+                    <div class="card-header bg-primary bg-opacity-10 d-flex justify-content-between align-items-center">
+                      <h5 class="mb-0">
+                        <i class="fas fa-list-ul me-2"></i>Características <span class="text-danger">*</span>
+                      </h5>
+                      <button type="button" class="btn btn-sm btn-primary" @click="agregarCaracteristica">
+                        <i class="fas fa-plus me-1"></i>Agregar
+                      </button>
+                    </div>
+                    <div class="card-body">
+                      <div :class="{ 'is-invalid': errors.caracteristicas && formulario.caracteristicas.length === 0 }">
+                        <div v-if="formulario.caracteristicas.length === 0" class="text-center py-3 border rounded mb-3 bg-white">
+                          <i class="fas fa-info-circle text-muted me-2"></i>
+                          <span class="text-muted">No hay características agregadas. Haga clic en "Agregar" para añadir características.</span>
+                        </div>
+                        <div v-for="(caracteristica, index) in formulario.caracteristicas" :key="index" class="mb-2">
+                          <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-check"></i></span>
+                            <input 
+                              type="text" 
+                              class="form-control" 
+                              v-model="formulario.caracteristicas[index]"
+                              placeholder="Ej: Batería de larga duración"
+                              required
+                            >
+                            <button type="button" class="btn btn-outline-danger" @click="eliminarCaracteristica(index)">
+                              <i class="fas fa-trash-alt"></i>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="invalid-feedback d-block" v-if="errors.caracteristicas">
+                        {{ errors.caracteristicas[0] }}
+                      </div>
+                      <small class="text-muted">Agregue las características principales del producto</small>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Modelos -->
+                <div class="col-12">
+                  <div class="card border-0 bg-light">
+                    <div class="card-header bg-primary bg-opacity-10 d-flex justify-content-between align-items-center">
+                      <h5 class="mb-0">
+                        <i class="fas fa-cubes me-2"></i>Modelos <span class="text-danger">*</span>
+                      </h5>
+                      <button type="button" class="btn btn-sm btn-primary" @click="agregarModelo">
+                        <i class="fas fa-plus me-1"></i>Agregar
+                      </button>
+                    </div>
+                    <div class="card-body">
+                      <div :class="{ 'is-invalid': errors.modelos && formulario.modelos.length === 0 }">
+                        <div v-if="formulario.modelos.length === 0" class="text-center py-3 border rounded mb-3 bg-white">
+                          <i class="fas fa-info-circle text-muted me-2"></i>
+                          <span class="text-muted">No hay modelos agregados. Haga clic en "Agregar" para añadir modelos.</span>
+                        </div>
+                        <div v-for="(modelo, index) in formulario.modelos" :key="index" class="card mb-3 border">
+                          <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">Modelo {{ index + 1 }}</h6>
+                            <button type="button" class="btn btn-sm btn-outline-danger" @click="eliminarModelo(index)">
+                              <i class="fas fa-trash-alt me-1"></i>Eliminar
+                            </button>
+                          </div>
+                          <div class="card-body">
+                            <div class="row g-2">
+                              <div class="col-md-6">
+                                <label class="form-label">Nombre <span class="text-danger">*</span></label>
+                                <input 
+                                  type="text" 
+                                  class="form-control" 
+                                  v-model="modelo.nombre"
+                                  placeholder="Ej: Exclusive"
+                                  required
+                                >
+                              </div>
+                              <div class="col-md-6">
+                                <label class="form-label">Precio <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                  <span class="input-group-text"><i class="fas fa-dollar-sign"></i></span>
+                                  <input 
+                                    type="number" 
+                                    class="form-control" 
+                                    v-model="modelo.precio" 
+                                    placeholder="Ej: 3000.00"
+                                    min="0.01"
+                                    step="0.01"
+                                    required
+                                  >
+                                </div>
+                              </div>
+                              <div class="col-md-6">
+                                <label class="form-label">Cantidad mínima <span class="text-danger">*</span></label>
+                                <input 
+                                  type="number" 
+                                  class="form-control" 
+                                  v-model="modelo.cantidad_minima"
+                                  placeholder="Ej: 20"
+                                  min="1"
+                                  required
+                                >
+                              </div>
+                              <div class="col-md-6">
+                                <label class="form-label">Cantidad máxima <span class="text-danger">*</span></label>
+                                <input 
+                                  type="number" 
+                                  class="form-control" 
+                                  v-model="modelo.cantidad_maxima"
+                                  placeholder="Ej: 200"
+                                  min="1"
+                                  required
+                                >
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="invalid-feedback d-block" v-if="errors.modelos">
+                        {{ errors.modelos[0] }}
+                      </div>
+                      <small class="text-muted">Agregue los diferentes modelos o variantes del producto</small>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Imágenes Adicionales -->
+                <div class="col-12">
+                  <div class="card border-0 bg-light">
+                    <div class="card-header bg-primary bg-opacity-10 d-flex justify-content-between align-items-center">
+                      <h5 class="mb-0">
+                        <i class="fas fa-images me-2"></i>Imágenes Adicionales <span class="text-danger">*</span>
+                      </h5>
+                      <button type="button" class="btn btn-sm btn-primary" @click="agregarImagen">
+                        <i class="fas fa-plus me-1"></i>Agregar
+                      </button>
+                    </div>
+                    <div class="card-body">
+                      <div :class="{ 'is-invalid': errors.images && formulario.images.length === 0 }">
+                        <div v-if="formulario.images.length === 0" class="text-center py-3 border rounded mb-3 bg-white">
+                          <i class="fas fa-info-circle text-muted me-2"></i>
+                          <span class="text-muted">No hay imágenes adicionales. Haga clic en "Agregar" para añadir imágenes.</span>
+                        </div>
+                        <div class="row g-3">
+                          <div class="col-md-4" v-for="(imagen, index) in formulario.images" :key="index">
+                            <div class="card h-100 border">
+                              <div class="card-header bg-white">
+                                <h6 class="mb-0">Imagen {{ index + 1 }}</h6>
+                              </div>
+                              <div class="card-body">
+                                <div class="mb-3">
+                                  <label class="form-label">Archivo <span class="text-danger">*</span></label>
+                                  <input 
+                                    type="file" 
+                                    class="form-control" 
+                                    @change="(event) => handleFileUpload(event, index)"
+                                    accept="image/*"
+                                    :required="!imagen.preview"
+                                  >
+                                </div>
+                                <div class="mb-3">
+                                  <label :for="'color-' + index" class="form-label">Color <span class="text-danger">*</span></label>
+                                  <div class="d-flex gap-2">
+                                    <input 
+                                      type="color" 
+                                      class="form-control form-control-color" 
+                                      :id="'color-' + index"
+                                      v-model="imagen.color"
+                                      required
+                                    >
+                                    <span class="form-control">{{ imagen.color }}</span>
+                                  </div>
+                                </div>
+                                <div class="text-center mb-3">
+                                  <div v-if="imagen.preview" class="border p-2 rounded bg-white">
+                                    <img :src="imagen.preview" class="img-fluid rounded" alt="Preview" style="max-height: 120px;">
+                                  </div>
+                                  <div v-else class="border p-2 rounded bg-white d-flex align-items-center justify-content-center" style="height: 120px;">
+                                    <span class="text-muted">Sin imagen</span>
+                                  </div>
+                                </div>
+                                <button type="button" class="btn btn-outline-danger btn-sm w-100" @click="eliminarImagen(index)">
+                                  <i class="fas fa-trash-alt me-1"></i> Eliminar
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="invalid-feedback d-block" v-if="errors.images">
+                        {{ errors.images[0] }}
+                      </div>
+                      <small class="text-muted mt-2 d-block">Agregue imágenes adicionales del producto con sus respectivos colores</small>
                     </div>
                   </div>
                 </div>
@@ -274,10 +516,28 @@
             </form>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="button" class="btn" :class="posicion ? 'btn-warning' : 'btn-primary'" @click="guardarProducto">
-              {{ posicion ? 'Actualizar' : 'Guardar' }}
-            </button>
+            <div class="d-flex justify-content-between w-100">
+              <div>
+                <span v-if="Object.keys(errors).length > 0" class="text-danger">
+                  <i class="fas fa-exclamation-circle me-1"></i>
+                  Por favor, corrija los errores en el formulario
+                </span>
+              </div>
+              <div>
+                <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">
+                  <i class="fas fa-times me-1"></i>Cancelar
+                </button>
+                <button 
+                  type="button" 
+                  class="btn" 
+                  :class="posicion ? 'btn-warning' : 'btn-primary'"
+                  @click="validarYGuardar"
+                >
+                  <i class="fas" :class="posicion ? 'fa-save me-1' : 'fa-plus me-1'"></i>
+                  {{ posicion ? 'Actualizar' : 'Guardar' }}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -303,7 +563,7 @@
                 <p><strong>Descripción:</strong> {{ productoSeleccionado.descripcion || 'N/A' }}</p>
                 <p><strong>Cantidad Mínima:</strong> {{ productoSeleccionado.cantidad_minima }}</p>
                 <p><strong>Cantidad Máxima:</strong> {{ productoSeleccionado.cantidad_maxima }}</p>
-                <p><strong>Estado:</strong> 
+                <p><strong>Estado:</strong>
                   <span class="badge" :class="productoSeleccionado.estado ? 'bg-success' : 'bg-danger'">
                     {{ productoSeleccionado.estado ? 'Activo' : 'Inactivo' }}
                   </span>
@@ -343,7 +603,9 @@
                 <div class="card">
                   <img :src="imagen.imagen" class="card-img-top" :alt="productoSeleccionado.nombre">
                   <div class="card-body">
-                    <p class="card-text">Color: <span :style="{ backgroundColor: imagen.color, width: '20px', height: '20px', display: 'inline-block', verticalAlign: 'middle' }"></span></p>
+                    <p class="card-text">Color: <span
+                        :style="{ backgroundColor: imagen.color, width: '20px', height: '20px', display: 'inline-block', verticalAlign: 'middle' }"></span>
+                    </p>
                   </div>
                 </div>
               </div>
@@ -384,6 +646,7 @@ const formulario = ref({
 const errors = ref({});
 const imagenPreview = ref('');
 const productoSeleccionado = ref(null);
+const formValidado = ref(false);
 
 let productoModal = null;
 let detallesModal = null;
@@ -397,9 +660,9 @@ onMounted(() => {
 
 const productosFiltrados = computed(() => {
   if (!search.value) return productos.value;
-  return productos.value.filter(producto => 
+  return productos.value.filter(producto =>
     producto.nombre.toLowerCase().includes(search.value.toLowerCase()) ||
-    producto.categoria?.nombre.toLowerCase().includes(search.value.toLowerCase())
+    (producto.categoria?.nombre && producto.categoria.nombre.toLowerCase().includes(search.value.toLowerCase()))
   );
 });
 
@@ -434,6 +697,7 @@ const abrirModal = () => {
   };
   imagenPreview.value = '';
   errors.value = {};
+  formValidado.value = false;
   productoModal.show();
 };
 
@@ -455,8 +719,73 @@ const listarCategorias = async () => {
   }
 };
 
-const guardarProducto = async () => {
+const validarFormulario = () => {
+  // Validar campos requeridos
+  const form = document.getElementById('productoForm');
+  formValidado.value = true;
+  
+  if (!form.checkValidity()) {
+    form.classList.add('was-validated');
+    return false;
+  }
+  
+  // Validaciones adicionales
+  let esValido = true;
   errors.value = {};
+  
+  if (!formulario.value.nombre) {
+    errors.value.nombre = ['El campo nombre es obligatorio.'];
+    esValido = false;
+  }
+  
+  if (!formulario.value.precio) {
+    errors.value.precio = ['El campo precio es obligatorio.'];
+    esValido = false;
+  }
+  
+  if (!formulario.value.cantidad_minima) {
+    errors.value.cantidad_minima = ['El campo cantidad minima es obligatorio.'];
+    esValido = false;
+  }
+  
+  if (!formulario.value.cantidad_maxima) {
+    errors.value.cantidad_maxima = ['El campo cantidad maxima es obligatorio.'];
+    esValido = false;
+  }
+  
+  if (formulario.value.caracteristicas.length === 0) {
+    errors.value.caracteristicas = ['El campo caracteristicas es obligatorio.'];
+    esValido = false;
+  }
+  
+  if (formulario.value.modelos.length === 0) {
+    errors.value.modelos = ['El campo modelos es obligatorio.'];
+    esValido = false;
+  }
+  
+  if (formulario.value.images.length === 0 && !posicion.value) {
+    errors.value.images = ['El campo images es obligatorio.'];
+    esValido = false;
+  }
+  
+  return esValido;
+};
+
+const validarYGuardar = () => {
+  if (validarFormulario()) {
+    guardarProducto();
+  } else {
+    // Scroll al primer error
+    setTimeout(() => {
+      const primerError = document.querySelector('.is-invalid');
+      if (primerError) {
+        primerError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+  }
+};
+
+const guardarProducto = async () => {
   try {
     const formData = new FormData();
     Object.keys(formulario.value).forEach(key => {
@@ -490,11 +819,23 @@ const guardarProducto = async () => {
     }
     await listarProductos();
     productoModal.hide();
+    
+    // Mostrar mensaje de éxito
+    alert(posicion.value ? 'Producto actualizado correctamente' : 'Producto creado correctamente');
   } catch (error) {
     if (error.response && error.response.status === 422) {
       errors.value = error.response.data.errors;
+      
+      // Scroll al primer error
+      setTimeout(() => {
+        const primerError = document.querySelector('.is-invalid');
+        if (primerError) {
+          primerError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
     } else {
       console.error('Error al guardar producto:', error);
+      alert('Error al guardar el producto. Intente nuevamente.');
     }
   }
 };
@@ -523,21 +864,25 @@ const mostrarProducto = async (id) => {
     };
     imagenPreview.value = data.dato.imagen_principal;
     posicion.value = id;
+    errors.value = {};
+    formValidado.value = false;
     productoModal.show();
   } catch (error) {
     console.error('Error al obtener producto:', error);
+    alert('Error al cargar el producto. Intente nuevamente.');
   }
 };
 
 const verDetalles = async (productoIO) => {
   productoSeleccionado.value = productoIO;
   try {
-    const {data} = await  showProducto(productoIO);
+    const { data } = await showProducto(productoIO);
     productoSeleccionado.value = data.dato;
     console.log(productoSeleccionado);
     detallesModal.show();
   } catch (error) {
     console.log(error);
+    alert('Error al cargar los detalles del producto. Intente nuevamente.');
   }
 };
 
@@ -724,7 +1069,8 @@ const mostrarDatosPrueba = () => {
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }
 
-.modal-header, .modal-footer {
+.modal-header,
+.modal-footer {
   padding: 1rem;
 }
 
@@ -738,9 +1084,52 @@ const mostrarDatosPrueba = () => {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .btn-group .btn {
     width: 100%;
   }
+}
+
+/* Estilos para mejorar la UI */
+.form-label {
+  font-size: 0.9rem;
+}
+
+.input-group-text {
+  background-color: #f8f9fa;
+}
+
+.card-header {
+  padding: 0.75rem 1rem;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.form-control-color {
+  width: 3rem;
+}
+
+/* Animaciones */
+.btn {
+  transition: all 0.2s ease-in-out;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Validación de formulario */
+.was-validated .form-control:invalid,
+.form-control.is-invalid {
+  border-color: #dc3545;
+  padding-right: calc(1.5em + 0.75rem);
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right calc(0.375em + 0.1875rem) center;
+  background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
 }
 </style>

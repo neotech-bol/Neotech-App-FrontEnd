@@ -18,7 +18,7 @@ import PedidosView from '@/Admin/PedidosView.vue'
 import CartView from '@/views/CartView.vue'
 import PerfilView from '@/views/PerfilView.vue'
 import Unauthorized from '@/views/Unauthorized.vue'
-import { userAutenticado } from '@/Services/UsuarioService'
+import { obtenerPermisos, userAutenticado } from '@/Services/UsuarioService'
 import FavoriteView from '@/views/FavoriteView.vue'
 import CuponesView from '@/Admin/CuponesView.vue'
 import TerminosCondiciones from '@/views/TerminosCondiciones.vue'
@@ -32,7 +32,142 @@ import CatalogosHistorialView from '@/Admin/CatalogosHistorialView.vue'
 import CatalogoHistorial from '@/views/CatalogoHistorial.vue'
 import CatalogoActivoView from '@/views/CatalogoActivoView.vue'
 import ContactanosPanelView from '@/Admin/ContactanosPanelView.vue'
+import VerificacionPendiente from '@/views/VerificacionPendiente.vue'
+import { ref, reactive } from 'vue'
 
+// Lista de permisos disponibles en el sistema
+const permisosDisponibles = [
+  'Gestionar Usuarios',
+  'Gestionar Catalogos',
+  'Gestionar Categorias',
+  'Gestionar Productos',
+  'Gestionar Roles',
+  'Gestionar Pedidos',
+  'Gestionar Cupones'
+];
+
+// Mapeo de rutas a permisos requeridos
+const rutasPermisos = {
+  'usuarios': 'Gestionar Usuarios',
+  'productos-admin': 'Gestionar Productos',
+  'catalogos': 'Gestionar Catalogos',
+  'categorias-panel': 'Gestionar Categorias',
+  'roles': 'Gestionar Roles',
+  'pedidos': 'Gestionar Pedidos',
+  'cupones': 'Gestionar Cupones',
+  'catalgos-historiales': 'Gestionar Catalogos',
+  'contactanos-admin': 'Gestionar Usuarios'
+};
+
+// Crear estado reactivo para el usuario y permisos
+const authState = reactive({
+  user: null,
+  userPermisos: [],
+  isLoading: false,
+  lastFetch: 0
+});
+
+// Función para obtener los permisos del usuario
+const fetchPermisosUser = async (forceRefresh = false) => {
+  // Si ya estamos cargando, no iniciar otra solicitud
+  if (authState.isLoading) return authState.userPermisos;
+  
+  // Si no forzamos la actualización y los permisos se obtuvieron hace menos de 5 minutos, usar la caché
+  const now = Date.now();
+  if (!forceRefresh && authState.lastFetch > 0 && now - authState.lastFetch < 300000) {
+    console.log('Usando permisos en caché');
+    return authState.userPermisos;
+  }
+  
+  try {
+    authState.isLoading = true;
+    console.log('Obteniendo permisos del servidor...');
+    
+    const { data } = await obtenerPermisos();
+    console.log('Respuesta de permisos:', data);
+    
+    // Guardar los permisos del usuario
+    if (data && data.datos) {
+      authState.userPermisos = data.datos;
+      console.log('Permisos actualizados:', authState.userPermisos);
+    } else {
+      // Si no hay datos de permisos, asumimos que no tiene permisos
+      authState.userPermisos = [];
+      console.warn('No se encontraron permisos en la respuesta');
+    }
+    
+    // Actualizar timestamp de última actualización
+    authState.lastFetch = now;
+    return authState.userPermisos;
+  } catch (error) {
+    console.error('Error al obtener permisos:', error);
+    return [];
+  } finally {
+    authState.isLoading = false;
+  }
+};
+
+const fetchAuthenticatedUser = async (forceRefresh = false) => {
+  // Si ya estamos cargando, no iniciar otra solicitud
+  if (authState.isLoading) return authState.user;
+  
+  // Si no forzamos la actualización y el usuario se obtuvo hace menos de 5 minutos, usar la caché
+  const now = Date.now();
+  if (!forceRefresh && authState.lastFetch > 0 && now - authState.lastFetch < 300000) {
+    console.log('Usando datos de usuario en caché');
+    return authState.user;
+  }
+  
+  try {
+    authState.isLoading = true;
+    console.log('Obteniendo datos de usuario autenticado...');
+    
+    const { data } = await userAutenticado();
+    console.log('Datos del usuario autenticado:', data);
+    
+    if (data && data.datos && data.datos.roles && data.datos.roles.length > 0) {
+      authState.user = data.datos.roles[0].name;
+      console.log('Rol del usuario actualizado:', authState.user);
+      
+      // Obtener permisos después de autenticar al usuario
+      await fetchPermisosUser(true);
+    } else {
+      console.error('No se encontraron roles en los datos del usuario.');
+      authState.user = null;
+    }
+    
+    // Actualizar timestamp de última actualización
+    authState.lastFetch = now;
+    return authState.user;
+  } catch (error) {
+    console.error('Error al obtener el usuario autenticado:', error);
+    authState.user = null;
+    return null;
+  } finally {
+    authState.isLoading = false;
+  }
+};
+
+// Verificar si el usuario tiene un permiso específico
+const tienePermiso = async (permiso) => {
+  if (!permiso) return true; // Si no se requiere permiso específico
+  
+  // Asegurarse de que los permisos estén actualizados
+  await fetchPermisosUser();
+  
+  return authState.userPermisos.includes(permiso);
+};
+
+// Función para obtener el rol del usuario
+const getUserRole = async () => {
+  // Si no hay usuario, intentar obtenerlo
+  if (!authState.user) {
+    await fetchAuthenticatedUser();
+  }
+  return authState.user;
+};
+
+// Crear el router
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -199,62 +334,93 @@ const router = createRouter({
     {
       path: '/admin-panel',
       component: LayoutAdmin,
+      meta: { requiresAuth: true },
       children: [
         {
           path: '/admin-panel',
           name: 'admin-panel',
-          meta: { requiredRole: 'super-admin' },
+          meta: { 
+            requiredRole: 'super-admin',
+            requiredPermission: null
+          },
           component: HomAdminView
         },
         {
           path: '/usuarios',
           name: 'usuarios',
-          meta: { requiredRole: 'super-admin' },
+          meta: { 
+            requiredRole: 'super-admin',
+            requiredPermission: 'Gestionar Usuarios'
+          },
           component: UsuariosView
         },
         {
           path: '/productos-admin',
           name: 'productos-admin',
-          meta: { requiredRole: 'super-admin' },
+          meta: { 
+            requiredRole: 'super-admin',
+            requiredPermission: 'Gestionar Productos'
+          },
           component: ProductosView
         },
         {
           path: '/catalogos',
           name: 'catalogos',
-          meta: { requiredRole: 'super-admin' },
+          meta: { 
+            requiredRole: 'super-admin',
+            requiredPermission: 'Gestionar Catalogos'
+          },
           component: CatalogosView
         },
         {
           path: '/categorias-panel',
           name: 'categorias-panel',
-          meta: { requiredRole: 'super-admin' },
+          meta: { 
+            requiredRole: 'super-admin',
+            requiredPermission: 'Gestionar Categorias'
+          },
           component: CategoriasView
         },
         {
           path: '/roles',
           name: 'roles',
-          meta: { requiredRole: 'super-admin' },
+          meta: { 
+            requiredRole: 'super-admin',
+            requiredPermission: 'Gestionar Roles'
+          },
           component: RolesView
         },
         {
           path: '/pedidos',
           name: 'pedidos',
-          meta: { requiredRole: 'super-admin' },
+          meta: { 
+            requiredRole: 'super-admin',
+            requiredPermission: 'Gestionar Pedidos'
+          },
           component: PedidosView
         },
         {
           path: '/cupones',
           name: 'cupones',
+          meta: { 
+            requiredPermission: 'Gestionar Cupones'
+          },
           component: CuponesView
         },
         {
           path: '/catalgos-historiales',
           name: 'catalogos historiales',
+          meta: { 
+            requiredPermission: 'Gestionar Catalogos'
+          },
           component: CatalogosHistorialView
         },
         {
           path: '/contactanos-admin',
           name: 'contactanos-admin',
+          meta: { 
+            requiredPermission: 'Gestionar Usuarios'
+          },
           component: ContactanosPanelView
         }
       ]
@@ -287,44 +453,110 @@ const router = createRouter({
       }
     },
     {
+      path: "/verificacion-pendiente",
+      name: "VerificacionPendiente",
+      component: () => import("@/views/VerificacionPendiente.vue"),
+    },
+    {
+      path: "/email/verify/:id/:hash",
+      name: "VerificarEmail",
+      component: () => import("@/views/VerificarEmail.vue"),
+    },
+    {
       path: '/:pathMatch(.*)*',
       redirect: '/page401'
     }
   ],
 })
 
-let user = null;
-
-const fetchAuthenticatedUser = async () => {
-  try {
-    const { data } = await userAutenticado();
-    console.log('Datos del usuario autenticado:', data);
-    if (data && data.datos && data.datos.roles && data.datos.roles.length > 0) {
-      user = data.datos.roles[0].name;
-      console.log(user);
-    } else {
-      console.error('No se encontraron roles en los datos del usuario.');
-    }
-  } catch (error) {
-    console.error('Error al obtener el usuario autenticado:', error);
-  }
-};
-
+// Inicializar la aplicación
 fetchAuthenticatedUser().then(() => {
-  router.beforeEach((to, from, next) => {
+  // Configurar el guard de navegación
+  router.beforeEach(async (to, from, next) => {
+    // Verificar si la ruta requiere autenticación
+    const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
+    
+    // Obtener el rol y permiso requeridos para la ruta
     const requiredRole = to.meta.requiredRole;
-    const userRole = getUserRole();
-
-    if (requiredRole && userRole !== requiredRole) {
-      next({ path: '/unauthorized' });
-    } else {
-      next();
+    const requiredPermission = to.meta.requiredPermission;
+    
+    // Siempre verificar permisos en cada navegación para rutas protegidas
+    if (requiresAuth || requiredRole || requiredPermission) {
+      // Forzar actualización de permisos en cada navegación a rutas protegidas
+      await fetchPermisosUser(true);
+      const userRole = await getUserRole();
+      
+      // Si la ruta requiere autenticación y el usuario no está autenticado
+      if (requiresAuth && !userRole) {
+        console.log('Redirigiendo a login: usuario no autenticado');
+        next({ path: '/login', query: { redirect: to.fullPath } });
+        return;
+      }
+      
+      // Verificar rol
+      if (requiredRole && userRole !== requiredRole) {
+        console.log(`Acceso denegado: Se requiere el rol "${requiredRole}"`);
+        next({ path: '/unauthorized' });
+        return;
+      }
+      
+      // Verificar permiso
+      if (requiredPermission) {
+        const hasPermission = await tienePermiso(requiredPermission);
+        if (!hasPermission) {
+          console.log(`Acceso denegado: Se requiere el permiso "${requiredPermission}"`);
+          next({ path: '/unauthorized' });
+          return;
+        }
+      }
     }
+    
+    // Si todo está bien, permitir acceso a la ruta
+    next();
   });
 });
 
-function getUserRole() {
-  return user;
+// Crear un bus de eventos para actualizar permisos
+const permissionBus = {
+  // Método para actualizar permisos después de cambios
+  refreshPermissions: async () => {
+    console.log('Actualizando permisos después de cambios...');
+    await fetchPermisosUser(true);
+    return authState.userPermisos;
+  }
+};
+
+// Función para verificar si el usuario tiene acceso a una ruta específica
+// Útil para mostrar/ocultar elementos en la interfaz
+export async function tieneAccesoARuta(rutaNombre) {
+  // Asegurarse de que los permisos estén actualizados
+  await fetchPermisosUser();
+  
+  const ruta = router.options.routes.flatMap(r => 
+    r.children ? r.children : [r]
+  ).find(r => r.name === rutaNombre);
+  
+  if (!ruta) return false;
+  
+  // Verificar rol
+  if (ruta.meta?.requiredRole) {
+    const userRole = await getUserRole();
+    if (userRole !== ruta.meta.requiredRole) {
+      return false;
+    }
+  }
+  
+  // Verificar permiso
+  if (ruta.meta?.requiredPermission) {
+    const hasPermission = await tienePermiso(ruta.meta.requiredPermission);
+    if (!hasPermission) {
+      return false;
+    }
+  }
+  
+  return true;
 }
 
-export default router
+// Exportar el bus de eventos junto con el router
+export { permissionBus };
+export default router;
