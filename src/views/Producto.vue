@@ -108,28 +108,32 @@
               </div>
               <div class="accordion-content">
                 <ul class="features">
-                  <li v-for="caracteristica in dato.caracteristicas" :key="caracteristica.id" class="feature-item"
+                  <li v-for="caracteristica in visibleCaracteristicas" :key="caracteristica.id" class="feature-item"
                     :class="{ 'feature-hover': hoveredFeature === caracteristica.id }"
                     @mouseover="hoveredFeature = caracteristica.id" @mouseleave="hoveredFeature = null">
                     <i class="fas fa-check-circle"></i>
                     <span>{{ caracteristica.caracteristica }}</span>
                   </li>
                 </ul>
+                <button v-if="shouldShowMoreButton" @click.stop="toggleShowAllFeatures" class="show-more-btn">
+                  <span>{{ showAllFeatures ? 'Ver menos' : 'Ver más' }}</span>
+                  <i class="fas" :class="showAllFeatures ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                </button>
               </div>
             </div>
 
-            <!-- Colores Disponibles -->
-            <div class="accordion-section" :class="{ 'expanded': expandedSection === 'colors' }">
+            <!-- Colores Disponibles - Solo mostrar si hay colores -->
+            <div v-if="hasColors" class="accordion-section" :class="{ 'expanded': expandedSection === 'colors' }">
               <div class="accordion-header" @click="toggleSection('colors')">
                 <h3 class="section-title">Colores Disponibles</h3>
                 <i class="fas" :class="expandedSection === 'colors' ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
               </div>
               <div class="accordion-content">
                 <div class="color-options">
-                  <button v-for="(image, index) in dato.images" :key="index" class="color-swatch"
-                    :style="{ backgroundColor: image.color }" @click="selectColor(index)"
-                    :class="{ active: selectedImage === index + 1 }">
-                    <div class="color-checkmark" v-if="selectedImage === index + 1">
+                  <button v-for="(image, index) in imagesWithColors" :key="index" class="color-swatch"
+                    :style="{ backgroundColor: image.color }" @click="selectColor(getOriginalIndex(index))"
+                    :class="{ active: selectedImage === getOriginalIndex(index) + 1 }">
+                    <div class="color-checkmark" v-if="selectedImage === getOriginalIndex(index) + 1">
                       <i class="fas fa-check"></i>
                     </div>
                   </button>
@@ -163,23 +167,27 @@
           <div class="features-section desktop-only">
             <h3 class="section-title">Características Destacadas</h3>
             <ul class="features">
-              <li v-for="caracteristica in dato.caracteristicas" :key="caracteristica.id" class="feature-item"
+              <li v-for="caracteristica in visibleCaracteristicas" :key="caracteristica.id" class="feature-item"
                 :class="{ 'feature-hover': hoveredFeature === caracteristica.id }"
                 @mouseover="hoveredFeature = caracteristica.id" @mouseleave="hoveredFeature = null">
                 <i class="fas fa-check-circle"></i>
                 <span>{{ caracteristica.caracteristica }}</span>
               </li>
             </ul>
+            <button v-if="shouldShowMoreButton" @click="toggleShowAllFeatures" class="show-more-btn desktop">
+              <span>{{ showAllFeatures ? 'Ver menos' : 'Ver más' }}</span>
+              <i class="fas" :class="showAllFeatures ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+            </button>
           </div>
 
-          <!-- Desktop Color Section -->
-          <div class="color-section desktop-only">
+          <!-- Desktop Color Section - Solo mostrar si hay colores -->
+          <div v-if="hasColors" class="color-section desktop-only">
             <h3 class="section-title">Colores Disponibles</h3>
             <div class="color-options">
-              <button v-for="(image, index) in dato.images" :key="index" class="color-swatch"
-                :style="{ backgroundColor: image.color }" @click="selectColor(index)"
-                :class="{ active: selectedImage === index + 1 }">
-                <div class="color-checkmark" v-if="selectedImage === index + 1">
+              <button v-for="(image, index) in imagesWithColors" :key="index" class="color-swatch"
+                :style="{ backgroundColor: image.color }" @click="selectColor(getOriginalIndex(index))"
+                :class="{ active: selectedImage === getOriginalIndex(index) + 1 }">
+                <div class="color-checkmark" v-if="selectedImage === getOriginalIndex(index) + 1">
                   <i class="fas fa-check"></i>
                 </div>
               </button>
@@ -241,13 +249,14 @@
         </div>
       </div>
     </div>
-    <!-- Productos Similares - Agregado al final del componente -->
+    
+    <!-- Productos Similares - Sección mejorada -->
     <div class="similar-products-section" v-if="productosSimilares.length > 0">
       <h2 class="section-title">
         Productos <span class="text-accent">Similares</span>
       </h2>
 
-      <!-- Products Grid - Usando los estilos de productos recientes -->
+      <!-- Products Grid - Diseño mejorado y más responsive -->
       <div class="products-grid">
         <div v-for="(product, index) in productosSimilares" :key="product.id" class="product-card"
           :style="{ '--index': index }" @click="navegarAProducto(product.id)">
@@ -298,7 +307,7 @@
             </div>
           </div>
           <!-- Product Info -->
-          <div class="product-info">
+          <div class="product-info-card">
             <div class="category">
               <i class="fas fa-tag"></i> {{ product.categoria?.nombre || 'Sin categoría' }}
             </div>
@@ -327,6 +336,7 @@
         </div>
       </div>
     </div>
+    
     <!-- Mobile Sticky Add to Cart Bar -->
     <div class="mobile-sticky-bar">
       <div class="mobile-price">
@@ -342,8 +352,6 @@
         <span>{{ addingToCart ? 'Agregando...' : 'Agregar' }}</span>
       </button>
     </div>
-
-
   </div>
 </template>
 
@@ -385,10 +393,31 @@ const currentImageIndexSimilar = ref({});
 const favoriteProductsSimilar = ref([]);
 const addingToCartSimilar = ref(null);
 const userRatings = ref([]);
+// Variables para la funcionalidad "Ver más" en características
+const showAllFeatures = ref(false);
+
 // Calcular todas las imágenes disponibles (principal + colores)
 const allImages = computed(() => {
   return [dato.value.imagen_principal, ...(dato.value.images?.map(img => img.imagen) || [])];
 });
+
+// Filtrar imágenes que tienen color
+const imagesWithColors = computed(() => {
+  return dato.value.images?.filter(img => img.color !== null) || [];
+});
+
+// Verificar si hay colores disponibles
+const hasColors = computed(() => {
+  return imagesWithColors.value.length > 0;
+});
+
+// Función para obtener el índice original de una imagen con color
+const getOriginalIndex = (filteredIndex) => {
+  if (!dato.value.images) return filteredIndex;
+  
+  const imageWithColor = imagesWithColors.value[filteredIndex];
+  return dato.value.images.findIndex(img => img.id === imageWithColor.id);
+};
 
 // Imagen actual seleccionada
 const currentImage = computed(() => allImages.value[selectedImage.value]);
@@ -409,6 +438,23 @@ const isNewProduct = computed(() => {
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   return productDate > thirtyDaysAgo;
 });
+
+// Computed para mostrar características limitadas o todas
+const visibleCaracteristicas = computed(() => {
+  if (!dato.value.caracteristicas) return [];
+  return showAllFeatures.value ? dato.value.caracteristicas : dato.value.caracteristicas.slice(0, 5);
+});
+
+// Computed para determinar si se debe mostrar el botón "Ver más"
+const shouldShowMoreButton = computed(() => {
+  return dato.value.caracteristicas && dato.value.caracteristicas.length > 5;
+});
+
+// Función para alternar la visualización de todas las características
+const toggleShowAllFeatures = (event) => {
+  if (event) event.stopPropagation();
+  showAllFeatures.value = !showAllFeatures.value;
+};
 
 // Cargar datos del producto - Keep this function for initial load
 const verProducto = async () => {
@@ -440,6 +486,9 @@ const verProducto = async () => {
 
     // Cargar calificaciones de usuarios
     indexRatingUser();
+    
+    // Resetear el estado de "Ver más" al cargar un nuevo producto
+    showAllFeatures.value = false;
   } catch (error) {
     console.error('Error al obtener detalles del producto:', error);
   }
@@ -484,8 +533,10 @@ const selectModel = (model) => {
 // Seleccionar un color
 const selectColor = (index) => {
   selectedImage.value = index + 1;
-  selectedColor.value = dato.value.images[index].color;
-  selectedColorImage.value = dato.value.images[index].imagen;
+  if (dato.value.images && dato.value.images[index]) {
+    selectedColor.value = dato.value.images[index].color;
+    selectedColorImage.value = dato.value.images[index].imagen;
+  }
 };
 
 // Validar cantidad
@@ -653,6 +704,7 @@ const formatPrice = (price) => {
 const toggleSection = (section) => {
   expandedSection.value = expandedSection.value === section ? null : section;
 };
+
 // Funciones para productos similares
 const getProductImagesSimilar = (product) => {
   const mainImage = product.imagen_principal;
@@ -748,6 +800,7 @@ const navegarAProducto = async (productId) => {
     selectedModel.value = null;
     selectedColor.value = null;
     selectedColorImage.value = '';
+    showAllFeatures.value = false;
     
     // Initialize similar products image indices
     productosSimilares.value.forEach(product => {
@@ -803,6 +856,17 @@ const indexRatingUser = async () => {
     console.error('Error al obtener las calificaciones:', error);
   }
 };
+
+// Función para guardar favoritos (simulada)
+const storeFavorite = async (data) => {
+  // Simulación de una llamada a API
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({ success: true });
+    }, 300);
+  });
+};
+
 // Al montar el componente
 onMounted(() => {
   verProducto();
@@ -1372,6 +1436,32 @@ watch(
   transform: translateX(0.5rem);
   border-color: rgba(33, 150, 243, 0.2);
   box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
+}
+
+/* Show More Button for Features */
+.show-more-btn {
+  margin-top: 1rem;
+  background: none;
+  border: none;
+  color: #007bff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.show-more-btn:hover {
+  background: rgba(0, 123, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.show-more-btn.desktop {
+  margin-top: 1rem;
 }
 
 /* Color Section */
@@ -2075,14 +2165,17 @@ watch(
   animation-delay: 0.7s;
 }
 
-/* Sección de Productos Similares */
+/* Sección de Productos Similares - Estilos mejorados */
 .similar-products-section {
   max-width: 1440px;
-  margin: 0 auto;
-  padding: 4rem;
+  margin: 3rem auto;
+  padding: 2rem 1rem;
+  background-color: #f9f9f9;
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
 }
 
-.section-title {
+.similar-products-section .section-title {
   font-size: clamp(1.75rem, 3vw, 2.25rem);
   font-weight: 700;
   color: #1a1a1a;
@@ -2091,7 +2184,7 @@ watch(
   position: relative;
 }
 
-.section-title::after {
+.similar-products-section .section-title::after {
   content: '';
   position: absolute;
   bottom: -10px;
@@ -2106,6 +2199,7 @@ watch(
 .text-accent {
   color: #3498db;
   position: relative;
+  display: inline-block;
 }
 
 .text-accent::after {
@@ -2125,20 +2219,20 @@ watch(
   transform: scaleX(1);
 }
 
-/* Products Grid - Estilos de productos recientes */
+/* Products Grid - Estilos mejorados */
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
   margin-bottom: 2rem;
 }
 
-/* Product Card */
+/* Product Card - Estilos mejorados */
 .product-card {
   background: white;
-  border-radius: 10px;
+  border-radius: 1rem;
   overflow: hidden;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
   opacity: 0;
@@ -2148,6 +2242,8 @@ watch(
   height: 100%;
   display: flex;
   flex-direction: column;
+  position: relative;
+  overflow: hidden;
 }
 
 @keyframes fadeInUp {
@@ -2163,11 +2259,11 @@ watch(
 }
 
 .product-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  transform: translateY(-8px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
 }
 
-/* Product Image */
+/* Product Image - Estilos mejorados */
 .product-image-wrapper {
   position: relative;
   width: 100%;
@@ -2184,6 +2280,7 @@ watch(
   display: flex;
   align-items: center;
   justify-content: center;
+  background-color: #f5f5f5;
 }
 
 .product-image img {
@@ -2194,17 +2291,17 @@ watch(
 }
 
 .product-card:hover .product-image img {
-  transform: scale(1.05);
+  transform: scale(1.08);
 }
 
-/* Navigation Buttons */
+/* Navigation Buttons - Estilos mejorados */
 .nav-button {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   background: rgba(255, 255, 255, 0.9);
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -2215,15 +2312,15 @@ watch(
   border: none;
   cursor: pointer;
   color: #2d3748;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .nav-button.prev {
-  left: 0.5rem;
+  left: 0.75rem;
 }
 
 .nav-button.next {
-  right: 0.5rem;
+  right: 0.75rem;
 }
 
 .product-card:hover .nav-button {
@@ -2234,29 +2331,30 @@ watch(
   background-color: white;
   transform: translateY(-50%) scale(1.1);
   color: #3498db;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* Badges */
+/* Badges - Estilos mejorados */
 .badges {
   position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
+  top: 0.75rem;
+  right: 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.35rem;
   z-index: 2;
 }
 
 .badge {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.65rem;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.7rem;
   font-weight: 700;
   border-radius: 9999px;
   text-transform: uppercase;
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
   letter-spacing: 0.5px;
 }
 
@@ -2285,7 +2383,7 @@ watch(
   }
 }
 
-/* Product Actions */
+/* Product Actions - Estilos mejorados */
 .product-actions-bottom {
   position: absolute;
   bottom: 0;
@@ -2293,24 +2391,25 @@ watch(
   right: 0;
   display: flex;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.5rem;
+  gap: 0.75rem;
+  padding: 0.75rem;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease;
   z-index: 2;
+  transform: translateY(10px);
 }
 
-.product-card:hover .product-actions-bottom,
-.product-image:hover .product-actions-bottom {
+.product-card:hover .product-actions-bottom {
   opacity: 1;
+  transform: translateY(0);
 }
 
 .action-button {
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: rgba(255, 255, 255, 0.95);
   border: none;
-  width: 30px;
-  height: 30px;
+  width: 35px;
+  height: 35px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -2318,13 +2417,13 @@ watch(
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(4px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
   color: #2d3748;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
 }
 
 .action-button:hover {
-  transform: scale(1.1);
+  transform: scale(1.15);
 }
 
 .cart-btn:hover {
@@ -2351,12 +2450,14 @@ watch(
   pointer-events: none;
 }
 
-/* Product Info */
-.product-info {
-  padding: 0.75rem;
+/* Product Info - Estilos mejorados */
+.product-info-card {
+  padding: 1rem;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+  background-color: white;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .category {
@@ -2372,7 +2473,7 @@ watch(
 }
 
 .product-name {
-  font-size: 0.875rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: #2d3748;
   line-height: 1.4;
@@ -2382,17 +2483,17 @@ watch(
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  height: 2.5rem;
-  margin-bottom: 0.5rem;
+  height: 2.8rem;
+  margin-bottom: 0.75rem;
 }
 
 .product-card:hover .product-name {
   color: #3498db;
 }
 
-/* Rating */
+/* Rating - Estilos mejorados */
 .rating-container {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .rating {
@@ -2403,7 +2504,7 @@ watch(
 
 .star {
   color: #e2e8f0;
-  font-size: 0.875rem;
+  font-size: 0.95rem;
   cursor: pointer;
   transition: transform 0.2s ease, color 0.2s ease;
 }
@@ -2417,11 +2518,11 @@ watch(
 }
 
 .rating-count {
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   color: #718096;
 }
 
-/* Price */
+/* Price - Estilos mejorados */
 .price-container {
   display: flex;
   justify-content: space-between;
@@ -2432,18 +2533,18 @@ watch(
 .price {
   display: flex;
   align-items: baseline;
-  gap: 0.25rem;
+  gap: 0.5rem;
   flex-wrap: wrap;
 }
 
-.current-price {
+.product-info-card .current-price {
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   color: #2d3748;
 }
 
 .old-price {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: #a0aec0;
   text-decoration: line-through;
 }
@@ -2459,15 +2560,15 @@ watch(
   opacity: 0;
 }
 
-/* Responsive Styles */
+/* Responsive Styles para Productos Similares */
 @media (min-width: 1200px) {
   .products-grid {
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 1.5rem;
   }
 
-  .product-info {
-    padding: 1rem;
+  .product-info-card {
+    padding: 1.25rem;
   }
 
   .product-name {
@@ -2479,24 +2580,24 @@ watch(
     font-size: 1rem;
   }
 
-  .current-price {
-    font-size: 1.1rem;
+  .product-info-card .current-price {
+    font-size: 1.2rem;
   }
 
   .action-button {
-    width: 35px;
-    height: 35px;
-    font-size: 0.875rem;
+    width: 38px;
+    height: 38px;
+    font-size: 0.95rem;
   }
 
   .nav-button {
-    width: 35px;
-    height: 35px;
+    width: 38px;
+    height: 38px;
   }
 
   .badge {
-    padding: 0.35rem 0.7rem;
-    font-size: 0.7rem;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
   }
 }
 
@@ -2520,6 +2621,10 @@ watch(
   .nav-button {
     opacity: 0.7;
   }
+  
+  .similar-products-section {
+    padding: 1.5rem 1rem;
+  }
 }
 
 @media (min-width: 576px) and (max-width: 767px) {
@@ -2530,35 +2635,50 @@ watch(
 
   .product-actions-bottom {
     opacity: 1;
-    padding: 0.4rem;
+    padding: 0.5rem;
   }
 
   .action-button {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
   }
 
   .nav-button {
     opacity: 0.8;
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
+  }
+  
+  .similar-products-section {
+    padding: 1.25rem 0.75rem;
+    margin: 2rem auto;
+  }
+  
+  .product-info-card {
+    padding: 0.75rem;
+  }
+  
+  .product-name {
+    font-size: 0.85rem;
+    height: 2.4rem;
   }
 }
 
 @media (min-width: 480px) and (max-width: 575px) {
   .products-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.5rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
   }
 
-  .product-info {
-    padding: 0.5rem;
+  .product-info-card {
+    padding: 0.75rem;
   }
 
   .product-name {
-    font-size: 0.8rem;
-    height: 2.2rem;
-    margin-bottom: 0.25rem;
+    font-size: 0.85rem;
+    height: 2.4rem;
+    margin-bottom: 0.5rem;
   }
 
   .category {
@@ -2571,94 +2691,58 @@ watch(
   }
 
   .star {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
   }
 
   .rating-count {
-    font-size: 0.6rem;
+    font-size: 0.65rem;
   }
 
-  .current-price {
-    font-size: 0.85rem;
+  .product-info-card .current-price {
+    font-size: 0.9rem;
   }
 
   .old-price {
-    font-size: 0.7rem;
+    font-size: 0.75rem;
   }
 
   .action-button {
-    width: 26px;
-    height: 26px;
-    font-size: 0.7rem;
+    width: 30px;
+    height: 30px;
+    font-size: 0.75rem;
   }
 
   .nav-button {
-    width: 26px;
-    height: 26px;
+    width: 28px;
+    height: 28px;
   }
 
   .badge {
-    padding: 0.2rem 0.4rem;
-    font-size: 0.6rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.65rem;
+  }
+  
+  .similar-products-section {
+    padding: 1rem 0.75rem;
+    margin: 1.5rem auto;
+    border-radius: 1rem;
   }
 }
 
-@media (min-width: 400px) and (max-width: 479px) {
+@media (max-width: 479px) {
   .products-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 0.5rem;
   }
 
-  .product-info {
+  .product-info-card {
     padding: 0.5rem;
   }
 
   .product-name {
     font-size: 0.8rem;
     height: 2.2rem;
-    margin-bottom: 0.25rem;
-  }
-
-  .category {
-    font-size: 0.65rem;
-    margin-bottom: 0.25rem;
-  }
-
-  .rating {
-    gap: 1px;
-  }
-
-  .star {
-    font-size: 0.75rem;
-  }
-
-  .rating-count {
-    font-size: 0.6rem;
-  }
-
-  .current-price {
-    font-size: 0.85rem;
-  }
-
-  .old-price {
-    font-size: 0.7rem;
-  }
-}
-
-@media (max-width: 399px) {
-  .products-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem;
-  }
-
-  .product-info {
-    padding: 0.4rem;
-  }
-
-  .product-name {
-    font-size: 0.75rem;
-    height: 2.1rem;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.35rem;
     -webkit-line-clamp: 2;
   }
 
@@ -2672,35 +2756,52 @@ watch(
   }
 
   .star {
-    font-size: 0.7rem;
+    font-size: 0.75rem;
   }
 
   .rating-count {
-    font-size: 0.55rem;
+    font-size: 0.6rem;
   }
 
-  .current-price {
-    font-size: 0.8rem;
+  .product-info-card .current-price {
+    font-size: 0.85rem;
   }
 
   .old-price {
-    font-size: 0.65rem;
+    font-size: 0.7rem;
   }
 
   .action-button {
-    width: 24px;
-    height: 24px;
-    font-size: 0.65rem;
+    width: 28px;
+    height: 28px;
+    font-size: 0.7rem;
   }
 
   .nav-button {
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
   }
 
   .badge {
-    padding: 0.15rem 0.3rem;
-    font-size: 0.55rem;
+    padding: 0.2rem 0.4rem;
+    font-size: 0.6rem;
+  }
+  
+  .similar-products-section {
+    padding: 1rem 0.5rem;
+    margin: 1rem auto;
+    border-radius: 0.75rem;
+  }
+  
+  .similar-products-section .section-title {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  
+  .similar-products-section .section-title::after {
+    bottom: -5px;
+    width: 50px;
+    height: 2px;
   }
 }
 
@@ -2708,12 +2809,13 @@ watch(
 @media (hover: none) {
   .product-card:hover {
     transform: none;
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
   }
 
   .product-actions-bottom {
     opacity: 1;
     background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.3) 50%, transparent 100%);
+    transform: translateY(0);
   }
 
   .nav-button {
@@ -2759,38 +2861,3 @@ watch(
   }
 }
 </style>
-
-## Mejoras de UI/UX Implementadas
-
-He realizado varias mejoras en la interfaz de usuario y la experiencia de usuario de la página de detalle de producto:
-
-### 1. Mejoras Visuales
-- **Diseño más limpio y moderno**: Eliminé elementos innecesarios y mejoré la jerarquía visual
-- **Animaciones suaves**: Añadí transiciones y animaciones para hacer la interfaz más dinámica
-- **Efectos de hover mejorados**: Los elementos interactivos ahora tienen feedback visual más claro
-- **Esquema de colores coherente**: Utilicé gradientes sutiles y colores que combinan bien
-
-### 2. Mejoras de Usabilidad
-- **Navegación de imágenes mejorada**: Implementé controles de navegación más intuitivos y visibles
-- **Zoom de imagen optimizado**: El zoom ahora es más suave y funciona tanto en escritorio como en dispositivos táctiles
-- **Selección de modelos más clara**: Rediseñé las tarjetas de modelos para destacar mejor la opción seleccionada
-- **Controles de cantidad mejorados**: Los botones de cantidad son más grandes y tienen mejor feedback
-
-### 3. Mejoras Responsivas
-- **Diseño adaptativo mejorado**: La interfaz se ajusta perfectamente a todos los tamaños de pantalla
-- **Modo móvil optimizado**: En dispositivos móviles, se muestra un acordeón para características, colores y modelos
-- **Barra fija en móvil**: Añadí una barra inferior fija para facilitar la compra en dispositivos móviles
-- **Optimización táctil**: Todos los elementos interactivos tienen tamaños adecuados para uso táctil
-
-### 4. Mejoras de Rendimiento
-- **Carga optimizada de imágenes**: Las miniaturas ahora usan el atributo loading="lazy"
-- **Animaciones eficientes**: Utilicé propiedades CSS que aprovechan la aceleración por hardware
-- **Transiciones suaves**: Implementé transiciones con curvas de aceleración naturales
-
-### 5. Mejoras de Accesibilidad
-- **Contraste mejorado**: Aseguré que todos los textos tengan suficiente contraste con el fondo
-- **Estructura semántica**: Utilicé elementos HTML semánticos para mejorar la accesibilidad
-- **Estados de foco visibles**: Todos los elementos interactivos tienen estados de foco claros
-
-Estas mejoras hacen que la página de detalle de producto sea más atractiva, fácil de usar y accesible para todos los
-usuarios, independientemente del dispositivo que utilicen.

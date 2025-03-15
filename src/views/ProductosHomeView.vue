@@ -72,15 +72,29 @@
       <div v-for="(categoria, index) in filteredCategorias" :key="categoria.id" class="category-section"
         :style="{ '--index': index }">
         <!-- Full-width Banner -->
-        <div class="category-banner" @click="viewAllProducts(categoria.id)">
-          <img :src="categoria.banner" :alt="categoria.nombre" loading="lazy" />
-          <div class="banner-overlay">
-            <div class="banner-content">
-              <h2>
-                {{ categoria.nombre }}
-              </h2>
-              <p>{{ categoria.descripcion }}</p>
-              <button class="banner-cta">Explorar Colección</button>
+        <div class="category-banner-container">
+          <div class="category-banner" @click="viewAllProducts(categoria.id)">
+            <img :src="categoria.banner" :alt="categoria.nombre" loading="lazy" />
+            <div class="banner-overlay">
+              <div class="banner-content">
+                <h2 class="banner-title">{{ categoria.nombre }}</h2>
+                <div class="banner-description-container">
+                  <p class="banner-description">
+                    {{ getTruncatedDescription(categoria.descripcion) }}
+                    <button 
+                      v-if="isDescriptionTruncated(categoria.descripcion)" 
+                      class="read-more-btn" 
+                      @click.stop="showDescriptionModal(categoria)"
+                    >
+                      Ver más
+                    </button>
+                  </p>
+                </div>
+                <button class="banner-cta">
+                  <span>Ver Colección</span>
+                  <i class="fas fa-arrow-right"></i>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -268,6 +282,28 @@
         {{ page }}
       </button>
     </div>
+    
+    <!-- Modal para descripción completa (movido fuera del bucle) -->
+    <div class="description-modal" v-if="isModalOpen && selectedCategoria" @click="closeModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>{{ selectedCategoria.nombre }}</h3>
+          <button class="close-btn" @click="closeModal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>{{ selectedCategoria.descripcion }}</p>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn" @click="closeModal">Cerrar</button>
+          <button class="modal-btn primary" @click="viewCollectionFromModal(selectedCategoria.id)">
+            <span>Ver Colección</span>
+            <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -302,6 +338,46 @@ const filtroCatalogo = ref('');
 const searchQuery = ref('');
 const selectedCategory = ref('');
 const viewMode = ref('categories'); // 'categories' o 'products'
+
+// Estados para el modal de descripción
+const isModalOpen = ref(false);
+const selectedCategoria = ref(null);
+const maxDescriptionLength = 120; // Longitud máxima para mostrar en el banner
+
+// Métodos para la descripción truncada
+const getTruncatedDescription = (descripcion) => {
+  if (!descripcion) return '';
+  
+  if (descripcion.length > maxDescriptionLength) {
+    return descripcion.substring(0, maxDescriptionLength) + '...';
+  }
+  
+  return descripcion;
+};
+
+// Verificar si la descripción está truncada
+const isDescriptionTruncated = (descripcion) => {
+  return descripcion && descripcion.length > maxDescriptionLength;
+};
+
+// Mostrar modal con descripción completa
+const showDescriptionModal = (categoria) => {
+  selectedCategoria.value = categoria;
+  isModalOpen.value = true;
+  document.body.classList.add('modal-open'); // Prevenir scroll del body
+};
+
+// Cerrar modal
+const closeModal = () => {
+  isModalOpen.value = false;
+  document.body.classList.remove('modal-open');
+};
+
+// Ver colección (desde el modal)
+const viewCollectionFromModal = (categoryId) => {
+  closeModal();
+  viewAllProducts(categoryId);
+};
 
 // Obtener categorías con productos
 const listarCategorias = async (page = 1) => {
@@ -514,6 +590,13 @@ onMounted(async () => {
   categorias.value = categoriasActivas;
   listarCategorias();
   indexRatingUser();
+  
+  // Cerrar modal con tecla Escape
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isModalOpen.value) {
+      closeModal();
+    }
+  });
 });
 </script>
 
@@ -763,73 +846,318 @@ onMounted(async () => {
   }
 }
 
-/* Full-width Responsive Banner */
+/* Container para mantener proporciones consistentes */
+.category-banner-container {
+  margin-bottom: 2rem;
+  width: 100%;
+  position: relative;
+}
+
+/* Banner principal con efectos mejorados */
 .category-banner {
   position: relative;
-  height: clamp(300px, 50vh, 500px);
+  height: clamp(250px, 40vh, 500px);
   cursor: pointer;
   overflow: hidden;
   border-radius: 12px;
-  margin-bottom: 2rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.category-banner:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
 }
 
 .category-banner img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.5s ease;
+  transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
 .category-banner:hover img {
   transform: scale(1.05);
 }
 
+/* Overlay con gradiente mejorado y animaciones */
 .banner-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, rgba(0, 0, 0, 0.7), transparent);
-  padding: 2rem;
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.6) 30%,
+    rgba(0, 0, 0, 0.3) 60%,
+    rgba(0, 0, 0, 0) 100%
+  );
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  align-items: center;
   color: #fff;
-}
-
-.banner-content {
-  max-width: 50%;
-  color: #ffffff;
   padding: 2rem;
+  transition: background 0.3s ease;
 }
 
-.banner-overlay h2 {
-  font-size: clamp(1.8rem, 4vw, 3rem);
-  font-weight: 700;
+.category-banner:hover .banner-overlay {
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.85) 0%,
+    rgba(0, 0, 0, 0.65) 30%,
+    rgba(0, 0, 0, 0.35) 60%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
+/* Contenido del banner con animaciones */
+.banner-content {
+  max-width: 600px;
+  transform: translateY(0);
+  opacity: 1;
+  transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+.category-banner:hover .banner-content {
+  transform: translateY(-5px);
+}
+
+.banner-title {
+  font-size: clamp(1.75rem, 5vw, 3.5rem);
+  font-weight: 800;
   margin-bottom: 1rem;
-  line-height: 1.2;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  position: relative;
+  display: inline-block;
 }
 
-.banner-overlay p {
+.banner-title::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background-color: #3498db;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.category-banner:hover .banner-title::after {
+  transform: scaleX(1);
+}
+
+.banner-description-container {
+  position: relative;
+}
+
+.banner-description {
   font-size: clamp(1rem, 2vw, 1.25rem);
   max-width: 60ch;
   margin-bottom: 1.5rem;
+  line-height: 1.6;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  opacity: 0.9;
 }
 
-.banner-cta {
-  padding: 0.85rem 2rem;
-  background: #38a169;
-  color: #ffffff;
+.read-more-btn {
+  background: none;
   border: none;
-  border-radius: 8px;
+  color: #3498db;
   font-weight: 600;
-  font-size: 1rem;
-  transition: all 0.3s ease;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 0.25rem;
+  font-size: 0.9em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  transition: color 0.2s ease;
+  text-decoration: underline;
+  display: inline;
+}
+
+.read-more-btn:hover {
+  color: #2980b9;
+}
+
+/* Botón CTA mejorado */
+.banner-cta {
+  padding: 0.75rem 1.5rem;
+  background: #3498db;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: clamp(0.875rem, 1.5vw, 1rem);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   width: fit-content;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+}
+
+.banner-cta::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #2980b9;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  z-index: -1;
 }
 
 .banner-cta:hover {
-  background: #2f855a;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+}
+
+.banner-cta:hover::before {
+  transform: translateX(0);
+}
+
+.banner-cta i {
+  transition: transform 0.3s ease;
+}
+
+.banner-cta:hover i {
+  transform: translateX(3px);
+}
+
+/* Modal de descripción */
+.description-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 1rem;
+  backdrop-filter: blur(5px);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease;
+  overflow: hidden;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+  padding: 1.25rem;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #666;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  color: #333;
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.modal-footer {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.modal-btn {
+  padding: 0.6rem 1.25rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid #ddd;
+  background-color: white;
+  color: #333;
+}
+
+.modal-btn:hover {
+  background-color: #f5f5f5;
+}
+
+.modal-btn.primary {
+  background-color: #3498db;
+  color: white;
+  border-color: #3498db;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modal-btn.primary:hover {
+  background-color: #2980b9;
+  border-color: #2980b9;
+}
+
+.modal-btn.primary i {
+  transition: transform 0.2s ease;
+}
+
+.modal-btn.primary:hover i {
+  transform: translateX(3px);
+}
+
+/* Clase para prevenir scroll del body cuando el modal está abierto */
+:global(.modal-open) {
+  overflow: hidden;
 }
 
 /* Category Header */
@@ -1395,6 +1723,54 @@ onMounted(async () => {
   .nav-button {
     opacity: 0.7;
   }
+  
+  .category-banner {
+    height: clamp(200px, 50vh, 300px);
+  }
+  
+  .banner-overlay {
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.8) 0%,
+      rgba(0, 0, 0, 0.6) 40%,
+      rgba(0, 0, 0, 0.3) 70%,
+      rgba(0, 0, 0, 0) 100%
+    );
+    align-items: flex-end;
+    padding: 1.5rem;
+  }
+  
+  .category-banner:hover .banner-overlay {
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.85) 0%,
+      rgba(0, 0, 0, 0.65) 40%,
+      rgba(0, 0, 0, 0.35) 70%,
+      rgba(0, 0, 0, 0) 100%
+    );
+  }
+  
+  .banner-content {
+    max-width: 100%;
+  }
+  
+  .banner-title {
+    font-size: clamp(1.5rem, 7vw, 2.5rem);
+  }
+  
+  .banner-description {
+    font-size: clamp(0.875rem, 4vw, 1rem);
+    margin-bottom: 1rem;
+  }
+  
+  .banner-cta {
+    padding: 0.6rem 1.25rem;
+    font-size: 0.875rem;
+  }
+  
+  .modal-content {
+    max-width: 90%;
+  }
 }
 
 @media (min-width: 576px) and (max-width: 767px) {
@@ -1417,6 +1793,54 @@ onMounted(async () => {
     opacity: 0.8;
     width: 28px;
     height: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .category-banner {
+    height: 180px;
+    border-radius: 8px;
+  }
+  
+  .banner-overlay {
+    padding: 1rem;
+  }
+  
+  .banner-title {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .banner-description {
+    font-size: 0.8rem;
+    margin-bottom: 0.75rem;
+    -webkit-line-clamp: 2;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .banner-cta {
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+  }
+  
+  .modal-header h3 {
+    font-size: 1.25rem;
+  }
+  
+  .modal-body {
+    padding: 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .modal-footer {
+    padding: 0.75rem 1rem;
+  }
+  
+  .modal-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
   }
 }
 
@@ -1602,28 +2026,60 @@ onMounted(async () => {
   .product-card:active {
     transform: scale(0.98);
   }
+  
+  .category-banner:hover {
+    transform: none;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  }
+  
+  .category-banner:hover img {
+    transform: scale(1);
+  }
+  
+  .banner-title::after {
+    transform: scaleX(1);
+    width: 40px;
+  }
+  
+  .banner-cta {
+    background: linear-gradient(to right, #3498db, #2980b9);
+  }
+  
+  .banner-cta::before {
+    display: none;
+  }
+  
+  /* Añadir efecto de pulso para indicar interactividad */
+  .banner-cta {
+    animation: pulse 2s infinite;
+  }
 }
 
 /* Accessibility Improvements */
 @media (prefers-reduced-motion: reduce) {
-  .product-card {
+  .product-card,
+  .category-banner,
+  .modal-content,
+  .description-modal {
     animation: none;
     opacity: 1;
     transform: none;
   }
 
-  .product-card:hover {
+  .product-card:hover,
+  .category-banner:hover,
+  .banner-cta:hover,
+  .action-button:hover,
+  .nav-button:hover {
     transform: none;
   }
 
-  .product-card:hover .product-image img {
+  .product-card:hover .product-image img,
+  .category-banner:hover img {
     transform: none;
   }
 
-  .spinner {
-    animation: none;
-  }
-
+  .spinner,
   .badge-new {
     animation: none;
   }
@@ -1633,13 +2089,22 @@ onMounted(async () => {
   .banner-cta:hover,
   .reset-filters-button:hover,
   .page-button:hover,
-  .add-to-cart-button:hover {
+  .add-to-cart-button:hover,
+  .modal-btn:hover {
     transform: none;
   }
 
   .fade-enter-active,
   .fade-leave-active {
     transition: none;
+  }
+  
+  .banner-title::after,
+  .banner-cta::before,
+  .banner-cta i,
+  .modal-btn.primary i {
+    transition: none;
+    transform: none;
   }
 }
 </style>

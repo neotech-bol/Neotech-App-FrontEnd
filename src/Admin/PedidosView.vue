@@ -7,29 +7,30 @@
           <i class="fas fa-shopping-cart me-2"></i>Gestión de Pedidos
         </h2>
         <div class="d-flex flex-wrap gap-2">
+          <!-- Dropdown para exportar - Implementación manual -->
           <div class="dropdown">
-            <button class="btn btn-primary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            <button class="btn btn-primary dropdown-toggle" type="button" @click="toggleExportDropdown">
               <i class="fas fa-file-export me-2"></i>Exportar
             </button>
-            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+            <ul class="dropdown-menu dropdown-menu-end" :class="{ 'show': showExportDropdown }" style="position: absolute;">
               <li>
-                <button class="dropdown-item" @click="fetchOrders()">
+                <button class="dropdown-item" @click="fetchOrders">
                   <i class="fas fa-file-excel me-2 text-success"></i>Excel (Todos)
                 </button>
               </li>
               <li>
-                <button class="dropdown-item" @click="descargarPdfPedidosCompletado()">
+                <button class="dropdown-item" @click="descargarPdfPedidosCompletado">
                   <i class="fas fa-file-pdf me-2 text-danger"></i>PDF (Completados)
                 </button>
               </li>
               <li>
-                <button class="dropdown-item" @click="descargarPdfPedidosEnProceso()">
+                <button class="dropdown-item" @click="descargarPdfPedidosEnProceso">
                   <i class="fas fa-file-pdf me-2 text-warning"></i>PDF (En proceso)
                 </button>
               </li>
             </ul>
           </div>
-          <button class="btn btn-outline-primary" @click="listOrders()">
+          <button class="btn btn-outline-primary" @click="listOrders">
             <i class="fas fa-sync-alt me-2"></i>Actualizar
           </button>
         </div>
@@ -71,7 +72,7 @@
           <div class="d-flex justify-content-between align-items-center mb-3">
             <p class="text-muted mb-0">
               <i class="fas fa-list-ul me-1"></i>
-              Mostrando {{ filteredOrders.length }} de {{ datos.length }} pedidos
+              Mostrando {{ datos.length }} de {{ pagination.total }} pedidos
             </p>
             <div class="btn-group">
               <button class="btn btn-sm" :class="viewMode === 'table' ? 'btn-primary' : 'btn-outline-primary'" @click="viewMode = 'table'">
@@ -85,7 +86,7 @@
         </div>
 
         <!-- Mensaje cuando no hay resultados -->
-        <div v-if="filteredOrders.length === 0 && datos.length > 0" class="text-center py-5">
+        <div v-if="datos.length === 0 && pagination.total > 0" class="text-center py-5">
           <i class="fas fa-search fa-3x text-muted mb-3"></i>
           <h5 class="text-muted">No se encontraron pedidos</h5>
           <p class="text-muted">Intenta con otra búsqueda o cambia los filtros</p>
@@ -95,7 +96,7 @@
         </div>
 
         <!-- Empty state -->
-        <div v-if="datos.length === 0" class="text-center py-5">
+        <div v-if="pagination.total === 0" class="text-center py-5">
           <div class="mb-3">
             <i class="fas fa-shopping-cart fa-3x text-muted"></i>
           </div>
@@ -104,7 +105,7 @@
         </div>
 
         <!-- Table view -->
-        <div class="table-responsive" v-if="filteredOrders.length > 0 && (viewMode === 'table' || windowWidth >= 768)">
+        <div class="table-responsive" v-if="datos.length > 0 && (viewMode === 'table' || windowWidth >= 768)">
           <table class="table table-hover align-middle mb-0">
             <thead class="bg-light">
               <tr class="text-center">
@@ -154,7 +155,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="item in filteredOrders" :key="item.id" class="text-center">
+              <tr v-for="item in datos" :key="item.id" class="text-center">
                 <td>{{ item.id }}</td>
                 <td>
                   <div class="d-flex align-items-center">
@@ -203,9 +204,9 @@
         </div>
 
         <!-- Cards view -->
-        <div v-if="filteredOrders.length > 0 && (viewMode === 'cards' || windowWidth < 768)">
+        <div v-if="datos.length > 0 && (viewMode === 'cards' || windowWidth < 768)">
           <div class="row g-3 p-3">
-            <div class="col-md-6 col-lg-4" v-for="item in filteredOrders" :key="item.id">
+            <div class="col-md-6 col-lg-4" v-for="item in datos" :key="item.id">
               <div class="card h-100 border-0 shadow-sm hover-card">
                 <div class="card-header bg-light d-flex justify-content-between align-items-center">
                   <div class="d-flex align-items-center">
@@ -265,6 +266,40 @@
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- Paginación -->
+        <div class="d-flex justify-content-center my-4" v-if="pagination.last_page > 1">
+          <nav aria-label="Navegación de pedidos">
+            <ul class="pagination">
+              <li class="page-item" :class="{ disabled: pagination.current_page === 1 }">
+                <a class="page-link" href="#" @click.prevent="changePage(1)">
+                  <i class="fas fa-angle-double-left"></i>
+                </a>
+              </li>
+              <li class="page-item" :class="{ disabled: pagination.current_page === 1 }">
+                <a class="page-link" href="#" @click.prevent="changePage(pagination.current_page - 1)">
+                  <i class="fas fa-angle-left"></i>
+                </a>
+              </li>
+              
+              <li class="page-item" v-for="page in paginationRange" :key="page" 
+                  :class="{ active: pagination.current_page === page }">
+                <a class="page-link" href="#" @click.prevent="changePage(page)">{{ page }}</a>
+              </li>
+              
+              <li class="page-item" :class="{ disabled: pagination.current_page === pagination.last_page }">
+                <a class="page-link" href="#" @click.prevent="changePage(pagination.current_page + 1)">
+                  <i class="fas fa-angle-right"></i>
+                </a>
+              </li>
+              <li class="page-item" :class="{ disabled: pagination.current_page === pagination.last_page }">
+                <a class="page-link" href="#" @click.prevent="changePage(pagination.last_page)">
+                  <i class="fas fa-angle-double-right"></i>
+                </a>
+              </li>
+            </ul>
+          </nav>
         </div>
       </div>
     </div>
@@ -334,6 +369,14 @@
                       <li class="list-group-item d-flex justify-content-between px-0">
                         <span class="text-muted"><i class="fas fa-id-card me-2"></i>CI:</span>
                         <span class="fw-medium">{{ detailOrder.user?.ci }}</span>
+                      </li>
+                      <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted"><i class="fas fa-globe me-2"></i>País:</span>
+                        <span class="fw-medium">Bolivia</span>
+                      </li>
+                      <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted"><i class="fas fa-map me-2"></i>Departamento:</span>
+                        <span class="fw-medium text-capitalize">{{ detailOrder.user?.departamento || 'No especificado' }}</span>
                       </li>
                       <li class="list-group-item px-0">
                         <span class="text-muted"><i class="fas fa-map-marker-alt me-2"></i>Dirección:</span>
@@ -517,8 +560,7 @@
     </div>
     
     <!-- Toast de notificación -->
-<!-- Toast de notificación -->
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
       <div id="liveToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
         <div class="toast-header" :class="toastType === 'success' ? 'bg-success text-white' : 'bg-danger text-white'">
           <i class="fas" :class="toastType === 'success' ? 'fa-check-circle me-2' : 'fa-exclamation-circle me-2'"></i>
@@ -555,6 +597,16 @@ const sortDirection = ref('desc');
 const toastType = ref('success');
 const toastTitle = ref('');
 const toastMessage = ref('');
+const currentPage = ref(1);
+const showExportDropdown = ref(false);
+const pagination = ref({
+  current_page: 1,
+  last_page: 1,
+  per_page: 10,
+  total: 0,
+  from: 0,
+  to: 0
+});
 
 let orderDetailModal = null;
 let voucherModal = null;
@@ -565,61 +617,30 @@ const actualizarAnchoPantalla = () => {
   windowWidth.value = window.innerWidth;
 };
 
-// Computed
-const filteredOrders = computed(() => {
-  // Primero filtrar por búsqueda
-  let result = datos.value;
-  
-  if (searchText.value) {
-    const search = searchText.value.toLowerCase();
-    result = result.filter(order => {
-      return (
-        (order.user?.nombre + ' ' + order.user?.apellido).toLowerCase().includes(search) ||
-        order.user?.email.toLowerCase().includes(search) ||
-        order.id.toString().includes(search)
-      );
-    });
+// Función para controlar el dropdown de exportación
+const toggleExportDropdown = () => {
+  showExportDropdown.value = !showExportDropdown.value;
+};
+
+// Cerrar el dropdown cuando se hace clic fuera de él
+const closeDropdownOnClickOutside = (event) => {
+  if (showExportDropdown.value && !event.target.closest('.dropdown')) {
+    showExportDropdown.value = false;
   }
-  
-  // Filtrar por estado
-  if (statusFilter.value !== 'all') {
-    const isPending = statusFilter.value === 'pending';
-    result = result.filter(order => order.estado === !isPending);
+};
+
+// Computed para el rango de paginación
+const paginationRange = computed(() => {
+  const range = [];
+  const maxVisiblePages = 5;
+  const startPage = Math.max(1, pagination.value.current_page - Math.floor(maxVisiblePages / 2));
+  const endPage = Math.min(pagination.value.last_page, startPage + maxVisiblePages - 1);
+
+  for (let i = startPage; i <= endPage; i++) {
+    range.push(i);
   }
-  
-  // Ordenar
-  return result.sort((a, b) => {
-    let valueA, valueB;
-    
-    switch (sortField.value) {
-      case 'id':
-        valueA = a.id;
-        valueB = b.id;
-        break;
-      case 'name':
-        valueA = (a.user?.nombre + ' ' + a.user?.apellido).toLowerCase();
-        valueB = (b.user?.nombre + ' ' + b.user?.apellido).toLowerCase();
-        break;
-      case 'products':
-        valueA = a.productos?.length || 0;
-        valueB = b.productos?.length || 0;
-        break;
-      case 'amount':
-        valueA = parseFloat(a.total_amount) || 0;
-        valueB = parseFloat(b.total_amount) || 0;
-        break;
-      case 'created_at':
-      default:
-        valueA = new Date(a.created_at).getTime();
-        valueB = new Date(b.created_at).getTime();
-    }
-    
-    if (sortDirection.value === 'asc') {
-      return valueA > valueB ? 1 : -1;
-    } else {
-      return valueA < valueB ? 1 : -1;
-    }
-  });
+
+  return range;
 });
 
 // Lifecycle hooks
@@ -627,6 +648,9 @@ onMounted(() => {
   orderDetailModal = new Modal(document.getElementById('orderDetailModal'));
   voucherModal = new Modal(document.getElementById('voucherModal'));
   liveToast = new Toast(document.getElementById('liveToast'));
+  
+  // Agregar event listener para cerrar el dropdown al hacer clic fuera
+  document.addEventListener('click', closeDropdownOnClickOutside);
   
   listOrders();
   loadModels();
@@ -639,8 +663,9 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  // Eliminar event listener cuando el componente se desmonta
+  // Eliminar event listeners cuando el componente se desmonta
   window.removeEventListener('resize', actualizarAnchoPantalla);
+  document.removeEventListener('click', closeDropdownOnClickOutside);
 });
 
 // Watch para actualizar el ordenamiento cuando cambia sortBy
@@ -668,13 +693,35 @@ const updateSortFieldAndDirection = () => {
 // Métodos
 const listOrders = async () => {
   try {
-    const { data } = await indexPedidos();
+    const { data } = await indexPedidos(
+      searchText.value,
+      statusFilter.value,
+      sortField.value,
+      sortDirection.value,
+      currentPage.value
+    );
+    
     datos.value = data.datos;
+    
+    // Actualizar información de paginación
+    if (data.pagination) {
+      pagination.value = data.pagination;
+    } else {
+      console.warn('Datos de paginación no encontrados en la respuesta de la API');
+    }
+    
     showToast('success', 'Datos cargados', 'Los pedidos se han cargado correctamente');
   } catch (error) {
     console.error('Error al cargar pedidos:', error);
     showToast('error', 'Error', 'No se pudieron cargar los pedidos');
   }
+};
+
+const changePage = async (page) => {
+  if (page < 1 || page > pagination.value.last_page) return;
+  
+  currentPage.value = page;
+  await listOrders();
 };
 
 const formatDate = (dateString) => {
@@ -754,6 +801,7 @@ const completeOrderPending = async (id) => {
 
 const fetchOrders = async () => {
   try {
+    showExportDropdown.value = false; // Cerrar el dropdown después de hacer clic
     const response = await generateExcel();
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
@@ -783,6 +831,7 @@ const fetchOrdersPDFId = async (id) => {
 
 const descargarPdfPedidosCompletado = async () => {
   try {
+    showExportDropdown.value = false; // Cerrar el dropdown después de hacer clic
     const response = await pdfPedidosCompletados();
     handlePdfResponse(response, 'pedidos_completados.pdf');
   } catch (error) {
@@ -793,6 +842,7 @@ const descargarPdfPedidosCompletado = async () => {
 
 const descargarPdfPedidosEnProceso = async () => {
   try {
+    showExportDropdown.value = false; // Cerrar el dropdown después de hacer clic
     const response = await pdfPedidosPendientes();
     handlePdfResponse(response, 'pedidos_en_proceso.pdf');
   } catch (error) {
@@ -901,11 +951,13 @@ const getAvatarColor = (nombre) => {
 // Funciones para filtros y ordenamiento
 const applyFilters = () => {
   updateSortFieldAndDirection();
-  // Los filtros se aplican automáticamente a través del computed
+  currentPage.value = 1; // Resetear a la primera página al aplicar filtros
+  listOrders(); // Cargar datos con los nuevos filtros
 };
 
 const clearSearch = () => {
   searchText.value = '';
+  applyFilters();
 };
 
 const clearFilters = () => {
@@ -913,6 +965,8 @@ const clearFilters = () => {
   statusFilter.value = 'all';
   sortBy.value = 'date_desc';
   updateSortFieldAndDirection();
+  currentPage.value = 1;
+  listOrders();
 };
 
 const toggleSort = (field) => {
@@ -931,6 +985,9 @@ const toggleSort = (field) => {
   } else if (field === 'amount') {
     sortBy.value = sortDirection.value === 'asc' ? 'amount_asc' : 'amount_desc';
   }
+  
+  // Aplicar el nuevo ordenamiento
+  listOrders();
 };
 
 const getSortIcon = (field) => {
@@ -1089,6 +1146,25 @@ const showToast = (type, title, message) => {
   color: white;
 }
 
+/* Estilos para paginación */
+.pagination {
+  margin-bottom: 0;
+}
+
+.page-item.active .page-link {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.page-link {
+  color: #0d6efd;
+}
+
+.page-link:hover {
+  color: #0a58ca;
+  background-color: #e9ecef;
+}
+
 /* Animaciones */
 .btn {
   transition: all 0.2s ease-in-out;
@@ -1106,4 +1182,54 @@ const showToast = (type, title, message) => {
 .toast-header .btn-close {
   filter: brightness(0) invert(1);
 }
+
+/* Estilos para el dropdown personalizado */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 1000;
+  display: none;
+  min-width: 10rem;
+  padding: 0.5rem 0;
+  margin: 0.125rem 0 0;
+  font-size: 1rem;
+  color: #212529;
+  text-align: left;
+  list-style: none;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 0.25rem;
+}
+
+.dropdown-menu.show {
+  display: block;
+}
+
+.dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 0.25rem 1.5rem;
+  clear: both;
+  font-weight: 400;
+  color: #212529;
+  text-align: inherit;
+  white-space: nowrap;
+  background-color: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.dropdown-item:hover, .dropdown-item:focus {
+  color: #16181b;
+  text-decoration: none;
+  background-color: #f8f9fa;
+}
 </style>
+

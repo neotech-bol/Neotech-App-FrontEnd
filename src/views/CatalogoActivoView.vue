@@ -19,12 +19,21 @@
     <div v-else class="catalog-content">
       <div v-for="catalog in datos" :key="catalog.id" class="catalog-section">
         <div v-for="(categoria, index) in catalog.categorias" :key="index" class="category-wrapper">
-          <!-- Banner -->
+          <!-- Banner con descripción truncada -->
           <div class="category-banner" @click="viewCollection">
             <img :src="categoria.banner" :alt="`Banner de ${categoria.nombre}`" loading="lazy" />
             <div class="banner-overlay">
               <h2>{{ categoria.nombre }}</h2>
-              <p>{{ categoria.descripcion }}</p>
+              <p>
+                {{ getTruncatedDescription(categoria.descripcion) }}
+                <button 
+                  v-if="isDescriptionTruncated(categoria.descripcion)" 
+                  class="read-more-btn" 
+                  @click.stop="showDescriptionModal(categoria)"
+                >
+                  Ver más
+                </button>
+              </p>
               <button class="banner-cta">Ver Colección</button>
             </div>
           </div>
@@ -138,6 +147,28 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal para descripción completa -->
+    <div class="description-modal" v-if="isModalOpen && selectedCategoria" @click="closeModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>{{ selectedCategoria.nombre }}</h3>
+          <button class="close-btn" @click="closeModal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>{{ selectedCategoria.descripcion }}</p>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn" @click="closeModal">Cerrar</button>
+          <button class="modal-btn primary" @click="viewCollectionFromModal(selectedCategoria.id)">
+            <span>Ver Colección</span>
+            <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -159,12 +190,59 @@ const loading = ref(true);
 const error = ref(null);
 const favoriteProducts = ref([]);
 
+// Estados para el modal de descripción
+const isModalOpen = ref(false);
+const selectedCategoria = ref(null);
+const maxDescriptionLength = 120; // Longitud máxima para mostrar en el banner
+
 const idCatalogoActivo = ref(router.currentRoute.value.params.idCatalogoActivo);
 
 onMounted(() => {
   listarCatalogo();
   indexRatingUser();
+
+  // Cerrar modal con tecla Escape
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isModalOpen.value) {
+      closeModal();
+    }
+  });
 });
+
+// Métodos para la descripción truncada
+const getTruncatedDescription = (descripcion) => {
+  if (!descripcion) return '';
+
+  if (descripcion.length > maxDescriptionLength) {
+    return descripcion.substring(0, maxDescriptionLength) + '...';
+  }
+
+  return descripcion;
+};
+
+// Verificar si la descripción está truncada
+const isDescriptionTruncated = (descripcion) => {
+  return descripcion && descripcion.length > maxDescriptionLength;
+};
+
+// Mostrar modal con descripción completa
+const showDescriptionModal = (categoria) => {
+  selectedCategoria.value = categoria;
+  isModalOpen.value = true;
+  document.body.classList.add('modal-open'); // Prevenir scroll del body
+};
+
+// Cerrar modal
+const closeModal = () => {
+  isModalOpen.value = false;
+  document.body.classList.remove('modal-open');
+};
+
+// Ver colección (desde el modal)
+const viewCollectionFromModal = (categoryId) => {
+  closeModal();
+  // Implementar lógica para ver la colección
+};
 
 const listarCatalogo = async () => {
   loading.value = true;
@@ -350,6 +428,25 @@ watch(() => router.currentRoute.value.params.idCatalogoActivo, (newId) => {
   margin-bottom: 1.5rem;
 }
 
+.read-more-btn {
+  background: none;
+  border: none;
+  color: #3498db;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 0.25rem;
+  font-size: 0.9em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  transition: color 0.2s ease;
+  text-decoration: underline;
+  display: inline;
+}
+
+.read-more-btn:hover {
+  color: #2980b9;
+}
+
 .banner-cta {
   padding: 0.85rem 2rem;
   background: #38a169;
@@ -366,6 +463,138 @@ watch(() => router.currentRoute.value.params.idCatalogoActivo, (newId) => {
   background: #2f855a;
   transform: translateY(-2px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Modal de descripción */
+.description-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 1rem;
+  backdrop-filter: blur(5px);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease;
+  overflow: hidden;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+  padding: 1.25rem;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #666;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  color: #333;
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.modal-footer {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.modal-btn {
+  padding: 0.6rem 1.25rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid #ddd;
+  background-color: white;
+  color: #333;
+}
+
+.modal-btn:hover {
+  background-color: #f5f5f5;
+}
+
+.modal-btn.primary {
+  background-color: #3498db;
+  color: white;
+  border-color: #3498db;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modal-btn.primary:hover {
+  background-color: #2980b9;
+  border-color: #2980b9;
+}
+
+.modal-btn.primary i {
+  transition: transform 0.2s ease;
+}
+
+.modal-btn.primary:hover i {
+  transform: translateX(3px);
+}
+
+/* Clase para prevenir scroll del body cuando el modal está abierto */
+:global(.modal-open) {
+  overflow: hidden;
 }
 
 /* Category Header */

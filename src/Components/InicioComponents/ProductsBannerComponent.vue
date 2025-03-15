@@ -15,28 +15,54 @@
       </button>
     </div>
 
-    <!-- Cache Indicator -->
- <!--    <div v-else-if="fromCache" class="cache-indicator">
-      <div class="cache-info">
-        <i class="fas fa-database"></i>
-        Datos cargados desde caché
-      </div>
-      <button @click="refreshCatalogo" class="refresh-button">
-        <i class="fas fa-sync-alt"></i> Actualizar datos
-      </button>
-    </div> -->
-
     <!-- Main Catalog Content -->
     <div v-else class="catalog-content">
       <div v-for="catalog in datos" :key="catalog.id" class="catalog-section">
         <div v-for="(categoria, index) in catalog.categorias" :key="index" class="category-wrapper">
           <!-- Banner -->
-          <div class="category-banner" @click="viewCollection">
-            <img :src="categoria.banner" :alt="`Banner de ${categoria.nombre}`" loading="lazy" />
-            <div class="banner-overlay">
-              <h2>{{ categoria.nombre }}</h2>
-              <p>{{ categoria.descripcion }}</p>
-              <button class="banner-cta">Ver Colección</button>
+          <div class="category-banner-container">
+            <div class="category-banner" @click="viewCollection">
+              <img :src="categoria.banner" :alt="`Banner de ${categoria.nombre}`" loading="lazy" />
+              <div class="banner-overlay">
+                <div class="banner-content">
+                  <h2 class="banner-title">{{ categoria.nombre }}</h2>
+                  <div class="banner-description-container">
+                    <p class="banner-description">
+                      {{ getTruncatedDescription(categoria.descripcion) }}
+                      <button v-if="isDescriptionTruncated(categoria.descripcion)" class="read-more-btn"
+                        @click.stop="showDescriptionModal(categoria)">
+                        Ver más
+                      </button>
+                    </p>
+                  </div>
+                  <button class="banner-cta">
+                    <span>Ver Colección</span>
+                    <i class="fas fa-arrow-right"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Modal para descripción completa -->
+            <div class="description-modal" v-if="isModalOpen && selectedCategoria" @click="closeModal">
+              <div class="modal-content" @click.stop>
+                <div class="modal-header">
+                  <h3>{{ selectedCategoria.nombre }}</h3>
+                  <button class="close-btn" @click="closeModal">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <p>{{ selectedCategoria.descripcion }}</p>
+                </div>
+                <div class="modal-footer">
+                  <button class="modal-btn" @click="closeModal">Cerrar</button>
+                  <button class="modal-btn primary" @click="viewCollectionFromModal">
+                    <span>Ver Colección</span>
+                    <i class="fas fa-arrow-right"></i>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -82,15 +108,18 @@
 
                   <!-- Product Actions -->
                   <div class="product-actions-bottom">
-                    <button class="action-button cart-btn" @click.stop="addToCart(product)" aria-label="Agregar al carrito"
-                      :class="{ 'adding': addingToCart === product.id }">
-                      <i class="fas" :class="addingToCart === product.id ? 'fa-spinner fa-spin' : 'fa-shopping-cart'"></i>
+                    <button class="action-button cart-btn" @click.stop="addToCart(product)"
+                      aria-label="Agregar al carrito" :class="{ 'adding': addingToCart === product.id }">
+                      <i class="fas"
+                        :class="addingToCart === product.id ? 'fa-spinner fa-spin' : 'fa-shopping-cart'"></i>
                     </button>
-                    <button class="action-button view-btn" @click.stop="verProducto(product.id)" aria-label="Ver producto">
+                    <button class="action-button view-btn" @click.stop="verProducto(product.id)"
+                      aria-label="Ver producto">
                       <i class="fas fa-eye"></i>
                     </button>
                     <button class="action-button fav-btn" @click.stop="fororiteUser(product.id)"
-                      aria-label="Agregar a favoritos" :class="{ 'in-favorites': favoriteProducts.includes(product.id) }">
+                      aria-label="Agregar a favoritos"
+                      :class="{ 'in-favorites': favoriteProducts.includes(product.id) }">
                       <i class="fas fa-heart"></i>
                     </button>
                   </div>
@@ -119,7 +148,8 @@
                 <div class="price-container">
                   <div class="price">
                     <span class="current-price">{{ formatPrice(product.precio) }}</span>
-                    <span v-if="product.precio_anterior" class="old-price">{{ formatPrice(product.precio_anterior) }}</span>
+                    <span v-if="product.precio_anterior" class="old-price">{{ formatPrice(product.precio_anterior)
+                    }}</span>
                   </div>
                 </div>
               </div>
@@ -164,10 +194,55 @@ const error = ref(null);
 const fromCache = ref(false);
 const addingToCart = ref(null);
 const favoriteProducts = ref([]);
+const isModalOpen = ref(false);
+const selectedCategoria = ref(null);
+const maxDescriptionLength = 120; // Longitud máxima para mostrar en el banner
+
+// Métodos para la descripción truncada
+const getTruncatedDescription = (descripcion) => {
+  if (!descripcion) return '';
+
+  if (descripcion.length > maxDescriptionLength) {
+    return descripcion.substring(0, maxDescriptionLength) + '...';
+  }
+
+  return descripcion;
+};
+
+// Verificar si la descripción está truncada
+const isDescriptionTruncated = (descripcion) => {
+  return descripcion && descripcion.length > maxDescriptionLength;
+};
+
+// Mostrar modal con descripción completa
+const showDescriptionModal = (categoria) => {
+  selectedCategoria.value = categoria;
+  isModalOpen.value = true;
+  document.body.classList.add('modal-open'); // Prevenir scroll del body
+};
+
+// Cerrar modal
+const closeModal = () => {
+  isModalOpen.value = false;
+  document.body.classList.remove('modal-open');
+};
+
+// Ver colección (desde el modal)
+const viewCollectionFromModal = () => {
+  closeModal();
+  viewCollection();
+};
 
 onMounted(() => {
   listarCatalogo();
   indexRatingUser();
+
+  // Cerrar modal con tecla Escape
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isModalOpen.value) {
+      closeModal();
+    }
+  });
 });
 
 const verProducto = param => {
@@ -182,7 +257,7 @@ const listarCatalogo = async () => {
     // Actualizar el estado de caché
     fromCache.value = response.fromCache || false;
     datos.value = response.data.datos;
-
+    console.log(datos.value);
     // Inicializar los índices de imágenes para cada producto
     response.data.datos.forEach(catalog => {
       catalog.categorias.forEach(categoria => {
@@ -233,7 +308,7 @@ const fororiteUser = async (productId) => {
       "producto_id": productId,
     };
     await storeFavorite(fovoritesForm.value);
-    
+
     // Actualizar estado visual de favoritos
     const index = favoriteProducts.value.indexOf(productId);
     if (index > -1) {
@@ -241,7 +316,7 @@ const fororiteUser = async (productId) => {
     } else {
       favoriteProducts.value.push(productId);
     }
-    
+
     showNotification('Producto agregado a favoritos', 'success');
   } catch (error) {
     console.error('Error al agregar a favoritos:', error.response?.data?.message || error);
@@ -272,6 +347,7 @@ const addToCart = (product) => {
 
 const viewCollection = () => {
   // Implementar lógica para ver la colección
+  console.log('Ver colección');
 };
 
 const storeRatingUser = async (productID, rating) => {
@@ -342,50 +418,135 @@ const formatPrice = (price) => {
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
-/* Category Banner */
+/* Container para mantener proporciones consistentes */
+.category-banner-container {
+  margin-bottom: 2rem;
+  width: 100%;
+  position: relative;
+}
+
+/* Banner principal con efectos mejorados */
 .category-banner {
   position: relative;
-  height: clamp(300px, 50vh, 500px);
+  height: clamp(250px, 40vh, 500px);
   cursor: pointer;
   overflow: hidden;
   border-radius: 12px;
-  margin-bottom: 2rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.category-banner:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
 }
 
 .category-banner img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.5s ease;
+  transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
 .category-banner:hover img {
   transform: scale(1.05);
 }
 
+/* Overlay con gradiente mejorado y animaciones */
 .banner-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, rgba(0, 0, 0, 0.7), transparent);
-  padding: 2rem;
+  background: linear-gradient(to right,
+      rgba(0, 0, 0, 0.8) 0%,
+      rgba(0, 0, 0, 0.6) 30%,
+      rgba(0, 0, 0, 0.3) 60%,
+      rgba(0, 0, 0, 0) 100%);
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  align-items: center;
   color: #fff;
+  padding: 2rem;
+  transition: background 0.3s ease;
 }
 
-.banner-overlay h2 {
-  font-size: clamp(1.5rem, 4vw, 3rem);
-  font-weight: 700;
+.category-banner:hover .banner-overlay {
+  background: linear-gradient(to right,
+      rgba(0, 0, 0, 0.85) 0%,
+      rgba(0, 0, 0, 0.65) 30%,
+      rgba(0, 0, 0, 0.35) 60%,
+      rgba(0, 0, 0, 0) 100%);
+}
+
+/* Contenido del banner con animaciones */
+.banner-content {
+  max-width: 600px;
+  transform: translateY(0);
+  opacity: 1;
+  transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+.category-banner:hover .banner-content {
+  transform: translateY(-5px);
+}
+
+.banner-title {
+  font-size: clamp(1.75rem, 5vw, 3.5rem);
+  font-weight: 800;
   margin-bottom: 1rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  position: relative;
+  display: inline-block;
 }
 
-.banner-overlay p {
+.banner-title::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background-color: #3498db;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.category-banner:hover .banner-title::after {
+  transform: scaleX(1);
+}
+
+.banner-description-container {
+  position: relative;
+}
+
+.banner-description {
   font-size: clamp(1rem, 2vw, 1.25rem);
   max-width: 60ch;
   margin-bottom: 1.5rem;
+  line-height: 1.6;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  opacity: 0.9;
 }
 
+.read-more-btn {
+  background: none;
+  border: none;
+  color: #3498db;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 0.25rem;
+  font-size: 0.9em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  transition: color 0.2s ease;
+  text-decoration: underline;
+  display: inline;
+}
+
+.read-more-btn:hover {
+  color: #2980b9;
+}
+
+/* Botón CTA mejorado */
 .banner-cta {
   padding: 0.75rem 1.5rem;
   background: #3498db;
@@ -393,14 +554,190 @@ const formatPrice = (price) => {
   border: none;
   border-radius: 6px;
   font-weight: 600;
-  transition: all 0.3s ease;
+  font-size: clamp(0.875rem, 1.5vw, 1rem);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   width: fit-content;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+}
+
+.banner-cta::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #2980b9;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  z-index: -1;
 }
 
 .banner-cta:hover {
-  background: #2980b9;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+}
+
+.banner-cta:hover::before {
+  transform: translateX(0);
+}
+
+.banner-cta i {
+  transition: transform 0.3s ease;
+}
+
+.banner-cta:hover i {
+  transform: translateX(3px);
+}
+
+/* Modal de descripción */
+.description-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 1rem;
+  backdrop-filter: blur(5px);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease;
+  overflow: hidden;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  padding: 1.25rem;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #666;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  color: #333;
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.modal-footer {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.modal-btn {
+  padding: 0.6rem 1.25rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid #ddd;
+  background-color: white;
+  color: #333;
+}
+
+.modal-btn:hover {
+  background-color: #f5f5f5;
+}
+
+.modal-btn.primary {
+  background-color: #3498db;
+  color: white;
+  border-color: #3498db;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modal-btn.primary:hover {
+  background-color: #2980b9;
+  border-color: #2980b9;
+}
+
+.modal-btn.primary i {
+  transition: transform 0.2s ease;
+}
+
+.modal-btn.primary:hover i {
+  transform: translateX(3px);
+}
+
+/* Clase para prevenir scroll del body cuando el modal está abierto */
+:global(.modal-open) {
+  overflow: hidden;
 }
 
 /* Category Header */
@@ -913,48 +1250,6 @@ const formatPrice = (price) => {
   opacity: 0;
 }
 
-/* Cache Indicator */
-.cache-indicator {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background-color: #f8f9fa;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
-  border-left: 4px solid #3498db;
-}
-
-.cache-info {
-  display: flex;
-  align-items: center;
-  color: #666;
-}
-
-.cache-info i {
-  margin-right: 0.5rem;
-  color: #3498db;
-}
-
-.refresh-button {
-  background-color: #3498db;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.refresh-button:hover {
-  background-color: #2980b9;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
 /* Responsive Styles */
 @media (min-width: 1200px) {
   .products-grid {
@@ -1016,13 +1311,53 @@ const formatPrice = (price) => {
   .nav-button {
     opacity: 0.7;
   }
+
+  .category-banner {
+    height: clamp(200px, 50vh, 300px);
+  }
+
+  .banner-overlay {
+    background: linear-gradient(to top,
+        rgba(0, 0, 0, 0.8) 0%,
+        rgba(0, 0, 0, 0.6) 40%,
+        rgba(0, 0, 0, 0.3) 70%,
+        rgba(0, 0, 0, 0) 100%);
+    align-items: flex-end;
+    padding: 1.5rem;
+  }
+
+  .category-banner:hover .banner-overlay {
+    background: linear-gradient(to top,
+        rgba(0, 0, 0, 0.85) 0%,
+        rgba(0, 0, 0, 0.65) 40%,
+        rgba(0, 0, 0, 0.35) 70%,
+        rgba(0, 0, 0, 0) 100%);
+  }
+
+  .banner-content {
+    max-width: 100%;
+  }
+
+  .banner-title {
+    font-size: clamp(1.5rem, 7vw, 2.5rem);
+  }
+
+  .banner-description {
+    font-size: clamp(0.875rem, 4vw, 1rem);
+    margin-bottom: 1rem;
+  }
+
+  .banner-cta {
+    padding: 0.6rem 1.25rem;
+    font-size: 0.875rem;
+  }
+
+  .modal-content {
+    max-width: 90%;
+  }
 }
 
 @media (min-width: 576px) and (max-width: 767px) {
-  .recently-arrived {
-    padding: 2.5rem 0;
-  }
-
   .products-grid {
     grid-template-columns: repeat(3, 1fr);
     gap: 0.75rem;
@@ -1045,167 +1380,51 @@ const formatPrice = (price) => {
   }
 }
 
-@media (min-width: 480px) and (max-width: 575px) {
-  .products-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.5rem;
+@media (max-width: 480px) {
+  .category-banner {
+    height: 180px;
+    border-radius: 8px;
   }
 
-  .product-info {
-    padding: 0.5rem;
+  .banner-overlay {
+    padding: 1rem;
   }
 
-  .product-name {
+  .banner-title {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .banner-description {
     font-size: 0.8rem;
-    height: 2.2rem;
-    margin-bottom: 0.25rem;
-  }
-
-  .category {
-    font-size: 0.65rem;
-    margin-bottom: 0.25rem;
-  }
-
-  .rating {
-    gap: 1px;
-  }
-
-  .star {
-    font-size: 0.75rem;
-  }
-
-  .rating-count {
-    font-size: 0.6rem;
-  }
-
-  .current-price {
-    font-size: 0.85rem;
-  }
-
-  .old-price {
-    font-size: 0.7rem;
-  }
-
-  .action-button {
-    width: 26px;
-    height: 26px;
-    font-size: 0.7rem;
-  }
-
-  .nav-button {
-    width: 26px;
-    height: 26px;
-  }
-
-  .badge {
-    padding: 0.2rem 0.4rem;
-    font-size: 0.6rem;
-  }
-}
-
-@media (min-width: 400px) and (max-width: 479px) {
-  .products-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem;
-  }
-
-  .product-info {
-    padding: 0.5rem;
-  }
-
-  .product-name {
-    font-size: 0.8rem;
-    height: 2.2rem;
-    margin-bottom: 0.25rem;
-  }
-
-  .category {
-    font-size: 0.65rem;
-    margin-bottom: 0.25rem;
-  }
-
-  .rating {
-    gap: 1px;
-  }
-
-  .star {
-    font-size: 0.75rem;
-  }
-
-  .rating-count {
-    font-size: 0.6rem;
-  }
-
-  .current-price {
-    font-size: 0.85rem;
-  }
-
-  .old-price {
-    font-size: 0.7rem;
-  }
-}
-
-@media (max-width: 399px) {
-  .products-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem;
-  }
-
-  .product-info {
-    padding: 0.4rem;
-  }
-
-  .product-name {
-    font-size: 0.75rem;
-    height: 2.1rem;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.75rem;
     -webkit-line-clamp: 2;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
-  .category {
-    font-size: 0.6rem;
-    margin-bottom: 0.25rem;
-  }
-
-  .rating {
-    gap: 1px;
-  }
-
-  .star {
-    font-size: 0.7rem;
-  }
-
-  .rating-count {
-    font-size: 0.55rem;
-  }
-
-  .current-price {
-    font-size: 0.8rem;
-  }
-
-  .old-price {
-    font-size: 0.65rem;
-  }
-
-  .action-button {
-    width: 24px;
-    height: 24px;
-    font-size: 0.65rem;
-  }
-
-  .nav-button {
-    width: 24px;
-    height: 24px;
-  }
-
-  .badge {
-    padding: 0.15rem 0.3rem;
-    font-size: 0.55rem;
-  }
-
-  .view-all-btn {
+  .banner-cta {
     padding: 0.5rem 1rem;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
+  }
+
+  .modal-header h3 {
+    font-size: 1.25rem;
+  }
+
+  .modal-body {
+    padding: 1rem;
+    font-size: 0.9rem;
+  }
+
+  .modal-footer {
+    padding: 0.75rem 1rem;
+  }
+
+  .modal-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
   }
 }
 
@@ -1232,35 +1451,64 @@ const formatPrice = (price) => {
   .product-card:active {
     transform: scale(0.98);
   }
+
+  .category-banner:hover {
+    transform: none;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  }
+
+  .category-banner:hover img {
+    transform: scale(1);
+  }
+
+  .banner-title::after {
+    transform: scaleX(1);
+    width: 40px;
+  }
+
+  .banner-cta {
+    background: linear-gradient(to right, #3498db, #2980b9);
+  }
+
+  .banner-cta::before {
+    display: none;
+  }
 }
 
 /* Accessibility Improvements */
 @media (prefers-reduced-motion: reduce) {
-  .product-card {
+
+  .product-card,
+  .category-banner,
+  .modal-content,
+  .description-modal {
     animation: none;
     opacity: 1;
     transform: none;
   }
 
-  .product-card:hover {
+  .product-card:hover,
+  .category-banner:hover,
+  .banner-cta:hover,
+  .action-button:hover,
+  .nav-button:hover {
     transform: none;
   }
 
-  .product-card:hover .product-image img {
+  .product-card:hover .product-image img,
+  .category-banner:hover img {
     transform: none;
   }
 
-  .spinner {
-    animation: none;
-  }
-
+  .spinner,
   .badge-new {
     animation: none;
   }
 
   .retry-button:hover,
   .action-button:hover,
-  .refresh-button:hover {
+  .refresh-button:hover,
+  .modal-btn:hover {
     transform: none;
   }
 
@@ -1274,6 +1522,14 @@ const formatPrice = (price) => {
   .skeleton-image,
   .skeleton-details {
     animation: none;
+  }
+
+  .banner-title::after,
+  .banner-cta::before,
+  .banner-cta i,
+  .modal-btn.primary i {
+    transition: none;
+    transform: none;
   }
 }
 </style>

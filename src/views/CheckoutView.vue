@@ -1,49 +1,59 @@
 <template>
   <div class="checkout-container">
+    <!-- Sticky Mobile Header -->
     <header class="checkout-header">
-      <h1>Finalizar Pedido <span>({{ totalItems }} ítems)</span></h1>
-      <div class="actions-container">
-        <button @click="emptyCart" class="empty-cart-btn" :disabled="items.length === 0">
-          <i class="fas fa-trash-alt"></i> Vaciar Carrito
-        </button>
-        <div class="lock-icon">
-          <i class="fas fa-lock"></i>
+      <div class="header-content">
+        <h1>Finalizar Pedido <span>({{ totalItems }} ítems)</span></h1>
+        <div class="actions-container">
+          <button @click="emptyCart" class="empty-cart-btn" :disabled="items.length === 0">
+            <i class="fas fa-trash-alt"></i> <span class="btn-text">Vaciar Carrito</span>
+          </button>
+          <div class="lock-icon">
+            <i class="fas fa-lock"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile Progress Indicator -->
+      <div class="mobile-progress">
+        <div class="steps-indicator">
+          <div v-for="(step, index) in checkoutSteps" :key="index" 
+               :class="['step-indicator', {
+                 'active': activeStep === index,
+                 'completed': activeStep > index
+               }]" 
+               @click="goToStep(index)">
+            <span class="step-number">{{ index + 1 }}</span>
+            <span class="step-label">{{ step.shortTitle || step.title }}</span>
+          </div>
+        </div>
+        <div class="progress-bar">
+          <div class="progress" :style="{ width: progressPercentage + '%' }"></div>
         </div>
       </div>
     </header>
-
-    <!-- Indicador de progreso móvil -->
-    <div class="mobile-progress">
-      <div class="steps-indicator">
-        <div v-for="(step, index) in checkoutSteps" :key="index" :class="['step-indicator', {
-          'active': activeStep === index,
-          'completed': activeStep > index
-        }]" @click="goToStep(index)">
-          <span class="step-number">{{ index + 1 }}</span>
-        </div>
-      </div>
-      <div class="progress-bar">
-        <div class="progress" :style="{ width: progressPercentage + '%' }"></div>
-      </div>
-    </div>
 
     <div class="checkout-content">
       <div class="main-content">
         <div class="checkout-steps">
           <!-- Step 1: Delivery Information -->
           <div class="step" :class="{ 'active-step': activeStep === 0, 'completed-step': activeStep > 0 }">
-            <div class="step-header">
-              <span class="step-number">1</span>
-              <h2>Ubicación de Entrega</h2>
-              <button v-if="activeStep >= 0" @click="toggleEdit(0)" class="edit-button">
-                <i class="fas" :class="checkoutSteps[0].editing ? 'fa-save' : 'fa-edit'"></i>
-                {{ checkoutSteps[0].editing ? 'Guardar' : 'Alterar' }}
-              </button>
+            <div class="step-header" @click="toggleStepVisibility(0)">
+              <div class="step-header-left">
+                <span class="step-number">1</span>
+                <h2>Ubicación de Entrega</h2>
+              </div>
+              <div class="step-header-right">
+                <button v-if="activeStep >= 0 && checkoutSteps[0].completed" @click.stop="toggleEdit(0)" class="edit-button">
+                  <i class="fas" :class="checkoutSteps[0].editing ? 'fa-save' : 'fa-edit'"></i>
+                  <span class="btn-text">{{ checkoutSteps[0].editing ? 'Guardar' : 'Alterar' }}</span>
+                </button>
+                <i v-if="activeStep !== 0" class="fas" :class="stepsVisible[0] ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+              </div>
             </div>
-            <div class="step-content" v-show="activeStep === 0 || checkoutSteps[0].completed">
-              <div v-if="!checkoutSteps[0].editing" class="delivery-info-display">
-                <p v-if="deliveryInfo.nombre"><i class="fas fa-user"></i> {{ deliveryInfo.nombre }} {{
-                  deliveryInfo.apellido }}</p>
+            <div class="step-content" v-show="activeStep === 0 || (stepsVisible[0] && checkoutSteps[0].completed)">
+              <div v-if="!checkoutSteps[0].editing && isDeliveryInfoComplete" class="delivery-info-display">
+                <p v-if="deliveryInfo.nombre"><i class="fas fa-user"></i> {{ deliveryInfo.nombre }} {{ deliveryInfo.apellido }}</p>
                 <p v-if="deliveryInfo.direccion"><i class="fas fa-map-marker-alt"></i> {{ deliveryInfo.direccion }}</p>
                 <p v-if="deliveryInfo.telefono"><i class="fas fa-phone"></i> {{ deliveryInfo.telefono }}</p>
                 <p v-if="deliveryInfo.email"><i class="fas fa-envelope"></i> {{ deliveryInfo.email }}</p>
@@ -51,23 +61,40 @@
               <div v-else class="form-grid">
                 <div class="form-group">
                   <label for="nombre">Nombre</label>
-                  <input id="nombre" v-model="deliveryInfo.nombre" placeholder="Nombre" required>
+                  <div class="input-wrapper">
+                    <i class="fas fa-user input-icon"></i>
+                    <input id="nombre" v-model="deliveryInfo.nombre" placeholder="Nombre" required>
+                  </div>
                 </div>
                 <div class="form-group">
                   <label for="apellido">Apellido</label>
-                  <input id="apellido" v-model="deliveryInfo.apellido" placeholder="Apellido" required>
+                  <div class="input-wrapper">
+                    <i class="fas fa-user input-icon"></i>
+                    <input id="apellido" v-model="deliveryInfo.apellido" placeholder="Apellido" required>
+                  </div>
                 </div>
                 <div class="form-group full-width">
                   <label for="direccion">Dirección</label>
-                  <input id="direccion" v-model="deliveryInfo.direccion" placeholder="Dirección" required>
+                  <div class="input-wrapper">
+                    <i class="fas fa-map-marker-alt input-icon"></i>
+                    <input id="direccion" v-model="deliveryInfo.direccion" placeholder="Dirección" required>
+                  </div>
                 </div>
                 <div class="form-group">
                   <label for="telefono">Teléfono</label>
-                  <input id="telefono" v-model="deliveryInfo.telefono" placeholder="Teléfono" required>
+                  <div class="input-wrapper">
+                    <i class="fas fa-phone input-icon"></i>
+                    <input id="telefono" v-model="deliveryInfo.telefono" placeholder="Teléfono" required
+                           type="tel" pattern="[0-9]*" inputmode="numeric">
+                  </div>
                 </div>
                 <div class="form-group">
                   <label for="email">Email</label>
-                  <input id="email" v-model="deliveryInfo.email" placeholder="Email" required>
+                  <div class="input-wrapper">
+                    <i class="fas fa-envelope input-icon"></i>
+                    <input id="email" v-model="deliveryInfo.email" placeholder="Email" required
+                           type="email">
+                  </div>
                 </div>
               </div>
               <div class="step-actions" v-if="activeStep === 0">
@@ -80,11 +107,16 @@
 
           <!-- Step 2: Review Items -->
           <div class="step" :class="{ 'active-step': activeStep === 1, 'completed-step': activeStep > 1 }">
-            <div class="step-header">
-              <span class="step-number">2</span>
-              <h2>Revise los Items y Envío</h2>
+            <div class="step-header" @click="toggleStepVisibility(1)">
+              <div class="step-header-left">
+                <span class="step-number">2</span>
+                <h2>Revise los Items y Envío</h2>
+              </div>
+              <div class="step-header-right">
+                <i v-if="activeStep !== 1" class="fas" :class="stepsVisible[1] ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+              </div>
             </div>
-            <div class="step-content" v-show="activeStep === 1 || checkoutSteps[1].completed">
+            <div class="step-content" v-show="activeStep === 1 || (stepsVisible[1] && checkoutSteps[1].completed)">
               <div v-if="items.length === 0" class="empty-cart-message">
                 <i class="fas fa-shopping-cart"></i>
                 <p>Tu carrito está vacío</p>
@@ -93,14 +125,14 @@
                 </button>
               </div>
               <div v-else class="product-list">
-                <div v-for="product in items" :key="product.id" class="product-item">
+                <div v-for="product in items" :key="product.uniqueId" class="product-item">
                   <div class="product-image-container">
                     <img :src="product.image" :alt="product.nombre" class="product-image">
                   </div>
                   <div class="product-info">
                     <h3>{{ product.nombre }}</h3>
                     <p v-if="product.specs" class="specs">{{ product.specs }}</p>
-                    <p class="price">{{ formatPrice(product.precio) }}</p>
+                    <p class="price">{{ formatPrice(product.precio * product.cantidad) }}</p>
                     <p class="unit-price">(Precio unitario: {{ formatPrice(product.precio) }})</p>
 
                     <div class="product-details">
@@ -139,7 +171,7 @@
                         </button>
                       </div>
                       <button @click="removeProduct(product)" class="remove-btn">
-                        <i class="fas fa-trash"></i> Eliminar
+                        <i class="fas fa-trash"></i> <span class="btn-text">Eliminar</span>
                       </button>
                     </div>
                   </div>
@@ -155,21 +187,30 @@
               </div>
             </div>
           </div>
+          
           <!-- Step 3: Coupon -->
           <div class="step" :class="{ 'active-step': activeStep === 2, 'completed-step': activeStep > 2 }">
-            <div class="step-header">
-              <span class="step-number">3</span>
-              <h2>Cupón de Descuento</h2>
+            <div class="step-header" @click="toggleStepVisibility(2)">
+              <div class="step-header-left">
+                <span class="step-number">3</span>
+                <h2>Cupón de Descuento</h2>
+              </div>
+              <div class="step-header-right">
+                <i v-if="activeStep !== 2" class="fas" :class="stepsVisible[2] ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+              </div>
             </div>
-            <div class="step-content" v-show="activeStep === 2 || checkoutSteps[2].completed">
+            <div class="step-content" v-show="activeStep === 2 || (stepsVisible[2] && checkoutSteps[2].completed)">
               <div class="coupon-section">
                 <div class="form-group">
                   <label for="cupon">Código de Cupón</label>
                   <div class="coupon-input-group">
-                    <input id="cupon" type="text" v-model="cuponForm.codigo" placeholder="Ingrese el código del cupón"
-                      class="coupon-input" />
+                    <div class="input-wrapper">
+                      <i class="fas fa-tag input-icon"></i>
+                      <input id="cupon" type="text" v-model="cuponForm.codigo" placeholder="Ingrese el código del cupón"
+                        class="coupon-input" />
+                    </div>
                     <button @click="applyCoupon" class="apply-coupon-btn" :disabled="!cuponForm.codigo">
-                      <i class="fas fa-tag"></i> Aplicar
+                      <i class="fas fa-check"></i> <span class="btn-text">Aplicar</span>
                     </button>
                   </div>
                 </div>
@@ -186,7 +227,7 @@
                     <i class="fas fa-percentage"></i> Porcentaje de descuento: {{ cartStore.descuento }}%
                   </p>
                   <button @click="removeCoupon" class="remove-coupon-btn">
-                    <i class="fas fa-times"></i> Eliminar Cupón
+                    <i class="fas fa-times"></i> <span class="btn-text">Eliminar Cupón</span>
                   </button>
                 </div>
               </div>
@@ -203,11 +244,16 @@
 
           <!-- Step 4: Payment Method -->
           <div class="step" :class="{ 'active-step': activeStep === 3, 'completed-step': activeStep > 3 }">
-            <div class="step-header">
-              <span class="step-number">4</span>
-              <h2>Método de Pago</h2>
+            <div class="step-header" @click="toggleStepVisibility(3)">
+              <div class="step-header-left">
+                <span class="step-number">4</span>
+                <h2>Método de Pago</h2>
+              </div>
+              <div class="step-header-right">
+                <i v-if="activeStep !== 3" class="fas" :class="stepsVisible[3] ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+              </div>
             </div>
-            <div class="step-content" v-show="activeStep === 3 || checkoutSteps[3].completed">
+            <div class="step-content" v-show="activeStep === 3 || (stepsVisible[3] && checkoutSteps[3].completed)">
               <div class="payment-options">
                 <div class="payment-option" :class="{ 'selected': paymentMethod === 'qr' }"
                   @click="paymentMethod = 'qr'">
@@ -221,13 +267,13 @@
                   <div v-if="paymentMethod === 'qr'" class="payment-details">
                     <p>Escanea el siguiente código QR para realizar el pago:</p>
                     <div class="qr-payment-image">
-                      <img src="#" alt="QR Code para pago">
+                      <img src="https://placehold.co/300x300/png?text=QR+Code" alt="QR Code para pago">
                     </div>
                     <div class="voucher-upload">
                       <label for="voucher-file">Subir comprobante de pago (requerido)</label>
                       <div class="file-upload-container">
                         <input type="file" id="voucher-file" @change="handleFileUpload" accept="image/*"
-                          class="file-input">
+                          class="file-input" capture="environment">
                         <div class="file-upload-button">
                           <i class="fas fa-upload"></i> Seleccionar archivo
                         </div>
@@ -270,23 +316,38 @@
                     <div v-if="selectedLocation" class="store-info">
                       <div class="store-info-item">
                         <i class="fas fa-map-marker-alt"></i>
-                        <span><b>Dirección: </b> {{ locationOptions[selectedLocation].address }}</span>
+                        <div>
+                          <h4>Dirección:</h4>
+                          <p>{{ locationOptions[selectedLocation].address }}</p>
+                        </div>
                       </div>
                       <div class="store-info-item">
                         <i class="fas fa-clock"></i>
-                        <span>Horario: {{ locationOptions[selectedLocation].hours }}</span>
+                        <div>
+                          <h4>Horario:</h4>
+                          <p>{{ locationOptions[selectedLocation].hours }}</p>
+                        </div>
                       </div>
                       <div class="store-info-item">
                         <i class="fas fa-phone"></i>
-                        <span>Teléfono: {{ locationOptions[selectedLocation].phone }}</span>
+                        <div>
+                          <h4>Teléfono:</h4>
+                          <p>{{ locationOptions[selectedLocation].phone }}</p>
+                        </div>
                       </div>
                       <div class="store-info-item">
                         <i class="fas fa-envelope"></i>
-                        <span>Email: {{ locationOptions[selectedLocation].email }}</span>
+                        <div>
+                          <h4>Email:</h4>
+                          <p>{{ locationOptions[selectedLocation].email }}</p>
+                        </div>
                       </div>
                       <div class="store-info-item">
                         <i class="fas fa-info-circle"></i>
-                        <span>{{ locationOptions[selectedLocation].additionalInfo }}</span>
+                        <div>
+                          <h4>Información adicional:</h4>
+                          <p>{{ locationOptions[selectedLocation].additionalInfo }}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -305,10 +366,11 @@
         </div>
       </div>
 
-      <div class="order-summary">
-        <div class="summary-header">
+      <div class="order-summary" :class="{ 'summary-expanded': showSummary }">
+        <div class="summary-header" @click="toggleSummary">
           <h2>Resumen del pedido</h2>
-          <button class="toggle-summary" @click="toggleSummary">
+          <div class="summary-badge" v-if="items.length > 0">{{ items.length }}</div>
+          <button class="toggle-summary">
             <i class="fas" :class="showSummary ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
           </button>
         </div>
@@ -325,7 +387,7 @@
                 <span>{{ formatPrice(cartStore.totalAmount) }}</span>
               </div>
               <!-- Mostrar descuento según tipo -->
-              <div class="summary-item" v-if="cartStore.montoDescuento > 0">
+              <div class="summary-item discount-item" v-if="cartStore.montoDescuento > 0">
                 <span v-if="cartStore.tipoDescuento === 'porcentaje'">
                   Descuento ({{ cartStore.descuento }}%):
                 </span>
@@ -355,6 +417,20 @@
               <span>Monto final:</span>
               <span class="total-amount">{{ formatPrice(cartStore.totalAfterDiscount) }}</span>
             </div>
+            
+            <!-- Mini cart preview for mobile -->
+            <div class="mini-cart-preview mobile-only">
+              <div v-for="(product, index) in items.slice(0, 2)" :key="product.uniqueId" class="mini-cart-item">
+                <img :src="product.image" :alt="product.nombre" class="mini-cart-image">
+                <div class="mini-cart-details">
+                  <p class="mini-cart-name">{{ product.nombre }}</p>
+                  <p class="mini-cart-price">{{ formatPrice(product.precio * product.cantidad) }}</p>
+                </div>
+              </div>
+              <div v-if="items.length > 2" class="mini-cart-more">
+                <span>+{{ items.length - 2 }} más</span>
+              </div>
+            </div>
           </div>
           
           <div class="checkout-progress desktop-only">
@@ -377,18 +453,41 @@
             <i class="fab fa-whatsapp"></i> Contactar por WhatsApp
           </a>
           <div class="qr-code">
-            <img src="../../public/QrDueño/images.png" alt="QR Code para seguimiento de pedido" />
+            <img src="https://placehold.co/200x200/png?text=QR+Code" alt="QR Code para seguimiento de pedido" />
             <p>Escanea este código QR para seguir tu pedido</p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Botón flotante para mostrar resumen en móvil -->
-    <button class="floating-summary-button mobile-only" @click="toggleSummary">
-      <i class="fas fa-shopping-cart"></i>
-      <span class="floating-total">{{ formatPrice(totalAmount) }}</span>
-    </button>
+    <!-- Floating Action Buttons for Mobile -->
+    <div class="floating-actions mobile-only" v-if="!orderFinalized">
+      <!-- Cart Summary Button -->
+      <button class="floating-summary-button" @click="toggleSummary">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="floating-total">{{ formatPrice(totalAmount) }}</span>
+        <i class="fas" :class="showSummary ? 'fa-chevron-down' : 'fa-chevron-up'"></i>
+      </button>
+      
+      <!-- Navigation Buttons -->
+      <div class="floating-nav-buttons" v-if="activeStep > 0">
+        <button @click="prevStep" class="floating-prev-button">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <button v-if="activeStep < checkoutSteps.length - 1" 
+                @click="nextStep" 
+                class="floating-next-button"
+                :disabled="(activeStep === 1 && items.length === 0)">
+          <i class="fas fa-arrow-right"></i>
+        </button>
+        <button v-else 
+                @click="finalizeOrder" 
+                class="floating-checkout-button"
+                :disabled="!isPaymentValid">
+          <i class="fas fa-check"></i>
+        </button>
+      </div>
+    </div>
     
     <!-- Modal de confirmación para vaciar carrito -->
     <div v-if="showEmptyCartModal" class="modal-overlay" @click="cancelEmptyCart">
@@ -412,6 +511,33 @@
         </div>
       </div>
     </div>
+    
+    <!-- Login Prompt Modal -->
+    <div v-if="showLoginPrompt" class="modal-overlay" @click="cancelLoginPrompt">
+      <div class="modal-content login-prompt" @click.stop>
+        <div class="modal-header">
+          <h3><i class="fas fa-user-lock"></i> Iniciar sesión</h3>
+          <button class="close-modal" @click="cancelLoginPrompt">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>Para guardar tus datos de envío, te recomendamos iniciar sesión o registrarte.</p>
+          <p>Sin embargo, puedes continuar como invitado si lo prefieres.</p>
+        </div>
+        <div class="modal-footer login-options">
+          <button class="guest-btn" @click="continueAsGuest">
+            <i class="fas fa-user"></i> Continuar como invitado
+          </button>
+          <button class="login-btn" @click="goToLogin">
+            <i class="fas fa-sign-in-alt"></i> Iniciar sesión
+          </button>
+          <button class="register-btn" @click="goToRegister">
+            <i class="fas fa-user-plus"></i> Registrarse
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -423,7 +549,7 @@ import { useCartStore } from '@/stores/cart';
 import { useThemeStore } from '@/stores/themeStore';
 import { useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
-import { computed, ref, onMounted, watch } from 'vue';
+import { computed, ref, onMounted, watch, onBeforeUnmount } from 'vue';
 
 const router = useRouter();
 const cartStore = useCartStore();
@@ -440,9 +566,11 @@ const whatsappLink = computed(() => `https://wa.me/${whatsappNumber}`);
 
 // Estado para controlar la visibilidad del resumen en móvil
 const showSummary = ref(window.innerWidth > 768);
+const stepsVisible = ref([true, true, true, true]);
 
 // Estado para el modal de confirmación de vaciar carrito
 const showEmptyCartModal = ref(false);
+const showLoginPrompt = ref(false);
 
 const deliveryInfo = ref({
   nombre: '',
@@ -475,15 +603,24 @@ const locationOptions = ref({
     phone: '+591 4 4556677',
     email: 'tienda.cochabamba@empresa.com',
     additionalInfo: 'Referencia: A media cuadra de la Plaza Principal, local con fachada verde.'
+  },
+  'santa-cruz': {
+    name: 'Santa Cruz',
+    address: 'Av. Irala #456, Zona Central, Santa Cruz',
+    hours: 'Lunes a Viernes de 8:00 a 19:00, Sábados de 9:00 a 15:00',
+    phone: '+591 3 3445566',
+    email: 'tienda.santacruz@empresa.com',
+    additionalInfo: 'Referencia: Centro Comercial Las Brisas, Local 12. Amplio estacionamiento disponible.'
   }
 });
+
 // Active step tracking
 const activeStep = ref(0);
 const checkoutSteps = ref([
-  { id: 'delivery', title: 'Ubicación de Entrega', editable: true, editing: false, completed: false },
-  { id: 'review', title: 'Revise los Items y Envío', editable: false, editing: false, completed: false },
-  { id: 'coupon', title: 'Cupón de Descuento', editable: false, editing: false, completed: false },
-  { id: 'payment', title: 'Método de Pago', editable: false, editing: false, completed: false }
+  { id: 'delivery', title: 'Ubicación de Entrega', shortTitle: 'Entrega', editable: true, editing: false, completed: false },
+  { id: 'review', title: 'Revise los Items y Envío', shortTitle: 'Items', editable: false, editing: false, completed: false },
+  { id: 'coupon', title: 'Cupón de Descuento', shortTitle: 'Cupón', editable: false, editing: false, completed: false },
+  { id: 'payment', title: 'Método de Pago', shortTitle: 'Pago', editable: false, editing: false, completed: false }
 ]);
 
 const progressPercentage = computed(() => {
@@ -516,15 +653,21 @@ watch(() => cartStore.productos, (newValue) => {
   }
 }, { deep: true });
 
+// Detectar si el usuario está autenticado
+const isAuthenticated = computed(() => {
+  return !!localStorage.getItem('token');
+});
+
 onMounted(() => {
   // Check if the current department is one of our locations
-  if (themeStore.currentDepartment === 'la-paz' || themeStore.currentDepartment === 'cochabamba') {
+  if (themeStore.currentDepartment === 'la-paz' || themeStore.currentDepartment === 'cochabamba' || themeStore.currentDepartment === 'santa-cruz') {
     selectedLocation.value = themeStore.currentDepartment;
   } else {
     // Default to first location
     selectedLocation.value = 'la-paz';
   }
 
+  // Cargar datos de usuario si existen
   const storedData = localStorage.getItem('datosUser');
   if (storedData) {
     deliveryInfo.value = JSON.parse(storedData);
@@ -532,16 +675,52 @@ onMounted(() => {
 
   // Listener para ajustar la visibilidad del resumen según el tamaño de la pantalla
   window.addEventListener('resize', handleResize);
+  
+  // Verificar si hay productos en el carrito
+  if (cartStore.productos.length === 0) {
+    // Si no hay productos, redirigir a la página de productos
+    Swal.fire({
+      title: "Carrito vacío",
+      text: "No hay productos en tu carrito. ¿Deseas ir a la tienda?",
+      icon: "info",
+      showCancelButton: true,
+      confirmButtonText: "Ir a la tienda",
+      cancelButtonText: "Cancelar"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        router.push('/productos');
+      }
+    });
+  }
+  
+  // Verificar si el usuario está autenticado al iniciar el checkout
+  if (!isAuthenticated.value && activeStep.value === 0) {
+    showLoginPrompt.value = true;
+  }
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleResize);
 });
 
 const handleResize = () => {
   if (window.innerWidth > 768) {
     showSummary.value = true;
+  } else {
+    // En móvil, mostrar el resumen solo en el último paso
+    showSummary.value = activeStep.value === checkoutSteps.value.length - 1;
   }
 };
 
 const toggleSummary = () => {
   showSummary.value = !showSummary.value;
+};
+
+const toggleStepVisibility = (index) => {
+  // Solo permitir toggle si no es el paso activo y está completado
+  if (activeStep.value !== index && checkoutSteps.value[index].completed) {
+    stepsVisible.value[index] = !stepsVisible.value[index];
+  }
 };
 
 // Función para ir directamente a un paso específico (para el indicador móvil)
@@ -561,12 +740,22 @@ const nextStep = () => {
     if (activeStep.value === checkoutSteps.value.length - 1 && window.innerWidth <= 768) {
       showSummary.value = true;
     }
+    
+    // Scroll to top on mobile
+    if (window.innerWidth <= 768) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 };
 
 const prevStep = () => {
   if (activeStep.value > 0) {
     activeStep.value--;
+    
+    // Scroll to top on mobile
+    if (window.innerWidth <= 768) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 };
 
@@ -640,7 +829,7 @@ const removeProduct = (product) => {
   });
 };
 
-// Función para vaciar el carrito (nueva)
+// Función para vaciar el carrito
 const emptyCart = () => {
   if (items.value.length === 0) {
     return;
@@ -668,6 +857,23 @@ const confirmEmptyCart = () => {
 
 const cancelEmptyCart = () => {
   showEmptyCartModal.value = false;
+};
+
+// Funciones para el modal de login
+const cancelLoginPrompt = () => {
+  showLoginPrompt.value = false;
+};
+
+const continueAsGuest = () => {
+  showLoginPrompt.value = false;
+};
+
+const goToLogin = () => {
+  router.push('/login?redirect=checkout');
+};
+
+const goToRegister = () => {
+  router.push('/register?redirect=checkout');
 };
 
 // Función para ir a la tienda
@@ -756,6 +962,17 @@ const finalizeOrder = async () => {
     return;
   }
 
+  if (!isDeliveryInfoComplete.value) {
+    Swal.fire({
+      title: "Información incompleta",
+      text: "Por favor, completa todos los datos de entrega antes de continuar.",
+      icon: "warning",
+      confirmButtonText: "Aceptar",
+    });
+    activeStep.value = 0;
+    return;
+  }
+
   if (!isPaymentValid.value) {
     let warningMessage = "Por favor, selecciona un método de pago.";
 
@@ -808,6 +1025,7 @@ const finalizeOrder = async () => {
   formData.append('pending', pending.value);
   formData.append('cupon_id', cartStore.cupon_id || '');
   formData.append('payment_method', paymentMethod.value);
+  formData.append('is_guest', !isAuthenticated.value);
 
   // Añadir la ubicación seleccionada si el método de pago es en persona
   if (paymentMethod.value === 'in-person' && selectedLocation.value) {
@@ -833,6 +1051,16 @@ const finalizeOrder = async () => {
   }).then(async (result) => {
     if (result.isConfirmed) {
       try {
+        // Mostrar indicador de carga
+        Swal.fire({
+          title: "Procesando pedido",
+          text: "Por favor espera mientras procesamos tu pedido...",
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+        
         // Enviar el FormData
         const { data } = await storePedido(formData);
 
@@ -900,59 +1128,55 @@ const clearOrderData = () => {
 
   // Marcar que el pedido se ha finalizado
   orderFinalized.value = true;
+  
+  // Guardar datos de entrega para futuros pedidos si el usuario está autenticado
+  if (isAuthenticated.value) {
+    localStorage.setItem('datosUser', JSON.stringify(deliveryInfo.value));
+  }
 };
 
 const toggleEdit = async (index) => {
   const step = checkoutSteps.value[index];
 
-  // Verificar si el usuario está autenticado
-  const isAuthenticated = !!localStorage.getItem('token'); // Cambia 'token' por la clave que uses para almacenar el token de autenticación
+  // Si el usuario está autenticado, permitir la edición normalmente
+  if (isAuthenticated.value) {
+    if (step.editable) {
+      step.editing = !step.editing;
 
-  if (!isAuthenticated) {
-    // Si no está autenticado, mostrar un mensaje de alerta
-    Swal.fire({
-      title: "Acceso Denegado",
-      text: "Por favor, inicia sesión o regístrate para editar tus datos.",
-      icon: "warning",
-      confirmButtonText: "Aceptar",
-    });
-    return; // Salir de la función si no está autenticado
-  }
+      // Si se está saliendo del modo de edición, actualizar los datos
+      if (!step.editing) {
+        try {
+          const { data } = await updateDatosInfoUser(deliveryInfo.value);
 
-  // Si el usuario está autenticado, permitir la edición
-  if (step.editable) {
-    step.editing = !step.editing;
+          // Limpiar el localStorage antes de guardar
+          localStorage.removeItem('datosUser');
 
-    // Si se está saliendo del modo de edición, actualizar los datos
-    if (!step.editing) {
-      try {
-        const { data } = await updateDatosInfoUser(deliveryInfo.value);
+          // Actualizar localStorage con los nuevos datos
+          localStorage.setItem('datosUser', JSON.stringify(deliveryInfo.value));
 
-        // Limpiar el localStorage antes de guardar
-        localStorage.removeItem('datosUser');
+          // Mostrar mensaje de éxito
+          Swal.fire({
+            title: "¡Éxito!",
+            text: "Tus datos han sido actualizados correctamente.",
+            icon: "success",
+            confirmButtonText: "Aceptar",
+          });
+        } catch (error) {
+          console.error("Error al actualizar los datos del usuario:", error);
 
-        // Actualizar localStorage con los nuevos datos
-        localStorage.setItem('datosUser', JSON.stringify(deliveryInfo.value));
-
-        // Mostrar mensaje de éxito
-        Swal.fire({
-          title: "¡Éxito!",
-          text: "Tus datos han sido actualizados correctamente.",
-          icon: "success",
-          confirmButtonText: "Aceptar",
-        });
-      } catch (error) {
-        console.error("Error al actualizar los datos del usuario:", error);
-
-        // Mostrar mensaje de error
-        Swal.fire({
-          title: "Error",
-          text: error.response?.data?.message || "Hubo un error al actualizar los datos. Por favor, intenta nuevamente.",
-          icon: "error",
-          confirmButtonText: "Aceptar",
-        });
+          // Mostrar mensaje de error
+          Swal.fire({
+            title: "Error",
+            text: error.response?.data?.message || "Hubo un error al actualizar los datos. Por favor, intenta nuevamente.",
+            icon: "error",
+            confirmButtonText: "Aceptar",
+          });
+        }
       }
     }
+  } else {
+    // Si no está autenticado, mostrar el modal de login
+    showLoginPrompt.value = true;
   }
 };
 </script>
@@ -993,13 +1217,22 @@ body {
 
 /* Header Styles */
 .checkout-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: var(--border-radius);
+  margin-bottom: 20px;
+  padding: 15px;
+}
+
+.header-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 15px 0;
-  border-bottom: 2px solid var(--primary-color);
-  margin-bottom: 20px;
   flex-wrap: wrap;
+  gap: 15px;
 }
 
 .actions-container {
@@ -1054,8 +1287,7 @@ h1 span {
 
 /* Mobile Progress Indicator */
 .mobile-progress {
-  display: none;
-  margin-bottom: 20px;
+  margin-top: 15px;
 }
 
 .steps-indicator {
@@ -1065,6 +1297,32 @@ h1 span {
 }
 
 .step-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+}
+
+.step-indicator::after {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background-color: #f8f9fa;
+  z-index: 0;
+}
+
+.step-indicator:last-child::after {
+  display: none;
+}
+
+.step-number {
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -1072,38 +1330,55 @@ h1 span {
   display: flex;
   align-items: center;
   justify-content: center;
+  font-weight: bold;
   position: relative;
-  cursor: pointer;
+  z-index: 1;
   transition: all 0.3s ease;
 }
 
-.step-indicator::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 100%;
-  width: calc(100% - 40px);
-  height: 2px;
-  background-color: #f8f9fa;
-  transform: translateY(-50%);
+.step-label {
+  font-size: 12px;
+  color: #6c757d;
+  text-align: center;
+  transition: all 0.3s ease;
 }
 
-.step-indicator:last-child::after {
-  display: none;
-}
-
-.step-indicator.active {
+.step-indicator.active .step-number {
   background-color: var(--primary-color);
   color: white;
 }
 
-.step-indicator.completed {
+.step-indicator.active .step-label {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.step-indicator.completed .step-number {
   background-color: #28a745;
   color: white;
 }
 
+.step-indicator.completed .step-label {
+  color: #28a745;
+}
+
 .step-indicator.completed::after {
   background-color: #28a745;
+}
+
+/* Progress Bar */
+.progress-bar {
+  height: 8px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 5px;
+}
+
+.progress {
+  height: 100%;
+  background-color: var(--primary-color);
+  transition: width 0.3s ease;
 }
 
 /* Layout Styles */
@@ -1153,9 +1428,21 @@ h1 span {
 .step-header {
   display: flex;
   align-items: center;
-  gap: 15px;
+  justify-content: space-between;
   margin-bottom: 20px;
-  flex-wrap: wrap;
+  cursor: pointer;
+}
+
+.step-header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.step-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .step-number {
@@ -1180,7 +1467,6 @@ h2 {
 }
 
 .edit-button {
-  margin-left: auto;
   color: var(--primary-color);
   background: none;
   border: none;
@@ -1201,7 +1487,7 @@ h2 {
 
 .step-content {
   padding-left: 60px;
-  transition: padding 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .delivery-info-display p {
@@ -1286,10 +1572,25 @@ h2 {
   font-size: clamp(14px, 2vw, 16px);
 }
 
+.input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.input-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  font-size: 18px;
+  transition: color 0.3s ease;
+}
+
 input,
 select {
   width: 100%;
-  padding: 12px 15px;
+  padding: 12px 15px 12px 45px;
   border: 2px solid #f8f9fa;
   border-radius: 8px;
   font-size: clamp(14px, 2vw, 16px);
@@ -1302,6 +1603,11 @@ select:focus {
   border-color: var(--primary-color);
   outline: none;
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+input:focus + .input-icon,
+select:focus + .input-icon {
+  color: var(--primary-color);
 }
 
 /* Button Styles */
@@ -1453,6 +1759,13 @@ select:focus {
   font-weight: 600;
 }
 
+.color-image {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
 .quantity-controls {
   display: flex;
   align-items: center;
@@ -1526,21 +1839,12 @@ select:focus {
 .coupon-input-group {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
-.coupon-input {
+.coupon-input-group .input-wrapper {
   flex: 1;
-  padding: 12px 15px;
-  border: 2px solid #f8f9fa;
-  border-radius: 8px;
-  font-size: clamp(14px, 2vw, 16px);
-  transition: all 0.3s ease;
-}
-
-.coupon-input:focus {
-  border-color: var(--primary-color);
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+  min-width: 200px;
 }
 
 .apply-coupon-btn,
@@ -1782,11 +2086,22 @@ select:focus {
   margin-top: 3px;
 }
 
+.store-info-item h4 {
+  margin: 0 0 5px 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.store-info-item p {
+  margin: 0;
+}
+
 /* Order Summary Styles */
 .order-summary {
   position: sticky;
-  top: 20px;
+  top: 100px;
   height: max-content;
+  transition: all 0.3s ease;
 }
 
 .summary-header {
@@ -1796,6 +2111,20 @@ select:focus {
   margin-bottom: 20px;
   padding-bottom: 10px;
   border-bottom: 2px solid #f8f9fa;
+  cursor: pointer;
+}
+
+.summary-badge {
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
 }
 
 .toggle-summary {
@@ -1804,7 +2133,6 @@ select:focus {
   color: var(--primary-color);
   cursor: pointer;
   font-size: 18px;
-  display: none;
 }
 
 .summary-content {
@@ -1834,6 +2162,11 @@ select:focus {
   font-size: clamp(14px, 2vw, 16px);
 }
 
+.discount-item {
+  color: #28a745;
+  font-weight: 500;
+}
+
 .total {
   display: flex;
   justify-content: space-between;
@@ -1850,21 +2183,56 @@ select:focus {
   font-weight: bold;
 }
 
+/* Mini Cart Preview */
+.mini-cart-preview {
+  margin-top: 20px;
+  border-top: 1px solid #f8f9fa;
+  padding-top: 15px;
+}
+
+.mini-cart-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.mini-cart-image {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.mini-cart-details {
+  flex: 1;
+}
+
+.mini-cart-name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mini-cart-price {
+  margin: 0;
+  font-size: 14px;
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.mini-cart-more {
+  text-align: center;
+  font-size: 14px;
+  color: #6c757d;
+  margin-top: 10px;
+}
+
 .checkout-progress {
   margin: 30px 0;
-}
-
-.progress-bar {
-  height: 8px;
-  background-color: #f8f9fa;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.progress {
-  height: 100%;
-  background-color: var(--primary-color);
-  transition: width 0.3s ease;
 }
 
 .progress-text {
@@ -1902,7 +2270,7 @@ select:focus {
 }
 
 .checkout-button:disabled {
-  background-color: #28a745;
+  background-color: #6c757d;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
@@ -1926,11 +2294,19 @@ select:focus {
   text-decoration: underline;
 }
 
-/* Floating Summary Button for Mobile */
-.floating-summary-button {
+/* Floating Action Buttons */
+.floating-actions {
   position: fixed;
   bottom: 20px;
   right: 20px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  align-items: flex-end;
+}
+
+.floating-summary-button {
   background-color: var(--primary-color);
   color: white;
   border: none;
@@ -1941,9 +2317,7 @@ select:focus {
   gap: 10px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   cursor: pointer;
-  z-index: 100;
   transition: all 0.3s ease;
-  display: none;
 }
 
 .floating-summary-button:hover {
@@ -1953,6 +2327,53 @@ select:focus {
 
 .floating-total {
   font-weight: bold;
+}
+
+.floating-nav-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.floating-prev-button,
+.floating-next-button,
+.floating-checkout-button {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  border: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.floating-prev-button {
+  background-color: #6c757d;
+}
+
+.floating-next-button {
+  background-color: var(--primary-color);
+}
+
+.floating-checkout-button {
+  background-color: #28a745;
+}
+
+.floating-prev-button:hover,
+.floating-next-button:hover,
+.floating-checkout-button:hover {
+  transform: translateY(-3px);
+}
+
+.floating-prev-button:disabled,
+.floating-next-button:disabled,
+.floating-checkout-button:disabled {
+  background-color: #adb5bd;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* Order Finalized Styles */
@@ -2075,6 +2496,10 @@ select:focus {
   gap: 10px;
 }
 
+.login-prompt .modal-header h3 {
+  color: var(--primary-color);
+}
+
 .close-modal {
   background: none;
   border: none;
@@ -2100,7 +2525,11 @@ select:focus {
   border-top: 1px solid #f8f9fa;
 }
 
-.cancel-btn, .confirm-btn {
+.login-options {
+  flex-direction: column;
+}
+
+.cancel-btn, .confirm-btn, .guest-btn, .login-btn, .register-btn {
   padding: 10px 15px;
   border-radius: 8px;
   font-size: 16px;
@@ -2108,7 +2537,9 @@ select:focus {
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
+  width: 100%;
 }
 
 .cancel-btn {
@@ -2132,6 +2563,38 @@ select:focus {
   transform: translateY(-2px);
 }
 
+.guest-btn {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #dee2e6;
+}
+
+.guest-btn:hover {
+  background-color: #e9ecef;
+}
+
+.login-btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+}
+
+.login-btn:hover {
+  background-color: #0069d9;
+  transform: translateY(-2px);
+}
+
+.register-btn {
+  background-color: #28a745;
+  color: white;
+  border: none;
+}
+
+.register-btn:hover {
+  background-color: #218838;
+  transform: translateY(-2px);
+}
+
 /* Utility Classes */
 .mobile-only {
   display: none;
@@ -2139,6 +2602,10 @@ select:focus {
 
 .desktop-only {
   display: block;
+}
+
+.btn-text {
+  display: inline;
 }
 
 /* Responsive Media Queries */
@@ -2152,6 +2619,10 @@ select:focus {
     margin-top: 30px;
     top: 0;
   }
+  
+  .step-content {
+    padding-left: 40px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -2159,15 +2630,14 @@ select:focus {
     padding: 15px;
   }
 
-  .checkout-header {
+  .header-content {
     flex-direction: column;
-    align-items: center;
-    gap: 15px;
-    padding: 10px 0;
+    align-items: flex-start;
   }
-
-  .mobile-progress {
-    display: block;
+  
+  .actions-container {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .mobile-only {
@@ -2177,13 +2647,9 @@ select:focus {
   .desktop-only {
     display: none;
   }
-
-  .floating-summary-button {
-    display: flex;
-  }
-
-  .toggle-summary {
-    display: block;
+  
+  .btn-text {
+    display: none;
   }
 
   .step-header {
@@ -2275,6 +2741,27 @@ select:focus {
   .modal-content {
     width: 95%;
   }
+  
+  .order-summary {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 90;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    transform: translateY(calc(100% - 60px));
+    transition: transform 0.3s ease;
+  }
+  
+  .order-summary.summary-expanded {
+    transform: translateY(0);
+  }
+  
+  .summary-header {
+    margin-bottom: 15px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -2334,9 +2821,13 @@ select:focus {
     flex-direction: column;
   }
   
-  .cancel-btn, .confirm-btn {
+  .cancel-btn, .confirm-btn, .guest-btn, .login-btn, .register-btn {
     width: 100%;
     justify-content: center;
+  }
+  
+  .step-indicator .step-label {
+    display: none;
   }
 }
 
@@ -2377,7 +2868,6 @@ select:focus {
 
 /* Touch-friendly improvements */
 @media (hover: none) {
-
   .next-button,
   .prev-button,
   .apply-coupon-btn,
@@ -2391,11 +2881,15 @@ select:focus {
 
   input,
   select {
-    padding: 15px;
+    padding: 15px 15px 15px 45px;
   }
 
   .payment-option label {
     padding: 10px 0;
+  }
+  
+  .floating-actions {
+    bottom: 70px; /* Adjust to avoid overlap with summary */
   }
 }
 
@@ -2420,6 +2914,7 @@ select:focus {
   }
 }
 
+/* Location selector styles */
 .location-selector {
   display: flex;
   gap: 15px;
@@ -2472,14 +2967,18 @@ select:focus {
   background-color: rgba(59, 130, 246, 0.1);
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .location-selector {
-    flex-direction: column;
-  }
+.location-option.selected[for="location-santa-cruz"] {
+  border-color: #10B981;
+  background-color: rgba(16, 185, 129, 0.1);
+}
 
-  .location-option {
-    width: 100%;
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 </style>

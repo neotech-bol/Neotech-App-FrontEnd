@@ -1,17 +1,422 @@
+<script setup>
+import { ref, computed, watchEffect, onMounted, nextTick } from 'vue'
+import { useThemeStore } from '../stores/themeStore'
+import { store } from '@/Services/ContactoService'
+import Swal from 'sweetalert2'
+
+const themeStore = useThemeStore()
+
+// Enhanced department locations with more details
+const departmentLocations = {
+  'la-paz': {
+    address: 'Av. 16 de Julio #1490, El Prado, La Paz - BO',
+    mapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3825.3681896113545!2d-68.13309!3d-16.499611!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTbCsDI5JzU4LjYiUyA2OMKwMDcnNTkuMSJX!5e0!3m2!1ses!2sbo!4v1234567890!5m2!1ses!2sbo',
+    directionsUrl: 'https://goo.gl/maps/abcdefg123456',
+    additionalInfo: 'Edificio Torre Azul, planta baja. Referencia: Frente al Banco Nacional.',
+    color: '#F8A812' // Naranja para La Paz
+  },
+  'cochabamba': {
+    address: 'Calle Tarija #234, esquina América, Cochabamba - BO',
+    mapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3807.3758801973644!2d-66.1552!3d-17.393611!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTfCsDIyJzIyLjciUyA2NsKwMDknMzguNyJX!5e0!3m2!1ses!2sbo!4v1234567890!5m2!1ses!2sbo',
+    directionsUrl: 'https://goo.gl/maps/hijklmn789012',
+    additionalInfo: 'Local con fachada verde. Referencia: A media cuadra de la Plaza Principal.',
+    color: '#3B82F6' // Azul para Cochabamba
+  },
+  'santa-cruz': {
+    address: 'Av. Irala #456, Santa Cruz - BO',
+    mapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3799.1234567890123!2d-63.1234!3d-17.7890!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTfCsDQ3JzIwLjQiUyA2M8KwMDcnMjAuMiJX!5e0!3m2!1ses!2sbo!4v1234567890!5m2!1ses!2sbo',
+    directionsUrl: 'https://goo.gl/maps/opqrstu345678',
+    additionalInfo: 'Centro Comercial Las Brisas, Local 12. Amplio estacionamiento disponible.',
+    color: '#10B981' // Verde para Santa Cruz
+  }
+}
+
+// State variables
+const currentDepartment = computed(() => themeStore.currentDepartment)
+const errors = ref({})
+const isLoading = ref(false)
+const activeTab = ref('message')
+const activeFaq = ref(null)
+const showSuccessModal = ref(false)
+const successMessage = ref({ title: '', message: '' })
+const isMobile = ref(false)
+const isTablet = ref(false)
+const isIntersecting = ref({
+  cards: false,
+  form: false,
+  location: false,
+  faq: false
+})
+const touchStartX = ref(0)
+const touchEndX = ref(0)
+const cardSwipeIndex = ref(0)
+const formHeight = ref(0)
+const formTransition = ref(true)
+const showFloatingContact = ref(false)
+const showFloatingMenu = ref(false)
+
+// Get current location based on selected department
+const currentLocation = computed(() => {
+  const department = selectedDepartment.value || 'cochabamba'
+  return departmentLocations[department] || departmentLocations['cochabamba']
+})
+
+// Form data
+const formData = ref({
+  nombre_completo: '',
+  correo: '',
+  telefono: '',
+  mensaje: ''
+})
+
+const appointmentData = ref({
+  nombre: '',
+  correo: '',
+  telefono: '',
+  fecha: '',
+  hora: '',
+  motivo: '',
+  otroMotivo: ''
+})
+
+// FAQ data
+const faqs = ref([
+  {
+    question: '¿Cuál es el tiempo de respuesta a mis consultas?',
+    answer: 'Nos comprometemos a responder todas las consultas en un plazo máximo de 24 horas hábiles. Para casos urgentes, recomendamos contactarnos directamente por teléfono.'
+  },
+  {
+    question: '¿Ofrecen soporte técnico remoto?',
+    answer: 'Sí, ofrecemos soporte técnico remoto para nuestros clientes. Puedes solicitar este servicio a través del formulario de contacto o llamando directamente a nuestro número de atención.'
+  },
+  {
+    question: '¿Cómo puedo cancelar o reprogramar una cita?',
+    answer: 'Para cancelar o reprogramar una cita, puedes contactarnos por teléfono con al menos 24 horas de anticipación, o enviarnos un correo electrónico a contacto@neotechbol.com indicando tu nombre y la fecha de la cita original.'
+  },
+  {
+    question: '¿Tienen servicio a domicilio?',
+    answer: 'Sí, contamos con servicio a domicilio para instalaciones y soporte técnico. Este servicio está disponible en las principales ciudades donde operamos, con costo adicional según la distancia.'
+  }
+])
+
+// Send message function
+const enviarMensaje = async () => {
+  errors.value = {}
+  isLoading.value = true
+  try {
+    const { data } = await store(formData.value)
+    
+    // Show success modal instead of Swal
+    successMessage.value = {
+      title: '¡Mensaje Enviado!',
+      message: 'Gracias por contactarnos. Te responderemos lo antes posible.'
+    }
+    showSuccessModal.value = true
+    
+    formData.value = { nombre_completo: '', correo: '', telefono: '', mensaje: '' }
+  } catch (error) {
+    if (error.response?.status === 422) {
+      errors.value = error.response.data.errors
+    }
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'Por favor, revisa los datos ingresados',
+      confirmButtonText: 'Intentar de nuevo',
+      confirmButtonColor: getDepartmentColor(selectedDepartment.value)
+    })
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// Contact cards with enhanced actions
+const contactCards = computed(() => [
+  { 
+    icon: 'fa-envelope', 
+    title: 'Escríbenos', 
+    content: 'contacto@neotechbol.com', 
+    href: 'mailto:contacto@neotechbol.com',
+    action: {
+      icon: 'fa-copy',
+      text: 'Copiar',
+      handler: () => copyToClipboard('contacto@neotechbol.com')
+    }
+  },
+  { 
+    icon: 'fa-phone', 
+    title: 'Llámanos', 
+    content: '+591 77997694', 
+    href: 'tel:+59177997694',
+    action: {
+      icon: 'fa-phone-alt',
+      text: 'Llamar ahora',
+      handler: () => window.location.href = 'tel:+59177997694'
+    }
+  },
+  { 
+    icon: 'fa-map-marker-alt', 
+    title: 'Visítanos', 
+    content: currentLocation.value.address,
+    action: {
+      icon: 'fa-directions',
+      text: 'Ver en mapa',
+      handler: () => window.open(currentLocation.value.directionsUrl, '_blank')
+    }
+  }
+])
+
+// Visible cards for mobile swiper
+const visibleCardIndex = computed(() => {
+  if (!isMobile.value) return -1
+  return cardSwipeIndex.value % contactCards.value.length
+})
+
+// Form submission handlers
+const handleSubmit = () => {
+  enviarMensaje()
+}
+
+const handleAppointment = () => {
+  // Show success modal instead of Swal
+  successMessage.value = {
+    title: '¡Cita Agendada!',
+    message: `Tu cita ha sido agendada para el ${formatDate(appointmentData.value.fecha)} a las ${appointmentData.value.hora}. Te hemos enviado un correo de confirmación.`
+  }
+  showSuccessModal.value = true
+  
+  appointmentData.value = { 
+    nombre: '', 
+    correo: '', 
+    telefono: '', 
+    fecha: '', 
+    hora: '',
+    motivo: '',
+    otroMotivo: ''
+  }
+}
+
+// Helper functions
+const departments = Object.keys(departmentLocations)
+const selectedDepartment = ref(currentDepartment.value || 'cochabamba')
+
+const getDepartmentColor = (dept) => {
+  return departmentLocations[dept]?.color || '#3B82F6'
+}
+
+const getFormattedDepartment = (dept) => {
+  return dept.charAt(0).toUpperCase() + dept.slice(1).replace('-', ' ')
+}
+
+const toggleFaq = (index) => {
+  activeFaq.value = activeFaq.value === index ? null : index
+}
+
+const closeSuccessModal = () => {
+  showSuccessModal.value = false
+}
+
+const copyToClipboard = (text) => {
+  navigator.clipboard.writeText(text).then(() => {
+    Swal.fire({
+      icon: 'success',
+      title: '¡Copiado!',
+      text: 'Texto copiado al portapapeles',
+      timer: 1500,
+      showConfirmButton: false,
+      position: 'top-end',
+      toast: true
+    })
+  })
+}
+
+const formatDate = (dateString) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleDateString('es-ES', { 
+    day: '2-digit', 
+    month: 'long', 
+    year: 'numeric' 
+  })
+}
+
+const showVirtualTour = () => {
+  Swal.fire({
+    title: 'Tour Virtual',
+    text: 'Esta función estará disponible próximamente',
+    icon: 'info',
+    confirmButtonText: 'Entendido',
+    confirmButtonColor: getDepartmentColor(selectedDepartment.value)
+  })
+}
+
+// Mobile-specific functions
+const checkDeviceType = () => {
+  isMobile.value = window.innerWidth <= 640
+  isTablet.value = window.innerWidth > 640 && window.innerWidth <= 1024
+}
+
+// Touch events for card swiping
+const handleTouchStart = (e) => {
+  touchStartX.value = e.touches[0].clientX
+}
+
+const handleTouchMove = (e) => {
+  touchEndX.value = e.touches[0].clientX
+}
+
+const handleTouchEnd = () => {
+  const minSwipeDistance = 50
+  const swipeDistance = touchStartX.value - touchEndX.value
+  
+  if (Math.abs(swipeDistance) > minSwipeDistance) {
+    if (swipeDistance > 0) {
+      // Swiped left - next card
+      nextCard()
+    } else {
+      // Swiped right - previous card
+      prevCard()
+    }
+  }
+}
+
+const nextCard = () => {
+  cardSwipeIndex.value = (cardSwipeIndex.value + 1) % contactCards.value.length
+}
+
+const prevCard = () => {
+  cardSwipeIndex.value = (cardSwipeIndex.value - 1 + contactCards.value.length) % contactCards.value.length
+}
+
+// Scroll handling for floating contact button
+const handleScroll = () => {
+  const scrollPosition = window.scrollY
+  const windowHeight = window.innerHeight
+  const documentHeight = document.documentElement.scrollHeight
+  
+  // Show floating contact button when scrolled down 300px
+  showFloatingContact.value = scrollPosition > 300
+  
+  // Hide floating contact button near the bottom of the page
+  if (scrollPosition + windowHeight > documentHeight - 200) {
+    showFloatingContact.value = false
+  }
+}
+
+// Toggle floating menu
+const toggleFloatingMenu = () => {
+  showFloatingMenu.value = !showFloatingMenu.value
+}
+
+// Setup intersection observer for animations
+const setupIntersectionObserver = () => {
+  const observerOptions = {
+    threshold: 0.15,
+    rootMargin: '0px 0px -100px 0px'
+  }
+  
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        if (entry.target.classList.contains('contact-cards')) {
+          isIntersecting.value.cards = true
+        } else if (entry.target.classList.contains('contact-content')) {
+          isIntersecting.value.form = true
+        } else if (entry.target.classList.contains('location-section')) {
+          isIntersecting.value.location = true
+        } else if (entry.target.classList.contains('faq-section')) {
+          isIntersecting.value.faq = true
+        }
+      }
+    })
+  }, observerOptions)
+  
+  // Observe sections
+  nextTick(() => {
+    const sections = [
+      '.contact-cards',
+      '.contact-content',
+      '.location-section',
+      '.faq-section'
+    ]
+    
+    sections.forEach(selector => {
+      const element = document.querySelector(selector)
+      if (element) observer.observe(element)
+    })
+  })
+}
+
+// Switch tabs with animation
+const switchTab = (tab) => {
+  // Disable transition temporarily when switching tabs
+  formTransition.value = false
+  
+  // Get current form height
+  const formContainer = document.querySelector('.form-container')
+  if (formContainer) {
+    formHeight.value = formContainer.offsetHeight
+  }
+  
+  // Switch tab after a small delay
+  setTimeout(() => {
+    activeTab.value = tab
+    
+    // Re-enable transition after tab switch
+    setTimeout(() => {
+      formTransition.value = true
+      formHeight.value = 0 // Reset height to auto
+    }, 50)
+  }, 50)
+}
+
+// Watch for department changes
+watchEffect(() => {
+  themeStore.setDepartment(selectedDepartment.value)
+})
+
+onMounted(() => {
+  // Set min date for appointment to today
+  const today = new Date()
+  const yyyy = today.getFullYear()
+  const mm = String(today.getMonth() + 1).padStart(2, '0')
+  const dd = String(today.getDate()).padStart(2, '0')
+  const minDate = `${yyyy}-${mm}-${dd}`
+  
+  const dateInputs = document.querySelectorAll('input[type="date"]')
+  dateInputs.forEach(input => {
+    input.min = minDate
+  })
+  
+  // Check device type
+  checkDeviceType()
+  window.addEventListener('resize', checkDeviceType)
+  
+  // Setup scroll handler
+  window.addEventListener('scroll', handleScroll)
+  
+  // Setup intersection observer
+  setupIntersectionObserver()
+  
+  // Set initial card index
+  cardSwipeIndex.value = 0
+})
+</script>
+
 <template>
   <section class="contact-section">
     <div class="contact-container">
-      <div class="section-header animate__animated animate__fadeIn">
-        <h2>Contáctanos <span class="highlight">Hoy</span></h2>
+      <div class="section-header" :class="{ 'animate-in': true }">
+        <h2>Contáctanos <span class="highlight" :style="{ '--highlight-color': getDepartmentColor(selectedDepartment) }">Hoy</span></h2>
         <p>Conéctate con nosotros de la manera que prefieras</p>
       </div>
 
       <!-- Department Selector with Visual Indicators -->
-      <div class="department-selector animate__animated animate__fadeIn">
+      <div class="department-selector" :class="{ 'animate-in': true }">
         <div class="select-wrapper">
           <select v-model="selectedDepartment" class="department-dropdown" aria-label="Seleccionar departamento">
             <option v-for="dept in departments" :key="dept" :value="dept">
-              {{ dept.charAt(0).toUpperCase() + dept.slice(1).replace('-', ' ') }}
+              {{ getFormattedDepartment(dept) }}
             </option>
           </select>
           <i class="fas fa-chevron-down select-arrow"></i>
@@ -23,10 +428,53 @@
       </div>
 
       <!-- Contact Cards with Enhanced Visual Design -->
-      <div class="contact-cards">
-        <div v-for="(card, index) in contactCards" :key="index" 
-             class="contact-card animate__animated animate__fadeInUp"
-             :style="{ animationDelay: `${index * 0.2}s` }">
+      <div class="contact-cards" :class="{ 'animate-in': isIntersecting.cards }">
+        <!-- Mobile Card Swiper -->
+        <div v-if="isMobile" class="mobile-card-swiper"
+             @touchstart="handleTouchStart" 
+             @touchmove="handleTouchMove" 
+             @touchend="handleTouchEnd">
+          <div class="swiper-navigation">
+            <button class="swipe-arrow prev" @click="prevCard" aria-label="Contacto anterior">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="swiper-indicators">
+              <span v-for="(_, index) in contactCards" :key="`indicator-${index}`" 
+                    :class="['swiper-dot', { active: visibleCardIndex === index }]"></span>
+            </div>
+            <button class="swipe-arrow next" @click="nextCard" aria-label="Contacto siguiente">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+          
+          <div class="swiper-container">
+            <div class="swiper-track" :style="{ transform: `translateX(-${visibleCardIndex * 100}%)` }">
+              <div v-for="(card, index) in contactCards" :key="`mobile-${index}`" 
+                   class="contact-card mobile-card">
+                <div class="icon" :style="{ background: getDepartmentColor(selectedDepartment) }">
+                  <i :class="['fas', card.icon]"></i>
+                </div>
+                <h3>{{ card.title }}</h3>
+                <a v-if="card.href" :href="card.href" class="contact-link" :style="{ color: getDepartmentColor(selectedDepartment) }">
+                  {{ card.content }}
+                </a>
+                <p v-else>{{ card.content }}</p>
+                <div class="card-action" v-if="card.action">
+                  <button class="action-button" @click="card.action.handler" :style="{ background: getDepartmentColor(selectedDepartment) }">
+                    <i :class="['fas', card.action.icon]"></i>
+                    {{ card.action.text }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Desktop/Tablet Cards -->
+        <div v-else v-for="(card, index) in contactCards" :key="`desktop-${index}`" 
+             class="contact-card"
+             :class="{ 'animate-card': true }"
+             :style="{ '--card-delay': `${index * 0.15}s` }">
           <div class="icon" :style="{ background: getDepartmentColor(selectedDepartment) }">
             <i :class="['fas', card.icon]"></i>
           </div>
@@ -45,17 +493,17 @@
       </div>
 
       <!-- Tabs for Contact Forms -->
-      <div class="form-tabs">
+      <div class="form-tabs" :class="{ 'animate-in': isIntersecting.form }">
         <button 
           :class="['tab-button', { active: activeTab === 'message' }]" 
-          @click="activeTab = 'message'"
+          @click="switchTab('message')"
           :style="activeTab === 'message' ? { borderColor: getDepartmentColor(selectedDepartment) } : {}"
         >
           <i class="fas fa-envelope"></i> Enviar Mensaje
         </button>
         <button 
           :class="['tab-button', { active: activeTab === 'appointment' }]" 
-          @click="activeTab = 'appointment'"
+          @click="switchTab('appointment')"
           :style="activeTab === 'appointment' ? { borderColor: getDepartmentColor(selectedDepartment) } : {}"
         >
           <i class="fas fa-calendar-alt"></i> Agendar Cita
@@ -63,9 +511,9 @@
       </div>
 
       <!-- Contact Forms with Improved UX -->
-      <div class="contact-content">
-        <transition name="fade-slide" mode="out-in">
-          <div v-if="activeTab === 'message'" class="form-container animate__animated animate__fadeIn" key="message">
+      <div class="contact-content" :class="{ 'animate-in': isIntersecting.form }">
+        <div class="form-wrapper" :style="formHeight ? { height: `${formHeight}px` } : {}" :class="{ 'no-transition': !formTransition }">
+          <div v-if="activeTab === 'message'" class="form-container" key="message">
             <h3>Envíanos un Mensaje</h3>
             <form class="contact-form" @submit.prevent="handleSubmit">
               <div class="form-group">
@@ -168,7 +616,7 @@
             </form>
           </div>
 
-          <div v-else-if="activeTab === 'appointment'" class="form-container animate__animated animate__fadeIn" key="appointment">
+          <div v-else-if="activeTab === 'appointment'" class="form-container" key="appointment">
             <h3>Agenda una Cita</h3>
             <form class="contact-form" @submit.prevent="handleAppointment">
               <div class="form-group">
@@ -288,12 +736,12 @@
               </button>
             </form>
           </div>
-        </transition>
+        </div>
       </div>
 
       <!-- Map with Location Info -->
-      <div class="location-section">
-        <div class="location-info animate__animated animate__fadeInLeft">
+      <div class="location-section" :class="{ 'animate-in': isIntersecting.location }">
+        <div class="location-info">
           <h3>Nuestra Ubicación</h3>
           <div class="location-details">
             <div class="location-item">
@@ -329,7 +777,7 @@
           </div>
         </div>
         
-        <div class="map-container animate__animated animate__fadeInRight">
+        <div class="map-container">
           <iframe 
             :src="currentLocation.mapUrl" 
             width="100%" 
@@ -344,14 +792,15 @@
       </div>
 
       <!-- FAQ Section -->
-      <div class="faq-section animate__animated animate__fadeIn">
+      <div class="faq-section" :class="{ 'animate-in': isIntersecting.faq }">
         <h3>Preguntas Frecuentes</h3>
         <div class="faq-container">
           <div 
             v-for="(faq, index) in faqs" 
             :key="index" 
             class="faq-item"
-            :class="{ 'active': activeFaq === index }"
+            :class="{ 'active': activeFaq === index, 'animate-faq': true }"
+            :style="{ '--faq-delay': `${index * 0.1}s` }"
           >
             <div class="faq-question" @click="toggleFaq(index)">
               <h4>{{ faq.question }}</h4>
@@ -380,260 +829,37 @@
         </div>
       </transition>
       <div v-if="showSuccessModal" class="modal-overlay" @click="closeSuccessModal"></div>
+      
+      <!-- Floating Contact Button for Mobile -->
+      <transition name="fade-up">
+        <div v-if="showFloatingContact" class="floating-contact">
+          <button class="floating-contact-btn" 
+                  @click="toggleFloatingMenu"
+                  :style="{ background: getDepartmentColor(selectedDepartment) }">
+            <i class="fas" :class="showFloatingMenu ? 'fa-times' : 'fa-comment-dots'"></i>
+          </button>
+          
+          <transition name="scale">
+            <div v-if="showFloatingMenu" class="floating-menu">
+              <a href="tel:+59177997694" class="floating-menu-item">
+                <i class="fas fa-phone"></i>
+                <span>Llamar</span>
+              </a>
+              <a href="mailto:contacto@neotechbol.com" class="floating-menu-item">
+                <i class="fas fa-envelope"></i>
+                <span>Email</span>
+              </a>
+              <a href="#" @click.prevent="activeTab = 'message'; showFloatingMenu = false" class="floating-menu-item">
+                <i class="fas fa-paper-plane"></i>
+                <span>Mensaje</span>
+              </a>
+            </div>
+          </transition>
+        </div>
+      </transition>
     </div>
   </section>
 </template>
-
-<script setup>
-import { ref, computed, watchEffect, onMounted } from 'vue'
-import { useThemeStore } from '../stores/themeStore'
-import { store } from '@/Services/ContactoService'
-import Swal from 'sweetalert2'
-
-const themeStore = useThemeStore()
-
-// Enhanced department locations with more details
-const departmentLocations = {
-  'la-paz': {
-    address: 'Av. 16 de Julio #1490, El Prado, La Paz - BO',
-    mapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3825.3681896113545!2d-68.13309!3d-16.499611!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTbCsDI5JzU4LjYiUyA2OMKwMDcnNTkuMSJX!5e0!3m2!1ses!2sbo!4v1234567890!5m2!1ses!2sbo',
-    directionsUrl: 'https://goo.gl/maps/abcdefg123456',
-    additionalInfo: 'Edificio Torre Azul, planta baja. Referencia: Frente al Banco Nacional.',
-    color: '#F8A812' // Naranja para La Paz
-  },
-  'cochabamba': {
-    address: 'Calle Tarija #234, esquina América, Cochabamba - BO',
-    mapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3807.3758801973644!2d-66.1552!3d-17.393611!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTfCsDIyJzIyLjciUyA2NsKwMDknMzguNyJX!5e0!3m2!1ses!2sbo!4v1234567890!5m2!1ses!2sbo',
-    directionsUrl: 'https://goo.gl/maps/hijklmn789012',
-    additionalInfo: 'Local con fachada verde. Referencia: A media cuadra de la Plaza Principal.',
-    color: '#3B82F6' // Azul para Cochabamba
-  },
-  'santa-cruz': {
-    address: 'Av. Irala #456, Santa Cruz - BO',
-    mapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3799.1234567890123!2d-63.1234!3d-17.7890!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTfCsDQ3JzIwLjQiUyA2M8KwMDcnMjAuMiJX!5e0!3m2!1ses!2sbo!4v1234567890!5m2!1ses!2sbo',
-    directionsUrl: 'https://goo.gl/maps/opqrstu345678',
-    additionalInfo: 'Centro Comercial Las Brisas, Local 12. Amplio estacionamiento disponible.',
-    color: '#10B981' // Verde para Santa Cruz
-  }
-}
-
-// State variables
-const currentDepartment = computed(() => themeStore.currentDepartment)
-const errors = ref({})
-const isLoading = ref(false)
-const activeTab = ref('message')
-const activeFaq = ref(null)
-const showSuccessModal = ref(false)
-const successMessage = ref({ title: '', message: '' })
-
-// Get current location based on selected department
-const currentLocation = computed(() => {
-  const department = selectedDepartment.value || 'cochabamba'
-  return departmentLocations[department] || departmentLocations['cochabamba']
-})
-
-// Form data
-const formData = ref({
-  nombre_completo: '',
-  correo: '',
-  telefono: '',
-  mensaje: ''
-})
-
-const appointmentData = ref({
-  nombre: '',
-  correo: '',
-  telefono: '',
-  fecha: '',
-  hora: '',
-  motivo: '',
-  otroMotivo: ''
-})
-
-// FAQ data
-const faqs = ref([
-  {
-    question: '¿Cuál es el tiempo de respuesta a mis consultas?',
-    answer: 'Nos comprometemos a responder todas las consultas en un plazo máximo de 24 horas hábiles. Para casos urgentes, recomendamos contactarnos directamente por teléfono.'
-  },
-  {
-    question: '¿Ofrecen soporte técnico remoto?',
-    answer: 'Sí, ofrecemos soporte técnico remoto para nuestros clientes. Puedes solicitar este servicio a través del formulario de contacto o llamando directamente a nuestro número de atención.'
-  },
-  {
-    question: '¿Cómo puedo cancelar o reprogramar una cita?',
-    answer: 'Para cancelar o reprogramar una cita, puedes contactarnos por teléfono con al menos 24 horas de anticipación, o enviarnos un correo electrónico a contacto@neotechbol.com indicando tu nombre y la fecha de la cita original.'
-  },
-  {
-    question: '¿Tienen servicio a domicilio?',
-    answer: 'Sí, contamos con servicio a domicilio para instalaciones y soporte técnico. Este servicio está disponible en las principales ciudades donde operamos, con costo adicional según la distancia.'
-  }
-])
-
-// Send message function
-const enviarMensaje = async () => {
-  errors.value = {}
-  isLoading.value = true
-  try {
-    const { data } = await store(formData.value)
-    
-    // Show success modal instead of Swal
-    successMessage.value = {
-      title: '¡Mensaje Enviado!',
-      message: 'Gracias por contactarnos. Te responderemos lo antes posible.'
-    }
-    showSuccessModal.value = true
-    
-    formData.value = { nombre_completo: '', correo: '', telefono: '', mensaje: '' }
-  } catch (error) {
-    if (error.response?.status === 422) {
-      errors.value = error.response.data.errors
-    }
-    Swal.fire({
-      icon: 'error',
-      title: 'Error',
-      text: 'Por favor, revisa los datos ingresados',
-      confirmButtonText: 'Intentar de nuevo',
-      confirmButtonColor: getDepartmentColor(selectedDepartment.value)
-    })
-  } finally {
-    isLoading.value = false
-  }
-}
-
-// Contact cards with enhanced actions
-const contactCards = computed(() => [
-  { 
-    icon: 'fa-envelope', 
-    title: 'Escríbenos', 
-    content: 'contacto@neotechbol.com', 
-    href: 'mailto:contacto@neotechbol.com',
-    action: {
-      icon: 'fa-copy',
-      text: 'Copiar',
-      handler: () => copyToClipboard('contacto@neotechbol.com')
-    }
-  },
-  { 
-    icon: 'fa-phone', 
-    title: 'Llámanos', 
-    content: '+591 77997694', 
-    href: 'tel:+59177997694',
-    action: {
-      icon: 'fa-phone-alt',
-      text: 'Llamar ahora',
-      handler: () => window.location.href = 'tel:+59177997694'
-    }
-  },
-  { 
-    icon: 'fa-map-marker-alt', 
-    title: 'Visítanos', 
-    content: currentLocation.value.address,
-    action: {
-      icon: 'fa-directions',
-      text: 'Ver en mapa',
-      handler: () => window.open(currentLocation.value.directionsUrl, '_blank')
-    }
-  }
-])
-
-// Form submission handlers
-const handleSubmit = () => {
-  enviarMensaje()
-}
-
-const handleAppointment = () => {
-  // Show success modal instead of Swal
-  successMessage.value = {
-    title: '¡Cita Agendada!',
-    message: `Tu cita ha sido agendada para el ${formatDate(appointmentData.value.fecha)} a las ${appointmentData.value.hora}. Te hemos enviado un correo de confirmación.`
-  }
-  showSuccessModal.value = true
-  
-  appointmentData.value = { 
-    nombre: '', 
-    correo: '', 
-    telefono: '', 
-    fecha: '', 
-    hora: '',
-    motivo: '',
-    otroMotivo: ''
-  }
-}
-
-// Helper functions
-const departments = Object.keys(departmentLocations)
-const selectedDepartment = ref(currentDepartment.value || 'cochabamba')
-
-const getDepartmentColor = (dept) => {
-  return departmentLocations[dept]?.color || '#3B82F6'
-}
-
-const getFormattedDepartment = (dept) => {
-  return dept.charAt(0).toUpperCase() + dept.slice(1).replace('-', ' ')
-}
-
-const toggleFaq = (index) => {
-  activeFaq.value = activeFaq.value === index ? null : index
-}
-
-const closeSuccessModal = () => {
-  showSuccessModal.value = false
-}
-
-const copyToClipboard = (text) => {
-  navigator.clipboard.writeText(text).then(() => {
-    Swal.fire({
-      icon: 'success',
-      title: '¡Copiado!',
-      text: 'Texto copiado al portapapeles',
-      timer: 1500,
-      showConfirmButton: false,
-      position: 'top-end',
-      toast: true
-    })
-  })
-}
-
-const formatDate = (dateString) => {
-  if (!dateString) return ''
-  const date = new Date(dateString)
-  return date.toLocaleDateString('es-ES', { 
-    day: '2-digit', 
-    month: 'long', 
-    year: 'numeric' 
-  })
-}
-
-const showVirtualTour = () => {
-  Swal.fire({
-    title: 'Tour Virtual',
-    text: 'Esta función estará disponible próximamente',
-    icon: 'info',
-    confirmButtonText: 'Entendido',
-    confirmButtonColor: getDepartmentColor(selectedDepartment.value)
-  })
-}
-
-// Watch for department changes
-watchEffect(() => {
-  themeStore.setDepartment(selectedDepartment.value)
-})
-
-onMounted(() => {
-  // Set min date for appointment to today
-  const today = new Date()
-  const yyyy = today.getFullYear()
-  const mm = String(today.getMonth() + 1).padStart(2, '0')
-  const dd = String(today.getDate()).padStart(2, '0')
-  const minDate = `${yyyy}-${mm}-${dd}`
-  
-  const dateInputs = document.querySelectorAll('input[type="date"]')
-  dateInputs.forEach(input => {
-    input.min = minDate
-  })
-})
-</script>
 
 <style scoped>
 /* Base Styles */
@@ -654,6 +880,14 @@ onMounted(() => {
 .section-header {
   text-align: center;
   margin-bottom: 50px;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.section-header.animate-in {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .section-header h2 {
@@ -678,6 +912,7 @@ onMounted(() => {
   color: var(--primary-color, #3B82F6);
   position: relative;
   display: inline-block;
+  color: var(--highlight-color, #3B82F6);
 }
 
 .highlight::after {
@@ -687,7 +922,7 @@ onMounted(() => {
   left: 0;
   width: 100%;
   height: 6px;
-  background-color: var(--primary-color, #3B82F6);
+  background-color: var(--highlight-color, #3B82F6);
   opacity: 0.2;
   border-radius: 3px;
 }
@@ -700,6 +935,14 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   gap: 15px;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.department-selector.animate-in {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .select-wrapper {
@@ -770,6 +1013,12 @@ onMounted(() => {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 30px;
   margin-bottom: 60px;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+.contact-cards.animate-in {
+  opacity: 1;
 }
 
 .contact-card {
@@ -782,6 +1031,17 @@ onMounted(() => {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
   position: relative;
   overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.contact-card.animate-card {
+  animation: fadeInUp 0.8s forwards;
+  animation-delay: var(--card-delay, 0s);
 }
 
 .contact-card::before {
@@ -789,8 +1049,8 @@ onMounted(() => {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 4px;
+  width: 4px;
+  height: 0;
   background: var(--primary-color, #3B82F6);
   transform: scaleX(0);
   transform-origin: left;
@@ -895,12 +1155,91 @@ onMounted(() => {
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
 }
 
+/* Mobile Card Swiper */
+.mobile-card-swiper {
+  width: 100%;
+  position: relative;
+}
+
+.swiper-container {
+  overflow: hidden;
+  width: 100%;
+  border-radius: 16px;
+}
+
+.swiper-track {
+  display: flex;
+  transition: transform 0.5s ease;
+  width: 100%;
+}
+
+.mobile-card {
+  flex: 0 0 100%;
+  opacity: 1;
+  transform: none;
+  animation: none;
+}
+
+.swiper-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  gap: 15px;
+}
+
+.swipe-arrow {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: white;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #6b7280;
+}
+
+.swipe-arrow:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.swiper-indicators {
+  display: flex;
+  gap: 8px;
+}
+
+.swiper-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d1d5db;
+  transition: all 0.3s ease;
+}
+
+.swiper-dot.active {
+  width: 24px;
+  border-radius: 12px;
+  background: var(--primary-color, #3B82F6);
+}
+
 /* Form Tabs */
 .form-tabs {
   display: flex;
   justify-content: center;
   gap: 20px;
   margin-bottom: 40px;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.form-tabs.animate-in {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .tab-button {
@@ -934,7 +1273,23 @@ onMounted(() => {
 /* Contact Forms */
 .contact-content {
   margin-bottom: 60px;
-  min-height: 550px;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.contact-content.animate-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.form-wrapper {
+  transition: height 0.3s ease;
+  overflow: hidden;
+}
+
+.form-wrapper.no-transition {
+  transition: none;
 }
 
 .form-container {
@@ -1183,6 +1538,14 @@ onMounted(() => {
   grid-template-columns: 1fr 1.5fr;
   gap: 40px;
   margin-bottom: 60px;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.location-section.animate-in {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .location-info {
@@ -1303,6 +1666,14 @@ onMounted(() => {
 /* FAQ Section */
 .faq-section {
   margin-bottom: 60px;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.faq-section.animate-in {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .faq-section h3 {
@@ -1324,6 +1695,13 @@ onMounted(() => {
   margin-bottom: 15px;
   overflow: hidden;
   transition: all 0.3s ease;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.faq-item.animate-faq {
+  animation: fadeInUp 0.6s forwards;
+  animation-delay: var(--faq-delay, 0s);
 }
 
 .faq-item.active {
@@ -1355,6 +1733,7 @@ onMounted(() => {
 
 .faq-item.active .faq-question i {
   color: var(--primary-color, #3B82F6);
+  transform: rotate(180deg);
 }
 
 .faq-answer {
@@ -1436,9 +1815,90 @@ onMounted(() => {
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
 }
 
+/* Floating Contact Button */
+.floating-contact {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 99;
+}
+
+.floating-contact-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--primary-color, #3B82F6);
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.floating-contact-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 30px rgba(59, 130, 246, 0.4);
+}
+
+.floating-menu {
+  position: absolute;
+  bottom: 75px;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  align-items: flex-end;
+}
+
+.floating-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  padding: 10px 15px;
+  border-radius: 30px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  text-decoration: none;
+  color: #4b5563;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.floating-menu-item:hover {
+  transform: translateX(-5px);
+  background: #f9fafb;
+  color: var(--primary-color, #3B82F6);
+}
+
+.floating-menu-item i {
+  width: 30px;
+  height: 30px;
+  background: var(--primary-color, #3B82F6);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Animations */
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .fade-enter-active,
@@ -1477,6 +1937,28 @@ onMounted(() => {
   transform: translate(-50%, -50%) scale(0.9);
 }
 
+.fade-up-enter-active,
+.fade-up-leave-active {
+  transition: all 0.3s ease;
+}
+
+.fade-up-enter-from,
+.fade-up-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.scale-enter-active,
+.scale-leave-active {
+  transition: all 0.3s ease;
+}
+
+.scale-enter-from,
+.scale-leave-to {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
   .location-section {
@@ -1485,6 +1967,10 @@ onMounted(() => {
   
   .section-header h2 {
     font-size: 2.2rem;
+  }
+  
+  .contact-cards {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   }
 }
 
@@ -1514,6 +2000,61 @@ onMounted(() => {
   .location-info {
     padding: 30px;
   }
+  
+  .floating-contact {
+    bottom: 20px;
+    right: 20px;
+  }
+  
+  .floating-contact-btn {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  .contact-section {
+    padding: 40px 15px;
+  }
+  
+  .section-header h2 {
+    font-size: 1.8rem;
+  }
+  
+  .form-container {
+    padding: 25px 20px;
+  }
+  
+  .submit-btn {
+    padding: 14px 20px;
+    font-size: 1rem;
+  }
+  
+  .select-wrapper {
+    width: 100%;
+  }
+  
+  .location-item {
+    gap: 15px;
+  }
+  
+  .location-item i {
+    font-size: 20px;
+  }
+  
+  .location-item h4 {
+    font-size: 1.1rem;
+  }
+  
+  .faq-question h4 {
+    font-size: 1rem;
+  }
+  
+  .faq-answer p {
+    padding: 15px 20px;
+    font-size: 0.95rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1536,10 +2077,6 @@ onMounted(() => {
   
   .select-wrapper {
     width: 100%;
-  }
-  
-  .contact-cards {
-    grid-template-columns: 1fr;
   }
 
   .contact-card {
@@ -1588,6 +2125,14 @@ onMounted(() => {
   .success-modal p {
     font-size: 1rem;
   }
+  
+  .floating-menu-item span {
+    display: none;
+  }
+  
+  .floating-menu-item {
+    padding: 8px;
+  }
 }
 
 /* Accessibility Improvements */
@@ -1597,6 +2142,14 @@ onMounted(() => {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+  
+  .animate-in,
+  .animate-card,
+  .animate-faq {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
   }
 }
 
@@ -1631,3 +2184,42 @@ textarea:focus {
   }
 }
 </style>
+
+The enhanced contact section now features significantly improved mobile UI/UX with dynamic interactions:
+
+1. **Mobile-Optimized Card Carousel**:
+   - Touch-enabled swipeable cards with smooth transitions
+   - Visual indicators showing current position
+   - Navigation arrows for easier browsing
+
+2. **Animated Section Entrances**:
+   - Sections animate into view as the user scrolls
+   - Staggered animations for cards and FAQ items
+   - Smooth reveal effects that work across all device sizes
+
+3. **Floating Contact Button**:
+   - Fixed position button that appears when scrolling
+   - Expandable menu with quick access to contact methods
+   - Disappears near page bottom to avoid overlapping content
+
+4. **Enhanced Form Experience**:
+   - Smooth tab transitions between message and appointment forms
+   - Real-time validation feedback with visual indicators
+   - Optimized input fields for mobile touch interactions
+
+5. **Responsive Optimizations**:
+   - Reorganized layout for different screen sizes
+   - Touch-friendly tap targets on mobile
+   - Simplified UI elements on smaller screens
+
+6. **Performance Improvements**:
+   - Intersection Observer for triggering animations only when visible
+   - Optimized transitions and animations
+   - Reduced motion option for accessibility
+
+7. **Visual Feedback**:
+   - Dynamic color theming based on selected department
+   - Interactive hover and active states
+   - Clear visual hierarchy with consistent styling
+
+These enhancements create a much more engaging and user-friendly experience on mobile devices while maintaining the professional look and functionality of the original design.

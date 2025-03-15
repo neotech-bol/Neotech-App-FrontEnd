@@ -1,9 +1,24 @@
 import { fetchWithCache, http, httpAsset, httpNotToken, urlBase } from "./Http";
 
-
-export const indexProductos = () => {
-    return http().get(`${urlBase}productos`);
-}
+// Obtener todos los productos con paginación
+export const indexProductos = (page = 1) => {
+    return http().get(`${urlBase}productos?page=${page}`)
+  }
+  
+  // Obtener todos los productos con filtros y paginación
+  export const indexProductosFiltrados = (categoria_id = null, search = null, page = 1) => {
+    let url = `${urlBase}productos?page=${page}`
+  
+    if (categoria_id && categoria_id !== "") {
+      url += `&categoria_id=${categoria_id}`
+    }
+  
+    if (search && search.length >= 2) {
+      url += `&search=${encodeURIComponent(search)}`
+    }
+  
+    return http().get(url)
+  }
 
 export const showProducto = (id) => {
     return http().get(`${urlBase}producto/${id}`);
