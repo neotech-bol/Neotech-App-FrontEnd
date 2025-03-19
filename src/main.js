@@ -32,25 +32,6 @@ router.beforeEach((to, from, next) => {
   // Actualizar el título de la página
   head.addHeadObjs({
     title: to.meta.title || 'Neotech-Bol | Tecnología y Electrónica en Bolivia',
-    meta: [
-      {
-        name: 'description',
-        content: to.meta.description || 'Tienda líder en tecnología y electrónica en Bolivia. Encuentra smartphones, computadoras y más al mejor precio.',
-      },
-      // Puedes añadir más metaetiquetas como Open Graph o Twitter Card aquí si lo deseas
-      {
-        property: 'og:title',
-        content: to.meta.title || 'Neotech-Bol | Tecnología y Electrónica en Bolivia',
-      },
-      {
-        property: 'og:description',
-        content: to.meta.description || 'Tienda líder en tecnología y electrónica en Bolivia.',
-      },
-      {
-        property: 'og:url',
-        content: `https://neotech-bol.com${to.fullPath}`,
-      },
-    ],
   })
   next()
 })

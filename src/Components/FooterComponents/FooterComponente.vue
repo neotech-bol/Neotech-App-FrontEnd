@@ -162,9 +162,9 @@ onUnmounted(() => {
 
 .footer {
   font-family: 'Poppins', Arial, sans-serif;
-  background-color: #f8f9fa;
+  background-color: var(--background-color);
   padding: 40px 0 0;
-  border-top: 1px solid #e9ecef;
+  border-top: 1px solid var(--border-color);
 }
 
 .footer-content {
@@ -192,7 +192,7 @@ onUnmounted(() => {
 }
 
 .footer-section h3 {
-  color: #343a40;
+  color: var(--text-color);
   font-size: 1.1rem;
   margin-bottom: 20px;
   font-weight: 600;
@@ -263,7 +263,7 @@ onUnmounted(() => {
   color: #6c757d;
   font-size: 1.2rem;
   transition: all 0.3s ease;
-  background-color: #f1f3f5;
+  background-color: var(--background-color);
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -283,7 +283,7 @@ onUnmounted(() => {
 .footer-bottom {
   margin-top: 40px;
   padding: 20px;
-  border-top: 1px solid #e9ecef;
+  border-top: 1px solid var(--border-color);
   display: flex;
   justify-content: center;
   align-items: center;

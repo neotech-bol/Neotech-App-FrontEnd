@@ -1,26 +1,15 @@
 <template>
-  <div class="carousel-container mt-5" ref="carouselContainer" tabindex="0" @keydown="handleKeydown">
-    <div class="carousel" 
-         @touchstart="touchStart" 
-         @touchmove="touchMove" 
-         @touchend="touchEnd"
-         @mouseenter="pauseAutoSlide"
-         @mouseleave="resumeAutoSlide">
+  <div class="carousel-container" ref="carouselContainer" tabindex="0" @keydown="handleKeydown">
+    <div class="carousel" @touchstart="touchStart" @touchmove="touchMove" @touchend="touchEnd"
+      @mouseenter="pauseAutoSlide" @mouseleave="resumeAutoSlide">
       <transition-group name="slide" tag="div" class="carousel-slides">
-        <div v-for="(image, index) in images" 
-             :key="index" 
-             :class="['carousel-slide', { active: currentIndex === index }]"
-             :style="{ zIndex: currentIndex === index ? 1 : 0 }">
-          <img :src="image.url" 
-               :alt="image.alt" 
-               class="carousel-image" 
-               loading="lazy"
-               @load="onImageLoad" />
+        <div v-for="(image, index) in images" :key="index"
+          :class="['carousel-slide', { active: currentIndex === index }]"
+          :style="{ zIndex: currentIndex === index ? 1 : 0 }">
+          <img :src="image.url" :alt="image.alt" class="carousel-image" loading="lazy" @load="onImageLoad" />
           <div class="carousel-overlay">
             <h2 class="carousel-title ms-md-5 ms-sm-4" v-html="image.title"></h2>
-            <a :href="image.ctaLink" 
-               class="carousel-cta ms-md-5 ms-sm-4" 
-               @click.prevent="handleCtaClick">
+            <a :href="image.ctaLink" class="carousel-cta ms-md-5 ms-sm-4" @click.prevent="handleCtaClick">
               {{ image.ctaText || 'Ver Colección' }}
             </a>
           </div>
@@ -28,29 +17,19 @@
       </transition-group>
 
       <!-- Navigation Controls -->
-      <button v-show="!isMobile" 
-              @click="prevSlide" 
-              class="carousel-control prev" 
-              aria-label="Previous slide"
-              :disabled="isLoading">
+      <button v-show="!isMobile" @click="prevSlide" class="carousel-control prev" aria-label="Previous slide"
+        :disabled="isLoading">
         <i class="fas fa-chevron-left"></i>
       </button>
-      <button v-show="!isMobile" 
-              @click="nextSlide" 
-              class="carousel-control next" 
-              aria-label="Next slide"
-              :disabled="isLoading">
+      <button v-show="!isMobile" @click="nextSlide" class="carousel-control next" aria-label="Next slide"
+        :disabled="isLoading">
         <i class="fas fa-chevron-right"></i>
       </button>
 
       <!-- Indicators -->
       <div class="carousel-indicators">
-        <button v-for="(image, index) in images" 
-                :key="index" 
-                :class="['indicator', { active: currentIndex === index }]"
-                @click="goToSlide(index)" 
-                :aria-label="`Go to slide ${index + 1}`"
-                :aria-current="currentIndex === index">
+        <button v-for="(image, index) in images" :key="index" :class="['indicator', { active: currentIndex === index }]"
+          @click="goToSlide(index)" :aria-label="`Go to slide ${index + 1}`" :aria-current="currentIndex === index">
         </button>
       </div>
     </div>
@@ -148,7 +127,7 @@ const touchEnd = () => {
   const swipeDistance = touchStartX.value - touchEndX.value;
   // Reduced threshold for smaller screens to make swiping more responsive
   const threshold = isMobile.value ? 20 : 30;
-  
+
   if (Math.abs(swipeDistance) > threshold) {
     swipeDistance > 0 ? nextSlide() : prevSlide();
   }
@@ -173,7 +152,7 @@ const handleResize = () => {
 
 onMounted(() => {
   startAutoSlide();
-  
+
   // Use Intersection Observer to pause/resume carousel when in/out of viewport
   const intersectionObserver = new IntersectionObserver(
     ([entry]) => {
@@ -185,7 +164,7 @@ onMounted(() => {
     },
     { threshold: 0.3 }
   );
-  
+
   if (carouselContainer.value) {
     intersectionObserver.observe(carouselContainer.value);
   }
@@ -196,12 +175,12 @@ onMounted(() => {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(handleResize, 100);
   };
-  
+
   window.addEventListener('resize', debouncedResize);
-  
+
   // Initial size check
   handleResize();
-  
+
   // Use ResizeObserver if available for more efficient resize detection
   if (typeof ResizeObserver !== 'undefined') {
     resizeObserver = new ResizeObserver(debouncedResize);
@@ -213,10 +192,10 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (intervalId) clearInterval(intervalId);
-  
+
   // Clean up all event listeners
   window.removeEventListener('resize', handleResize);
-  
+
   // Clean up ResizeObserver if it was created
   if (resizeObserver && carouselContainer.value) {
     resizeObserver.unobserve(carouselContainer.value);
@@ -237,7 +216,8 @@ onUnmounted(() => {
 @media (min-width: 1440px) {
   .carousel-container {
     max-width: 1440px;
-    padding: 0 1rem; /* Less padding on small screens */
+    padding: 0 1rem;
+    /* Less padding on small screens */
   }
 }
 
@@ -245,7 +225,6 @@ onUnmounted(() => {
   position: relative;
   /* Improved height responsiveness with more precise clamp values */
   height: clamp(200px, 45vw, 600px);
-  border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   user-select: none;
@@ -269,6 +248,7 @@ onUnmounted(() => {
 }
 
 .carousel-image {
+ /*  margin-top: 40px; */
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -285,7 +265,8 @@ onUnmounted(() => {
   top: 0;
   left: 0;
   right: 0;
-  bottom: 0; /* Increased space at bottom to prevent overlap with indicators */
+  bottom: 0;
+  /* Increased space at bottom to prevent overlap with indicators */
   background: linear-gradient(90deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.1) 100%);
   display: flex;
   flex-direction: column;
@@ -294,7 +275,8 @@ onUnmounted(() => {
   padding: clamp(1rem, 2vw, 2.5rem);
   color: white;
   max-width: 100%;
-  pointer-events: none; /* Allow clicks to pass through to indicators */
+  pointer-events: none;
+  /* Allow clicks to pass through to indicators */
 }
 
 .carousel-title {
@@ -305,7 +287,8 @@ onUnmounted(() => {
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
   word-wrap: break-word;
   max-width: 100%;
-  pointer-events: auto; /* Re-enable pointer events for title */
+  pointer-events: auto;
+  /* Re-enable pointer events for title */
 }
 
 .carousel-cta {
@@ -318,8 +301,10 @@ onUnmounted(() => {
   font-size: clamp(0.875rem, 2vw, 1rem);
   transition: all 0.3s ease;
   white-space: nowrap;
-  pointer-events: auto; /* Re-enable pointer events for CTA button */
-  z-index: 5; /* Ensure button is clickable */
+  pointer-events: auto;
+  /* Re-enable pointer events for CTA button */
+  z-index: 5;
+  /* Ensure button is clickable */
 }
 
 .carousel-cta:hover,
@@ -360,8 +345,13 @@ onUnmounted(() => {
   cursor: not-allowed;
 }
 
-.prev { left: 1.5rem; }
-.next { right: 1.5rem; }
+.prev {
+  left: 1.5rem;
+}
+
+.next {
+  right: 1.5rem;
+}
 
 .carousel-indicators {
   position: absolute;
@@ -371,8 +361,10 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   gap: clamp(0.5rem, 1vw, 1rem);
-  z-index: 20; /* Increased z-index to ensure indicators are above overlay */
-  padding: 0.5rem 0; /* Add padding to increase hit area */
+  z-index: 20;
+  /* Increased z-index to ensure indicators are above overlay */
+  padding: 0.5rem 0;
+  /* Add padding to increase hit area */
 }
 
 .indicator {
@@ -383,7 +375,8 @@ onUnmounted(() => {
   border: 2px solid white;
   cursor: pointer;
   transition: all 0.3s ease;
-  position: relative; /* For the pseudo-element */
+  position: relative;
+  /* For the pseudo-element */
 }
 
 .indicator::before {
@@ -400,7 +393,8 @@ onUnmounted(() => {
 .indicator.active {
   background: white;
   transform: scale(1.2);
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8); /* Add glow effect to active indicator */
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+  /* Add glow effect to active indicator */
 }
 
 .indicator:hover {
@@ -436,14 +430,16 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .carousel {
     height: clamp(180px, 50vw, 350px);
-    border-radius: 12px; /* Smaller radius for mobile */
+    /* Smaller radius for mobile */
   }
 
   .carousel-overlay {
     background: linear-gradient(90deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.2) 100%);
     justify-content: center;
-    bottom: 0; /* More space for indicators */
-    max-width: 100%; /* Full width on mobile */
+    bottom: 0;
+    /* More space for indicators */
+    max-width: 100%;
+    /* Full width on mobile */
   }
 
   .carousel-control {
@@ -451,10 +447,11 @@ onUnmounted(() => {
     width: 36px;
     height: 36px;
   }
-  
+
   .carousel-indicators {
     bottom: 1rem;
-    background: rgba(0, 0, 0, 0.3); /* Semi-transparent background for better visibility */
+    background: rgba(0, 0, 0, 0.3);
+    /* Semi-transparent background for better visibility */
     border-radius: 20px;
     padding: 0.5rem;
     width: fit-content;
@@ -465,11 +462,11 @@ onUnmounted(() => {
 @media (max-width: 480px) {
   .carousel {
     height: clamp(160px, 55vw, 280px);
-    border-radius: 10px;
   }
 
   .carousel-container {
-    padding: 0 0.4rem; /* Less padding on small screens */
+    padding: 0 0.4rem;
+    /* Less padding on small screens */
   }
 
   .carousel-overlay {
@@ -488,7 +485,8 @@ onUnmounted(() => {
   .carousel-cta {
     padding: 0.4rem 0.8rem;
     font-size: 0.875rem;
-    align-self: flex-start; /* Align to left on mobile */
+    align-self: flex-start;
+    /* Align to left on mobile */
   }
 
   .carousel-control {
@@ -496,14 +494,19 @@ onUnmounted(() => {
     height: 32px;
   }
 
-  .prev { left: 0.5rem; }
-  .next { right: 0.5rem; }
+  .prev {
+    left: 0.5rem;
+  }
+
+  .next {
+    right: 0.5rem;
+  }
 
   .indicator {
     width: 8px;
     height: 8px;
   }
-  
+
   .carousel-indicators {
     bottom: 0.5rem;
     gap: 0.4rem;
@@ -514,7 +517,6 @@ onUnmounted(() => {
 @media (max-width: 360px) {
   .carousel {
     height: clamp(140px, 60vw, 220px);
-    border-radius: 8px;
   }
 
   .carousel-overlay {
@@ -533,12 +535,12 @@ onUnmounted(() => {
     font-size: 0.75rem;
     border-radius: 4px;
   }
-  
+
   .carousel-control {
     width: 28px;
     height: 28px;
   }
-  
+
   .indicator {
     width: 6px;
     height: 6px;
@@ -551,16 +553,16 @@ onUnmounted(() => {
   .carousel {
     height: clamp(120px, 55vw, 180px);
   }
-  
+
   .carousel-title {
     font-size: clamp(0.75rem, 4vw, 1rem);
   }
-  
+
   .carousel-cta {
     padding: 0.3rem 0.6rem;
     font-size: 0.7rem;
   }
-  
+
   .carousel-indicators {
     bottom: 0.3rem;
   }
@@ -571,7 +573,7 @@ onUnmounted(() => {
   .carousel {
     height: clamp(120px, 40vh, 250px);
   }
-  
+
   .carousel-overlay {
     flex-direction: row;
     align-items: center;
@@ -579,7 +581,7 @@ onUnmounted(() => {
     padding: 0.5rem 2rem;
     bottom: 2.5rem;
   }
-  
+
   .carousel-title {
     margin-bottom: 0;
     margin-right: 1rem;

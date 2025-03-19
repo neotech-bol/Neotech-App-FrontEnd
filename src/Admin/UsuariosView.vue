@@ -205,7 +205,7 @@
                                     <div class="text-muted small">
                                         <div>ID: {{ item.id }}</div>
                                         <div>Género: {{ formatearGenero(item.genero) }}</div>
-                                        <div>Edad: {{ item.edad }} años</div>
+                                        <div>Fecha de Nacimiento: {{ formatearFecha(item.fecha_de_nacimiento) }}</div>
                                     </div>
                                 </div>
                                 <div class="card-footer bg-white border-top-0">
@@ -338,20 +338,19 @@
                                                     <small class="text-muted">Opcional</small>
                                                 </div>
                                                 <div class="col-md-6">
-                                                    <label for="edad" class="form-label fw-bold">Edad <span
+                                                    <label for="fecha_de_nacimiento" class="form-label fw-bold">Fecha de Nacimiento <span
                                                             class="text-danger">*</span></label>
                                                     <div class="input-group">
                                                         <span class="input-group-text"><i
-                                                                class="fas fa-birthday-cake"></i></span>
-                                                        <input type="number" class="form-control"
-                                                            :class="{ 'is-invalid': errors?.edad }" id="edad"
-                                                            v-model="formulario.edad" placeholder="Ej: 30" min="18"
-                                                            max="100" required>
-                                                        <div class="invalid-feedback" v-if="errors.edad">
-                                                            {{ errors.edad[0] }}
+                                                                class="fas fa-calendar-alt"></i></span>
+                                                        <input type="date" class="form-control"
+                                                            :class="{ 'is-invalid': errors?.fecha_de_nacimiento }" id="fecha_de_nacimiento"
+                                                            v-model="formulario.fecha_de_nacimiento" required>
+                                                        <div class="invalid-feedback" v-if="errors.fecha_de_nacimiento">
+                                                            {{ errors.fecha_de_nacimiento[0] }}
                                                         </div>
                                                         <div class="invalid-feedback" v-else>
-                                                            La edad es obligatoria
+                                                            La fecha de nacimiento es obligatoria
                                                         </div>
                                                     </div>
                                                 </div>
@@ -571,8 +570,8 @@
                                             </li>
                                             <li
                                                 class="list-group-item d-flex justify-content-between align-items-center">
-                                                <span><i class="fas fa-birthday-cake me-2"></i>Edad:</span>
-                                                <span>{{ usuarioSeleccionado.edad }} años</span>
+                                                <span><i class="fas fa-calendar-alt me-2"></i>Fecha de Nacimiento:</span>
+                                                <span>{{ formatearFecha(usuarioSeleccionado.fecha_de_nacimiento) }}</span>
                                             </li>
                                             <li
                                                 class="list-group-item d-flex justify-content-between align-items-center">
@@ -667,7 +666,7 @@ const formulario = ref({
     nit: '',
     direccion: '',
     telefono: '',
-    edad: '',
+    fecha_de_nacimiento: '',
     genero: '',
     role: '',
     email: '',
@@ -769,7 +768,7 @@ const abrirModal = () => {
         nit: '',
         direccion: '',
         telefono: '',
-        edad: '',
+        fecha_de_nacimiento: '',
         genero: '',
         role: '',
         email: '',
@@ -874,7 +873,7 @@ const mostarUser = async (id) => {
             nit: data.dato.nit,
             direccion: data.dato.direccion,
             telefono: data.dato.telefono,
-            edad: data.dato.edad,
+            fecha_de_nacimiento: data.dato.fecha_de_nacimiento,
             genero: data.dato.genero,
             role: data.dato.roles.length > 0 ? data.dato.roles[0].name : '',
             email: data.dato.email,
@@ -913,7 +912,7 @@ const verDetalles = (usuario) => {
 
 const formatearFecha = (fecha) => {
     if (!fecha) return 'N/A';
-    return new Date(fecha).toLocaleString();
+    return new Date(fecha).toLocaleDateString();
 };
 
 const formatearGenero = (genero) => {
@@ -984,7 +983,7 @@ const exportarUsuarios = () => {
         NIT: usuario.nit || 'N/A',
         Dirección: usuario.direccion,
         Teléfono: usuario.telefono,
-        Edad: usuario.edad,
+        'Fecha de Nacimiento': formatearFecha(usuario.fecha_de_nacimiento),
         Género: formatearGenero(usuario.genero),
         Rol: usuario.roles[0]?.name || 'Sin rol',
         Estado: usuario.estado ? 'Activo' : 'Inactivo',

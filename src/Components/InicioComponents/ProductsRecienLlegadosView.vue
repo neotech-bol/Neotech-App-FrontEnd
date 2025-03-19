@@ -258,14 +258,14 @@ const showNotification = (message, type) => {
 .container {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 0 1rem;
+/*   padding: 0 1rem; */
 }
 
 /* Section Header */
 .section-title {
   font-size: clamp(1.75rem, 5vw, 2.5rem);
   font-weight: 800;
-  color: #1a202c;
+  color: var(--text-color);
   text-align: center;
   margin-bottom: 0.75rem;
   position: relative;
@@ -403,10 +403,10 @@ const showNotification = (message, type) => {
 
 /* Product Card */
 .product-card {
-  background: white;
+  background: var(--background-color);
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 3px 6px var(--shadow-color);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
   opacity: 0;
@@ -432,7 +432,7 @@ const showNotification = (message, type) => {
 
 .product-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 20px var(--shadow-color);
 }
 
 /* Product Image */
@@ -625,6 +625,7 @@ const showNotification = (message, type) => {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+  background-color: var(--background-color);
 }
 
 .category {
@@ -642,7 +643,7 @@ const showNotification = (message, type) => {
 .product-name {
   font-size: 0.875rem;
   font-weight: 700;
-  color: #2d3748;
+  color: var(--text-color);
   line-height: 1.4;
   transition: color 0.3s ease;
   display: -webkit-box;
@@ -707,7 +708,7 @@ const showNotification = (message, type) => {
 .current-price {
   font-weight: 700;
   font-size: 0.95rem;
-  color: #2d3748;
+  color: var(--text-color);
 }
 
 .old-price {
@@ -971,9 +972,9 @@ const showNotification = (message, type) => {
     padding: 1.5rem 0;
   }
 
-  .container {
+/*   .container {
     padding: 0 0.5rem;
-  }
+  } */
 
   .products-grid {
     grid-template-columns: repeat(2, 1fr);

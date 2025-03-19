@@ -1,8 +1,14 @@
 {
   "compilerOptions": {
+    // Opciones de configuración del compilador TypeScript
     "paths": {
-      "@/*": ["./src/*"]
+      // Mapeo de rutas para facilitar las importaciones
+      "@/*": ["./src/*"] // Crea un alias '@' que apunta a cualquier archivo dentro del directorio 'src'
     }
   },
-  "exclude": ["node_modules", "dist"]
+  "exclude": [
+    // Archivos o directorios que se deben excluir del proceso de compilación
+    "node_modules", // Excluye la carpeta 'node_modules' donde se encuentran las dependencias
+    "dist" // Excluye la carpeta 'dist' donde se generan los archivos de salida
+  ]
 }

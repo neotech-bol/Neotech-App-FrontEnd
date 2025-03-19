@@ -403,12 +403,12 @@ onUnmounted(() => {
   left: 0;
   width: 80px;
   height: 4px;
-  background-color: var(--primary-color, #3498db);
+  background-color: var(--primary-color);
   border-radius: 2px;
 }
 
 .highlight {
-  color: var(--primary-color, #3498db);
+  color: var(--primary-color);
   position: relative;
 }
 
@@ -459,14 +459,14 @@ onUnmounted(() => {
 
 .stat-icon {
   font-size: 2rem;
-  color: var(--primary-color, #3498db);
+  color: var(--primary-color);
   margin-bottom: 15px;
 }
 
 .stat-value {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--primary-color, #3498db);
+  color: var(--primary-color);
   margin-bottom: 5px;
 }
 

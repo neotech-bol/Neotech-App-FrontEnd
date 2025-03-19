@@ -2,17 +2,22 @@
   <div class="product-detail">
     <!-- Mobile Header (visible only on small screens) -->
     <div class="mobile-header">
-      <div class="badge-container">
-        <span v-if="discountPercentage > 0" class="sale-badge">
-          <i class="fas fa-bolt"></i> OFERTA
-        </span>
-        <span v-if="isNewProduct" class="new-badge">
-          <i class="fas fa-star"></i> NUEVO
-        </span>
+      <div class="mobile-nav">
+        <button class="back-button" @click="goBack">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <div class="badge-container">
+          <span v-if="discountPercentage > 0" class="sale-badge">
+            <i class="fas fa-bolt"></i> OFERTA
+          </span>
+          <span v-if="isNewProduct" class="new-badge">
+            <i class="fas fa-star"></i> NUEVO
+          </span>
+        </div>
       </div>
       <h1 class="product-title">{{ dato.nombre }}</h1>
 
-      <!-- Mobile Price Quick View -->
+      <!-- Mobile Price Quick View - Enhanced and more visible -->
       <div class="mobile-price-preview">
         <span class="current-price">{{ formatPrice(selectedModelPrice) }}</span>
         <div class="price-details" v-if="originalPrice > selectedModelPrice">
@@ -70,9 +75,6 @@
       <div class="product-info">
         <div class="sticky-header desktop-only">
           <div class="badge-container">
-            <span v-if="discountPercentage > 0" class="sale-badge">
-              <i class="fas fa-bolt"></i> OFERTA DEL DÍA
-            </span>
             <span v-if="isNewProduct" class="new-badge">
               <i class="fas fa-star"></i> NUEVO
             </span>
@@ -91,8 +93,6 @@
               <div class="price-info">
                 <span class="current-price">{{ formatPrice(selectedModelPrice) }}</span>
                 <div class="price-details" v-if="originalPrice > selectedModelPrice">
-                  <span class="original-price">{{ formatPrice(originalPrice) }}</span>
-                  <span class="discount-badge">-{{ discountPercentage }}%</span>
                 </div>
               </div>
             </div>
@@ -100,6 +100,20 @@
 
           <!-- Accordion Sections for Mobile -->
           <div class="accordion-sections">
+            <!-- Price Section for Mobile (NEW) -->
+            <div class="accordion-section price-accordion" :class="{ 'expanded': true }">
+              <div class="accordion-header">
+                <h3 class="section-title">Precio</h3>
+                <div class="mobile-price-info">
+                  <span class="current-price">{{ formatPrice(selectedModelPrice) }}</span>
+                  <div class="price-details" v-if="originalPrice > selectedModelPrice">
+                    <span class="original-price">{{ formatPrice(originalPrice) }}</span>
+                    <span class="discount-badge">-{{ discountPercentage }}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
             <!-- Features Section -->
             <div class="accordion-section" :class="{ 'expanded': expandedSection === 'features' }">
               <div class="accordion-header" @click="toggleSection('features')">
@@ -250,6 +264,67 @@
       </div>
     </div>
     
+    <!-- Rating -->
+    <div class="rating-section" v-if="dato.id">
+      <h2 class="section-title">
+        Calificaciones y <span class="text-accent">Opiniones</span>
+      </h2>
+
+      <div class="rating-overview">
+        <div class="rating-summary">
+          <div class="average-rating">
+            <span class="rating-value">{{ productRating.average_rating || 0 }}</span>
+            <div class="rating-stars large">
+              <div class="stars-container">
+                <div class="stars-background">★★★★★</div>
+                <div class="stars-foreground" :style="{ width: `${(productRating.average_rating || 0) * 20}%` }">★★★★★
+                </div>
+              </div>
+            </div>
+            <span class="rating-count">{{ productRating.total_ratings || 0 }} calificaciones</span>
+          </div>
+
+          <div class="rating-progress">
+            <div v-for="i in 5" :key="i" class="rating-bar">
+              <div class="rating-label">{{ 6 - i }} <span class="star-icon">★</span></div>
+              <div class="progress-container">
+                <div class="progress-bar" :style="{ width: `${productRating.rating_percentages?.[6 - i] || 0}%` }"></div>
+              </div>
+              <div class="rating-percentage">{{ productRating.rating_percentages?.[6 - i] || 0 }}%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="user-rating">
+          <h4>Tu calificación</h4>
+          <div class="rating-stars interactive" :class="{ 'has-rated': userRating > 0 }">
+            <span v-for="star in 5" :key="star" class="star"
+              :class="{ 'filled': star <= userRating, 'hover': star <= hoverRating && !isRatingSubmitting }"
+              @mouseover="hoverRating = star" @mouseleave="hoverRating = 0" @click="rateProduct(star)">
+              ★
+            </span>
+          </div>
+          <div class="rating-label" v-if="userRating > 0">
+            {{ getRatingLabel(userRating) }}
+          </div>
+          <div class="rating-label" v-else-if="hoverRating > 0 && !isRatingSubmitting">
+            {{ getRatingLabel(hoverRating) }}
+          </div>
+          <div class="rating-label placeholder" v-else>
+            Toca para calificar
+          </div>
+          
+          <div class="rating-actions" v-if="userRating > 0">
+            <button class="submit-rating" @click="submitRating" :disabled="isRatingSubmitting"
+              :class="{ 'loading': isRatingSubmitting }">
+              <i class="fas" :class="isRatingSubmitting ? 'fa-spinner fa-spin' : 'fa-check'"></i>
+              {{ isRatingSubmitting ? 'Enviando...' : 'Guardar calificación' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
     <!-- Productos Similares - Sección mejorada -->
     <div class="similar-products-section" v-if="productosSimilares.length > 0">
       <h2 class="section-title">
@@ -336,7 +411,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Mobile Sticky Add to Cart Bar -->
     <div class="mobile-sticky-bar">
       <div class="mobile-price">
@@ -352,6 +427,30 @@
         <span>{{ addingToCart ? 'Agregando...' : 'Agregar' }}</span>
       </button>
     </div>
+
+    <!-- Mobile Share Button - Improved visibility -->
+    <button class="mobile-share-button" @click="shareProduct">
+      <i class="fas fa-share-alt"></i>
+    </button>
+
+    <!-- Mobile Swipe Indicator -->
+    <div class="swipe-indicator" v-if="showSwipeIndicator">
+      <div class="swipe-icon">
+        <i class="fas fa-hand-pointer"></i>
+        <i class="fas fa-arrows-alt-h"></i>
+      </div>
+      <span>Desliza para ver más imágenes</span>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container">
+      <div v-for="(toast, index) in toasts" :key="index" 
+           class="toast" 
+           :class="[toast.type, {'toast-visible': toast.visible}]">
+        <i class="fas" :class="getToastIcon(toast.type)"></i>
+        <span>{{ toast.message }}</span>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -360,7 +459,7 @@ import { ref, computed, onMounted, watch, nextTick, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { detalleProducto } from '@/Services/ProductoService';
 import { useCartStore } from '@/stores/cart';
-import { indexRatings, storeRating } from '@/Services/RatingService';
+import { indexRatings, storeRating, getProductRatingStats } from '@/Services/RatingService';
 
 const dato = ref({});
 const router = useRouter();
@@ -395,6 +494,112 @@ const addingToCartSimilar = ref(null);
 const userRatings = ref([]);
 // Variables para la funcionalidad "Ver más" en características
 const showAllFeatures = ref(false);
+// Variables para el sistema de calificación
+const userRating = ref(0);
+const hoverRating = ref(0);
+const isRatingSubmitting = ref(false);
+const productRating = ref({
+  average_rating: 0,
+  total_ratings: 0,
+  rating_percentage: 0,
+  rating_distribution: {
+    '1': 0, '2': 0, '3': 0, '4': 0, '5': 0
+  },
+  rating_percentages: {
+    '1': 0, '2': 0, '3': 0, '4': 0, '5': 0
+  }
+});
+
+// New mobile UX variables
+const cartItemCount = computed(() => cartStore.productos?.length || 0);
+const showSwipeIndicator = ref(true);
+const toasts = ref([]);
+const hasScrolled = ref(false);
+
+// Etiquetas descriptivas para cada nivel de calificación
+const ratingLabels = {
+  1: 'Muy malo',
+  2: 'Malo',
+  3: 'Regular',
+  4: 'Bueno',
+  5: 'Excelente'
+};
+
+// Obtener la etiqueta correspondiente a una calificación
+const getRatingLabel = (rating) => {
+  return ratingLabels[rating] || '';
+};
+
+// Cargar las estadísticas de calificación del producto
+const loadProductRatingStats = async (productId) => {
+  try {
+    const { data } = await getProductRatingStats(productId);
+    productRating.value = data;
+
+    // Verificar si el usuario ya ha calificado este producto
+    checkUserRating(productId);
+  } catch (error) {
+    console.error('Error al cargar estadísticas de calificación:', error);
+  }
+};
+
+// Verificar si el usuario ya ha calificado este producto
+const checkUserRating = async (productId) => {
+  try {
+    // Esta función debería implementarse en el servicio de calificaciones
+    // Aquí usaremos los datos que ya tenemos en userRatings
+    const userRatingData = userRatings.value.find(r => r.producto_id === parseInt(productId));
+
+    if (userRatingData) {
+      userRating.value = userRatingData.rating;
+    } else {
+      userRating.value = 0;
+    }
+  } catch (error) {
+    console.error('Error al verificar calificación del usuario:', error);
+  }
+};
+
+// Calificar el producto
+const rateProduct = (rating) => {
+  if (isRatingSubmitting.value) return;
+
+  // Si el usuario hace clic en la misma calificación, la elimina
+  if (userRating.value === rating && hoverRating.value === rating) {
+    userRating.value = 0;
+  } else {
+    userRating.value = rating;
+  }
+};
+
+// Enviar la calificación
+const submitRating = async () => {
+  if (isRatingSubmitting.value || !userRating.value || !dato.value.id) return;
+
+  isRatingSubmitting.value = true;
+
+  try {
+    await storeRating({
+      producto_id: dato.value.id,
+      rating: userRating.value
+    });
+
+    // Recargar las estadísticas de calificación
+    await loadProductRatingStats(dato.value.id);
+
+    // Actualizar las calificaciones de usuario
+    await indexRatingUser();
+
+    // Mostrar notificación de éxito
+    showToast('Calificación guardada correctamente', 'success');
+
+    isRatingSubmitting.value = false;
+  } catch (error) {
+    console.error('Error al enviar calificación:', error);
+    showToast('Error al guardar la calificación', 'error');
+    isRatingSubmitting.value = false;
+  }
+};
 
 // Calcular todas las imágenes disponibles (principal + colores)
 const allImages = computed(() => {
@@ -414,7 +619,7 @@ const hasColors = computed(() => {
 // Función para obtener el índice original de una imagen con color
 const getOriginalIndex = (filteredIndex) => {
   if (!dato.value.images) return filteredIndex;
-  
+
   const imageWithColor = imagesWithColors.value[filteredIndex];
   return dato.value.images.findIndex(img => img.id === imageWithColor.id);
 };
@@ -455,45 +660,6 @@ const toggleShowAllFeatures = (event) => {
   if (event) event.stopPropagation();
   showAllFeatures.value = !showAllFeatures.value;
 };
-
-// Cargar datos del producto - Keep this function for initial load
-const verProducto = async () => {
-  try {
-    const { data } = await detalleProducto(route.params.idProducto);
-    console.log(data);
-    dato.value = data.dato;
-    originalPrice.value = dato.value.precio;
-
-    // Cargar productos similares
-    productosSimilares.value = data.productos_similares || [];
-
-    // Inicializar índices de imágenes para productos similares
-    productosSimilares.value.forEach(product => {
-      currentImageIndexSimilar.value[product.id] = 0;
-    });
-
-    // Seleccionar el primer modelo por defecto si existe
-    if (dato.value.modelos?.length > 0) {
-      selectModel(dato.value.modelos[0]);
-    } else {
-      selectedModelPrice.value = originalPrice.value;
-    }
-
-    // Animar elementos después de cargar
-    nextTick(() => {
-      animateElements();
-    });
-
-    // Cargar calificaciones de usuarios
-    indexRatingUser();
-    
-    // Resetear el estado de "Ver más" al cargar un nuevo producto
-    showAllFeatures.value = false;
-  } catch (error) {
-    console.error('Error al obtener detalles del producto:', error);
-  }
-};
-
 
 // Animar elementos al cargar
 const animateElements = () => {
@@ -576,8 +742,10 @@ const addToCart = async () => {
 
     await cartStore.addToCart(productWithModelPrice);
     showAddedToCartAnimation();
+    showToast('Producto agregado al carrito', 'success');
   } catch (error) {
     console.error('Error al agregar al carrito:', error);
+    showToast('Error al agregar al carrito', 'error');
   } finally {
     setTimeout(() => {
       addingToCart.value = false;
@@ -609,6 +777,14 @@ const handleImageZoom = (event) => {
 // Manejar inicio de toque
 const handleTouchStart = (event) => {
   touchStartX.value = event.touches[0].clientX;
+  
+  // Hide swipe indicator after first interaction
+  if (showSwipeIndicator.value && !hasScrolled.value) {
+    hasScrolled.value = true;
+    setTimeout(() => {
+      showSwipeIndicator.value = false;
+    }, 1500);
+  }
 };
 
 // Manejar movimiento de toque
@@ -689,6 +865,8 @@ const toggleWishlist = () => {
   } else {
     isInWishlist.value = !isInWishlist.value;
   }
+  
+  showToast(isInWishlist.value ? 'Agregado a favoritos' : 'Eliminado de favoritos', 'info');
 };
 
 // Formatear precio
@@ -752,10 +930,10 @@ const addToCartSimilar = async (product) => {
     const cantidadMinima = product.cantidad_minima || 1;
     const productWithMinQuantity = { ...product, quantity: cantidadMinima };
     await cartStore.addToCart(productWithMinQuantity);
-    showNotification(`${product.nombre} agregado al carrito`, 'success');
+    showToast(`${product.nombre} agregado al carrito`, 'success');
   } catch (error) {
     console.error('Error al agregar al carrito:', error);
-    showNotification('Error al agregar al carrito', 'error');
+    showToast('Error al agregar al carrito', 'error');
   } finally {
     setTimeout(() => addingToCartSimilar.value = null, 800);
   }
@@ -767,13 +945,14 @@ const toggleFavoriteSimilar = async (productId) => {
     const index = favoriteProductsSimilar.value.indexOf(productId);
     if (index > -1) {
       favoriteProductsSimilar.value.splice(index, 1);
+      showToast('Eliminado de favoritos', 'info');
     } else {
       favoriteProductsSimilar.value.push(productId);
+      showToast('Agregado a favoritos', 'success');
     }
-    showNotification('Producto agregado a favoritos', 'success');
   } catch (error) {
     console.error('Error al agregar a favoritos:', error.response?.data?.message || error);
-    showNotification('Error al agregar a favoritos', 'error');
+    showToast('Error al agregar a favoritos', 'error');
   }
 };
 
@@ -781,7 +960,7 @@ const toggleFavoriteSimilar = async (productId) => {
 const navegarAProducto = async (productId) => {
   // Avoid reloading the same product
   if (productId === parseInt(route.params.idProducto)) return;
-  
+
   try {
     // First approach: Force component reload by using a key
     // This is done by navigating with replace and adding a timestamp
@@ -789,24 +968,26 @@ const navegarAProducto = async (productId) => {
       path: `/producto/${productId}`,
       query: { _t: Date.now() } // Add timestamp to force reload
     });
-    
+
     // Second approach: Manually reload the data after navigation
     const { data } = await detalleProducto(productId);
     dato.value = data.dato;
     productosSimilares.value = data.productos_similares || [];
-    
+
     // Reset all state variables
     selectedImage.value = 0;
     selectedModel.value = null;
     selectedColor.value = null;
     selectedColorImage.value = '';
     showAllFeatures.value = false;
-    
+    showSwipeIndicator.value = true;
+    hasScrolled.value = false;
+
     // Initialize similar products image indices
     productosSimilares.value.forEach(product => {
       currentImageIndexSimilar.value[product.id] = 0;
     });
-    
+
     // Select first model if available
     if (dato.value.modelos?.length > 0) {
       selectModel(dato.value.modelos[0]);
@@ -814,17 +995,17 @@ const navegarAProducto = async (productId) => {
       originalPrice.value = dato.value.precio;
       selectedModelPrice.value = originalPrice.value;
     }
-    
+
     // Reload ratings
     indexRatingUser();
-    
+
     // Animate elements after loading
     nextTick(() => {
       animateElements();
       document.querySelector('.product-detail')?.classList.add('loaded');
       window.scrollTo(0, 0); // Scroll to top
     });
-    
+
   } catch (error) {
     console.error('Error al navegar al producto:', error);
     // Fallback to traditional navigation if the above fails
@@ -832,19 +1013,79 @@ const navegarAProducto = async (productId) => {
   }
 };
 
-const showNotification = (message, type) => {
-  console.log(`${type}: ${message}`);
-  // Implementar sistema de notificaciones aquí
+// Navigation functions
+const goBack = () => {
+  router.go(-1);
 };
 
-const storeRatingUser = async (productId, rating) => {
+const goToHome = () => {
+  router.push('/');
+};
+
+const goToSearch = () => {
+  router.push('/buscar');
+};
+
+const goToCategories = () => {
+  router.push('/categorias');
+};
+
+const goToCart = () => {
+  router.push('/carrito');
+};
+
+const shareProduct = async () => {
   try {
-    await storeRating({ producto_id: productId, rating });
-    await indexRatingUser();
-    showNotification('Calificación guardada', 'success');
+    if (navigator.share) {
+      await navigator.share({
+        title: dato.value.nombre,
+        text: dato.value.subtitulo || 'Mira este producto',
+        url: window.location.href
+      });
+      showToast('Compartido exitosamente', 'success');
+    } else {
+      // Fallback for browsers that don't support Web Share API
+      navigator.clipboard.writeText(window.location.href);
+      showToast('Enlace copiado al portapapeles', 'success');
+    }
   } catch (error) {
-    console.error('Error al calificar el producto:', error.response?.data?.message || error);
-    showNotification('Error al guardar calificación', 'error');
+    console.error('Error al compartir:', error);
+    showToast('Error al compartir el producto', 'error');
+  }
+};
+
+// Toast notification system
+const showToast = (message, type = 'info') => {
+  const toast = {
+    message,
+    type,
+    visible: true,
+    id: Date.now()
+  };
+  
+  toasts.value.push(toast);
+  
+  // Auto hide after 3 seconds
+  setTimeout(() => {
+    const index = toasts.value.findIndex(t => t.id === toast.id);
+    if (index !== -1) {
+      toasts.value[index].visible = false;
+      
+      // Remove from array after animation completes
+      setTimeout(() => {
+        toasts.value = toasts.value.filter(t => t.id !== toast.id);
+      }, 300);
+    }
+  }, 3000);
+};
+
+const getToastIcon = (type) => {
+  switch (type) {
+    case 'success': return 'fa-check-circle';
+    case 'error': return 'fa-exclamation-circle';
+    case 'warning': return 'fa-exclamation-triangle';
+    case 'info': 
+    default: return 'fa-info-circle';
   }
 };
 
@@ -867,9 +1108,56 @@ const storeFavorite = async (data) => {
   });
 };
 
+// Cargar datos del producto
+const verProducto = async () => {
+  try {
+    const { data } = await detalleProducto(route.params.idProducto);
+    console.log(data);
+    dato.value = data.dato;
+    originalPrice.value = dato.value.precio;
+
+    // Cargar productos similares
+    productosSimilares.value = data.productos_similares || [];
+
+    // Inicializar índices de imágenes para productos similares
+    productosSimilares.value.forEach(product => {
+      currentImageIndexSimilar.value[product.id] = 0;
+    });
+
+    // Seleccionar el primer modelo por defecto si existe
+    if (dato.value.modelos?.length > 0) {
+      selectModel(dato.value.modelos[0]);
+    } else {
+      selectedModelPrice.value = originalPrice.value;
+    }
+
+    // Animar elementos después de cargar
+    nextTick(() => {
+      animateElements();
+    });
+
+    // Cargar calificaciones de usuarios
+    indexRatingUser();
+
+    // Resetear el estado de "Ver más" al cargar un nuevo producto
+    showAllFeatures.value = false;
+  } catch (error) {
+    console.error('Error al obtener detalles del producto:', error);
+    showToast('Error al cargar el producto', 'error');
+  }
+};
+
+// Versión extendida que también carga estadísticas de calificación
+const verProductoConRatings = async () => {
+  await verProducto();
+  if (dato.value.id) {
+    await loadProductRatingStats(dato.value.id);
+  }
+};
+
 // Al montar el componente
 onMounted(() => {
-  verProducto();
+  verProductoConRatings(); // Usar la versión extendida aquí
   checkThumbnailScroll();
   window.addEventListener('resize', checkThumbnailScroll);
 
@@ -883,6 +1171,18 @@ onMounted(() => {
     const mobileHeader = document.querySelector('.mobile-header');
     if (mobileHeader) mobileHeader.style.display = 'block';
   }
+
+  // Si ya tenemos un ID de producto, cargar las estadísticas de calificación
+  if (route.params.idProducto) {
+    loadProductRatingStats(route.params.idProducto);
+  }
+  
+  // Auto-hide swipe indicator after 5 seconds
+  setTimeout(() => {
+    if (!hasScrolled.value) {
+      showSwipeIndicator.value = false;
+    }
+  }, 5000);
 });
 
 // Al desmontar el componente
@@ -893,30 +1193,56 @@ onUnmounted(() => {
 // Observar cambios en la cantidad
 watch(quantity, validateQuantity);
 
-// Make sure to update the watch to use route instead of router
+// Observar cambios en el ID del producto
 watch(
   () => route.params.idProducto,
   async (newId, oldId) => {
     if (newId && newId !== oldId) {
       try {
-        await verProducto();
+        await verProductoConRatings(); // Usar la versión extendida aquí también
       } catch (error) {
         console.error('Error al cargar el producto:', error);
+        showToast('Error al cargar el producto', 'error');
       }
     }
   }
 );
+
+// Función simplificada para calificar productos similares
+const storeRatingUser = async (productId, rating) => {
+  try {
+    await storeRating({
+      producto_id: productId,
+      rating
+    });
+
+    // Recargar las calificaciones
+    await indexRatingUser();
+
+    // Si el producto actual es el que se calificó, actualizar sus estadísticas
+    if (dato.value.id === productId) {
+      await loadProductRatingStats(productId);
+    }
+
+    showToast('Calificación guardada', 'success');
+  } catch (error) {
+    console.error('Error al calificar el producto:', error.response?.data?.message || error);
+    showToast('Error al guardar calificación', 'error');
+  }
+};
 </script>
 
 <style scoped>
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
+
 /* Base Styles */
 .product-detail {
   padding: 2rem 1.5rem;
-  background: #fff;
   min-height: 100vh;
   opacity: 0;
   animation: fadeIn 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
   animation-delay: 0.2s;
+  padding-bottom: 20px; /* Reduced padding since we removed bottom nav */
 }
 
 .product-detail.loaded {
@@ -948,6 +1274,32 @@ watch(
   padding: 1rem 0;
   margin-bottom: 1rem;
   border-bottom: 1px solid #eee;
+}
+
+.mobile-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.back-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f8f9fa;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.back-button:active {
+  transform: scale(0.95);
+  background: #e9ecef;
 }
 
 /* Animation Classes */
@@ -1009,7 +1361,6 @@ watch(
 .main-image-wrapper {
   border-radius: 1.5rem;
   overflow: hidden;
-  background: #f8f9fa;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
@@ -1212,6 +1563,10 @@ watch(
   align-items: center;
   gap: 12px;
   margin-top: 0.75rem;
+  background-color: #f8f9fa;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 /* Info Section */
@@ -1305,6 +1660,39 @@ watch(
 .accordion-section.expanded {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
   border-color: #007bff;
+}
+
+/* Price Accordion - NEW */
+.price-accordion {
+  background-color: #f8f9fa;
+  border-color: #007bff;
+  margin-bottom: 1rem;
+}
+
+.price-accordion .accordion-header {
+  background-color: rgba(0, 123, 255, 0.05);
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mobile-price-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.mobile-price-info .current-price {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.mobile-price-info .price-details {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .accordion-header {
@@ -1694,13 +2082,13 @@ watch(
 }
 
 .quantity-input {
+  color: #000;
   width: 3rem;
   height: 2.5rem;
   border: none;
   text-align: center;
   font-size: 0.875rem;
   font-weight: 500;
-  -moz-appearance: textfield;
   background: white;
   padding: 0;
 }
@@ -1742,10 +2130,30 @@ watch(
   box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
 }
 
+.add-to-cart::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: all 0.5s ease;
+}
+
+.add-to-cart:hover::before {
+  left: 100%;
+}
+
 .add-to-cart:hover:not(:disabled) {
+  background-color: #0069d9;
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(0, 123, 255, 0.4);
-  background: linear-gradient(45deg, #0062cc, #0046a1);
+}
+
+.add-to-cart:active:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 123, 255, 0.3);
 }
 
 .add-to-cart:disabled {
@@ -1898,7 +2306,7 @@ watch(
 .mobile-sticky-bar {
   display: none;
   position: fixed;
-  bottom: 0;
+  bottom: 20px; /* Adjusted since we removed bottom nav */
   left: 0;
   width: 100%;
   background: white;
@@ -1962,6 +2370,110 @@ watch(
   cursor: not-allowed;
 }
 
+/* Mobile Share Button */
+.mobile-share-button {
+  display: none;
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #007bff;
+  color: white;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+  z-index: 90;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.mobile-share-button:active {
+  transform: scale(0.95);
+  background: #0056b3;
+}
+
+/* Swipe Indicator */
+.swipe-indicator {
+  display: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 1rem;
+  z-index: 10;
+  text-align: center;
+  animation: fadeInOut 3s ease-in-out;
+}
+
+.swipe-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 1.25rem;
+}
+
+@keyframes fadeInOut {
+  0%, 100% { opacity: 0; }
+  20%, 80% { opacity: 1; }
+}
+
+/* Toast Notifications */
+.toast-container {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 90%;
+  max-width: 300px;
+}
+
+.toast {
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.3s ease;
+}
+
+.toast.toast-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast.success {
+  background: rgba(40, 167, 69, 0.9);
+}
+
+.toast.error {
+  background: rgba(220, 53, 69, 0.9);
+}
+
+.toast.warning {
+  background: rgba(255, 193, 7, 0.9);
+}
+
+.toast.info {
+  background: rgba(23, 162, 184, 0.9);
+}
+
 /* Loading State */
 .loading {
   position: relative;
@@ -2007,7 +2519,7 @@ watch(
 
 @media (max-width: 768px) {
   .product-detail {
-    padding: 1rem;
+    padding: 0.5rem 1rem 80px 1rem;
   }
 
   .desktop-only {
@@ -2035,8 +2547,20 @@ watch(
     display: block;
   }
 
+  .mobile-price-preview {
+    display: flex;
+  }
+
   .mobile-sticky-bar {
     display: flex;
+  }
+
+  .mobile-share-button {
+    display: flex;
+  }
+
+  .swipe-indicator {
+    display: block;
   }
 
   .accordion-sections {
@@ -2048,6 +2572,53 @@ watch(
   .color-section,
   .model-section {
     display: none;
+  }
+
+  /* Improve touch targets for mobile */
+  .quantity-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .quantity-input {
+    width: 50px;
+    height: 40px;
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+
+  /* Enhance accordion sections for better mobile UX */
+  .accordion-section {
+    margin-bottom: 1rem;
+  }
+
+  .accordion-header {
+    padding: 1rem;
+  }
+
+  .accordion-content {
+    padding: 0 1rem;
+  }
+
+  .accordion-section.expanded .accordion-content {
+    padding: 1rem;
+  }
+
+  /* Improve image navigation on mobile */
+  .image-nav {
+    width: 36px;
+    height: 36px;
+    opacity: 0.9;
+  }
+
+  .pagination-dot {
+    width: 8px;
+    height: 8px;
+  }
+
+  /* Enhance color swatches for touch */
+  .color-swatch {
+    width: 36px;
+    height: 36px;
   }
 }
 
@@ -2078,11 +2649,38 @@ watch(
     width: 100%;
     justify-content: center;
   }
+
+  /* Adjust sticky bar for smaller screens */
+  .mobile-sticky-bar {
+    padding: 0.5rem 1rem;
+  }
+
+  .mobile-product-name {
+    font-size: 0.9rem;
+    max-width: 150px;
+  }
+
+  .mobile-price .current-price {
+    font-size: 1.1rem;
+  }
+
+  .mobile-add-to-cart {
+    padding: 0 1rem;
+  }
+
+  /* Improve toast notifications */
+  .toast-container {
+    max-width: 280px;
+  }
+
+  .toast {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.9rem;
+  }
 }
 
 /* Touch Device Optimizations */
 @media (hover: none) {
-
   .add-to-cart:hover:not(:disabled),
   .model-card:hover,
   .quantity-btn:hover:not(:disabled) {
@@ -2111,11 +2709,40 @@ watch(
   }
 
   .add-to-wishlist:active {
+    transform: scale(0.98);
+  }
+
+  .add-to-wishlist:active {
     transform: scale(0.95);
   }
 
   .model-card:active {
     background: rgba(0, 123, 255, 0.05);
+  }
+
+  /* Improve touch feedback */
+  .color-swatch:active {
+    transform: scale(1.1);
+  }
+
+  .quantity-btn:active:not(:disabled) {
+    background: rgba(0, 123, 255, 0.2);
+  }
+
+  .mobile-add-to-cart:active {
+    transform: scale(0.98);
+  }
+
+  /* Ensure large enough touch targets */
+  .pagination-dot {
+    width: 12px;
+    height: 12px;
+    margin: 0 4px;
+  }
+
+  .image-nav {
+    width: 44px;
+    height: 44px;
   }
 }
 
@@ -2170,9 +2797,7 @@ watch(
   max-width: 1440px;
   margin: 3rem auto;
   padding: 2rem 1rem;
-  background-color: #f9f9f9;
   border-radius: 1.5rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
 }
 
 .similar-products-section .section-title {
@@ -2367,20 +2992,6 @@ watch(
 .badge-sale {
   background: linear-gradient(45deg, #ed8936, #dd6b20);
   color: white;
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-
-  50% {
-    transform: scale(1.05);
-  }
-
-  100% {
-    transform: scale(1);
-  }
 }
 
 /* Product Actions - Estilos mejorados */
@@ -2621,7 +3232,7 @@ watch(
   .nav-button {
     opacity: 0.7;
   }
-  
+
   .similar-products-section {
     padding: 1.5rem 1rem;
   }
@@ -2649,16 +3260,16 @@ watch(
     width: 30px;
     height: 30px;
   }
-  
+
   .similar-products-section {
     padding: 1.25rem 0.75rem;
     margin: 2rem auto;
   }
-  
+
   .product-info-card {
     padding: 0.75rem;
   }
-  
+
   .product-name {
     font-size: 0.85rem;
     height: 2.4rem;
@@ -2721,7 +3332,7 @@ watch(
     padding: 0.25rem 0.5rem;
     font-size: 0.65rem;
   }
-  
+
   .similar-products-section {
     padding: 1rem 0.75rem;
     margin: 1.5rem auto;
@@ -2786,18 +3397,18 @@ watch(
     padding: 0.2rem 0.4rem;
     font-size: 0.6rem;
   }
-  
+
   .similar-products-section {
     padding: 1rem 0.5rem;
     margin: 1rem auto;
     border-radius: 0.75rem;
   }
-  
+
   .similar-products-section .section-title {
     font-size: 1.25rem;
     margin-bottom: 1rem;
   }
-  
+
   .similar-products-section .section-title::after {
     bottom: -5px;
     width: 50px;
@@ -2805,30 +3416,268 @@ watch(
   }
 }
 
-/* Touch Device Optimizations */
-@media (hover: none) {
-  .product-card:hover {
-    transform: none;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+/* rating */
+/* Estilos para el sistema de calificación */
+.rating-section {
+  max-width: 1440px;
+  margin: 3rem auto;
+  padding: 2rem 1rem;
+  border-radius: 1.5rem;
+  animation: fadeIn 0.8s ease forwards;
+  animation-delay: 0.3s;
+  opacity: 0;
+}
+
+.rating-section .section-title {
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 2rem;
+  text-align: center;
+  position: relative;
+}
+
+.rating-section .section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 3px;
+  background: linear-gradient(45deg, #007bff, #00bcd4);
+  border-radius: 3px;
+}
+
+.rating-overview {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  margin-top: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .rating-overview {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.rating-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.average-rating {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rating-value {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #333;
+  line-height: 1;
+}
+
+.rating-count {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.rating-stars {
+  display: flex;
+  align-items: center;
+}
+
+.rating-stars.large {
+  font-size: 1.75rem;
+}
+
+.rating-stars.small {
+  font-size: 1rem;
+}
+
+.stars-container {
+  position: relative;
+  display: inline-block;
+  line-height: 1;
+}
+
+.stars-background {
+  color: #e0e0e0;
+}
+
+.stars-foreground {
+  color: #FFD700;
+  position: absolute;
+  top: 0;
+  left: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  width: 0;
+}
+
+.rating-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.rating-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.rating-label {
+  min-width: 2.5rem;
+  font-size: 0.875rem;
+  color: #555;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.star-icon {
+  color: #FFD700;
+  font-size: 0.875rem;
+}
+
+.progress-container {
+  flex-grow: 1;
+  height: 0.5rem;
+  background: #f0f0f0;
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(45deg, #FFD700, #FFA500);
+  border-radius: 1rem;
+  width: 0;
+  transition: width 1s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.rating-percentage {
+  min-width: 2.5rem;
+  font-size: 0.75rem;
+  color: #666;
+  text-align: right;
+}
+
+.user-rating {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.user-rating h4 {
+  margin: 0;
+  font-size: 1.125rem;
+  color: #333;
+}
+
+.rating-stars.interactive {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 2rem;
+  justify-content: center;
+}
+
+.rating-stars.interactive .star {
+  cursor: pointer;
+  color: #e0e0e0;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.rating-stars.interactive .star:hover {
+  transform: scale(1.2);
+}
+
+.rating-stars.interactive .star.filled,
+.rating-stars.interactive .star.hover {
+  color: #FFD700;
+}
+
+.rating-stars.interactive .star.filled {
+  animation: starPulse 0.5s ease;
+}
+
+@keyframes starPulse {
+  0% {
+    transform: scale(1);
   }
 
-  .product-actions-bottom {
-    opacity: 1;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.3) 50%, transparent 100%);
-    transform: translateY(0);
+  50% {
+    transform: scale(1.3);
   }
 
-  .nav-button {
-    opacity: 0.8;
+  100% {
+    transform: scale(1);
   }
+}
 
-  .action-button:active {
-    transform: scale(0.95);
-  }
+.rating-stars.has-rated .star.filled {
+  text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+}
 
-  .product-card:active {
-    transform: scale(0.98);
-  }
+.rating-label {
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #333;
+  min-height: 1.5rem;
+}
+
+.rating-label.placeholder {
+  color: #999;
+  font-style: italic;
+  font-weight: normal;
+}
+
+.rating-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.submit-rating {
+  padding: 0.75rem 1.5rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.submit-rating:hover:not(:disabled) {
+  background: #0056b3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+}
+
+.submit-rating:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.submit-rating.loading {
+  background: #0056b3;
 }
 
 /* Accessibility Improvements */
@@ -2857,6 +3706,14 @@ watch(
 
   .fade-enter-active,
   .fade-leave-active {
+    transition: none;
+  }
+  
+  .swipe-indicator {
+    animation: none;
+  }
+  
+  .toast {
     transition: none;
   }
 }

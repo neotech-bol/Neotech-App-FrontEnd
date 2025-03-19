@@ -400,15 +400,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-:root {
-  --primary-color: #3B82F6;
-  --primary-hover-color: #2563eb;
-  --card-bg: #fff;
-  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  --text-primary: #333;
-  --text-secondary: #666;
-  --animation-duration: 0.5s;
-}
 
 /* Main Content Styles */
 main {

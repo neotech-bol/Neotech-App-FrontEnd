@@ -1,35 +1,77 @@
+
+/* ===== TIPOGRAFÍA GLOBAL ===== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 :root {
+  /* Tipografía */
+  --font-family-base: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  --font-size-base: 16px;
+  --line-height-base: 1.5;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 700;
+  
+  /* Espaciado */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  
+  /* Colores base (modo claro) - IMPORTANTE: Solo definir una vez */
   --primary-color: #3b82f6; /* Default to blue */
   --primary-hover-color: #2563eb;
+  
+  /* Colores de sistema (modo claro) */
+  --background-color: #ffffff;
+  --surface-color: #f8f9fa;
+  --text-color: #333333;
+  --text-muted: #6c757d;
+  --border-color: #e5e7eb;
+  --input-bg: #ffffff;
+  --input-border: #d1d5db;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  
+  /* Colores de estado */
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  --info-color: #3b82f6;
+
+  /* Variables adicionales */
+  --secondary-color: #6c757d;
+  --light-color: #f8f9fa;
+  --dark-color: #343a40;
+  --border-radius: 8px;
+  --box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  --transition: all 0.3s ease;
+  --header-height: 150px;
 }
 
-/* Global styles for buttons */
-.btn-primary {
-  background-color: var(--primary-color);
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+/* ===== TEMA OSCURO ===== */
+.dark-mode {
+  /* Colores de sistema (modo oscuro) */
+  --background-color: #121212;
+  --text-color: #f5f5f5;
+  --surface-color: #1e1e1e;
+  --border-color: #2e2e2e;
+  --input-bg: #2a2a2a;
+  --input-border: #3f3f46;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  
+  /* Colores de estado (modo oscuro) */
+  --success-color: #059669;
+  --warning-color: #d97706;
+  --error-color: #dc2626;
+  --info-color: #2563eb;
+  
+  /* IMPORTANTE: NO redefinir --primary-color y --primary-hover-color aquí */
+  /* Estos colores deben venir de los temas de departamentos */
 }
 
-.btn-primary:hover {
-  background-color: var(--primary-hover-color);
-}
+/* ===== TEMAS DE DEPARTAMENTOS ===== */
+/* Estos temas solo cambian los colores primarios, no afectan a los colores del sistema */
 
-/* Global styles for links */
-a {
-  color: var(--primary-color);
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
-
-a:hover {
-  color: var(--primary-hover-color);
-}
-
-/* Department-specific theme classes */
 .theme-la-paz {
   --primary-color: #f8a812;
   --primary-hover-color: #e69711;
@@ -40,6 +82,7 @@ a:hover {
   --primary-hover-color: #2563eb;
 }
 
+/* Añadir otros departamentos según sea necesario */
 .theme-santa-cruz {
   --primary-color: #10b981;
   --primary-hover-color: #059669;
@@ -73,4 +116,163 @@ a:hover {
 .theme-chuquisaca {
   --primary-color: #14b8a6;
   --primary-hover-color: #0d9488;
+}
+
+/* Estilos para el botón de alternar tema */
+.theme-toggle-btn {
+  background-color: var(--surface-color);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-left: 8px;
+}
+
+.theme-toggle-btn:hover {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.icon {
+  font-size: 16px;
+}
+
+/* ===== ESTILOS GLOBALES ===== */
+body {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+  color: var(--text-color);
+  background-color: var(--background-color);
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: var(--font-weight-bold);
+  margin-top: 0;
+  margin-bottom: var(--spacing-md);
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: 2.5rem;
+}
+
+h2 {
+  font-size: 2rem;
+}
+
+h3 {
+  font-size: 1.75rem;
+}
+
+h4 {
+  font-size: 1.5rem;
+}
+
+h5 {
+  font-size: 1.25rem;
+}
+
+h6 {
+  font-size: 1rem;
+}
+
+p {
+  margin-top: 0;
+  margin-bottom: var(--spacing-md);
+}
+
+/* Estilos para botones */
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: var(--font-family-base);
+  font-weight: var(--font-weight-medium);
+  transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-hover-color);
+}
+
+/* Estilos para enlaces */
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: var(--primary-hover-color);
+}
+
+/* ===== UTILIDADES ADICIONALES ===== */
+
+/* Contenedores */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+}
+
+/* Tarjetas */
+.card {
+  background-color: var(--surface-color);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  padding: var(--spacing-lg);
+  box-shadow: 0 2px 4px var(--shadow-color);
+  transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+
+/* Formularios */
+input, select, textarea {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  background-color: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+  padding: 8px 12px;
+  color: var(--text-color);
+  transition: border-color 0.3s, background-color 0.3s;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+/* Texto */
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.font-bold {
+  font-weight: var(--font-weight-bold);
+}
+
+.font-medium {
+  font-weight: var(--font-weight-medium);
 }

@@ -749,12 +749,12 @@ const formatPrice = (price) => {
 .category-header h2 {
   font-size: clamp(1.75rem, 3vw, 2.5rem);
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--text-color);
   margin-bottom: 0.5rem;
 }
 
 .text-accent {
-  color: #3498db;
+  color: var(--primary-color);
   position: relative;
 }
 
@@ -765,7 +765,7 @@ const formatPrice = (price) => {
   left: 0;
   width: 100%;
   height: 2px;
-  background-color: #3498db;
+  background-color: var(--primary-color);
   transform: scaleX(0);
   transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   transform-origin: left;
@@ -792,10 +792,10 @@ const formatPrice = (price) => {
 
 /* Product Card */
 .product-card {
-  background: white;
+  background: var(--background-color);
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 3px 6px var(--shadow-color);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
   opacity: 0;
@@ -1014,6 +1014,7 @@ const formatPrice = (price) => {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+  background-color: var(--background-color);
 }
 
 .category {
@@ -1031,7 +1032,7 @@ const formatPrice = (price) => {
 .product-name {
   font-size: 0.875rem;
   font-weight: 700;
-  color: #2d3748;
+  color: var(--text-color);
   line-height: 1.4;
   transition: color 0.3s ease;
   display: -webkit-box;
@@ -1096,7 +1097,7 @@ const formatPrice = (price) => {
 .current-price {
   font-weight: 700;
   font-size: 0.95rem;
-  color: #2d3748;
+  color: var(--text-color);
 }
 
 .old-price {

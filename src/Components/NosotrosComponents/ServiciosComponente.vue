@@ -357,15 +357,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-:root {
-  --primary-color: #3498db;
-  --primary-hover-color: #2980b9;
-  --service-bg-0: rgba(52, 152, 219, 0.1);
-  --service-bg-1: rgba(46, 204, 113, 0.1);
-  --service-bg-2: rgba(155, 89, 182, 0.1);
-  --service-bg-3: rgba(241, 196, 15, 0.1);
-}
-
 .services-section {
   max-width: 1440px;
   margin: 80px auto;

@@ -1,12 +1,18 @@
 <template>
   <div class="checkout-container">
     <!-- Sticky Mobile Header -->
-    <header class="checkout-header">
+    <header class="checkout-header" :class="{ 'header-scrolled': isScrolled }">
       <div class="header-content">
-        <h1>Finalizar Pedido <span>({{ totalItems }} ítems)</span></h1>
+        <div class="header-left">
+          <div class="logo-container">
+            <img src="../../public/logo/Logo Neofetch PNG.png" alt="Logo de la empresa" class="company-logo" />
+          </div>
+          
+        </div>
+        <h1>Finalizar Pedido <span class="items-badge">{{ totalItems }}</span></h1>
         <div class="actions-container">
           <button @click="emptyCart" class="empty-cart-btn" :disabled="items.length === 0">
-            <i class="fas fa-trash-alt"></i> <span class="btn-text">Vaciar Carrito</span>
+            <i class="fas fa-trash-alt"></i> <span class="btn-text">Vaciar</span>
           </button>
           <div class="lock-icon">
             <i class="fas fa-lock"></i>
@@ -14,17 +20,24 @@
         </div>
       </div>
 
-      <!-- Mobile Progress Indicator -->
+      <!-- Improved Mobile Progress Indicator -->
       <div class="mobile-progress">
         <div class="steps-indicator">
           <div v-for="(step, index) in checkoutSteps" :key="index" 
                :class="['step-indicator', {
                  'active': activeStep === index,
-                 'completed': activeStep > index
+                 'completed': activeStep > index,
+                 'clickable': index <= activeStep || (index === activeStep + 1 && checkoutSteps[activeStep].completed)
                }]" 
-               @click="goToStep(index)">
-            <span class="step-number">{{ index + 1 }}</span>
+               @click="handleStepClick(index)">
+            <div class="step-number-container">
+              <span class="step-number">{{ index + 1 }}</span>
+              <i v-if="activeStep > index" class="fas fa-check check-icon"></i>
+            </div>
             <span class="step-label">{{ step.shortTitle || step.title }}</span>
+            <div v-if="index <= activeStep || (index === activeStep + 1 && checkoutSteps[activeStep].completed)" class="step-tooltip">
+              Ir al paso {{ index + 1 }}
+            </div>
           </div>
         </div>
         <div class="progress-bar">
@@ -33,72 +46,136 @@
       </div>
     </header>
 
-    <div class="checkout-content">
+    <div class="checkout-content" :class="{ 'summary-open': showSummary }">
       <div class="main-content">
         <div class="checkout-steps">
           <!-- Step 1: Delivery Information -->
           <div class="step" :class="{ 'active-step': activeStep === 0, 'completed-step': activeStep > 0 }">
             <div class="step-header" @click="toggleStepVisibility(0)">
               <div class="step-header-left">
-                <span class="step-number">1</span>
+                <div class="step-number-wrapper">
+                  <span class="step-number">1</span>
+                  <i v-if="activeStep > 0" class="fas fa-check check-icon"></i>
+                </div>
                 <h2>Ubicación de Entrega</h2>
               </div>
               <div class="step-header-right">
-                <button v-if="activeStep >= 0 && checkoutSteps[0].completed" @click.stop="toggleEdit(0)" class="edit-button">
+                <button v-if="activeStep >= 0 && checkoutSteps[0].completed" @click.stop="toggleEdit(0)"
+                  class="edit-button">
                   <i class="fas" :class="checkoutSteps[0].editing ? 'fa-save' : 'fa-edit'"></i>
-                  <span class="btn-text">{{ checkoutSteps[0].editing ? 'Guardar' : 'Alterar' }}</span>
+                  <span class="btn-text">{{ checkoutSteps[0].editing ? 'Guardar' : 'Editar' }}</span>
                 </button>
-                <i v-if="activeStep !== 0" class="fas" :class="stepsVisible[0] ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                <i v-if="activeStep !== 0" class="fas"
+                  :class="stepsVisible[0] ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
               </div>
             </div>
             <div class="step-content" v-show="activeStep === 0 || (stepsVisible[0] && checkoutSteps[0].completed)">
               <div v-if="!checkoutSteps[0].editing && isDeliveryInfoComplete" class="delivery-info-display">
-                <p v-if="deliveryInfo.nombre"><i class="fas fa-user"></i> {{ deliveryInfo.nombre }} {{ deliveryInfo.apellido }}</p>
-                <p v-if="deliveryInfo.direccion"><i class="fas fa-map-marker-alt"></i> {{ deliveryInfo.direccion }}</p>
-                <p v-if="deliveryInfo.telefono"><i class="fas fa-phone"></i> {{ deliveryInfo.telefono }}</p>
-                <p v-if="deliveryInfo.email"><i class="fas fa-envelope"></i> {{ deliveryInfo.email }}</p>
+                <div class="info-card">
+                  <p v-if="deliveryInfo.nombre"><i class="fas fa-user"></i> {{ deliveryInfo.nombre }} {{ deliveryInfo.apellido }}</p>
+                  <p v-if="deliveryInfo.direccion"><i class="fas fa-map-marker-alt"></i> {{ deliveryInfo.direccion }}</p>
+                  <p v-if="deliveryInfo.telefono"><i class="fas fa-phone"></i> {{ deliveryInfo.telefono }}</p>
+                  <p v-if="deliveryInfo.email"><i class="fas fa-envelope"></i> {{ deliveryInfo.email }}</p>
+                </div>
               </div>
               <div v-else class="form-grid">
                 <div class="form-group">
-                  <label for="nombre">Nombre</label>
+                  <label for="nombre">Nombre *</label>
                   <div class="input-wrapper">
                     <i class="fas fa-user input-icon"></i>
-                    <input id="nombre" v-model="deliveryInfo.nombre" placeholder="Nombre" required>
+                    <input 
+                      id="nombre" 
+                      v-model="deliveryInfo.nombre" 
+                      placeholder="Ingrese su nombre" 
+                      required 
+                      class="responsive-input"
+                      :class="{ 'input-error': !deliveryInfo.nombre && formSubmitted }"
+                    >
+                    <span class="input-focus-indicator"></span>
+                    <span v-if="!deliveryInfo.nombre && formSubmitted" class="error-message">
+                      Este campo es obligatorio
+                    </span>
                   </div>
                 </div>
                 <div class="form-group">
-                  <label for="apellido">Apellido</label>
+                  <label for="apellido">Apellido *</label>
                   <div class="input-wrapper">
                     <i class="fas fa-user input-icon"></i>
-                    <input id="apellido" v-model="deliveryInfo.apellido" placeholder="Apellido" required>
+                    <input 
+                      id="apellido" 
+                      v-model="deliveryInfo.apellido" 
+                      placeholder="Ingrese su apellido" 
+                      required 
+                      class="responsive-input"
+                      :class="{ 'input-error': !deliveryInfo.apellido && formSubmitted }"
+                    >
+                    <span class="input-focus-indicator"></span>
+                    <span v-if="!deliveryInfo.apellido && formSubmitted" class="error-message">
+                      Este campo es obligatorio
+                    </span>
                   </div>
                 </div>
                 <div class="form-group full-width">
-                  <label for="direccion">Dirección</label>
+                  <label for="direccion">Dirección *</label>
                   <div class="input-wrapper">
                     <i class="fas fa-map-marker-alt input-icon"></i>
-                    <input id="direccion" v-model="deliveryInfo.direccion" placeholder="Dirección" required>
+                    <input 
+                      id="direccion" 
+                      v-model="deliveryInfo.direccion" 
+                      placeholder="Ingrese su dirección completa" 
+                      required 
+                      class="responsive-input"
+                      :class="{ 'input-error': !deliveryInfo.direccion && formSubmitted }"
+                    >
+                    <span class="input-focus-indicator"></span>
+                    <span v-if="!deliveryInfo.direccion && formSubmitted" class="error-message">
+                      Este campo es obligatorio
+                    </span>
                   </div>
                 </div>
                 <div class="form-group">
-                  <label for="telefono">Teléfono</label>
+                  <label for="telefono">Teléfono *</label>
                   <div class="input-wrapper">
                     <i class="fas fa-phone input-icon"></i>
-                    <input id="telefono" v-model="deliveryInfo.telefono" placeholder="Teléfono" required
-                           type="tel" pattern="[0-9]*" inputmode="numeric">
+                    <input 
+                      id="telefono" 
+                      v-model="deliveryInfo.telefono" 
+                      placeholder="Ingrese su número" 
+                      required 
+                      type="tel"
+                      pattern="[0-9]*" 
+                      inputmode="numeric" 
+                      class="responsive-input"
+                      :class="{ 'input-error': !deliveryInfo.telefono && formSubmitted }"
+                    >
+                    <span class="input-focus-indicator"></span>
+                    <span v-if="!deliveryInfo.telefono && formSubmitted" class="error-message">
+                      Este campo es obligatorio
+                    </span>
                   </div>
                 </div>
                 <div class="form-group">
-                  <label for="email">Email</label>
+                  <label for="email">Email *</label>
                   <div class="input-wrapper">
                     <i class="fas fa-envelope input-icon"></i>
-                    <input id="email" v-model="deliveryInfo.email" placeholder="Email" required
-                           type="email">
+                    <input 
+                      id="email" 
+                      v-model="deliveryInfo.email" 
+                      placeholder="Ingrese su email" 
+                      required 
+                      type="email" 
+                      class="responsive-input"
+                      :class="{ 'input-error': !deliveryInfo.email && formSubmitted }"
+                    >
+                    <span class="input-focus-indicator"></span>
+                    <span v-if="!deliveryInfo.email && formSubmitted" class="error-message">
+                      Este campo es obligatorio
+                    </span>
                   </div>
                 </div>
               </div>
               <div class="step-actions" v-if="activeStep === 0">
-                <button @click="nextStep" class="next-button" :disabled="!isDeliveryInfoComplete">
+                <button @click="nextStep" class="next-button">
                   Continuar <i class="fas fa-arrow-right"></i>
                 </button>
               </div>
@@ -109,11 +186,15 @@
           <div class="step" :class="{ 'active-step': activeStep === 1, 'completed-step': activeStep > 1 }">
             <div class="step-header" @click="toggleStepVisibility(1)">
               <div class="step-header-left">
-                <span class="step-number">2</span>
+                <div class="step-number-wrapper">
+                  <span class="step-number">2</span>
+                  <i v-if="activeStep > 1" class="fas fa-check check-icon"></i>
+                </div>
                 <h2>Revise los Items y Envío</h2>
               </div>
               <div class="step-header-right">
-                <i v-if="activeStep !== 1" class="fas" :class="stepsVisible[1] ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                <i v-if="activeStep !== 1" class="fas"
+                  :class="stepsVisible[1] ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
               </div>
             </div>
             <div class="step-content" v-show="activeStep === 1 || (stepsVisible[1] && checkoutSteps[1].completed)">
@@ -132,9 +213,10 @@
                   <div class="product-info">
                     <h3>{{ product.nombre }}</h3>
                     <p v-if="product.specs" class="specs">{{ product.specs }}</p>
-                    <p class="price">{{ formatPrice(product.precio * product.cantidad) }}</p>
-                    <p class="unit-price">(Precio unitario: {{ formatPrice(product.precio) }})</p>
-
+                    <div class="price-container">
+                      <p class="price">{{ formatPrice(product.precio * product.cantidad) }}</p>
+                      <p class="unit-price">Precio unitario: {{ formatPrice(product.precio) }}</p>
+                    </div>
                     <div class="product-details">
                       <div class="detail-item">
                         <span class="detail-label">Cantidad mínima:</span>
@@ -157,16 +239,13 @@
                         <img :src="product.colorImage" alt="Color seleccionado" class="color-image" />
                       </div>
                     </div>
-
                     <div class="quantity-controls">
                       <div class="quantity-selector">
-                        <button @click="decreaseQuantity(product)"
-                          :disabled="product.cantidad <= product.cantidad_minima" class="quantity-btn">
+                        <button @click="decreaseQuantity(product)" :disabled="product.cantidad <= product.cantidad_minima" class="quantity-btn">
                           <i class="fas fa-minus"></i>
                         </button>
                         <span class="quantity">{{ product.cantidad }}</span>
-                        <button @click="increaseQuantity(product)"
-                          :disabled="product.cantidad >= product.cantidad_maxima" class="quantity-btn">
+                        <button @click="increaseQuantity(product)" :disabled="product.cantidad >= product.cantidad_maxima" class="quantity-btn">
                           <i class="fas fa-plus"></i>
                         </button>
                       </div>
@@ -187,16 +266,20 @@
               </div>
             </div>
           </div>
-          
+
           <!-- Step 3: Coupon -->
           <div class="step" :class="{ 'active-step': activeStep === 2, 'completed-step': activeStep > 2 }">
             <div class="step-header" @click="toggleStepVisibility(2)">
               <div class="step-header-left">
-                <span class="step-number">3</span>
+                <div class="step-number-wrapper">
+                  <span class="step-number">3</span>
+                  <i v-if="activeStep > 2" class="fas fa-check check-icon"></i>
+                </div>
                 <h2>Cupón de Descuento</h2>
               </div>
               <div class="step-header-right">
-                <i v-if="activeStep !== 2" class="fas" :class="stepsVisible[2] ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                <i v-if="activeStep !== 2" class="fas"
+                  :class="stepsVisible[2] ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
               </div>
             </div>
             <div class="step-content" v-show="activeStep === 2 || (stepsVisible[2] && checkoutSteps[2].completed)">
@@ -206,8 +289,8 @@
                   <div class="coupon-input-group">
                     <div class="input-wrapper">
                       <i class="fas fa-tag input-icon"></i>
-                      <input id="cupon" type="text" v-model="cuponForm.codigo" placeholder="Ingrese el código del cupón"
-                        class="coupon-input" />
+                      <input id="cupon" type="text" v-model="cuponForm.codigo" placeholder="Ingrese el código del cupón" class="coupon-input responsive-input" />
+                      <span class="input-focus-indicator"></span>
                     </div>
                     <button @click="applyCoupon" class="apply-coupon-btn" :disabled="!cuponForm.codigo">
                       <i class="fas fa-check"></i> <span class="btn-text">Aplicar</span>
@@ -219,13 +302,8 @@
                   {{ couponMessage }}
                 </p>
                 <div v-if="cartStore.descuento > 0" class="discount-info">
-                  <p>
-                    <i class="fas fa-money-bill-wave"></i> Descuento aplicado:
-                    {{ formatPrice(cartStore.montoDescuento) }}
-                  </p>
-                  <p v-if="cartStore.tipoDescuento === 'porcentaje'">
-                    <i class="fas fa-percentage"></i> Porcentaje de descuento: {{ cartStore.descuento }}%
-                  </p>
+                  <p><i class="fas fa-money-bill-wave"></i> Descuento aplicado: {{ formatPrice(cartStore.montoDescuento) }}</p>
+                  <p v-if="cartStore.tipoDescuento === 'porcentaje'"><i class="fas fa-percentage"></i> Porcentaje de descuento: {{ cartStore.descuento }}%</p>
                   <button @click="removeCoupon" class="remove-coupon-btn">
                     <i class="fas fa-times"></i> <span class="btn-text">Eliminar Cupón</span>
                   </button>
@@ -246,23 +324,23 @@
           <div class="step" :class="{ 'active-step': activeStep === 3, 'completed-step': activeStep > 3 }">
             <div class="step-header" @click="toggleStepVisibility(3)">
               <div class="step-header-left">
-                <span class="step-number">4</span>
+                <div class="step-number-wrapper">
+                  <span class="step-number">4</span>
+                  <i v-if="activeStep > 3" class="fas fa-check check-icon"></i>
+                </div>
                 <h2>Método de Pago</h2>
               </div>
               <div class="step-header-right">
-                <i v-if="activeStep !== 3" class="fas" :class="stepsVisible[3] ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                <i v-if="activeStep !== 3" class="fas"
+                  :class="stepsVisible[3] ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
               </div>
             </div>
             <div class="step-content" v-show="activeStep === 3 || (stepsVisible[3] && checkoutSteps[3].completed)">
               <div class="payment-options">
-                <div class="payment-option" :class="{ 'selected': paymentMethod === 'qr' }"
-                  @click="paymentMethod = 'qr'">
+                <div class="payment-option" :class="{ 'selected': paymentMethod === 'qr' }" @click="paymentMethod = 'qr'">
                   <div class="payment-option-header">
                     <input type="radio" id="qr-payment" name="payment-method" value="qr" v-model="paymentMethod">
-                    <label for="qr-payment">
-                      <i class="fas fa-qrcode"></i>
-                      Pago por QR
-                    </label>
+                    <label for="qr-payment"><i class="fas fa-qrcode"></i> Pago por QR</label>
                   </div>
                   <div v-if="paymentMethod === 'qr'" class="payment-details">
                     <p>Escanea el siguiente código QR para realizar el pago:</p>
@@ -272,8 +350,7 @@
                     <div class="voucher-upload">
                       <label for="voucher-file">Subir comprobante de pago (requerido)</label>
                       <div class="file-upload-container">
-                        <input type="file" id="voucher-file" @change="handleFileUpload" accept="image/*"
-                          class="file-input" capture="environment">
+                        <input type="file" id="voucher-file" @change="handleFileUpload" accept="image/*" class="file-input" capture="environment">
                         <div class="file-upload-button">
                           <i class="fas fa-upload"></i> Seleccionar archivo
                         </div>
@@ -288,31 +365,19 @@
                     </div>
                   </div>
                 </div>
-                <div class="payment-option" :class="{ 'selected': paymentMethod === 'in-person' }"
-                  @click="paymentMethod = 'in-person'">
+                <div class="payment-option" :class="{ 'selected': paymentMethod === 'in-person' }" @click="paymentMethod = 'in-person'">
                   <div class="payment-option-header">
                     <input type="radio" id="in-person" name="payment-method" value="in-person" v-model="paymentMethod">
-                    <label for="in-person">
-                      <i class="fas fa-store"></i>
-                      Pago en Instalaciones
-                    </label>
+                    <label for="in-person"><i class="fas fa-store"></i> Pago en Instalaciones</label>
                   </div>
                   <div v-if="paymentMethod === 'in-person'" class="payment-details">
-                    <p>Puedes realizar el pago directamente en nuestras instalaciones. Por favor selecciona una
-                      ubicación:</p>
-
-                    <!-- Location selector -->
+                    <p>Puedes realizar el pago directamente en nuestras instalaciones. Por favor selecciona una ubicación:</p>
                     <div class="location-selector">
-                      <div v-for="(location, key) in locationOptions" :key="key"
-                        :class="['location-option', { 'selected': selectedLocation === key }]"
-                        @click="selectedLocation = key">
-                        <input type="radio" :id="`location-${key}`" name="location" :value="key"
-                          v-model="selectedLocation">
+                      <div v-for="(location, key) in locationOptions" :key="key" :class="['location-option', { 'selected': selectedLocation === key }]" @click="selectedLocation = key">
+                        <input type="radio" :id="`location-${key}`" name="location" :value="key" v-model="selectedLocation">
                         <label :for="`location-${key}`">{{ location.name }}</label>
                       </div>
                     </div>
-
-                    <!-- Selected location details -->
                     <div v-if="selectedLocation" class="store-info">
                       <div class="store-info-item">
                         <i class="fas fa-map-marker-alt"></i>
@@ -366,87 +431,87 @@
         </div>
       </div>
 
+      <!-- Fixed Order Summary for Mobile -->
       <div class="order-summary" :class="{ 'summary-expanded': showSummary }">
         <div class="summary-header" @click="toggleSummary">
-          <h2>Resumen del pedido</h2>
-          <div class="summary-badge" v-if="items.length > 0">{{ items.length }}</div>
-          <button class="toggle-summary">
+          <div class="summary-header-left">
+            <h2>Resumen del pedido</h2>
+            <div class="summary-badge" v-if="items.length > 0">{{ items.length }}</div>
+          </div>
+          <div class="toggle-summary-btn">
             <i class="fas" :class="showSummary ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-          </button>
+          </div>
         </div>
 
-        <div class="summary-content" :class="{ 'summary-hidden': !showSummary }">
-          <div v-if="items.length === 0" class="empty-summary">
-            <i class="fas fa-shopping-cart"></i>
-            <p>No hay productos en el carrito</p>
-          </div>
-          <div v-else>
-            <div class="summary-items">
-              <div class="summary-item">
-                <span>Total en Productos:</span>
-                <span>{{ formatPrice(cartStore.totalAmount) }}</span>
-              </div>
-              <!-- Mostrar descuento según tipo -->
-              <div class="summary-item discount-item" v-if="cartStore.montoDescuento > 0">
-                <span v-if="cartStore.tipoDescuento === 'porcentaje'">
-                  Descuento ({{ cartStore.descuento }}%):
-                </span>
-                <span v-else>
-                  Descuento:
-                </span>
-                <span>-{{ formatPrice(cartStore.montoDescuento) }}</span>
-              </div>
-
-              <div class="summary-item">
-                <span>Total después del descuento:</span>
-                <span>{{ formatPrice(cartStore.totalAfterDiscount) }}</span>
-              </div>
-
-              <!-- Resto del resumen permanece igual -->
-              <div class="summary-item">
-                <span>Monto a cancelar (70%):</span>
-                <span>{{ formatPrice(cartStore.totalToPay) }}</span>
-              </div>
-              <div class="summary-item">
-                <span>Pendiente (30%):</span>
-                <span>{{ formatPrice(cartStore.pending) }}</span>
-              </div>
+        <transition name="fade">
+          <div class="summary-content" v-if="showSummary">
+            <div v-if="items.length === 0" class="empty-summary">
+              <i class="fas fa-shopping-cart"></i>
+              <p>No hay productos en el carrito</p>
             </div>
-
-            <div class="total">
-              <span>Monto final:</span>
-              <span class="total-amount">{{ formatPrice(cartStore.totalAfterDiscount) }}</span>
-            </div>
-            
-            <!-- Mini cart preview for mobile -->
-            <div class="mini-cart-preview mobile-only">
-              <div v-for="(product, index) in items.slice(0, 2)" :key="product.uniqueId" class="mini-cart-item">
-                <img :src="product.image" :alt="product.nombre" class="mini-cart-image">
-                <div class="mini-cart-details">
-                  <p class="mini-cart-name">{{ product.nombre }}</p>
-                  <p class="mini-cart-price">{{ formatPrice(product.precio * product.cantidad) }}</p>
+            <div v-else>
+              <div class="summary-items">
+                <div class="summary-item">
+                  <span>Total en Productos:</span>
+                  <span class="price-value">{{ formatPrice(cartStore.totalAmount) }}</span>
+                </div>
+                <div class="summary-item discount-item" v-if="cartStore.montoDescuento > 0">
+                  <span v-if="cartStore.tipoDescuento === 'porcentaje'">Descuento ({{ cartStore.descuento }}%):</span>
+                  <span v-else>Descuento:</span>
+                  <span class="price-value">-{{ formatPrice(cartStore.montoDescuento) }}</span>
+                </div>
+                <div class="summary-item">
+                  <span>Total después del descuento:</span>
+                  <span class="price-value">{{ formatPrice(cartStore.totalAfterDiscount) }}</span>
+                </div>
+                <div class="summary-item">
+                  <span>Monto a cancelar (70%):</span>
+                  <span class="price-value">{{ formatPrice(cartStore.totalToPay) }}</span>
+                </div>
+                <div class="summary-item">
+                  <span>Pendiente (30%):</span>
+                  <span class="price-value">{{ formatPrice(cartStore.pending) }}</span>
                 </div>
               </div>
-              <div v-if="items.length > 2" class="mini-cart-more">
-                <span>+{{ items.length - 2 }} más</span>
+              <div class="total">
+                <span>Monto final:</span>
+                <span class="total-amount">{{ formatPrice(cartStore.totalAfterDiscount) }}</span>
+              </div>
+              <div class="mini-cart-preview mobile-only">
+                <div class="mini-cart-scroll">
+                  <div v-for="product in items" :key="product.uniqueId" class="mini-cart-item">
+                    <img :src="product.image" :alt="product.nombre" class="mini-cart-image">
+                    <div class="mini-cart-details">
+                      <p class="mini-cart-name">{{ product.nombre }}</p>
+                      <p class="mini-cart-price">{{ formatPrice(product.precio * product.cantidad) }}</p>
+                      <p class="mini-cart-unit-price">Precio unitario: {{ formatPrice(product.precio) }}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-          
-          <div class="checkout-progress desktop-only">
-            <div class="progress-bar">
-              <div class="progress" :style="{ width: progressPercentage + '%' }"></div>
+            <div class="checkout-progress desktop-only">
+              <div class="progress-bar">
+                <div class="progress" :style="{ width: progressPercentage + '%' }"></div>
+              </div>
+              <p class="progress-text">Paso {{ activeStep + 1 }} de {{ checkoutSteps.length }}</p>
             </div>
-            <p class="progress-text">Paso {{ activeStep + 1 }} de {{ checkoutSteps.length }}</p>
+            <p class="terms">
+              Al hacer clic en "Finalizar pedido", aceptas los
+              <a href="/terminos-condiciones">términos y condiciones</a> del servicio.
+            </p>
+            <div class="mobile-finalize-container" v-if="activeStep === 3 && !orderFinalized">
+              <button @click="finalizeOrder" class="mobile-finalize-button" :disabled="!isPaymentValid">
+                <i class="fas fa-check-circle"></i> FINALIZAR PEDIDO
+              </button>
+            </div>
           </div>
-
-          <p class="terms">
-            Al hacer clic en "Finalizar pedido", aceptas los
-            <a href="/terminos-condiciones">términos y condiciones</a> del servicio.
-          </p>
-        </div>
+        </transition>
 
         <div v-if="orderFinalized" class="order-finalized">
+          <div class="success-animation">
+            <i class="fas fa-check-circle"></i>
+          </div>
           <h3>¡Gracias por tu pedido!</h3>
           <p>Puedes contactarnos por WhatsApp para cualquier consulta:</p>
           <a :href="whatsappLink" class="whatsapp-button">
@@ -460,84 +525,81 @@
       </div>
     </div>
 
-    <!-- Floating Action Buttons for Mobile -->
-    <div class="floating-actions mobile-only" v-if="!orderFinalized">
-      <!-- Cart Summary Button -->
-      <button class="floating-summary-button" @click="toggleSummary">
-        <i class="fas fa-shopping-cart"></i>
-        <span class="floating-total">{{ formatPrice(totalAmount) }}</span>
-        <i class="fas" :class="showSummary ? 'fa-chevron-down' : 'fa-chevron-up'"></i>
-      </button>
-      
-      <!-- Navigation Buttons -->
-      <div class="floating-nav-buttons" v-if="activeStep > 0">
-        <button @click="prevStep" class="floating-prev-button">
+    <!-- Navigation Controls for Mobile -->
+    <div class="mobile-nav-controls" v-if="!orderFinalized">
+      <div class="nav-buttons-container">
+        <button v-if="activeStep > 0" @click="prevStep" class="mobile-nav-btn prev-btn">
           <i class="fas fa-arrow-left"></i>
         </button>
-        <button v-if="activeStep < checkoutSteps.length - 1" 
-                @click="nextStep" 
-                class="floating-next-button"
-                :disabled="(activeStep === 1 && items.length === 0)">
+        <button @click="toggleSummary" class="mobile-cart-btn">
+          <i class="fas fa-shopping-cart"></i>
+          <span class="cart-count" v-if="items.length > 0">{{ items.length }}</span>
+          <span class="cart-total">{{ formatPrice(totalAmount) }}</span>
+        </button>
+        <button v-if="activeStep < checkoutSteps.length - 1" @click="nextStep" class="mobile-nav-btn next-btn" :disabled="(activeStep === 1 && items.length === 0)">
           <i class="fas fa-arrow-right"></i>
         </button>
-        <button v-else 
-                @click="finalizeOrder" 
-                class="floating-checkout-button"
-                :disabled="!isPaymentValid">
+        <button v-else @click="finalizeOrder" class="mobile-nav-btn checkout-btn" :disabled="!isPaymentValid">
           <i class="fas fa-check"></i>
         </button>
       </div>
     </div>
-    
+
     <!-- Modal de confirmación para vaciar carrito -->
-    <div v-if="showEmptyCartModal" class="modal-overlay" @click="cancelEmptyCart">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h3><i class="fas fa-exclamation-triangle"></i> Vaciar carrito</h3>
-          <button class="close-modal" @click="cancelEmptyCart">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        <div class="modal-body">
-          <p>¿Estás seguro de que deseas vaciar tu carrito? Esta acción no se puede deshacer.</p>
-        </div>
-        <div class="modal-footer">
-          <button class="cancel-btn" @click="cancelEmptyCart">
-            <i class="fas fa-times"></i> Cancelar
-          </button>
-          <button class="confirm-btn" @click="confirmEmptyCart">
-            <i class="fas fa-trash-alt"></i> Vaciar carrito
-          </button>
+    <transition name="modal">
+      <div v-if="showEmptyCartModal" class="modal-container" aria-modal="true" role="dialog">
+        <div class="modal-overlay" @click="cancelEmptyCart"></div>
+        <div class="modal-content" @click.stop>
+          <div class="modal-header">
+            <h3><i class="fas fa-exclamation-triangle"></i> Vaciar carrito</h3>
+            <button class="close-modal" @click="cancelEmptyCart" aria-label="Cerrar">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p>¿Estás seguro de que deseas vaciar tu carrito? Esta acción no se puede deshacer.</p>
+          </div>
+          <div class="modal-footer">
+            <button class="cancel-btn" @click="cancelEmptyCart">
+              <i class="fas fa-times"></i> Cancelar
+            </button>
+            <button class="confirm-btn" @click="confirmEmptyCart">
+              <i class="fas fa-trash-alt"></i> Vaciar carrito
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-    
+    </transition>
+
     <!-- Login Prompt Modal -->
-    <div v-if="showLoginPrompt" class="modal-overlay" @click="cancelLoginPrompt">
-      <div class="modal-content login-prompt" @click.stop>
-        <div class="modal-header">
-          <h3><i class="fas fa-user-lock"></i> Iniciar sesión</h3>
-          <button class="close-modal" @click="cancelLoginPrompt">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        <div class="modal-body">
-          <p>Para guardar tus datos de envío, te recomendamos iniciar sesión o registrarte.</p>
-          <p>Sin embargo, puedes continuar como invitado si lo prefieres.</p>
-        </div>
-        <div class="modal-footer login-options">
-          <button class="guest-btn" @click="continueAsGuest">
-            <i class="fas fa-user"></i> Continuar como invitado
-          </button>
-          <button class="login-btn" @click="goToLogin">
-            <i class="fas fa-sign-in-alt"></i> Iniciar sesión
-          </button>
-          <button class="register-btn" @click="goToRegister">
-            <i class="fas fa-user-plus"></i> Registrarse
-          </button>
+    <transition name="modal">
+      <div v-if="showLoginPrompt" class="modal-container" aria-modal="true" role="dialog">
+        <div class="modal-overlay" @click="cancelLoginPrompt"></div>
+        <div class="modal-content login-prompt" @click.stop>
+          <div class="modal-header">
+            <h3><i class="fas fa-user-lock"></i> Iniciar sesión</h3>
+            <button class="close-modal" @click="cancelLoginPrompt" aria-label="Cerrar">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p>Para guardar tus datos de envío y facilitar futuras compras, te recomendamos iniciar sesión o registrarte.</p>
+            <p>Sin embargo, puedes continuar como invitado si lo prefieres.</p>
+          </div>
+          <div class="modal-footer login-options">
+            <button class="guest-btn" @click="continueAsGuest">
+              <i class="fas fa-user"></i> Continuar como invitado
+            </button>
+            <button class="login-btn" @click="goToLogin">
+              <i class="fas fa-sign-in-alt"></i> Iniciar sesión
+            </button>
+            <button class="register-btn" @click="goToRegister">
+              <i class="fas fa-user-plus"></i> Registrarse
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </transition>
   </div>
 </template>
 
@@ -557,20 +619,18 @@ const themeStore = useThemeStore();
 const userData = ref({});
 const couponMessage = ref('');
 const couponError = ref(false);
-const cuponForm = ref({
-  codigo: '',
-});
+const cuponForm = ref({ codigo: '' });
 const orderFinalized = ref(false);
-const whatsappNumber = '+59170000000'; // Reemplaza con el número real
+const whatsappNumber = '+59170000000';
 const whatsappLink = computed(() => `https://wa.me/${whatsappNumber}`);
-
-// Estado para controlar la visibilidad del resumen en móvil
 const showSummary = ref(window.innerWidth > 768);
 const stepsVisible = ref([true, true, true, true]);
-
-// Estado para el modal de confirmación de vaciar carrito
+const isScrolled = ref(false);
 const showEmptyCartModal = ref(false);
 const showLoginPrompt = ref(false);
+const formSubmitted = ref(false);
+const redirectAfterLogin = ref(false);
+const activeStepClicked = ref(null); // Track which step was clicked for animation
 
 const deliveryInfo = ref({
   nombre: '',
@@ -580,12 +640,10 @@ const deliveryInfo = ref({
   email: ''
 });
 
-// Payment method
 const paymentMethod = ref('');
 const voucherFile = ref(null);
 const voucherPreview = ref('');
 
-// Location options for in-person payment
 const selectedLocation = ref('');
 const locationOptions = ref({
   'la-paz': {
@@ -614,7 +672,6 @@ const locationOptions = ref({
   }
 });
 
-// Active step tracking
 const activeStep = ref(0);
 const checkoutSteps = ref([
   { id: 'delivery', title: 'Ubicación de Entrega', shortTitle: 'Entrega', editable: true, editing: false, completed: false },
@@ -627,7 +684,6 @@ const progressPercentage = computed(() => {
   return (activeStep.value / (checkoutSteps.value.length - 1)) * 100;
 });
 
-// Validation
 const isDeliveryInfoComplete = computed(() => {
   return deliveryInfo.value.nombre &&
     deliveryInfo.value.apellido &&
@@ -640,45 +696,46 @@ const isPaymentValid = computed(() => {
   if (paymentMethod.value === 'qr') {
     return voucherFile.value !== null;
   } else if (paymentMethod.value === 'in-person') {
-    return selectedLocation.value !== ''; // Ensure a location is selected
+    return selectedLocation.value !== '';
   }
   return false;
 });
 
-// Observar cambios en el carrito para actualizar la UI
 watch(() => cartStore.productos, (newValue) => {
   if (newValue.length === 0 && activeStep.value === 1) {
-    // Si el carrito está vacío y estamos en el paso de revisión, mostrar mensaje
     console.log('Carrito vacío en paso de revisión');
   }
 }, { deep: true });
 
-// Detectar si el usuario está autenticado
 const isAuthenticated = computed(() => {
   return !!localStorage.getItem('token');
 });
 
+// Check for redirect from login page
+const checkRedirectFromLogin = () => {
+  const redirectParam = new URLSearchParams(window.location.search).get('fromLogin');
+  if (redirectParam === 'true' && !isAuthenticated.value) {
+    showLoginPrompt.value = true;
+  }
+};
+
 onMounted(() => {
-  // Check if the current department is one of our locations
   if (themeStore.currentDepartment === 'la-paz' || themeStore.currentDepartment === 'cochabamba' || themeStore.currentDepartment === 'santa-cruz') {
     selectedLocation.value = themeStore.currentDepartment;
   } else {
-    // Default to first location
     selectedLocation.value = 'la-paz';
   }
 
-  // Cargar datos de usuario si existen
   const storedData = localStorage.getItem('datosUser');
   if (storedData) {
     deliveryInfo.value = JSON.parse(storedData);
   }
 
-  // Listener para ajustar la visibilidad del resumen según el tamaño de la pantalla
   window.addEventListener('resize', handleResize);
-  
-  // Verificar si hay productos en el carrito
+  window.addEventListener('scroll', handleScroll);
+  window.addEventListener('touchstart', handleTouchStart, { passive: true });
+
   if (cartStore.productos.length === 0) {
-    // Si no hay productos, redirigir a la página de productos
     Swal.fire({
       title: "Carrito vacío",
       text: "No hay productos en tu carrito. ¿Deseas ir a la tienda?",
@@ -692,56 +749,120 @@ onMounted(() => {
       }
     });
   }
-  
-  // Verificar si el usuario está autenticado al iniciar el checkout
+
   if (!isAuthenticated.value && activeStep.value === 0) {
     showLoginPrompt.value = true;
   }
+  
+  checkRedirectFromLogin();
+  document.addEventListener('keydown', handleKeyDown);
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize);
+  window.removeEventListener('scroll', handleScroll);
+  window.removeEventListener('touchstart', handleTouchStart);
+  document.removeEventListener('keydown', handleKeyDown);
 });
+
+const handleTouchStart = (e) => {
+  // Improve touch responsiveness
+  if (e.target.closest('.toggle-summary-btn') || e.target.closest('.summary-header')) {
+    e.preventDefault();
+  }
+};
+
+const handleKeyDown = (e) => {
+  if (e.key === 'Escape') {
+    if (showEmptyCartModal.value) cancelEmptyCart();
+    if (showLoginPrompt.value) cancelLoginPrompt();
+  }
+};
+
+const handleScroll = () => {
+  isScrolled.value = window.scrollY > 10;
+};
 
 const handleResize = () => {
   if (window.innerWidth > 768) {
     showSummary.value = true;
   } else {
-    // En móvil, mostrar el resumen solo en el último paso
-    showSummary.value = activeStep.value === checkoutSteps.value.length - 1;
+    // En móvil, mantener el estado actual o mostrar en el último paso
+    if (activeStep.value === checkoutSteps.value.length - 1) {
+      showSummary.value = true;
+    }
   }
 };
 
-const toggleSummary = () => {
+// Enhanced step click handler with feedback
+const handleStepClick = (index) => {
+  if (index <= activeStep.value || (index === activeStep.value + 1 && checkoutSteps.value[activeStep.value].completed)) {
+    activeStepClicked.value = index; // Set which step was clicked for animation
+    
+    // Provide visual feedback
+    const stepElement = document.querySelector(`.step-indicator:nth-child(${index + 1})`);
+    if (stepElement) {
+      stepElement.classList.add('step-clicked');
+      setTimeout(() => {
+        stepElement.classList.remove('step-clicked');
+      }, 300);
+    }
+    
+    // Navigate to the step
+    goToStep(index);
+    
+    // Show a brief toast notification
+    if (index !== activeStep.value) {
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: `Navegando al paso ${index + 1}: ${checkoutSteps.value[index].title}`,
+        showConfirmButton: false,
+        timer: 1500,
+        timerProgressBar: true
+      });
+    }
+  }
+};
+
+const toggleSummary = (e) => {
+  if (e) e.stopPropagation();
   showSummary.value = !showSummary.value;
 };
 
 const toggleStepVisibility = (index) => {
-  // Solo permitir toggle si no es el paso activo y está completado
   if (activeStep.value !== index && checkoutSteps.value[index].completed) {
     stepsVisible.value[index] = !stepsVisible.value[index];
   }
 };
 
-// Función para ir directamente a un paso específico (para el indicador móvil)
 const goToStep = (index) => {
-  // Solo permitir ir a pasos completados o al siguiente paso
   if (index <= activeStep.value || (index === activeStep.value + 1 && checkoutSteps.value[activeStep.value].completed)) {
     activeStep.value = index;
+    if (window.innerWidth <= 768) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 };
 
-// Navigation functions
 const nextStep = () => {
+  formSubmitted.value = true; // Activar validación visual
+  if (activeStep.value === 0 && !isDeliveryInfoComplete.value) {
+    Swal.fire({
+      title: "Información incompleta",
+      text: "Por favor, completa todos los campos obligatorios antes de continuar.",
+      icon: "warning",
+      confirmButtonText: "Entendido",
+    });
+    return; // No avanzar si la información no está completa
+  }
   if (activeStep.value < checkoutSteps.value.length - 1) {
     checkoutSteps.value[activeStep.value].completed = true;
     activeStep.value++;
-    // En móvil, mostrar el resumen al llegar al último paso
     if (activeStep.value === checkoutSteps.value.length - 1 && window.innerWidth <= 768) {
       showSummary.value = true;
     }
-    
-    // Scroll to top on mobile
     if (window.innerWidth <= 768) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -751,15 +872,12 @@ const nextStep = () => {
 const prevStep = () => {
   if (activeStep.value > 0) {
     activeStep.value--;
-    
-    // Scroll to top on mobile
     if (window.innerWidth <= 768) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
 };
 
-// File handling
 const handleFileUpload = (event) => {
   const file = event.target.files[0];
   if (file) {
@@ -776,9 +894,7 @@ const removeVoucher = () => {
   voucherFile.value = null;
   voucherPreview.value = '';
   const fileInput = document.getElementById('voucher-file');
-  if (fileInput) {
-    fileInput.value = '';
-  }
+  if (fileInput) fileInput.value = '';
 };
 
 const totalItems = computed(() => cartStore.totalItems);
@@ -823,32 +939,25 @@ const removeProduct = (product) => {
     cancelButtonText: "Cancelar"
   }).then((result) => {
     if (result.isConfirmed) {
-      // Usar el uniqueId que ya viene con el producto en lugar de generarlo nuevamente
       cartStore.removeFromCart(product.uniqueId);
     }
   });
 };
 
-// Función para vaciar el carrito
 const emptyCart = () => {
-  if (items.value.length === 0) {
-    return;
-  }
+  if (items.value.length === 0) return;
   showEmptyCartModal.value = true;
 };
 
 const confirmEmptyCart = () => {
   cartStore.clearCart();
   showEmptyCartModal.value = false;
-  
   Swal.fire({
     title: "Carrito vaciado",
     text: "Todos los productos han sido eliminados del carrito",
     icon: "success",
     confirmButtonText: "Aceptar",
   });
-  
-  // Si estamos en el paso de revisión de productos, volver al paso 1
   if (activeStep.value === 1) {
     activeStep.value = 0;
     checkoutSteps.value[1].completed = false;
@@ -859,7 +968,6 @@ const cancelEmptyCart = () => {
   showEmptyCartModal.value = false;
 };
 
-// Funciones para el modal de login
 const cancelLoginPrompt = () => {
   showLoginPrompt.value = false;
 };
@@ -869,14 +977,17 @@ const continueAsGuest = () => {
 };
 
 const goToLogin = () => {
+  redirectAfterLogin.value = true;
+  localStorage.setItem('checkoutRedirect', 'true');
   router.push('/login?redirect=checkout');
 };
 
 const goToRegister = () => {
+  redirectAfterLogin.value = true;
+  localStorage.setItem('checkoutRedirect', 'true');
   router.push('/register?redirect=checkout');
 };
 
-// Función para ir a la tienda
 const goShopping = () => {
   router.push('/productos');
 };
@@ -899,15 +1010,12 @@ const applyCoupon = async () => {
     });
     return;
   }
-
   try {
     const response = await validateCuponBE(cuponForm.value);
     if (response.data.success) {
-      console.log(response.data.cupon);
       cartStore.applyCoupon(response.data.cupon);
       couponMessage.value = `Cupón aplicado: ${response.data.cupon.codigo}`;
       couponError.value = false;
-
       Swal.fire({
         title: "¡Éxito!",
         text: `Cupón aplicado: ${response.data.cupon.codigo}`,
@@ -917,7 +1025,6 @@ const applyCoupon = async () => {
     } else {
       couponMessage.value = 'Cupón no válido o expirado.';
       couponError.value = true;
-
       Swal.fire({
         title: "Error",
         text: "Cupón no válido o expirado.",
@@ -928,7 +1035,6 @@ const applyCoupon = async () => {
   } catch (error) {
     couponMessage.value = 'Error al aplicar el cupón. Intenta de nuevo más tarde.';
     couponError.value = true;
-
     Swal.fire({
       title: "Error",
       text: "Error al aplicar el cupón. Intenta de nuevo más tarde.",
@@ -942,7 +1048,6 @@ const removeCoupon = () => {
   cartStore.removeCoupon();
   couponMessage.value = 'Cupón eliminado.';
   couponError.value = false;
-
   Swal.fire({
     title: "Información",
     text: "Cupón eliminado correctamente.",
@@ -952,6 +1057,28 @@ const removeCoupon = () => {
 };
 
 const finalizeOrder = async () => {
+  if (!isAuthenticated.value) {
+    Swal.fire({
+      title: "Iniciar sesión",
+      text: "Para finalizar tu pedido, te recomendamos iniciar sesión o registrarte. ¿Deseas continuar?",
+      icon: "info",
+      showCancelButton: true,
+      confirmButtonText: "Iniciar sesión",
+      cancelButtonText: "Continuar como invitado"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        goToLogin();
+        return;
+      } else {
+        processOrder();
+      }
+    });
+  } else {
+    processOrder();
+  }
+};
+
+const processOrder = async () => {
   if (items.value.length === 0) {
     Swal.fire({
       title: "Advertencia",
@@ -961,7 +1088,6 @@ const finalizeOrder = async () => {
     });
     return;
   }
-
   if (!isDeliveryInfoComplete.value) {
     Swal.fire({
       title: "Información incompleta",
@@ -972,16 +1098,13 @@ const finalizeOrder = async () => {
     activeStep.value = 0;
     return;
   }
-
   if (!isPaymentValid.value) {
     let warningMessage = "Por favor, selecciona un método de pago.";
-
     if (paymentMethod.value === 'qr') {
       warningMessage = "Por favor, sube el comprobante de pago antes de finalizar el pedido.";
     } else if (paymentMethod.value === 'in-person' && !selectedLocation.value) {
       warningMessage = "Por favor, selecciona una ubicación para el pago en instalaciones.";
     }
-
     Swal.fire({
       title: "Advertencia",
       text: warningMessage,
@@ -990,8 +1113,6 @@ const finalizeOrder = async () => {
     });
     return;
   }
-
-  // Verificar que items.value sea un array válido
   if (!Array.isArray(items.value)) {
     console.error("Error: items.value no es un array", items.value);
     Swal.fire({
@@ -1003,40 +1124,25 @@ const finalizeOrder = async () => {
     return;
   }
 
-  // Crear un objeto FormData para enviar datos de formulario multipart
   const formData = new FormData();
-
-  // Añadir cada producto como una entrada separada en el FormData
   items.value.forEach((producto, index) => {
     formData.append(`productos[${index}][id]`, producto.id);
     formData.append(`productos[${index}][cantidad]`, producto.cantidad);
-    formData.append(`productos[${index}][precio]`, producto.precio); // Añadir el precio
-    if (producto.modeloId) {
-      formData.append(`productos[${index}][modelo_id]`, producto.modeloId);
-    }
-    if (producto.color) {
-      formData.append(`productos[${index}][color]`, producto.color);
-    }
+    formData.append(`productos[${index}][precio]`, producto.precio);
+    if (producto.modeloId) formData.append(`productos[${index}][modelo_id]`, producto.modeloId);
+    if (producto.color) formData.append(`productos[${index}][color]`, producto.color);
   });
-
-  // Agregar otros datos del pedido
   formData.append('total_amount', totalAmount.value);
   formData.append('total_to_pay', totalToPay.value);
   formData.append('pending', pending.value);
   formData.append('cupon_id', cartStore.cupon_id || '');
   formData.append('payment_method', paymentMethod.value);
   formData.append('is_guest', !isAuthenticated.value);
-
-  // Añadir la ubicación seleccionada si el método de pago es en persona
   if (paymentMethod.value === 'in-person' && selectedLocation.value) {
     formData.append('location', selectedLocation.value);
     formData.append('location_details', JSON.stringify(locationOptions.value[selectedLocation.value]));
   }
-
-  // Para delivery_info, sí necesitamos usar JSON.stringify porque es un objeto complejo
   formData.append('delivery_info', JSON.stringify(deliveryInfo.value));
-
-  // Agregar el archivo del voucher si existe
   if (voucherFile.value && paymentMethod.value === 'qr') {
     formData.append('voucher', voucherFile.value);
   }
@@ -1051,7 +1157,6 @@ const finalizeOrder = async () => {
   }).then(async (result) => {
     if (result.isConfirmed) {
       try {
-        // Mostrar indicador de carga
         Swal.fire({
           title: "Procesando pedido",
           text: "Por favor espera mientras procesamos tu pedido...",
@@ -1060,23 +1165,17 @@ const finalizeOrder = async () => {
             Swal.showLoading();
           }
         });
-        
-        // Enviar el FormData
         const { data } = await storePedido(formData);
-
         Swal.fire({
           title: "¡Pedido Finalizado!",
           text: "Tu pedido ha sido realizado con éxito.",
           icon: "success",
           confirmButtonText: "Aceptar",
         }).then(() => {
-          // Limpiar todos los datos después de que el usuario cierre el mensaje de éxito
           clearOrderData();
         });
-
       } catch (error) {
         console.error("Error al finalizar el pedido:", error.response?.data || error);
-
         Swal.fire({
           title: "Error",
           text: error.response?.data?.message || "Hubo un error al finalizar el pedido. Por favor, intente nuevamente.",
@@ -1084,52 +1183,32 @@ const finalizeOrder = async () => {
           confirmButtonText: "Aceptar",
         });
       }
-    } else {
-      console.log("El usuario ha cancelado el proceso del pedido.");
     }
   });
 };
 
 const clearOrderData = () => {
-  // Limpiar el carrito
   if (typeof cartStore.clearCart === 'function') {
     cartStore.clearCart();
   } else {
-    // Alternativa si no existe la función clearCart
     cartStore.productos = [];
     cartStore.total = 0;
   }
-
-  // Limpiar el cupón
   cartStore.removeCoupon();
   cuponForm.value.codigo = '';
   couponMessage.value = '';
   couponError.value = false;
-
-  // Limpiar la imagen del voucher
   voucherFile.value = null;
   voucherPreview.value = '';
   const fileInput = document.getElementById('voucher-file');
-  if (fileInput) {
-    fileInput.value = '';
-  }
-
-  // Resetear método de pago
+  if (fileInput) fileInput.value = '';
   paymentMethod.value = '';
-
-  // Restablecer pasos del checkout
   checkoutSteps.value.forEach(step => {
     step.completed = false;
     step.editing = false;
   });
-
-  // Volver al primer paso
   activeStep.value = 0;
-
-  // Marcar que el pedido se ha finalizado
   orderFinalized.value = true;
-  
-  // Guardar datos de entrega para futuros pedidos si el usuario está autenticado
   if (isAuthenticated.value) {
     localStorage.setItem('datosUser', JSON.stringify(deliveryInfo.value));
   }
@@ -1137,24 +1216,14 @@ const clearOrderData = () => {
 
 const toggleEdit = async (index) => {
   const step = checkoutSteps.value[index];
-
-  // Si el usuario está autenticado, permitir la edición normalmente
   if (isAuthenticated.value) {
     if (step.editable) {
       step.editing = !step.editing;
-
-      // Si se está saliendo del modo de edición, actualizar los datos
       if (!step.editing) {
         try {
           const { data } = await updateDatosInfoUser(deliveryInfo.value);
-
-          // Limpiar el localStorage antes de guardar
           localStorage.removeItem('datosUser');
-
-          // Actualizar localStorage con los nuevos datos
           localStorage.setItem('datosUser', JSON.stringify(deliveryInfo.value));
-
-          // Mostrar mensaje de éxito
           Swal.fire({
             title: "¡Éxito!",
             text: "Tus datos han sido actualizados correctamente.",
@@ -1163,8 +1232,6 @@ const toggleEdit = async (index) => {
           });
         } catch (error) {
           console.error("Error al actualizar los datos del usuario:", error);
-
-          // Mostrar mensaje de error
           Swal.fire({
             title: "Error",
             text: error.response?.data?.message || "Hubo un error al actualizar los datos. Por favor, intenta nuevamente.",
@@ -1175,7 +1242,6 @@ const toggleEdit = async (index) => {
       }
     }
   } else {
-    // Si no está autenticado, mostrar el modal de login
     showLoginPrompt.value = true;
   }
 };
@@ -1196,6 +1262,7 @@ const toggleEdit = async (index) => {
   --border-radius: 8px;
   --box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
   --transition: all 0.3s ease;
+  --header-height: 150px;
 }
 
 body {
@@ -1209,22 +1276,41 @@ body {
 .checkout-container {
   max-width: 1480px;
   margin: 0 auto;
-  padding: 20px;
+  padding: clamp(10px, 3vw, 20px);
   width: 100%;
   box-sizing: border-box;
   position: relative;
+}
+
+/* Logo Styles */
+.logo-container {
+  display: flex;
+  align-items: center;
+  margin-right: 15px;
+}
+
+.company-logo {
+  height: clamp(30px, 5vw, 40px);
+  width: auto;
+  transition: all 0.3s ease;
 }
 
 /* Header Styles */
 .checkout-header {
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1000;
   background-color: white;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   border-radius: var(--border-radius);
   margin-bottom: 20px;
-  padding: 15px;
+  padding: clamp(10px, 3vw, 15px);
+  transition: all 0.3s ease;
+}
+
+.header-scrolled {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  transform: translateY(-5px);
 }
 
 .header-content {
@@ -1233,6 +1319,12 @@ body {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 15px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .actions-container {
@@ -1246,17 +1338,34 @@ h1 {
   font-weight: 700;
   margin: 0;
   color: var(--primary-color);
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-h1 span {
-  color: #000000;
+.items-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
   font-weight: normal;
-  font-size: 0.85em;
 }
 
 .lock-icon {
   color: var(--primary-color);
   font-size: clamp(18px, 3vw, 24px);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 0.7; transform: scale(1); }
 }
 
 /* Empty Cart Button */
@@ -1277,6 +1386,12 @@ h1 span {
 .empty-cart-btn:hover:not(:disabled) {
   background-color: #c82333;
   transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+.empty-cart-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
 }
 
 .empty-cart-btn:disabled {
@@ -1285,7 +1400,7 @@ h1 span {
   cursor: not-allowed;
 }
 
-/* Mobile Progress Indicator */
+/* Improved Mobile Progress Indicator */
 .mobile-progress {
   margin-top: 15px;
 }
@@ -1294,6 +1409,7 @@ h1 span {
   display: flex;
   justify-content: space-between;
   margin-bottom: 10px;
+  position: relative;
 }
 
 .step-indicator {
@@ -1305,6 +1421,18 @@ h1 span {
   cursor: pointer;
   transition: all 0.3s ease;
   flex: 1;
+  opacity: 0.7;
+  z-index: 1;
+}
+
+.step-indicator.clickable {
+  opacity: 1;
+  cursor: pointer;
+}
+
+.step-indicator.clickable:hover .step-number-container {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
 }
 
 .step-indicator::after {
@@ -1322,7 +1450,8 @@ h1 span {
   display: none;
 }
 
-.step-number {
+.step-number-container {
+  position: relative;
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -1330,10 +1459,27 @@ h1 span {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
-  position: relative;
   z-index: 1;
   transition: all 0.3s ease;
+}
+
+.step-number {
+  font-weight: bold;
+  font-size: clamp(16px, 2vw, 18px);
+  transition: all 0.3s ease;
+}
+
+.check-icon {
+  position: absolute;
+  font-size: 16px;
+  opacity: 0;
+  transform: scale(0);
+  transition: all 0.3s ease;
+}
+
+.step-indicator.completed .check-icon {
+  opacity: 1;
+  transform: scale(1);
 }
 
 .step-label {
@@ -1343,8 +1489,12 @@ h1 span {
   transition: all 0.3s ease;
 }
 
-.step-indicator.active .step-number {
+.step-indicator.active .step-number-container {
   background-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+.step-indicator.active .step-number {
   color: white;
 }
 
@@ -1353,9 +1503,13 @@ h1 span {
   font-weight: 600;
 }
 
-.step-indicator.completed .step-number {
+.step-indicator.completed .step-number-container {
   background-color: #28a745;
   color: white;
+}
+
+.step-indicator.completed .step-number {
+  opacity: 0;
 }
 
 .step-indicator.completed .step-label {
@@ -1364,6 +1518,39 @@ h1 span {
 
 .step-indicator.completed::after {
   background-color: #28a745;
+}
+
+/* New tooltip for step indicators */
+.step-tooltip {
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.step-indicator.clickable:hover .step-tooltip {
+  opacity: 1;
+}
+
+/* Animation for clicked step */
+.step-clicked .step-number-container {
+  animation: clickPulse 0.3s ease;
+}
+
+@keyframes clickPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
 }
 
 /* Progress Bar */
@@ -1378,7 +1565,15 @@ h1 span {
 .progress {
   height: 100%;
   background-color: var(--primary-color);
-  transition: width 0.3s ease;
+  transition: width 0.5s ease;
+  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);
+  background-size: 1rem 1rem;
+  animation: progress-bar-stripes 1s linear infinite;
+}
+
+@keyframes progress-bar-stripes {
+  from { background-position: 1rem 0; }
+  to { background-position: 0 0; }
 }
 
 /* Layout Styles */
@@ -1386,6 +1581,8 @@ h1 span {
   display: grid;
   grid-template-columns: 1fr 350px;
   gap: 30px;
+  transition: all 0.3s ease;
+  padding-top: 20px;
 }
 
 .main-content,
@@ -1395,6 +1592,15 @@ h1 span {
   padding: clamp(15px, 3vw, 30px);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
+}
+
+.main-content {
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Checkout Steps */
@@ -1408,6 +1614,7 @@ h1 span {
   border-bottom: 2px solid #f8f9fa;
   padding-bottom: 20px;
   transition: all 0.3s ease;
+  position: relative;
 }
 
 .step:last-child {
@@ -1419,6 +1626,12 @@ h1 span {
   padding-left: 15px;
   background-color: #f8f9fa;
   border-radius: 8px;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 .completed-step .step-number {
@@ -1431,6 +1644,13 @@ h1 span {
   justify-content: space-between;
   margin-bottom: 20px;
   cursor: pointer;
+  padding: 10px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.step-header:hover {
+  background-color: rgba(0, 123, 255, 0.05);
 }
 
 .step-header-left {
@@ -1445,7 +1665,8 @@ h1 span {
   gap: 10px;
 }
 
-.step-number {
+.step-number-wrapper {
+  position: relative;
   background: var(--primary-color);
   color: white;
   width: 40px;
@@ -1457,6 +1678,27 @@ h1 span {
   justify-content: center;
   font-size: clamp(16px, 2vw, 18px);
   font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.step-number-wrapper .check-icon {
+  position: absolute;
+  opacity: 0;
+  transform: scale(0);
+  transition: all 0.3s ease;
+}
+
+.completed-step .step-number-wrapper .check-icon {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.completed-step .step-number-wrapper .step-number {
+  opacity: 0;
+}
+
+.completed-step .step-number-wrapper {
+  background: #28a745;
 }
 
 h2 {
@@ -1472,7 +1714,7 @@ h2 {
   border: none;
   cursor: pointer;
   font-size: clamp(14px, 2vw, 16px);
-  transition: color 0.3s ease;
+  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   gap: 5px;
@@ -1482,12 +1724,30 @@ h2 {
 
 .edit-button:hover {
   color: var(--primary-hover-color);
-  background-color: rgba(127, 130, 134, 0.1);
+  background-color: rgba(0, 123, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.edit-button:active {
+  transform: translateY(0);
 }
 
 .step-content {
   padding-left: 60px;
   transition: all 0.3s ease;
+}
+
+.info-card {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+  border-left: 4px solid var(--primary-color);
+  transition: all 0.3s ease;
+}
+
+.info-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
 }
 
 .delivery-info-display p {
@@ -1506,7 +1766,8 @@ h2 {
 }
 
 /* Empty Cart Message */
-.empty-cart-message, .empty-summary {
+.empty-cart-message,
+.empty-summary {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1518,13 +1779,22 @@ h2 {
   margin: 20px 0;
 }
 
-.empty-cart-message i, .empty-summary i {
+.empty-cart-message i,
+.empty-summary i {
   font-size: 48px;
   color: #adb5bd;
   margin-bottom: 15px;
+  animation: bounce 2s infinite;
 }
 
-.empty-cart-message p, .empty-summary p {
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-20px); }
+  60% { transform: translateY(-10px); }
+}
+
+.empty-cart-message p,
+.empty-summary p {
   color: #6c757d;
   font-size: 18px;
   margin-bottom: 20px;
@@ -1547,17 +1817,24 @@ h2 {
 .go-shopping-btn:hover {
   background-color: var(--primary-hover-color);
   transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.go-shopping-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
 }
 
 /* Form Styles */
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
+  gap: 20px;
+  margin-bottom: 20px;
 }
 
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 
 .form-group.full-width {
@@ -1566,10 +1843,10 @@ h2 {
 
 .form-group label {
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
   font-weight: 500;
   color: #343a40;
-  font-size: clamp(14px, 2vw, 16px);
+  font-size: clamp(14px, 2.5vw, 16px);
 }
 
 .input-wrapper {
@@ -1583,47 +1860,83 @@ h2 {
   top: 50%;
   transform: translateY(-50%);
   color: #6b7280;
-  font-size: 18px;
+  font-size: 20px;
   transition: color 0.3s ease;
 }
 
-input,
-select {
+input {
   width: 100%;
-  padding: 12px 15px 12px 45px;
-  border: 2px solid #f8f9fa;
+  padding: 14px 15px 14px 45px;
+  border: 2px solid #e5e7eb;
   border-radius: 8px;
-  font-size: clamp(14px, 2vw, 16px);
-  transition: border-color 0.3s ease;
+  font-size: clamp(16px, 2.5vw, 18px);
+  transition: all 0.3s ease;
   box-sizing: border-box;
+  background-color: #fff;
+  min-height: 56px;
 }
 
-input:focus,
-select:focus {
+.responsive-input {
+  font-size: 16px;
+  min-height: 56px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+input:focus {
   border-color: var(--primary-color);
   outline: none;
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
 }
 
-input:focus + .input-icon,
-select:focus + .input-icon {
+input:focus + .input-icon {
   color: var(--primary-color);
+}
+
+.input-focus-indicator {
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  height: 2px;
+  width: 0;
+  background-color: var(--primary-color);
+  transition: width 0.3s ease;
+}
+
+input:focus ~ .input-focus-indicator {
+  width: 100%;
+}
+
+.input-error {
+  border-color: var(--danger-color);
+  background-color: #fef2f2;
+}
+
+.input-error:focus {
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.25);
+}
+
+.error-message {
+  color: var(--danger-color);
+  font-size: 0.8rem;
+  margin-top: 5px;
+  display: block;
+  position: absolute;
 }
 
 /* Button Styles */
 .step-actions {
   display: flex;
   justify-content: space-between;
-  margin-top: 20px;
+  margin-top: 25px;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 15px;
 }
 
 .next-button,
 .prev-button {
-  padding: clamp(8px, 2vw, 10px) clamp(15px, 3vw, 20px);
+  padding: clamp(10px, 2.5vw, 12px) clamp(20px, 3.5vw, 25px);
   border-radius: 8px;
-  font-size: clamp(14px, 2vw, 16px);
+  font-size: clamp(15px, 2.5vw, 17px);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -1638,9 +1951,15 @@ select:focus + .input-icon {
   border: none;
 }
 
-.next-button:hover {
+.next-button:hover:not(:disabled) {
   background-color: var(--primary-hover-color);
   transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.next-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
 }
 
 .prev-button {
@@ -1649,9 +1968,15 @@ select:focus + .input-icon {
   border: 1px solid #dee2e6;
 }
 
-.prev-button:hover {
+.prev-button:hover:not(:disabled) {
   background-color: #e9ecef;
   transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.prev-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .next-button:disabled,
@@ -1659,6 +1984,7 @@ select:focus + .input-icon {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
 }
 
 /* Product List Styles */
@@ -1677,6 +2003,8 @@ select:focus + .input-icon {
 
 .product-item:hover {
   background-color: #f8f9fa;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
 }
 
 .product-item:last-child {
@@ -1695,16 +2023,17 @@ select:focus + .input-icon {
   object-fit: cover;
   border-radius: 8px;
   transition: transform 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .product-image:hover {
   transform: scale(1.05);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
 .product-info {
   flex: 1;
   min-width: 0;
-  /* Prevents flexbox items from overflowing */
 }
 
 .product-info h3 {
@@ -1720,17 +2049,30 @@ select:focus + .input-icon {
   font-size: clamp(12px, 2vw, 14px);
 }
 
+.price-container {
+  margin: 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
 .price {
   font-weight: 600;
-  margin: 10px 0;
   color: var(--primary-color);
   font-size: clamp(16px, 3vw, 18px);
+  margin: 0;
 }
 
 .unit-price {
   color: #000000;
   font-size: clamp(12px, 2vw, 14px);
   margin: 0;
+  font-weight: 500;
+  background-color: #f0f8ff;
+  padding: 5px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  border-left: 3px solid var(--primary-color);
 }
 
 .product-details {
@@ -1741,12 +2083,23 @@ select:focus + .input-icon {
   background-color: #f8f9fa;
   padding: 10px;
   border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.product-details:hover {
+  background-color: #e9ecef;
 }
 
 .detail-item {
   display: flex;
   justify-content: space-between;
   font-size: clamp(12px, 2vw, 14px);
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.detail-item:last-child {
+  border-bottom: none;
 }
 
 .detail-label {
@@ -1764,6 +2117,8 @@ select:focus + .input-icon {
   height: 30px;
   border-radius: 50%;
   object-fit: cover;
+  border: 2px solid white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .quantity-controls {
@@ -1781,6 +2136,11 @@ select:focus + .input-icon {
   background-color: #f8f9fa;
   padding: 5px 10px;
   border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.quantity-selector:hover {
+  background-color: #e9ecef;
 }
 
 .quantity-btn,
@@ -1795,21 +2155,24 @@ select:focus + .input-icon {
   font-size: clamp(14px, 2vw, 16px);
 }
 
-.quantity-btn:hover,
+.quantity-btn:hover:not(:disabled),
 .remove-btn:hover {
   background-color: var(--primary-hover-color);
   transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
 }
 
-.quantity-btn:active,
+.quantity-btn:active:not(:disabled),
 .remove-btn:active {
   transform: scale(0.95);
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
 }
 
 .quantity-btn:disabled {
   background-color: #707070;
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
 }
 
 .quantity {
@@ -1820,101 +2183,113 @@ select:focus + .input-icon {
 }
 
 .remove-btn {
-  background-color: #dc3545;
+  background-color: var(--danger-color);
   display: flex;
   align-items: center;
-  gap: 5px;
-  margin-left: auto;
+  gap: 8px;
 }
 
 .remove-btn:hover {
   background-color: #c82333;
 }
 
-/* Coupon Section Styles */
+/* Coupon Section */
 .coupon-section {
-  margin-top: 20px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  transition: all 0.3s ease;
 }
 
 .coupon-input-group {
   display: flex;
   gap: 10px;
+  align-items: center;
   flex-wrap: wrap;
 }
 
-.coupon-input-group .input-wrapper {
+.coupon-input {
   flex: 1;
   min-width: 200px;
 }
 
-.apply-coupon-btn,
-.remove-coupon-btn {
-  padding: clamp(8px, 2vw, 12px);
-  background-color: #28a745;
+.apply-coupon-btn {
+  background-color: var(--primary-color);
   color: white;
   border: none;
+  padding: 10px 20px;
   border-radius: 8px;
-  font-size: clamp(14px, 2vw, 16px);
   cursor: pointer;
   transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  white-space: nowrap;
-}
-
-.apply-coupon-btn:hover,
-.remove-coupon-btn:hover {
-  background-color: #218838;
-  transform: translateY(-2px);
-}
-
-.apply-coupon-btn:disabled {
-  background-color: #28a745;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.remove-coupon-btn {
-  background-color: #dc3545;
-  margin-top: 10px;
-}
-
-.remove-coupon-btn:hover {
-  background-color: #c82333;
-}
-
-.coupon-message {
-  margin-top: 10px;
-  font-size: clamp(12px, 2vw, 14px);
-  color: #28a745;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.error-message {
-  color: #dc3545;
-}
-
-.discount-info {
-  margin-top: 15px;
-  padding: 15px;
-  background-color: #e9f7ef;
-  border-radius: 8px;
-  border-left: 4px solid #28a745;
-}
-
-.discount-info p {
-  margin: 5px 0;
-  color: #28a745;
-  font-size: clamp(12px, 2vw, 14px);
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-/* Payment Options Styles */
+.apply-coupon-btn:hover:not(:disabled) {
+  background-color: var(--primary-hover-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.apply-coupon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.coupon-message {
+  margin-top: 15px;
+  padding: 10px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.coupon-message.error-message {
+  background-color: #f8d7da;
+  color: var(--danger-color);
+}
+
+.coupon-message:not(.error-message) {
+  background-color: #d4edda;
+  color: var(--success-color);
+}
+
+.discount-info {
+  margin-top: 15px;
+  padding: 15px;
+  background-color: #d4edda;
+  border-radius: 8px;
+  border-left: 4px solid var(--success-color);
+}
+
+.discount-info p {
+  margin: 5px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.remove-coupon-btn {
+  background-color: var(--danger-color);
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.remove-coupon-btn:hover {
+  background-color: #c82333;
+  transform: translateY(-2px);
+}
+
+/* Payment Options */
 .payment-options {
   display: flex;
   flex-direction: column;
@@ -1923,111 +2298,100 @@ select:focus + .input-icon {
 
 .payment-option {
   padding: 15px;
-  border: 2px solid #f8f9fa;
+  border: 2px solid #e5e7eb;
   border-radius: 8px;
-  transition: all 0.3s ease;
   cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .payment-option:hover {
   border-color: var(--primary-color);
-  box-shadow: 0 3px 8px rgba(0, 123, 255, 0.15);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .payment-option.selected {
   border-color: var(--primary-color);
-  background-color: rgba(0, 123, 255, 0.05);
+  background-color: #f0f8ff;
 }
 
 .payment-option-header {
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-bottom: 15px;
 }
 
-.payment-option input[type="radio"] {
-  margin-right: 10px;
-  width: auto;
+.payment-option-header input[type="radio"] {
+  margin: 0;
 }
 
-.payment-option label {
+.payment-option-header label {
+  font-weight: 600;
+  font-size: clamp(14px, 2.5vw, 16px);
+  color: #343a40;
+  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 10px;
-  font-weight: 500;
-  cursor: pointer;
-  font-size: clamp(14px, 2vw, 16px);
-}
-
-.payment-option label i {
-  color: var(--primary-color);
-  font-size: clamp(16px, 3vw, 20px);
 }
 
 .payment-details {
-  margin-top: 15px;
-  padding-top: 15px;
-  border-top: 1px solid #f8f9fa;
+  padding-left: 25px;
 }
 
 .qr-payment-image {
+  margin: 15px 0;
   display: flex;
   justify-content: center;
-  margin: 20px 0;
 }
 
 .qr-payment-image img {
-  width: clamp(150px, 50vw, 200px);
-  height: clamp(150px, 50vw, 200px);
-  border: 1px solid #dee2e6;
+  width: 180px;
+  height: 180px;
   border-radius: 8px;
-  padding: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .voucher-upload {
-  margin-top: 20px;
+  margin-top: 15px;
 }
 
 .file-upload-container {
   position: relative;
-  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .file-input {
+  opacity: 0;
   position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
-  opacity: 0;
   cursor: pointer;
-  z-index: 2;
 }
 
 .file-upload-button {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 15px;
-  background-color: #f8f9fa;
-  border: 2px dashed #dee2e6;
-  border-radius: 8px;
-  color: #000000;
-  font-size: clamp(14px, 2vw, 16px);
   transition: all 0.3s ease;
 }
 
 .file-upload-button:hover {
-  background-color: #e9ecef;
-  border-color: #adb5bd;
+  background-color: var(--primary-hover-color);
+  transform: translateY(-2px);
 }
 
 .file-name {
-  display: block;
-  margin-top: 10px;
-  font-size: clamp(12px, 2vw, 14px);
-  color: #28a745;
-  word-break: break-all;
+  color: #6c757d;
+  font-size: 14px;
 }
 
 .voucher-preview {
@@ -2037,169 +2401,275 @@ select:focus + .input-icon {
 }
 
 .voucher-preview img {
-  max-width: 100%;
-  max-height: 200px;
+  max-width: 200px;
   border-radius: 8px;
-  border: 1px solid #dee2e6;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .remove-voucher-btn {
   position: absolute;
   top: -10px;
   right: -10px;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background-color: #dc3545;
+  background-color: var(--danger-color);
   color: white;
   border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-size: 14px;
 }
 
 .remove-voucher-btn:hover {
   background-color: #c82333;
-  transform: rotate(90deg);
+  transform: scale(1.1);
+}
+
+/* Location selector - REDUCED SIZE */
+.location-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.location-option {
+  padding: 8px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 13px;
+}
+
+.location-option:hover {
+  border-color: var(--primary-color);
+}
+
+.location-option.selected {
+  border-color: var(--primary-color);
+  background-color: #f0f8ff;
+}
+
+.location-option input[type="radio"] {
+  margin-right: 8px;
+}
+
+.location-option label {
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 13px;
 }
 
 .store-info {
   margin-top: 15px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid var(--primary-color);
+  font-size: 13px;
 }
 
 .store-info-item {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  margin: 10px 0;
-  color: #000000;
-  font-size: clamp(14px, 2vw, 16px);
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
 .store-info-item i {
   color: var(--primary-color);
-  width: 20px;
-  min-width: 20px;
-  margin-top: 3px;
+  font-size: 14px;
+  margin-top: 2px;
 }
 
 .store-info-item h4 {
-  margin: 0 0 5px 0;
-  font-size: 1rem;
-  font-weight: 600;
+  margin: 0 0 3px 0;
+  font-size: 13px;
+  color: #343a40;
 }
 
 .store-info-item p {
   margin: 0;
+  color: #000000;
+  font-size: 12px;
 }
 
-/* Order Summary Styles */
+.checkout-button {
+  background-color: var(--success-color);
+  color: white;
+  border: none;
+  padding: clamp(12px, 2.5vw, 15px) clamp(25px, 3.5vw, 30px);
+  border-radius: 8px;
+  font-size: clamp(16px, 3vw, 18px);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 20px;
+}
+
+.checkout-button:hover:not(:disabled) {
+  background-color: #218838;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+.checkout-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Order Summary - FIXED STICKY POSITION */
 .order-summary {
   position: sticky;
-  top: 100px;
-  height: max-content;
+  top: calc(var(--header-height) + 20px);
+  height: fit-content;
   transition: all 0.3s ease;
+  align-self: flex-start;
 }
 
 .summary-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid #f8f9fa;
+  justify-content: space-between;
+  padding: 15px;
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 8px 8px 0 0;
   cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.summary-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.summary-header h2 {
+  font-size: clamp(18px, 3vw, 20px);
+  margin: 0;
+  color: white;
 }
 
 .summary-badge {
-  background-color: var(--primary-color);
-  color: white;
+  background-color: white;
+  color: var(--primary-color);
   border-radius: 50%;
   width: 24px;
   height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
   font-weight: bold;
+  font-size: 14px;
 }
 
-.toggle-summary {
-  background: none;
+.toggle-summary-btn {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
   border: none;
-  color: var(--primary-color);
+  color: white;
+  font-size: 20px;
   cursor: pointer;
-  font-size: 18px;
+  transition: all 0.3s ease;
+  border-radius: 50%;
+}
+
+.toggle-summary-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.toggle-summary-btn:active {
+  transform: scale(0.95);
 }
 
 .summary-content {
-  transition: max-height 0.3s ease, opacity 0.3s ease;
-  max-height: 1000px;
-  opacity: 1;
-  overflow: hidden;
-}
-
-.summary-hidden {
-  max-height: 0;
-  opacity: 0;
-  overflow: hidden;
+  padding: 20px;
+  border: 2px solid #e5e7eb;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  transition: all 0.3s ease;
 }
 
 .summary-items {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 }
 
 .summary-item {
   display: flex;
   justify-content: space-between;
-  color: #000000;
+  padding: 10px 0;
+  border-bottom: 1px solid #e5e7eb;
   font-size: clamp(14px, 2vw, 16px);
 }
 
+.summary-item:last-child {
+  border-bottom: none;
+}
+
+/* Fixed price alignment - ensuring "Bs" stays on the same line */
+.price-value {
+  white-space: nowrap;
+  text-align: right;
+  min-width: 100px;
+}
+
 .discount-item {
-  color: #28a745;
-  font-weight: 500;
+  color: var(--success-color);
 }
 
 .total {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  font-weight: 600;
-  margin: 30px 0;
-  padding-top: 20px;
-  border-top: 2px solid var(--primary-color);
+  padding: 15px 0;
+  font-weight: bold;
+  font-size: clamp(16px, 3vw, 18px);
+  border-top: 2px solid #e5e7eb;
 }
 
 .total-amount {
   color: var(--primary-color);
-  font-size: clamp(22px, 4vw, 28px);
-  font-weight: bold;
+  white-space: nowrap;
 }
 
-/* Mini Cart Preview */
 .mini-cart-preview {
   margin-top: 20px;
-  border-top: 1px solid #f8f9fa;
+  border-top: 1px solid #e5e7eb;
   padding-top: 15px;
+}
+
+.mini-cart-scroll {
+  max-height: 200px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-color) #f8f9fa;
 }
 
 .mini-cart-item {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 15px;
+  padding: 10px 0;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .mini-cart-image {
-  width: 50px;
-  height: 50px;
+  width: 60px;
+  height: 60px;
   object-fit: cover;
   border-radius: 8px;
 }
@@ -2209,220 +2679,128 @@ select:focus + .input-icon {
 }
 
 .mini-cart-name {
-  margin: 0;
-  font-size: 14px;
   font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  margin: 0 0 5px 0;
+  font-size: 14px;
 }
 
 .mini-cart-price {
+  font-weight: 600;
+  color: var(--primary-color);
   margin: 0;
   font-size: 14px;
-  color: var(--primary-color);
-  font-weight: 600;
+  white-space: nowrap;
 }
 
-.mini-cart-more {
-  text-align: center;
-  font-size: 14px;
-  color: #6c757d;
-  margin-top: 10px;
+.mini-cart-unit-price {
+  color: #000000;
+  font-size: 12px;
+  margin: 5px 0 0 0;
+  white-space: nowrap;
 }
 
 .checkout-progress {
-  margin: 30px 0;
+  margin-top: 20px;
 }
 
 .progress-text {
-  margin-top: 10px;
   text-align: center;
-  color: #000000;
-  font-size: clamp(12px, 2vw, 14px);
-}
-
-.checkout-button {
-  width: 100%;
-  padding: clamp(12px, 3vw, 15px);
-  background: var(--primary-color);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: clamp(16px, 3vw, 18px);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
-
-.checkout-button:hover {
-  background-color: #0069d9;
-  transform: translateY(-3px);
-  box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
-}
-
-.checkout-button:active {
-  transform: translateY(-1px);
-}
-
-.checkout-button:disabled {
-  background-color: #6c757d;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
+  margin-top: 10px;
+  color: #6c757d;
+  font-size: 14px;
 }
 
 .terms {
-  margin: 20px 0 0 0;
-  font-size: clamp(12px, 2vw, 14px);
-  color: #000000;
+  font-size: 12px;
+  color: #6c757d;
+  margin-top: 20px;
   text-align: center;
 }
 
 .terms a {
   color: var(--primary-color);
   text-decoration: none;
-  transition: color 0.3s ease;
 }
 
 .terms a:hover {
-  color: #17a2b8;
   text-decoration: underline;
 }
 
-/* Floating Action Buttons */
-.floating-actions {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 100;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  align-items: flex-end;
+.mobile-finalize-container {
+  margin-top: 20px;
 }
 
-.floating-summary-button {
-  background-color: var(--primary-color);
+.mobile-finalize-button {
+  width: 100%;
+  background-color: var(--success-color);
   color: white;
   border: none;
-  border-radius: 50px;
-  padding: 12px 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  padding: 15px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-}
-
-.floating-summary-button:hover {
-  background-color: #0069d9;
-  transform: translateY(-3px);
-}
-
-.floating-total {
-  font-weight: bold;
-}
-
-.floating-nav-buttons {
-  display: flex;
-  gap: 10px;
-}
-
-.floating-prev-button,
-.floating-next-button,
-.floating-checkout-button {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  border: none;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  cursor: pointer;
-  transition: all 0.3s ease;
+  gap: 10px;
 }
 
-.floating-prev-button {
-  background-color: #6c757d;
+.mobile-finalize-button:hover:not(:disabled) {
+  background-color: #218838;
+  transform: translateY(-2px);
 }
 
-.floating-next-button {
-  background-color: var(--primary-color);
-}
-
-.floating-checkout-button {
-  background-color: #28a745;
-}
-
-.floating-prev-button:hover,
-.floating-next-button:hover,
-.floating-checkout-button:hover {
-  transform: translateY(-3px);
-}
-
-.floating-prev-button:disabled,
-.floating-next-button:disabled,
-.floating-checkout-button:disabled {
-  background-color: #adb5bd;
+.mobile-finalize-button:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
-  transform: none;
 }
 
-/* Order Finalized Styles */
 .order-finalized {
-  margin-top: 30px;
   text-align: center;
-  padding: 20px;
-  background-color: #e9f7ef;
-  border-radius: 8px;
-  border-left: 4px solid #28a745;
-  animation: fadeIn 0.5s ease;
+  padding: 30px;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
+.success-animation {
+  font-size: 60px;
+  color: var(--success-color);
+  margin-bottom: 20px;
+  animation: successBounce 0.5s ease;
+}
 
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes successBounce {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
 }
 
 .order-finalized h3 {
-  color: #28a745;
-  font-size: clamp(20px, 4vw, 24px);
-  margin-bottom: 15px;
+  color: var(--success-color);
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.order-finalized p {
+  color: #6c757d;
+  font-size: 16px;
+  margin-bottom: 20px;
 }
 
 .whatsapp-button {
   display: inline-flex;
+  align-items: center;
+  gap: 10px;
   background-color: #25D366;
   color: white;
-  padding: clamp(8px, 2vw, 10px) clamp(15px, 3vw, 20px);
+  padding: 12px 20px;
   border-radius: 8px;
   text-decoration: none;
-  font-size: clamp(14px, 2vw, 16px);
-  margin-top: 15px;
   transition: all 0.3s ease;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
 }
 
 .whatsapp-button:hover {
-  background-color: #128C7E;
+  background-color: #20bd57;
   transform: translateY(-2px);
 }
 
@@ -2431,73 +2809,166 @@ select:focus + .input-icon {
 }
 
 .qr-code img {
-  width: clamp(120px, 40vw, 150px);
-  height: clamp(120px, 40vw, 150px);
-  border: 1px solid #dee2e6;
+  width: 150px;
+  height: 150px;
   border-radius: 8px;
-  padding: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .qr-code p {
-  margin-top: 10px;
-  font-size: clamp(12px, 2vw, 14px);
-  color: #28a745;
+  margin-top: 15px;
+  font-size: 14px;
 }
 
-/* Modal Styles */
-.modal-overlay {
+/* New Mobile Navigation Controls */
+.mobile-nav-controls {
   position: fixed;
-  top: 0;
+  bottom: 0;
   left: 0;
   right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: white;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  padding: 10px 15px;
+  z-index: 990;
+  transition: all 0.3s ease;
+}
+
+.nav-buttons-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.mobile-nav-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-  animation: fadeIn 0.3s ease;
+  color: white;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.prev-btn {
+  background-color: #6c757d;
+}
+
+.next-btn {
+  background-color: var(--primary-color);
+}
+
+.checkout-btn {
+  background-color: var(--success-color);
+}
+
+.mobile-nav-btn:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.mobile-nav-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mobile-cart-btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 30px;
+  padding: 8px 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+  justify-content: center;
+  position: relative;
+}
+
+.mobile-cart-btn:hover {
+  background-color: var(--primary-hover-color);
+  transform: translateY(-2px);
+}
+
+.mobile-cart-btn .cart-count {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: var(--danger-color);
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.cart-total {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Modal Styles */
+.modal-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
 }
 
 .modal-content {
   background-color: white;
+  padding: 20px;
   border-radius: 8px;
   width: 90%;
   max-width: 500px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  animation: slideUp 0.3s ease;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  position: relative;
+  animation: modalFadeIn 0.3s ease;
 }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(50px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 20px;
-  border-bottom: 1px solid #f8f9fa;
+  margin-bottom: 20px;
 }
 
 .modal-header h3 {
   margin: 0;
   font-size: 20px;
-  color: var(--danger-color);
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.login-prompt .modal-header h3 {
-  color: var(--primary-color);
 }
 
 .close-modal {
@@ -2506,7 +2977,7 @@ select:focus + .input-icon {
   font-size: 20px;
   cursor: pointer;
   color: #6c757d;
-  transition: color 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .close-modal:hover {
@@ -2514,42 +2985,42 @@ select:focus + .input-icon {
 }
 
 .modal-body {
-  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.modal-body p {
+  margin: 10px 0;
+  color: #000000;
 }
 
 .modal-footer {
   display: flex;
-  justify-content: flex-end;
   gap: 10px;
-  padding: 15px 20px;
-  border-top: 1px solid #f8f9fa;
+  justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
-.login-options {
-  flex-direction: column;
-}
-
-.cancel-btn, .confirm-btn, .guest-btn, .login-btn, .register-btn {
-  padding: 10px 15px;
+.cancel-btn,
+.confirm-btn {
+  padding: 10px 20px;
   border-radius: 8px;
   font-size: 16px;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 8px;
-  width: 100%;
 }
 
 .cancel-btn {
   background-color: #f8f9fa;
-  color: #6c757d;
+  color: #000000;
   border: 1px solid #dee2e6;
 }
 
 .cancel-btn:hover {
   background-color: #e9ecef;
+  transform: translateY(-2px);
 }
 
 .confirm-btn {
@@ -2563,9 +3034,28 @@ select:focus + .input-icon {
   transform: translateY(-2px);
 }
 
+.login-options {
+  justify-content: space-between;
+}
+
+.guest-btn,
+.login-btn,
+.register-btn {
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  justify-content: center;
+}
+
 .guest-btn {
   background-color: #f8f9fa;
-  color: #6c757d;
+  color: #000000;
   border: 1px solid #dee2e6;
 }
 
@@ -2580,140 +3070,246 @@ select:focus + .input-icon {
 }
 
 .login-btn:hover {
-  background-color: #0069d9;
-  transform: translateY(-2px);
+  background-color: var(--primary-hover-color);
 }
 
 .register-btn {
-  background-color: #28a745;
+  background-color: var(--success-color);
   color: white;
   border: none;
 }
 
 .register-btn:hover {
   background-color: #218838;
-  transform: translateY(-2px);
 }
 
-/* Utility Classes */
-.mobile-only {
-  display: none;
+/* Transitions */
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity 0.3s ease;
 }
 
-.desktop-only {
-  display: block;
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
 }
 
-.btn-text {
-  display: inline;
+.modal-enter-active .modal-content,
+.modal-leave-active .modal-content {
+  transition: all 0.3s ease;
 }
 
-/* Responsive Media Queries */
-@media (max-width: 1024px) {
+.modal-enter-from .modal-content,
+.modal-leave-to .modal-content {
+  transform: scale(0.9);
+}
+
+/* Fade transition for summary content */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+  .checkout-container {
+    padding: 10px;
+    padding-bottom: 70px; /* Space for fixed navigation */
+  }
+
   .checkout-content {
     grid-template-columns: 1fr;
+    padding-top: 0;
   }
 
   .order-summary {
-    position: relative;
-    margin-top: 30px;
-    top: 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    z-index: 990;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+    padding: 0;
+    transform: translateY(calc(100% - 60px));
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    background-color: white;
   }
-  
-  .step-content {
-    padding-left: 40px;
-  }
-}
 
-@media (max-width: 768px) {
-  .checkout-container {
+  .order-summary.summary-expanded {
+    transform: translateY(0);
+  }
+
+  .summary-header {
+    border-radius: 16px 16px 0 0;
     padding: 15px;
+    margin-bottom: 0;
+  }
+
+  .summary-content {
+    border: none;
+    padding: 15px;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
+  .checkout-header {
+    padding: 10px;
   }
 
   .header-content {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .actions-container {
     width: 100%;
     justify-content: space-between;
-  }
-
-  .mobile-only {
-    display: block;
-  }
-
-  .desktop-only {
-    display: none;
-  }
-  
-  .btn-text {
-    display: none;
-  }
-
-  .step-header {
-    gap: 10px;
-  }
-
-  .step-content {
-    padding-left: 0;
   }
 
   .form-grid {
     grid-template-columns: 1fr;
   }
 
+  .form-group.full-width {
+    grid-column: span 1;
+  }
+
+  .step-content {
+    padding-left: 0;
+  }
+
+  .step-header {
+    padding: 5px;
+  }
+
   .product-item {
     flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 15px;
+    padding: 15px;
   }
 
   .product-image {
-    width: 180px;
-    height: 180px;
-  }
-
-  .product-details {
-    text-align: left;
-  }
-
-  .detail-item {
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  }
-
-  .detail-item:last-child {
-    border-bottom: none;
+    width: 100%;
+    height: auto;
+    max-width: 200px;
+    margin: 0 auto;
   }
 
   .quantity-controls {
-    justify-content: center;
-    flex-direction: column;
-    align-items: center;
+    justify-content: space-between;
   }
 
-  .quantity-selector {
-    width: 100%;
-    justify-content: center;
+  .desktop-only {
+    display: none;
   }
 
-  .remove-btn {
-    margin-left: 0;
+  .mobile-only {
+    display: block;
+  }
+
+  .checkout-button {
     width: 100%;
-    justify-content: center;
+    margin-top: 15px;
   }
 
   .step-actions {
     flex-direction: column;
+    gap: 10px;
   }
 
   .next-button,
   .prev-button {
     width: 100%;
-    justify-content: center;
+  }
+
+  /* Fix for toggle summary button on mobile */
+  .toggle-summary-btn {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 20px;
+  }
+
+  /* Improve mini cart scrolling */
+  .mini-cart-scroll {
+    padding-bottom: 15px;
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+  }
+
+  .mini-cart-item {
+    flex: 0 0 auto;
+    width: 150px;
+    scroll-snap-align: start;
+  }
+  
+  /* Adjust bottom padding when summary is expanded */
+  .summary-open {
+    padding-bottom: 0;
+  }
+
+  /* Ensure prices always stay in a single line on mobile */
+  .summary-item {
+    display: flex;
+    align-items: center;
+  }
+  
+  .price-value {
+    flex-shrink: 0;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-only {
+    display: none;
+  }
+
+  .desktop-only {
+    display: block;
+  }
+  
+  .mobile-nav-controls {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 20px;
+  }
+
+  .step-number-wrapper {
+    width: 35px;
+    height: 35px;
+    font-size: 16px;
+  }
+
+  h2 {
+    font-size: 18px;
+  }
+
+  .edit-button {
+    font-size: 14px;
+    padding: 6px 10px;
+  }
+
+  .input-icon {
+    font-size: 18px;
+  }
+
+  input {
+    font-size: 16px;
+    padding: 12px 12px 12px 40px;
   }
 
   .coupon-input-group {
@@ -2722,147 +3318,35 @@ select:focus + .input-icon {
 
   .apply-coupon-btn {
     width: 100%;
-    justify-content: center;
   }
 
-  .payment-option-header {
-    flex-wrap: wrap;
+  /* Improved touch targets for mobile */
+  .quantity-btn,
+  .remove-btn,
+  .apply-coupon-btn,
+  .toggle-summary-btn {
+    min-height: 44px;
+    min-width: 44px;
   }
 
-  .store-info-item {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .store-info-item i {
-    margin-bottom: 5px;
+  /* Responsive input fields */
+  .responsive-input {
+    font-size: clamp(16px, 4vw, 18px);
+    height: clamp(44px, 8vw, 56px);
   }
   
-  .modal-content {
-    width: 95%;
-  }
-  
-  .order-summary {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 90;
-    border-radius: 16px 16px 0 0;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
-    padding: 15px;
-    transform: translateY(calc(100% - 60px));
-    transition: transform 0.3s ease;
-  }
-  
-  .order-summary.summary-expanded {
-    transform: translateY(0);
-  }
-  
-  .summary-header {
-    margin-bottom: 15px;
-  }
-}
-
-@media (max-width: 480px) {
-  .checkout-container {
+  /* Smaller payment option buttons */
+  .payment-option {
     padding: 10px;
   }
-
-  .main-content,
-  .order-summary {
-    padding: 15px;
-    border-radius: 8px;
-  }
-
-  .step {
-    padding-bottom: 15px;
-    margin-bottom: 15px;
-  }
-
-  .active-step {
-    padding-left: 10px;
-  }
-
-  .step-number {
-    width: 30px;
-    height: 30px;
-    min-width: 30px;
-  }
-
-  .product-image {
-    width: 150px;
-    height: 150px;
-  }
-
-  .whatsapp-button {
-    padding: 10px;
-  }
-
-  .file-upload-button {
-    font-size: 12px;
-    padding: 10px;
-  }
-
-  .file-name {
-    font-size: 11px;
+  
+  .payment-option-header label {
+    font-size: 14px;
   }
   
-  .modal-header h3 {
-    font-size: 18px;
-  }
-  
-  .modal-body {
-    padding: 15px;
-  }
-  
-  .modal-footer {
-    padding: 10px 15px;
-    flex-direction: column;
-  }
-  
-  .cancel-btn, .confirm-btn, .guest-btn, .login-btn, .register-btn {
-    width: 100%;
-    justify-content: center;
-  }
-  
-  .step-indicator .step-label {
-    display: none;
-  }
-}
-
-/* Animations and Effects */
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-
-  50% {
-    transform: scale(1.05);
-  }
-
-  100% {
-    transform: scale(1);
-  }
-}
-
-.checkout-button:not(:disabled):hover {
-  animation: pulse 2s infinite;
-}
-
-.active-step {
-  animation: slideIn 0.3s ease;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
+  .payment-details {
+    padding-left: 15px;
+    font-size: 13px;
   }
 }
 
@@ -2876,7 +3360,6 @@ select:focus + .input-icon {
   .remove-btn,
   .checkout-button {
     padding: 12px 20px;
-    /* Larger touch targets */
   }
 
   input,
@@ -2887,89 +3370,6 @@ select:focus + .input-icon {
   .payment-option label {
     padding: 10px 0;
   }
-  
-  .floating-actions {
-    bottom: 70px; /* Adjust to avoid overlap with summary */
-  }
-}
-
-/* High contrast mode for accessibility */
-@media (prefers-contrast: high) {
-  :root {
-    --primary-color: #0056b3;
-    --secondary-color: #495057;
-    --success-color: #1e7e34;
-    --danger-color: #bd2130;
-  }
-
-  input,
-  select {
-    border-width: 2px;
-  }
-
-  .step-content p i,
-  .payment-option label i,
-  .store-info-item i {
-    color: black;
-  }
-}
-
-/* Location selector styles */
-.location-selector {
-  display: flex;
-  gap: 15px;
-  margin: 15px 0;
-  flex-wrap: wrap;
-}
-
-.location-option {
-  flex: 1;
-  min-width: 200px;
-  padding: 15px;
-  border: 2px solid #f8f9fa;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.location-option:hover {
-  border-color: var(--primary-color);
-  background-color: rgba(0, 123, 255, 0.05);
-}
-
-.location-option.selected {
-  border-color: var(--primary-color);
-  background-color: rgba(0, 123, 255, 0.1);
-}
-
-.location-option input[type="radio"] {
-  margin: 0;
-  width: auto;
-}
-
-.location-option label {
-  cursor: pointer;
-  font-weight: 500;
-  margin: 0;
-}
-
-/* Customize location options based on department */
-.location-option.selected[for="location-la-paz"] {
-  border-color: #f8a812;
-  background-color: rgba(248, 168, 18, 0.1);
-}
-
-.location-option.selected[for="location-cochabamba"] {
-  border-color: #3B82F6;
-  background-color: rgba(59, 130, 246, 0.1);
-}
-
-.location-option.selected[for="location-santa-cruz"] {
-  border-color: #10B981;
-  background-color: rgba(16, 185, 129, 0.1);
 }
 
 /* Reduced motion preferences */

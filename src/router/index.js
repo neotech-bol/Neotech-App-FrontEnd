@@ -23,7 +23,6 @@ import FavoriteView from '@/views/FavoriteView.vue'
 import CuponesView from '@/Admin/CuponesView.vue'
 import TerminosCondiciones from '@/views/TerminosCondiciones.vue'
 import Page401 from '@/views/page401.vue'
-import Checkout2 from '@/views/Checkout2.vue'
 import CategoriasViewPagina from '@/views/CategoriasViewPagina.vue'
 import ProductosHomeView from '@/views/ProductosHomeView.vue'
 import Guia from '@/views/Guia.vue'
@@ -34,30 +33,6 @@ import CatalogoActivoView from '@/views/CatalogoActivoView.vue'
 import ContactanosPanelView from '@/Admin/ContactanosPanelView.vue'
 import VerificacionPendiente from '@/views/VerificacionPendiente.vue'
 import { ref, reactive } from 'vue'
-
-// Lista de permisos disponibles en el sistema
-const permisosDisponibles = [
-  'Gestionar Usuarios',
-  'Gestionar Catalogos',
-  'Gestionar Categorias',
-  'Gestionar Productos',
-  'Gestionar Roles',
-  'Gestionar Pedidos',
-  'Gestionar Cupones'
-];
-
-// Mapeo de rutas a permisos requeridos
-const rutasPermisos = {
-  'usuarios': 'Gestionar Usuarios',
-  'productos-admin': 'Gestionar Productos',
-  'catalogos': 'Gestionar Catalogos',
-  'categorias-panel': 'Gestionar Categorias',
-  'roles': 'Gestionar Roles',
-  'pedidos': 'Gestionar Pedidos',
-  'cupones': 'Gestionar Cupones',
-  'catalgos-historiales': 'Gestionar Catalogos',
-  'contactanos-admin': 'Gestionar Usuarios'
-};
 
 // Crear estado reactivo para el usuario y permisos
 const authState = reactive({
@@ -213,24 +188,6 @@ const router = createRouter({
           }
         },
         {
-          path: '/checkout',
-          name: 'checkout',
-          component: CheckoutView,
-          meta: {
-            title: 'Checkout | Neotech-Bol Bolivia',
-            description: 'Finaliza tu compra de productos electrónicos en Neotech-Bol de forma rápida y segura.'
-          }
-        },
-        {
-          path: '/checkout2',
-          name: 'checkout2',
-          component: Checkout2,
-          meta: {
-            title: 'Checkout Alternativo | Neotech-Bol Bolivia',
-            description: 'Otra opción para completar tu compra de tecnología en Neotech-Bol Bolivia.'
-          }
-        },
-        {
           path: '/carrito',
           name: 'carrito',
           component: CartView,
@@ -312,6 +269,15 @@ const router = createRouter({
           }
         }
       ],
+    },
+    {
+      path: '/checkout',
+      name: 'checkout',
+      component: CheckoutView,
+      meta: {
+        title: 'Checkout | Neotech-Bol Bolivia',
+        description: 'Finaliza tu compra de productos electrónicos en Neotech-Bol de forma rápida y segura.'
+      }
     },
     {
       path: '/login',

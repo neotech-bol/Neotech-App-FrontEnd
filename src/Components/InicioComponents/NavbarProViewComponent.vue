@@ -1,5 +1,6 @@
 <template>
-  <header class="header">
+  <ThemePageWrapper>
+    <header class="header">
     <div class="top-bar">
       <div class="top-bar-inner">
         <div class="contact">
@@ -10,8 +11,16 @@
           {{ translate('experience') }}
         </div>
         <div class="top-links">
-          <router-link to="/contacto" style="text-decoration: none;"><a href="#" style="text-decoration: none; color: #838384;">{{ translate('help') }}</a></router-link>
-          <router-link to="/faq" style="text-decoration: none;" class="ms-2"><a href="#" style="text-decoration: none; color: #838384;">FAQ</a></router-link>
+          <router-link to="/contacto" style="text-decoration: none;"><a href="#"
+              style="text-decoration: none; color: #838384;">{{ translate('help') }}</a></router-link>
+          <router-link to="/faq" style="text-decoration: none;" class="ms-2"><a href="#"
+              style="text-decoration: none; color: #838384;">FAQ</a></router-link>
+          <!-- Botón de alternar tema -->
+          <button @click="themeStoreDark.toggleDarkMode" class="theme-toggle-btn"
+            :title="themeStoreDark.isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
+            <i v-if="!themeStoreDark.isDarkMode" class="fas fa-sun"></i>
+            <i v-else class="fas fa-moon"></i>
+          </button>
         </div>
       </div>
     </div>
@@ -19,31 +28,21 @@
       <div class="logo">
         <img src="/logo/Logo Neofetch PNG.png" alt="Logo" />
       </div>
-      
+
       <!-- Barra de búsqueda mejorada y centrada -->
       <div class="search-container">
         <div class="search-bar">
-          <input 
-            v-model="searchQuery" 
-            type="text" 
-            :placeholder="translate('search_placeholder')"
-            @keyup.enter="performSearch"
-            @focus="searchFocused = true"
-            @blur="setTimeout(() => searchFocused = false, 200)"
-          />
+          <input v-model="searchQuery" type="text" :placeholder="translate('search_placeholder')"
+            @keyup.enter="performSearch" @focus="searchFocused = true"
+            @blur="setTimeout(() => searchFocused = false, 200)" />
           <button class="search-button" @click="performSearch">
             <i class="fas fa-search"></i>
           </button>
-          
+
           <!-- Sugerencias de búsqueda -->
           <div v-if="searchFocused && searchQuery.length > 0" class="search-suggestions">
-            <div 
-              v-for="(suggestion, index) in filteredSuggestions" 
-              :key="index" 
-              class="suggestion-item"
-              @click="selectSuggestion(suggestion)"
-              :class="{ 'active': selectedSuggestionIndex === index }"
-            >
+            <div v-for="(suggestion, index) in filteredSuggestions" :key="index" class="suggestion-item"
+              @click="selectSuggestion(suggestion)" :class="{ 'active': selectedSuggestionIndex === index }">
               <span>{{ suggestion }}</span>
             </div>
             <div v-if="filteredSuggestions.length === 0" class="no-suggestions">
@@ -52,7 +51,7 @@
           </div>
         </div>
       </div>
-      
+
       <div class="user-actions">
         <button class="icon-button" @click="handleAccountClick">
           <img src="/svg/icono-header-cuenta.svg" alt="Account" />
@@ -82,22 +81,18 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
-      
+
       <!-- Barra de búsqueda móvil -->
       <div class="mobile-search" v-if="isMobileMenuOpen">
         <div class="search-bar">
-          <input 
-            v-model="searchQuery" 
-            type="text" 
-            :placeholder="translate('search_placeholder')"
-            @keyup.enter="performSearch"
-          />
+          <input v-model="searchQuery" type="text" :placeholder="translate('search_placeholder')"
+            @keyup.enter="performSearch" />
           <button class="search-button" @click="performSearch">
             <i class="fas fa-search"></i>
           </button>
         </div>
       </div>
-      
+
       <button class="catalog-button" @click="toggleSidebar">
         <i class="fas fa-th-large"></i>
         {{ translate('view_catalog') }}
@@ -209,6 +204,8 @@
       </button>
     </div>
   </div>
+  </ThemePageWrapper>
+
 </template>
 
 <script setup>
@@ -221,7 +218,8 @@ import { indexCatalogosactives } from '@/Services/CatalogoService';
 import { useUserStore } from '@/stores/userAuht';
 import { useThemeStore } from '@/stores/themeStore';
 import useLanguageStore from '@/stores/languageStore';
-
+import { useThemeStoreDark } from '@/stores/themeDarkStore';
+import ThemePageWrapper from '@/components/ThemePageWrapper.vue';
 const router = useRouter();
 const cartStore = useCartStore();
 const searchQuery = ref('');
@@ -233,6 +231,8 @@ const isMobileMenuOpen = ref(false);
 const catalogosAnteriores = ref([]);
 const catalogosActivos = ref([]);
 const themeStore = useThemeStore();
+const themeStoreDark = useThemeStoreDark();
+
 const userStore = useUserStore();
 
 // Nuevas variables para la búsqueda mejorada
@@ -257,11 +257,11 @@ const loadRecentSearches = () => {
 // Guardar búsqueda reciente
 const saveRecentSearch = (query) => {
   if (!query || query.trim() === '') return;
-  
+
   // Eliminar duplicados y añadir al principio
   const updatedSearches = [query, ...recentSearches.value.filter(s => s !== query)].slice(0, 5);
   recentSearches.value = updatedSearches;
-  
+
   // Guardar en localStorage
   localStorage.setItem('recentSearches', JSON.stringify(updatedSearches));
 };
@@ -269,13 +269,13 @@ const saveRecentSearch = (query) => {
 // Filtrar sugerencias basadas en la consulta actual
 const filteredSuggestions = computed(() => {
   if (!searchQuery.value) return [...recentSearches.value, ...popularSearches.value];
-  
+
   const query = searchQuery.value.toLowerCase();
   const allSuggestions = [...recentSearches.value, ...popularSearches.value];
-  
+
   // Eliminar duplicados
   const uniqueSuggestions = [...new Set(allSuggestions)];
-  
+
   return uniqueSuggestions.filter(s => s.toLowerCase().includes(query));
 });
 
@@ -288,13 +288,13 @@ const selectSuggestion = (suggestion) => {
 // Navegación por teclado en sugerencias
 const handleKeyNavigation = (e) => {
   if (!searchFocused.value || filteredSuggestions.value.length === 0) return;
-  
+
   if (e.key === 'ArrowDown') {
     e.preventDefault();
     selectedSuggestionIndex.value = (selectedSuggestionIndex.value + 1) % filteredSuggestions.value.length;
   } else if (e.key === 'ArrowUp') {
     e.preventDefault();
-    selectedSuggestionIndex.value = selectedSuggestionIndex.value <= 0 ? 
+    selectedSuggestionIndex.value = selectedSuggestionIndex.value <= 0 ?
       filteredSuggestions.value.length - 1 : selectedSuggestionIndex.value - 1;
   } else if (e.key === 'Enter' && selectedSuggestionIndex.value >= 0) {
     e.preventDefault();
@@ -433,7 +433,7 @@ onMounted(() => {
   listarCatalogosHistoriales();
   listarCatalogosActivos();
   loadRecentSearches();
-  
+  /* themeStoreDark.applyTheme(); */
   // Agregar event listener para navegación por teclado
   window.addEventListener('keydown', handleKeyNavigation);
 });
@@ -474,12 +474,14 @@ body {
 }
 
 .header {
-  position: sticky;
+/*   position: sticky; */
   top: 0;
   z-index: 1000;
-  background: #fff;
+/*   background: #fff; */
   width: 100%;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  background-color: var(--background-color);
+  color: var(--text-color);
 }
 
 hr {
@@ -491,7 +493,7 @@ hr {
 
 /* Top Bar */
 .top-bar {
-  background-color: #f8f8fb;
+  background-color: var(--surface-color);
   padding: 6px 0;
   font-size: 12px;
 }
@@ -511,7 +513,7 @@ hr {
 }
 
 .announcement {
-  color: #838384;
+  color: var(--text-muted);
   font-weight: 500;
   text-align: center;
   width: 80%;
@@ -552,7 +554,7 @@ hr {
   background: none;
   border: none;
   cursor: pointer;
-  color: #333;
+  color: var(--text-color);
   justify-self: end;
   grid-column: 3;
   grid-row: 1;
@@ -577,19 +579,19 @@ hr {
 .search-bar input {
   width: 100%;
   padding: 12px 40px 12px 16px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--input-border);
   border-radius: 8px;
   font-size: 14px;
   font-weight: 400;
-  background-color: #f9fafb;
+  background-color: var(--background-color);
   transition: all 0.3s ease;
 }
 
 .search-bar input:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
-  background-color: #fff;
+  border-color: var(--border-color);
+  box-shadow: 0 0 0 3px var(--shadow-color);
+  background-color: var(--background-color);
 }
 
 .search-button {
@@ -631,8 +633,15 @@ hr {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .suggestion-item {
@@ -644,7 +653,8 @@ hr {
   gap: 8px;
 }
 
-.suggestion-item:hover, .suggestion-item.active {
+.suggestion-item:hover,
+.suggestion-item.active {
   background: #f3f4f6;
 }
 
@@ -693,7 +703,7 @@ hr {
 .icon-button .label {
   font-size: 12px;
   font-weight: 500;
-  color: #4b5563;
+  color: var(--text-color);
 }
 
 .cart-button {
@@ -704,7 +714,7 @@ hr {
   position: absolute;
   top: 0;
   right: 0;
-  background-color: var(--primary-color, #3b82f6);
+  background-color: var(--primary-color);
   color: white;
   border-radius: 50%;
   width: 18px;
@@ -723,6 +733,7 @@ hr {
   max-width: 1500px;
   margin: 0 auto;
   background: #fff;
+  background-color: var(--background-color);
 }
 
 .main-nav.mobile-nav-open {
@@ -762,7 +773,7 @@ hr {
 }
 
 .catalog-button {
-  background: var(--primary-color, #3b82f6);
+  background: var(--primary-color);
   color: white;
   border: none;
   padding: 12px 16px;
@@ -779,7 +790,7 @@ hr {
 }
 
 .catalog-button:hover {
-  background: var(--primary-hover-color, #2563eb);
+  background: var(--primary-hover-color);
 }
 
 .nav-links {
@@ -795,7 +806,7 @@ hr {
 }
 
 .nav-links a {
-  color: #1f2937;
+  color: var(--text-color);
   text-decoration: none;
   font-weight: 500;
   padding: 16px;
@@ -812,19 +823,19 @@ hr {
 
 .nav-links a:hover,
 .nav-links a.active {
-  color: var(--primary-color, #3b82f6);
+  color: var(--primary-color);
 }
 
 .nav-links a:hover i,
 .nav-links a.active i {
-  color: var(--primary-color, #3b82f6);
+  color: var(--primary-color);
 }
 
 .location-selector {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--primary-color, #3b82f6);
+  background: var(--primary-color);
   padding: 12px 16px;
   border-radius: 8px;
   margin: 16px;
@@ -894,11 +905,11 @@ hr {
 
 .mobile-action-button i {
   font-size: 20px;
-  color: var(--primary-color, #3b82f6);
+  color: var(--primary-color);
 }
 
 .mobile-cart-count {
-  background-color: var(--primary-color, #3b82f6);
+  background-color: var(--primary-color);
   color: white;
   border-radius: 50%;
   width: 20px;
@@ -1261,6 +1272,7 @@ hr {
 
 /* Desktop (1024px and up) */
 @media (min-width: 1024px) {
+
   .top-bar-inner,
   .main-header,
   .main-nav {
@@ -1325,6 +1337,7 @@ hr {
 
 /* Large Desktop (1280px and up) */
 @media (min-width: 1280px) {
+
   .top-bar-inner,
   .main-header,
   .main-nav {
@@ -1385,5 +1398,28 @@ hr {
   outline: none;
   border-color: #007bff;
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.theme-toggle-btn {
+  background-color: var(--surface-color);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.theme-toggle-btn:hover {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.icon {
+  font-size: 18px;
 }
 </style>

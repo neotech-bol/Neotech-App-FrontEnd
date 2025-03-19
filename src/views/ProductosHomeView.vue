@@ -620,7 +620,7 @@ onMounted(async () => {
 }
 
 .text-accent {
-  color: #3498db;
+  color: var(--primary-color);
   position: relative;
 }
 

@@ -17,5 +17,6 @@ import ProductsRecienLlegadosView from '@/Components/InicioComponents/ProductsRe
 
 .font-container {
     font-family: 'Inter', sans-serif; /* Aplica la fuente a este contenedor */
+    background-color: var(--background-color);
 }
 </style>

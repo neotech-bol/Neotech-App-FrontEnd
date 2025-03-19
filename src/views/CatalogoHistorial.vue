@@ -20,21 +20,30 @@
       <div v-for="catalog in datos" :key="catalog.id" class="catalog-section">
         <div v-for="(categoria, index) in catalog.categorias" :key="index" class="category-wrapper">
           <!-- Banner con descripción truncada -->
-          <div class="category-banner" @click="viewCollection">
-            <img :src="categoria.banner" :alt="`Banner de ${categoria.nombre}`" loading="lazy" />
-            <div class="banner-overlay">
-              <h2>{{ categoria.nombre }}</h2>
-              <p>
-                {{ getTruncatedDescription(categoria.descripcion) }}
-                <button 
-                  v-if="isDescriptionTruncated(categoria.descripcion)" 
-                  class="read-more-btn" 
-                  @click.stop="showDescriptionModal(categoria)"
-                >
-                  Ver más
-                </button>
-              </p>
-              <button class="banner-cta">Ver Colección</button>
+          <div class="category-banner-container">
+            <div class="category-banner" @click="viewCollection">
+              <img :src="categoria.banner" :alt="`Banner de ${categoria.nombre}`" loading="lazy" />
+              <div class="banner-overlay">
+                <div class="banner-content">
+                  <h2>{{ categoria.nombre }}</h2>
+                  <div class="banner-description-container">
+                    <p class="banner-description">
+                      {{ getTruncatedDescription(categoria.descripcion) }}
+                      <button 
+                        v-if="isDescriptionTruncated(categoria.descripcion)" 
+                        class="read-more-btn" 
+                        @click.stop="showDescriptionModal(categoria)"
+                      >
+                        Ver más
+                      </button>
+                    </p>
+                  </div>
+                  <button class="banner-cta">
+                    <span>Ver Colección</span>
+                    <i class="fas fa-arrow-right"></i>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -181,7 +190,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useCartStore } from '@/stores/cart';
 import { indexCatalogoItems } from '@/Services/CatalogoService';
@@ -199,16 +208,21 @@ const loading = ref(true);
 const error = ref(null);
 const idCatalogoHistorial = ref(null);
 const favoriteProducts = ref([]);
+const isMobile = ref(false);
 
 // Estados para el modal de descripción
 const isModalOpen = ref(false);
 const selectedCategoria = ref(null);
-const maxDescriptionLength = 120; // Longitud máxima para mostrar en el banner
+const maxDescriptionLength = computed(() => isMobile.value ? 80 : 120); // Longitud máxima para mostrar en el banner
 
 onMounted(() => {
   idCatalogoHistorial.value = router.currentRoute.value.params.idCatalogoHistorial;
   listarCatalogo();
   indexRatingUser();
+  checkMobile();
+
+  // Verificar si es dispositivo móvil al cambiar el tamaño de la ventana
+  window.addEventListener('resize', checkMobile);
 
   // Cerrar modal con tecla Escape
   window.addEventListener('keydown', (e) => {
@@ -218,12 +232,17 @@ onMounted(() => {
   });
 });
 
+// Verificar si es dispositivo móvil
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768;
+};
+
 // Métodos para la descripción truncada
 const getTruncatedDescription = (descripcion) => {
   if (!descripcion) return '';
 
-  if (descripcion.length > maxDescriptionLength) {
-    return descripcion.substring(0, maxDescriptionLength) + '...';
+  if (descripcion.length > maxDescriptionLength.value) {
+    return descripcion.substring(0, maxDescriptionLength.value) + '...';
   }
 
   return descripcion;
@@ -231,7 +250,7 @@ const getTruncatedDescription = (descripcion) => {
 
 // Verificar si la descripción está truncada
 const isDescriptionTruncated = (descripcion) => {
-  return descripcion && descripcion.length > maxDescriptionLength;
+  return descripcion && descripcion.length > maxDescriptionLength.value;
 };
 
 // Mostrar modal con descripción completa
@@ -420,53 +439,123 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
 .catalog-container {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 1.5rem;
+  padding: 0.5rem;
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
-/* Category Banner */
+/* Container para mantener proporciones consistentes */
+.category-banner-container {
+  margin-bottom: 2rem;
+  width: 100%;
+  position: relative;
+  padding: 0;
+}
+
+/* Category Banner - Corregido para ser responsive */
 .category-banner {
   position: relative;
-  height: clamp(300px, 50vh, 500px);
+  height: clamp(200px, 40vh, 500px);
   cursor: pointer;
   overflow: hidden;
   border-radius: 12px;
-  margin-bottom: 2rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  width: 100%;
+}
+
+.category-banner:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
 }
 
 .category-banner img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.5s ease;
+  transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
 .category-banner:hover img {
   transform: scale(1.05);
 }
 
+/* Overlay con gradiente mejorado y animaciones */
 .banner-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, rgba(0, 0, 0, 0.7), transparent);
-  padding: 2rem;
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.6) 30%,
+    rgba(0, 0, 0, 0.3) 60%,
+    rgba(0, 0, 0, 0) 100%
+  );
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  align-items: center;
   color: #fff;
+  padding: 2rem;
+  transition: background 0.3s ease;
+}
+
+.category-banner:hover .banner-overlay {
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.85) 0%,
+    rgba(0, 0, 0, 0.65) 30%,
+    rgba(0, 0, 0, 0.35) 60%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
+/* Contenido del banner con animaciones */
+.banner-content {
+  max-width: 600px;
+  transform: translateY(0);
+  opacity: 1;
+  transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+.category-banner:hover .banner-content {
+  transform: translateY(-5px);
 }
 
 .banner-overlay h2 {
-  font-size: clamp(1.8rem, 4vw, 3rem);
-  font-weight: 700;
+  font-size: clamp(1.5rem, 4vw, 3rem);
+  font-weight: 800;
   margin-bottom: 1rem;
-  line-height: 1.2;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  position: relative;
+  display: inline-block;
 }
 
-.banner-overlay p {
-  font-size: clamp(1rem, 2vw, 1.25rem);
-  max-width: 60ch;
+.banner-overlay h2::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background-color: #3498db;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.category-banner:hover .banner-overlay h2::after {
+  transform: scaleX(1);
+}
+
+.banner-description-container {
+  position: relative;
   margin-bottom: 1.5rem;
+}
+
+.banner-description {
+  font-size: clamp(0.9rem, 2vw, 1.25rem);
+  max-width: 60ch;
+  line-height: 1.6;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  opacity: 0.9;
 }
 
 .read-more-btn {
@@ -488,22 +577,54 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   color: #2980b9;
 }
 
+/* Botón CTA mejorado */
 .banner-cta {
-  padding: 0.85rem 2rem;
-  background: #38a169;
-  color: #ffffff;
+  padding: 0.75rem 1.5rem;
+  background: #3498db;
+  color: #fff;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   font-weight: 600;
-  font-size: 1rem;
-  transition: all 0.3s ease;
+  font-size: clamp(0.875rem, 1.5vw, 1rem);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   width: fit-content;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+}
+
+.banner-cta::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #2980b9;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  z-index: -1;
 }
 
 .banner-cta:hover {
-  background: #2f855a;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+}
+
+.banner-cta:hover::before {
+  transform: translateX(0);
+}
+
+.banner-cta i {
+  transition: transform 0.3s ease;
+}
+
+.banner-cta:hover i {
+  transform: translateX(3px);
 }
 
 /* Modal de descripción */
@@ -1155,6 +1276,10 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
 
 /* Responsive Styles */
 @media (min-width: 1200px) {
+  .catalog-container {
+    padding: 1.5rem;
+  }
+  
   .products-grid {
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 1.5rem;
@@ -1195,6 +1320,10 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
 }
 
 @media (min-width: 992px) and (max-width: 1199px) {
+  .catalog-container {
+    padding: 1.25rem;
+  }
+  
   .products-grid {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 1.25rem;
@@ -1202,6 +1331,10 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
 }
 
 @media (min-width: 768px) and (max-width: 991px) {
+  .catalog-container {
+    padding: 1rem;
+  }
+  
   .products-grid {
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 1rem;
@@ -1214,9 +1347,21 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   .nav-button {
     opacity: 0.7;
   }
+  
+  .category-banner {
+    height: clamp(200px, 40vh, 400px);
+  }
+  
+  .banner-overlay {
+    padding: 1.5rem;
+  }
 }
 
 @media (min-width: 576px) and (max-width: 767px) {
+  .catalog-container {
+    padding: 0.75rem;
+  }
+  
   .products-grid {
     grid-template-columns: repeat(3, 1fr);
     gap: 0.75rem;
@@ -1237,9 +1382,42 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
     width: 28px;
     height: 28px;
   }
+  
+  .category-banner {
+    height: clamp(180px, 35vh, 350px);
+  }
+  
+  .banner-overlay {
+    background: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.85) 0%,
+      rgba(0, 0, 0, 0.7) 40%,
+      rgba(0, 0, 0, 0.4) 70%,
+      rgba(0, 0, 0, 0.2) 100%
+    );
+    padding: 1.25rem;
+  }
+  
+  .banner-description {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+  
+  .banner-cta {
+    padding: 0.6rem 1.25rem;
+    font-size: 0.875rem;
+  }
 }
 
 @media (min-width: 480px) and (max-width: 575px) {
+  .catalog-container {
+    padding: 0.5rem;
+  }
+  
+  .banner-overlay {
+    padding: 1rem;
+  }
+  
   .products-grid {
     grid-template-columns: repeat(3, 1fr);
     gap: 0.5rem;
@@ -1295,9 +1473,43 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
     padding: 0.2rem 0.4rem;
     font-size: 0.6rem;
   }
+  
+  .category-banner {
+    height: clamp(160px, 30vh, 300px);
+  }
+  
+  .banner-overlay {
+    background: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.9) 0%,
+      rgba(0, 0, 0, 0.75) 50%,
+      rgba(0, 0, 0, 0.5) 80%,
+      rgba(0, 0, 0, 0.3) 100%
+    );
+    padding: 1rem;
+  }
+  
+  .banner-overlay h2 {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .banner-description {
+    font-size: 0.8rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .banner-cta {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
 }
 
 @media (min-width: 400px) and (max-width: 479px) {
+  .catalog-container {
+    padding: 0.5rem;
+  }
+  
   .products-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 0.5rem;
@@ -1337,9 +1549,38 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   .old-price {
     font-size: 0.7rem;
   }
+  
+  .category-banner {
+    height: clamp(150px, 30vh, 250px);
+  }
+  
+  .banner-overlay {
+    background: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.9) 0%,
+      rgba(0, 0, 0, 0.8) 60%,
+      rgba(0, 0, 0, 0.6) 100%
+    );
+    padding: 1rem;
+  }
+  
+  .banner-description {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 }
 
 @media (max-width: 399px) {
+  .catalog-container {
+    padding: 0.25rem;
+  }
+  
+  .category-banner-container {
+    margin-bottom: 1.5rem;
+  }
+  
   .products-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 0.5rem;
@@ -1396,6 +1637,44 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
     padding: 0.15rem 0.3rem;
     font-size: 0.55rem;
   }
+  
+  .category-banner {
+    height: clamp(140px, 25vh, 200px);
+    border-radius: 8px;
+  }
+  
+  .banner-overlay {
+    background: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.95) 0%,
+      rgba(0, 0, 0, 0.85) 70%,
+      rgba(0, 0, 0, 0.7) 100%
+    );
+    padding: 0.75rem;
+  }
+  
+  .banner-overlay h2 {
+    font-size: 1.1rem;
+    margin-bottom: 0.4rem;
+  }
+  
+  .banner-description {
+    font-size: 0.75rem;
+    margin-bottom: 0.6rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .banner-cta {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
+  }
+  
+  .read-more-btn {
+    font-size: 0.75rem;
+  }
 }
 
 /* Touch Device Optimizations */
@@ -1420,6 +1699,28 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
 
   .product-card:active {
     transform: scale(0.98);
+  }
+  
+  .category-banner:hover {
+    transform: none;
+  }
+  
+  .category-banner:hover img {
+    transform: none;
+  }
+  
+  .banner-overlay {
+    background: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.85) 0%,
+      rgba(0, 0, 0, 0.7) 40%,
+      rgba(0, 0, 0, 0.5) 70%,
+      rgba(0, 0, 0, 0.3) 100%
+    );
+  }
+  
+  .banner-cta:active {
+    transform: scale(0.95);
   }
 }
 
@@ -1463,6 +1764,26 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   .skeleton-image,
   .skeleton-details {
     animation: none;
+  }
+  
+  .category-banner:hover {
+    transform: none;
+  }
+  
+  .category-banner:hover img {
+    transform: none;
+  }
+  
+  .banner-overlay h2::after {
+    transition: none;
+  }
+  
+  .banner-cta::before {
+    transition: none;
+  }
+  
+  .banner-cta i {
+    transition: none;
   }
 }
 </style>
