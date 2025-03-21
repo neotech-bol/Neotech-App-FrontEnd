@@ -1,209 +1,210 @@
 <template>
   <ThemePageWrapper>
     <header class="header">
-    <div class="top-bar">
-      <div class="top-bar-inner">
-        <div class="contact">
-          <a href="tel:+59177997694" style="text-decoration: none; color: #838384;"><i class="fas fa-phone-alt"></i>
-            +591 77997694</a>
-        </div>
-        <div class="announcement">
-          {{ translate('experience') }}
-        </div>
-        <div class="top-links">
-          <router-link to="/contacto" style="text-decoration: none;"><a href="#"
-              style="text-decoration: none; color: #838384;">{{ translate('help') }}</a></router-link>
-          <router-link to="/faq" style="text-decoration: none;" class="ms-2"><a href="#"
-              style="text-decoration: none; color: #838384;">FAQ</a></router-link>
-          <!-- Botón de alternar tema -->
-          <button @click="themeStoreDark.toggleDarkMode" class="theme-toggle-btn"
-            :title="themeStoreDark.isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
-            <i v-if="!themeStoreDark.isDarkMode" class="fas fa-sun"></i>
-            <i v-else class="fas fa-moon"></i>
-          </button>
-        </div>
-      </div>
-    </div>
-    <div class="main-header">
-      <div class="logo">
-        <img src="/logo/Logo Neofetch PNG.png" alt="Logo" />
-      </div>
+      <div class="top-bar">
+        <div class="top-bar-inner">
+          <div class="contact">
+            <a href="tel:+59177997694" style="text-decoration: none; color: #838384;"><i class="fas fa-phone-alt"></i>
+              +591 77997694</a>
+          </div>
+          <div class="announcement">
+            {{ translate('experience') }}
+          </div>
+          <div class="top-links">
+            <router-link to="/contacto" style="text-decoration: none;"><a href="#"
+                style="text-decoration: none; color: #838384;">{{ translate('help') }}</a></router-link>
+            <router-link to="/faq" style="text-decoration: none;" class="ms-2"><a href="#"
+                style="text-decoration: none; color: #838384;">FAQ</a></router-link>
+            <!-- Botón de alternar tema -->
 
-      <!-- Barra de búsqueda mejorada y centrada -->
-      <div class="search-container">
-        <div class="search-bar">
-          <input v-model="searchQuery" type="text" :placeholder="translate('search_placeholder')"
-            @keyup.enter="performSearch" @focus="searchFocused = true"
-            @blur="setTimeout(() => searchFocused = false, 200)" />
-          <button class="search-button" @click="performSearch">
-            <i class="fas fa-search"></i>
-          </button>
-
-          <!-- Sugerencias de búsqueda -->
-          <div v-if="searchFocused && searchQuery.length > 0" class="search-suggestions">
-            <div v-for="(suggestion, index) in filteredSuggestions" :key="index" class="suggestion-item"
-              @click="selectSuggestion(suggestion)" :class="{ 'active': selectedSuggestionIndex === index }">
-              <span>{{ suggestion }}</span>
-            </div>
-            <div v-if="filteredSuggestions.length === 0" class="no-suggestions">
-              No se encontraron resultados
-            </div>
+     <!--        <button @click="themeStoreDark.toggleDarkMode" class="theme-toggle-btn"
+              :title="themeStoreDark.isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
+              <i v-if="!themeStoreDark.isDarkMode" class="fas fa-sun"></i>
+              <i v-else class="fas fa-moon"></i>
+            </button> -->
           </div>
         </div>
       </div>
-
-      <div class="user-actions">
-        <button class="icon-button" @click="handleAccountClick">
-          <img src="/svg/icono-header-cuenta.svg" alt="Account" />
-          <span class="label">{{ translate(isLoggedIn ? 'account' : 'login') }}</span>
-        </button>
-        <button class="icon-button" @click="goFavorites">
-          <img src="/svg/icono-header-favoritos.svg" alt="Favorites" />
-          <span class="label">{{ translate('favorites') }}</span>
-        </button>
-        <button class="icon-button cart-button" @click="carritoView">
-          <img src="/svg/icono-header-carrito.svg" alt="Cart" />
-          <span class="label">{{ translate('cart') }}</span>
-          <span class="cart-count" v-if="cartItemCount > 0">{{ cartItemCount }}</span>
-        </button>
-      </div>
-      <div class="mobile-toggle" @click="toggleMobileMenu">
-        <i :class="isMobileMenuOpen ? 'fas fa-times' : 'fas fa-bars'"></i>
-      </div>
-    </div>
-    <hr />
-    <nav class="main-nav" :class="{ 'mobile-nav-open': isMobileMenuOpen }">
-      <div class="nav-header" v-if="isMobileMenuOpen">
+      <div class="main-header">
         <div class="logo">
           <img src="/logo/Logo Neofetch PNG.png" alt="Logo" />
         </div>
-        <button class="close-nav" @click="closeMobileMenu">
+
+        <!-- Barra de búsqueda mejorada y centrada -->
+        <div class="search-container">
+          <div class="search-bar">
+            <input v-model="searchQuery" type="text" :placeholder="translate('search_placeholder')"
+              @keyup.enter="performSearch" @focus="searchFocused = true"
+              @blur="setTimeout(() => searchFocused = false, 200)" />
+            <button class="search-button" @click="performSearch">
+              <i class="fas fa-search"></i>
+            </button>
+
+            <!-- Sugerencias de búsqueda -->
+            <div v-if="searchFocused && searchQuery.length > 0" class="search-suggestions">
+              <div v-for="(suggestion, index) in filteredSuggestions" :key="index" class="suggestion-item"
+                @click="selectSuggestion(suggestion)" :class="{ 'active': selectedSuggestionIndex === index }">
+                <span>{{ suggestion }}</span>
+              </div>
+              <div v-if="filteredSuggestions.length === 0" class="no-suggestions">
+                No se encontraron resultados
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="user-actions">
+          <button class="icon-button" @click="handleAccountClick">
+            <img src="/svg/icono-header-cuenta.svg" alt="Account" />
+            <span class="label">{{ translate(isLoggedIn ? 'account' : 'login') }}</span>
+          </button>
+          <button class="icon-button" @click="goFavorites">
+            <img src="/svg/icono-header-favoritos.svg" alt="Favorites" />
+            <span class="label">{{ translate('favorites') }}</span>
+          </button>
+          <button class="icon-button cart-button" @click="carritoView">
+            <img src="/svg/icono-header-carrito.svg" alt="Cart" />
+            <span class="label">{{ translate('cart') }}</span>
+            <span class="cart-count" v-if="cartItemCount > 0">{{ cartItemCount }}</span>
+          </button>
+        </div>
+        <div class="mobile-toggle" @click="toggleMobileMenu">
+          <i :class="isMobileMenuOpen ? 'fas fa-times' : 'fas fa-bars'"></i>
+        </div>
+      </div>
+      <hr />
+      <nav class="main-nav" :class="{ 'mobile-nav-open': isMobileMenuOpen }">
+        <div class="nav-header" v-if="isMobileMenuOpen">
+          <div class="logo">
+            <img src="/logo/Logo Neofetch PNG.png" alt="Logo" />
+          </div>
+          <button class="close-nav" @click="closeMobileMenu">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <!-- Barra de búsqueda móvil -->
+        <div class="mobile-search" v-if="isMobileMenuOpen">
+          <div class="search-bar">
+            <input v-model="searchQuery" type="text" :placeholder="translate('search_placeholder')"
+              @keyup.enter="performSearch" />
+            <button class="search-button" @click="performSearch">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+        </div>
+
+        <button class="catalog-button" @click="toggleSidebar">
+          <i class="fas fa-th-large"></i>
+          {{ translate('view_catalog') }}
+        </button>
+        <ul class="nav-links">
+          <li v-for="item in navItems" :key="item.path">
+            <router-link :to="item.path" :class="{ 'active': $route.path === item.path }" @click="closeMobileMenu">
+              <i :class="item.icon"></i>
+              <span class="link-text">{{ translate(item.nombre) }}</span>
+            </router-link>
+          </li>
+        </ul>
+        <div :class="[
+          'location-selector',
+          currentDepartment === 'la-paz' ? 'location-selector-naranja' : '',
+          currentDepartment === 'cochabamba' ? 'location-selector-azul' : ''
+        ]">
+          <i class="fas fa-map-marker-alt"></i>
+          <select v-model="currentDepartment" class="location-select" @change="updateDepartment">
+            <option value="la-paz">La Paz</option>
+            <option value="cochabamba">Cochabamba</option>
+            <option value="santa-cruz">Santa Cruz</option>
+            <option value="tarija">Tarija</option>
+            <option value="potosi">Potosí</option>
+            <option value="oruro">Oruro</option>
+            <option value="beni">Beni</option>
+            <option value="pando">Pando</option>
+            <option value="chuquisaca">Chuquisaca</option>
+            <option value="el-beni">El Beni</option>
+          </select>
+        </div>
+        <div class="mobile-user-actions" v-if="isMobileMenuOpen">
+          <button class="mobile-action-button" @click="handleAccountClick">
+            <i class="fas fa-user"></i>
+            <span>{{ translate(isLoggedIn ? 'account' : 'login') }}</span>
+          </button>
+          <button class="mobile-action-button" @click="goFavorites">
+            <i class="fas fa-heart"></i>
+            <span>{{ translate('favorites') }}</span>
+          </button>
+          <button class="mobile-action-button" @click="carritoView">
+            <i class="fas fa-shopping-cart"></i>
+            <span>{{ translate('cart') }}</span>
+            <span class="mobile-cart-count" v-if="cartItemCount > 0">{{ cartItemCount }}</span>
+          </button>
+        </div>
+      </nav>
+      <hr />
+    </header>
+
+    <div :class="['sidebar', { 'open': isSidebarOpen }]">
+      <div class="sidebar-header">
+        <h2>{{ translate('catalogs') }}</h2>
+        <button class="close-sidebar" @click="toggleSidebar">
           <i class="fas fa-times"></i>
         </button>
       </div>
-
-      <!-- Barra de búsqueda móvil -->
-      <div class="mobile-search" v-if="isMobileMenuOpen">
-        <div class="search-bar">
-          <input v-model="searchQuery" type="text" :placeholder="translate('search_placeholder')"
-            @keyup.enter="performSearch" />
-          <button class="search-button" @click="performSearch">
-            <i class="fas fa-search"></i>
-          </button>
+      <div class="sidebar-content">
+        <div class="catalog-section">
+          <h3 @click="toggleSection('activos')" :class="{ 'active': activeSections.activos }">
+            Catálogos Activos
+            <i :class="['fas', activeSections.activos ? 'fa-chevron-up' : 'fa-chevron-down']"></i>
+          </h3>
+          <transition name="accordion">
+            <ul v-if="activeSections.activos" class="category-list">
+              <li v-for="catalogo in catalogosActivos" :key="catalogo.id">
+                <a href="#" @click.prevent="viewCatalogoActivo(catalogo.id)">
+                  <i class="fas fa-book-open"></i>
+                  {{ catalogo.nombre }}
+                </a>
+                <ul v-if="catalogo.categorias" class="subcategory-list">
+                  <li v-for="categoria in catalogo.categorias" :key="categoria.id">
+                    <a href="#" @click.prevent="viewCategoria(categoria.id)">
+                      <i class="fas fa-tag"></i>
+                      {{ categoria.nombre }}
+                    </a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </transition>
+        </div>
+        <div class="catalog-section">
+          <h3 @click="toggleSection('anteriores')" :class="{ 'active': activeSections.anteriores }">
+            Historial de Catálogos
+            <i :class="['fas', activeSections.anteriores ? 'fa-chevron-up' : 'fa-chevron-down']"></i>
+          </h3>
+          <transition name="accordion">
+            <ul v-if="activeSections.anteriores" class="category-list">
+              <li v-for="catalogo in catalogosAnteriores" :key="catalogo.id">
+                <a href="#" @click.prevent="viewCatalogoHistorial(catalogo.id)">
+                  <i class="fas fa-history"></i>
+                  {{ catalogo.nombre }}
+                </a>
+              </li>
+            </ul>
+          </transition>
         </div>
       </div>
+    </div>
+    <div :class="['sidebar-overlay', { 'active': isSidebarOpen }]" @click="closeAllMenus"></div>
 
-      <button class="catalog-button" @click="toggleSidebar">
-        <i class="fas fa-th-large"></i>
-        {{ translate('view_catalog') }}
-      </button>
-      <ul class="nav-links">
-        <li v-for="item in navItems" :key="item.path">
-          <router-link :to="item.path" :class="{ 'active': $route.path === item.path }" @click="closeMobileMenu">
-            <i :class="item.icon"></i>
-            <span class="link-text">{{ translate(item.nombre) }}</span>
-          </router-link>
-        </li>
-      </ul>
-      <div :class="[
-        'location-selector',
-        currentDepartment === 'la-paz' ? 'location-selector-naranja' : '',
-        currentDepartment === 'cochabamba' ? 'location-selector-azul' : ''
-      ]">
-        <i class="fas fa-map-marker-alt"></i>
-        <select v-model="currentDepartment" class="location-select" @change="updateDepartment">
-          <option value="la-paz">La Paz</option>
-          <option value="cochabamba">Cochabamba</option>
-          <option value="santa-cruz">Santa Cruz</option>
-          <option value="tarija">Tarija</option>
-          <option value="potosi">Potosí</option>
-          <option value="oruro">Oruro</option>
-          <option value="beni">Beni</option>
-          <option value="pando">Pando</option>
-          <option value="chuquisaca">Chuquisaca</option>
-          <option value="el-beni">El Beni</option>
-        </select>
-      </div>
-      <div class="mobile-user-actions" v-if="isMobileMenuOpen">
-        <button class="mobile-action-button" @click="handleAccountClick">
-          <i class="fas fa-user"></i>
-          <span>{{ translate(isLoggedIn ? 'account' : 'login') }}</span>
-        </button>
-        <button class="mobile-action-button" @click="goFavorites">
-          <i class="fas fa-heart"></i>
-          <span>{{ translate('favorites') }}</span>
-        </button>
-        <button class="mobile-action-button" @click="carritoView">
-          <i class="fas fa-shopping-cart"></i>
-          <span>{{ translate('cart') }}</span>
-          <span class="mobile-cart-count" v-if="cartItemCount > 0">{{ cartItemCount }}</span>
+    <div v-if="showLoginMessage" class="login-message">
+      <div class="message-content">
+        <i class="fas fa-exclamation-circle"></i>
+        <span>Debes iniciar sesión para acceder a Favoritos</span>
+        <button @click="showLoginMessage = false" class="close-button">
+          <i class="fas fa-times"></i>
         </button>
       </div>
-    </nav>
-    <hr />
-  </header>
-
-  <div :class="['sidebar', { 'open': isSidebarOpen }]">
-    <div class="sidebar-header">
-      <h2>{{ translate('catalogs') }}</h2>
-      <button class="close-sidebar" @click="toggleSidebar">
-        <i class="fas fa-times"></i>
-      </button>
     </div>
-    <div class="sidebar-content">
-      <div class="catalog-section">
-        <h3 @click="toggleSection('activos')" :class="{ 'active': activeSections.activos }">
-          Catálogos Activos
-          <i :class="['fas', activeSections.activos ? 'fa-chevron-up' : 'fa-chevron-down']"></i>
-        </h3>
-        <transition name="accordion">
-          <ul v-if="activeSections.activos" class="category-list">
-            <li v-for="catalogo in catalogosActivos" :key="catalogo.id">
-              <a href="#" @click.prevent="viewCatalogoActivo(catalogo.id)">
-                <i class="fas fa-book-open"></i>
-                {{ catalogo.nombre }}
-              </a>
-              <ul v-if="catalogo.categorias" class="subcategory-list">
-                <li v-for="categoria in catalogo.categorias" :key="categoria.id">
-                  <a href="#" @click.prevent="viewCategoria(categoria.id)">
-                    <i class="fas fa-tag"></i>
-                    {{ categoria.nombre }}
-                  </a>
-                </li>
-              </ul>
-            </li>
-          </ul>
-        </transition>
-      </div>
-      <div class="catalog-section">
-        <h3 @click="toggleSection('anteriores')" :class="{ 'active': activeSections.anteriores }">
-          Historial de Catálogos
-          <i :class="['fas', activeSections.anteriores ? 'fa-chevron-up' : 'fa-chevron-down']"></i>
-        </h3>
-        <transition name="accordion">
-          <ul v-if="activeSections.anteriores" class="category-list">
-            <li v-for="catalogo in catalogosAnteriores" :key="catalogo.id">
-              <a href="#" @click.prevent="viewCatalogoHistorial(catalogo.id)">
-                <i class="fas fa-history"></i>
-                {{ catalogo.nombre }}
-              </a>
-            </li>
-          </ul>
-        </transition>
-      </div>
-    </div>
-  </div>
-  <div :class="['sidebar-overlay', { 'active': isSidebarOpen }]" @click="closeAllMenus"></div>
-
-  <div v-if="showLoginMessage" class="login-message">
-    <div class="message-content">
-      <i class="fas fa-exclamation-circle"></i>
-      <span>Debes iniciar sesión para acceder a Favoritos</span>
-      <button @click="showLoginMessage = false" class="close-button">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-  </div>
   </ThemePageWrapper>
 
 </template>
@@ -436,6 +437,12 @@ onMounted(() => {
   /* themeStoreDark.applyTheme(); */
   // Agregar event listener para navegación por teclado
   window.addEventListener('keydown', handleKeyNavigation);
+  // Siempre iniciar con el tema claro, independientemente de lo guardado en localStorage
+  themeStoreDark.setDarkMode(false);
+
+  // Si quieres cargar la preferencia guardada después de la primera visita,
+  // podrías usar un enfoque diferente, pero esto garantiza que siempre comience en claro
+  // themeStoreDark.loadSavedPreference();
 });
 
 // Limpiar event listeners al desmontar
@@ -474,10 +481,10 @@ body {
 }
 
 .header {
-/*   position: sticky; */
+  /*   position: sticky; */
   top: 0;
   z-index: 1000;
-/*   background: #fff; */
+  /*   background: #fff; */
   width: 100%;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   background-color: var(--background-color);

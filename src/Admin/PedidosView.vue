@@ -398,26 +398,45 @@
                   </div>
                   <div class="card-body p-0">
                     <div class="list-group list-group-flush">
-                      <div class="list-group-item p-3" v-for="(item, index) in detailOrder.productos" :key="item.id">
-                        <div class="d-flex justify-content-between align-items-start">
-                          <div>
-                            <div class="d-flex align-items-center">
-                              <span class="badge bg-primary rounded-pill me-2">{{ item.pivot?.cantidad }}</span>
-                              <span class="fw-medium">{{ item.nombre }}</span>
-                            </div>
-                            <div class="text-muted small mt-1">
-                              Precio unitario: {{ formatCurrency(item.pivot?.precio) }}
-                            </div>
-                            <div class="text-muted small mt-1">
-                              Modelo: {{ item.pivot?.modelo_id ? getModelName(item.pivot.modelo_id) : 'N/A' }}
-                            </div>
-                            <div class="text-muted small mt-1">
-                              Color: {{ item.pivot?.color ? item.pivot.color : 'N/A' }}
-                            </div>
-                          </div>
-                          <span class="fw-bold">{{ formatCurrency(item.pivot?.precio * item.pivot?.cantidad) }}</span>
-                        </div>
-                      </div>
+  <!-- Modificación en la sección de productos del modal de detalles -->
+  <div class="list-group-item p-3" v-for="(item, index) in detailOrder.productos" :key="item.id">
+    <div class="d-flex justify-content-between align-items-start">
+      <div>
+        <div class="d-flex align-items-center">
+          <span class="badge bg-primary rounded-pill me-2">{{ item.pivot?.cantidad }}</span>
+          <span class="fw-medium">{{ item.nombre }}</span>
+          <!-- Badge para indicar si es preventa -->
+          <span v-if="item.pivot?.es_preventa" class="badge bg-warning ms-2">Preventa</span>
+        </div>
+        <div class="text-muted small mt-1">
+          Precio unitario: {{ formatCurrency(item.pivot?.precio) }}
+        </div>
+        <!-- Información de preventa si aplica -->
+        <div v-if="item.pivot?.es_preventa" class="preventa-info mt-1">
+          <div class="text-primary small">
+            <i class="fas fa-tag me-1"></i>Precio preventa: {{ formatCurrency(item.pivot?.precio_preventa) }}
+          </div>
+          <div class="text-primary small">
+            <i class="fas fa-sort-numeric-down me-1"></i>Cantidad mínima: {{ item.pivot?.cantidad_minima_preventa }}
+          </div>
+          <div class="text-primary small">
+            <i class="fas fa-sort-numeric-up me-1"></i>Cantidad máxima: {{ item.pivot?.cantidad_maxima_preventa }}
+          </div>
+        </div>
+        <!-- Información de precio regular si está disponible -->
+        <div v-if="item.pivot?.precio_original && item.pivot?.es_preventa" class="text-muted small mt-1">
+          <i class="fas fa-info-circle me-1"></i>Precio regular: {{ formatCurrency(item.pivot?.precio_original) }}
+        </div>
+        <div class="text-muted small mt-1">
+          Modelo: {{ item.pivot?.modelo_id ? getModelName(item.pivot.modelo_id) : 'N/A' }}
+        </div>
+        <div class="text-muted small mt-1">
+          Color: {{ item.pivot?.color ? item.pivot.color : 'N/A' }}
+        </div>
+      </div>
+      <span class="fw-bold">{{ formatCurrency(item.pivot?.precio * item.pivot?.cantidad) }}</span>
+    </div>
+  </div>
                     </div>
                   </div>
                 </div>
@@ -1230,6 +1249,14 @@ const showToast = (type, title, message) => {
   color: #16181b;
   text-decoration: none;
   background-color: #f8f9fa;
+}
+/* Estilos adicionales para la información de preventa */
+.preventa-info {
+  background-color: rgba(255, 193, 7, 0.1);
+  border-left: 3px solid #ffc107;
+  padding: 5px 8px;
+  margin: 5px 0;
+  border-radius: 0 4px 4px 0;
 }
 </style>
 

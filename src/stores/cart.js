@@ -8,176 +8,153 @@ import { ref, computed } from 'vue';
  * - Actualizar cantidades
  * - Aplicar cupones de descuento
  * - Calcular totales
+ * - Manejar precios de preventa
  */
 export const useCartStore = defineStore('cart', () => {
   // ===== ESTADO DEL CARRITO =====
-  
-  // Lista de productos en el carrito (cargada desde localStorage al inicio)
-  const productos = ref(loadCartFromStorage() || []);
-  
-  // Variables relacionadas con descuentos y cupones
-  const descuento = ref(0);           // Valor del descuento
-  const tipoDescuento = ref('');      // Tipo de descuento (porcentaje o fijo)
-  const montoPorcentaje = ref(0);     // Porcentaje de descuento calculado
-  const montoDescuento = ref(0);      // Monto total del descuento en valor monetario
-  const cupon_id = ref(null);         // ID del cupón aplicado
-  const cuponAplicado = ref(null);    // Objeto completo del cupón aplicado
+  const productos = ref([]);
+  const descuento = ref(0);
+  const tipoDescuento = ref('');
+  const montoPorcentaje = ref(0);
+  const montoDescuento = ref(0);
+  const cupon_id = ref(null);
+  const cuponAplicado = ref(null);
 
-  /**
-   * Carga el carrito desde localStorage al iniciar la aplicación
-   * @returns {Array} - Array de productos guardados o array vacío si no hay datos
-   */
-  function loadCartFromStorage() {
-    const savedCart = localStorage.getItem('cart');
-    return savedCart ? JSON.parse(savedCart) : [];
+  // Cargar datos del carrito desde localStorage al inicializar
+  if (localStorage.getItem('cart')) {
+    productos.value = JSON.parse(localStorage.getItem('cart'));
   }
 
   /**
+   * Carga el carrito desde localStorage
+   * @returns {Array} - Array de productos o array vacío
+   */
+  function loadCartFromStorage() {
+    const savedCart = localStorage.getItem("cart");
+    return savedCart ? JSON.parse(savedCart) : [];
+  }
+
+  // ===== PROPIEDADES CALCULADAS (GETTERS) =====
+  const totalItems = computed(() => {
+    return productos.value.reduce((total, item) => total + item.cantidad, 0);
+  });
+
+  const totalAmount = computed(() => {
+    return productos.value.reduce((total, item) => {
+      const precio = item.es_preventa ? item.precio_preventa : item.precio;
+      return total + precio * item.cantidad;
+    }, 0);
+  });
+
+  const totalAfterDiscount = computed(() => totalAmount.value - montoDescuento.value);
+  const totalToPay = computed(() => totalAfterDiscount.value * 0.7);
+  const pending = computed(() => totalAfterDiscount.value * 0.3);
+
+  /**
    * Guarda el estado actual del carrito en localStorage
-   * Permite persistencia de datos entre sesiones
    */
   function saveCartToStorage() {
     localStorage.setItem('cart', JSON.stringify(productos.value));
   }
 
-  // ===== PROPIEDADES CALCULADAS (GETTERS) =====
+  /**
+   * Determina si un producto debe usar precio de preventa
+   * @param {Object} product - Producto a evaluar
+   * @returns {boolean} - true si debe usar precio de preventa
+   */
+  function determinarSiEsPreventa(product) {
+    if (!product.precio_preventa) return false;
+    
+    const cantidad = product.cantidad || 1;
+    const minPreventa = product.cantidad_minima_preventa;
+    const maxPreventa = product.cantidad_maxima_preventa;
+    
+    if (!minPreventa || !maxPreventa) return false;
+    
+    return cantidad >= minPreventa && cantidad <= maxPreventa;
+  }
 
   /**
-   * Calcula el número total de items en el carrito
-   * Suma las cantidades de todos los productos
+   * Genera un ID único para cada producto en el carrito
+   * @param {Object} product - Producto para generar ID
+   * @returns {string} - ID único
    */
-  const totalItems = computed(() => {
-    return productos.value.reduce((total, item) => total + item.cantidad, 0);
-  });
+  function generarUniqueId(product) {
+    const preventaStatus = product.es_preventa ? 'preventa' : 'regular';
+    return `${product.id}-${product.modeloId || "default"}-${product.color || "default"}-${preventaStatus}`;
+  }
 
   /**
-   * Calcula el número de productos únicos en el carrito
-   * Cuenta cuántos productos diferentes hay, independientemente de su cantidad
-   */
-  const uniqueItemCount = computed(() => productos.value.length);
-
-  /**
-   * Calcula el monto total del carrito sin descuentos
-   * Multiplica precio por cantidad para cada producto y suma todos
-   */
-  const totalAmount = computed(() => {
-    return productos.value.reduce((total, item) => total + (item.precio * item.cantidad), 0);
-  });
-
-  /**
-   * Calcula el total después de aplicar descuentos
-   * Resta el monto de descuento del total
-   */
-  const totalAfterDiscount = computed(() => totalAmount.value - montoDescuento.value);
-  
-  /**
-   * Calcula el monto a pagar inicialmente (70% del total con descuento)
-   * Representa el pago inicial o anticipo
-   */
-  const totalToPay = computed(() => totalAfterDiscount.value * 0.7);
-  
-  /**
-   * Calcula el monto pendiente por pagar (30% del total con descuento)
-   * Representa el saldo pendiente después del pago inicial
-   */
-  const pending = computed(() => totalAfterDiscount.value * 0.3);
-
-  // ===== MÉTODOS PARA MANIPULAR EL CARRITO =====
-
-  /**
-   * Añade un producto al carrito
-   * Si el producto ya existe, incrementa su cantidad
-   * Si es nuevo, lo agrega como nuevo item
-   * 
-   * @param {Object} product - Objeto con datos del producto a añadir
+   * Añade un producto al carrito o actualiza su cantidad si ya existe
+   * SOLUCIÓN: Completamente reescrita para preservar correctamente las propiedades de imagen
+   * @param {Object} product - Producto a añadir
    */
   function addToCart(product) {
-    // Genera un ID único para el producto basado en sus características
-    const uniqueId = generarUniqueId(product);
-    // Busca si el producto ya existe en el carrito
-    const existingItem = productos.value.find(item => item.uniqueId === uniqueId);
-
+    console.log('Añadiendo producto al carrito:', product.nombre, {
+      imagen_principal: product.imagen_principal,
+      colorImage: product.colorImage,
+      image: product.image
+    });
+  
+    const originalImage = product.imagen_principal || product.colorImage || product.image;
+    const esPreventa = determinarSiEsPreventa(product);
+    const uniqueId = generarUniqueId({ ...product, es_preventa: esPreventa });
+  
+    const existingItem = productos.value.find((item) => item.uniqueId === uniqueId);
+  
     if (existingItem) {
-      // Si ya existe, incrementa la cantidad si no supera el máximo
-      if (existingItem.cantidad < existingItem.cantidad_maxima) {
-        existingItem.cantidad += product.cantidad;
-      } else {
-        console.warn(`Límite máximo alcanzado para ${existingItem.nombre}`);
+      const cantidadMaxima = esPreventa
+        ? existingItem.cantidad_maxima_preventa || existingItem.cantidad_maxima
+        : existingItem.cantidad_maxima;
+  
+      if (existingItem.cantidad < cantidadMaxima) {
+        existingItem.cantidad += product.cantidad || 1;
       }
+  
+      // Preservar imágenes
+      existingItem.imagen_principal = product.imagen_principal || existingItem.imagen_principal || originalImage;
+      existingItem.colorImage = product.colorImage || existingItem.colorImage;
+      existingItem.image = product.image || existingItem.image || originalImage;
     } else {
-      // Si es nuevo, añade el producto completo al carrito
-      productos.value.push({
+      const cantidadMinima = esPreventa
+        ? product.cantidad_minima_preventa || product.cantidad_minima
+        : product.cantidad_minima;
+  
+      const newCartItem = {
+        ...product,
         uniqueId,
-        id: product.id,
-        nombre: product.nombre,
-        precio: product.precio,
-        cantidad: product.cantidad_minima || 1,
-        cantidad_minima: product.cantidad_minima,
-        cantidad_maxima: product.cantidad_maxima,
-        image: product.colorImage || product.imagen_principal,
-        modeloId: product.modeloId,
-        modelo: product.nombreModelo,
-        color: product.color,
-        colorImage: product.colorImage
-      });
+        es_preventa: esPreventa,
+        cantidad: product.cantidad || cantidadMinima || 1,
+        imagen_principal: product.imagen_principal || originalImage,
+        colorImage: product.colorImage,
+        image: product.image || originalImage
+      };
+  
+      productos.value.push(newCartItem);
     }
-    // Guarda cambios y recalcula descuentos
+  
     saveCartToStorage();
     recalcularDescuento();
   }
 
   /**
-   * Genera un identificador único para cada producto
-   * Combina ID del producto, modelo y color para diferenciar variantes
-   * 
-   * @param {Object} product - Producto para el que se genera el ID
-   * @returns {string} - ID único para el producto
-   */
-  function generarUniqueId(product) {
-    return `${product.id}-${product.modeloId}-${product.color || 'default'}`;
-  }
-
-  /**
-   * Elimina un producto del carrito por su ID único
-   * 
+   * Elimina un producto del carrito
    * @param {string} uniqueId - ID único del producto a eliminar
    */
   function removeFromCart(uniqueId) {
-    console.log("Eliminando producto con uniqueId:", uniqueId);
-    productos.value = productos.value.filter(item => item.uniqueId !== uniqueId);
-    console.log("Productos restantes:", productos.value); // Verifica el estado del carrito
+    productos.value = productos.value.filter((item) => item.uniqueId !== uniqueId);
     saveCartToStorage();
     recalcularDescuento();
   }
 
   /**
-   * Actualiza la cantidad de un producto en el carrito
-   * Verifica que la cantidad esté dentro de los límites permitidos
-   * 
-   * @param {string} uniqueId - ID único del producto a actualizar
-   * @param {number} cantidad - Nueva cantidad a establecer
-   */
-  function updateQuantity(uniqueId, cantidad) {
-    const item = productos.value.find(item => item.uniqueId === uniqueId);
-    if (item) {
-      // Verifica que la cantidad esté dentro de los límites min/max
-      if (cantidad >= item.cantidad_minima && cantidad <= item.cantidad_maxima) {
-        item.cantidad = cantidad;
-      }
-    }
-    saveCartToStorage();
-    recalcularDescuento();
-  }
-
-  /**
-   * Vacía completamente el carrito y elimina descuentos
-   * Reinicia todos los valores a su estado inicial
+   * Vacía completamente el carrito
    */
   function clearCart() {
     productos.value = [];
     descuento.value = 0;
     montoDescuento.value = 0;
-    tipoDescuento.value = '';
+    tipoDescuento.value = "";
     montoPorcentaje.value = 0;
     cupon_id.value = null;
     cuponAplicado.value = null;
@@ -185,26 +162,32 @@ export const useCartStore = defineStore('cart', () => {
   }
 
   /**
-   * Aplica un cupón de descuento al carrito
-   * Guarda la información del cupón y recalcula los descuentos
-   * 
-   * @param {Object} cupon - Objeto con datos del cupón a aplicar
+   * Aplica un cupón de descuento
+   * @param {Object} cupon - Cupón a aplicar
    */
   function applyCoupon(cupon) {
     cuponAplicado.value = cupon;
     cupon_id.value = cupon.id;
     tipoDescuento.value = cupon.tipo;
-    
     recalcularDescuento();
   }
 
   /**
+   * Elimina el cupón aplicado
+   */
+  function removeCoupon() {
+    descuento.value = 0;
+    montoDescuento.value = 0;
+    tipoDescuento.value = "";
+    montoPorcentaje.value = 0;
+    cupon_id.value = null;
+    cuponAplicado.value = null;
+  }
+
+  /**
    * Recalcula el descuento basado en el cupón aplicado
-   * Maneja diferentes tipos de descuento (porcentaje o monto fijo)
-   * Asegura que el descuento no exceda el total del carrito
    */
   function recalcularDescuento() {
-    // Si no hay cupón aplicado, reinicia valores de descuento
     if (!cuponAplicado.value) {
       montoDescuento.value = 0;
       montoPorcentaje.value = 0;
@@ -212,62 +195,145 @@ export const useCartStore = defineStore('cart', () => {
       return;
     }
 
-    // Calcula descuento según el tipo (porcentaje o fijo)
-    if (cuponAplicado.value.tipo === 'porcentaje') {
-      // Descuento porcentual: calcula el monto basado en el porcentaje
+    if (cuponAplicado.value.tipo === "porcentaje") {
       montoDescuento.value = (totalAmount.value * cuponAplicado.value.descuento) / 100;
       montoPorcentaje.value = cuponAplicado.value.descuento;
       descuento.value = cuponAplicado.value.descuento;
-    } else if (cuponAplicado.value.tipo === 'fijo') {
-      // Descuento de monto fijo: usa el valor directo (sin exceder el total)
+    } else if (cuponAplicado.value.tipo === "fijo") {
       montoDescuento.value = Math.min(cuponAplicado.value.descuento, totalAmount.value);
       montoPorcentaje.value = (montoDescuento.value / totalAmount.value) * 100;
       descuento.value = cuponAplicado.value.descuento;
     }
 
-    // Asegura que el descuento nunca sea mayor que el total del carrito
     montoDescuento.value = Math.min(montoDescuento.value, totalAmount.value);
   }
 
   /**
-   * Elimina el cupón aplicado y reinicia todos los valores de descuento
+   * Actualiza el estado de preventa de un producto
+   * @param {Object} item - Item a actualizar
+   * @returns {boolean} - true si el estado cambió
    */
-  function removeCoupon() {
-    descuento.value = 0;
-    montoDescuento.value = 0;
-    tipoDescuento.value = '';
-    montoPorcentaje.value = 0;
-    cupon_id.value = null;
-    cuponAplicado.value = null;
+  function actualizarEstadoPreventa(item) {
+    const estadoAnterior = item.es_preventa;
+    
+    if (!item.precio_preventa) {
+      item.es_preventa = false;
+      return estadoAnterior !== item.es_preventa;
+    }
+
+    // Solo actualiza si la cantidad está fuera del rango actual
+    if (item.es_preventa) {
+      const min = item.cantidad_minima_preventa;
+      const max = item.cantidad_maxima_preventa;
+      if (min && max && (item.cantidad < min || item.cantidad > max)) {
+        item.es_preventa = false;
+      }
+    } else {
+      const min = item.cantidad_minima;
+      const max = item.cantidad_maxima;
+      if (min && max && (item.cantidad < min || item.cantidad > max)) {
+        const preventaMin = item.cantidad_minima_preventa;
+        const preventaMax = item.cantidad_maxima_preventa;
+        if (preventaMin && preventaMax && item.cantidad >= preventaMin && item.cantidad <= preventaMax) {
+          item.es_preventa = true;
+        }
+      }
+    }
+
+    return estadoAnterior !== item.es_preventa;
   }
 
-  // Expone estado y métodos para ser utilizados fuera del store
+  /**
+   * Actualiza la cantidad de un producto
+   * @param {string} uniqueId - ID único del producto
+   * @param {number} cantidad - Nueva cantidad
+   */
+  function updateQuantity(uniqueId, cantidad) {
+    const index = productos.value.findIndex((item) => item.uniqueId === uniqueId);
+    if (index === -1) return;
+    
+    const item = productos.value[index];
+    
+    // Guardar propiedades de imagen antes de cualquier cambio
+    const originalImage = item.image || item.colorImage || item.imagen_principal;
+    
+    // Determinar límites min/max
+    let minCantidad = item.cantidad_minima || 1;
+    let maxCantidad = item.cantidad_maxima || 999;
+
+    // Verificar límites
+    if (cantidad < minCantidad) {
+      cantidad = minCantidad;
+    } else if (cantidad > maxCantidad) {
+      cantidad = maxCantidad;
+    }
+    
+    // Actualizar cantidad
+    item.cantidad = cantidad;
+    
+    // Validar contra el rango actual
+    const min = item.es_preventa ? item.cantidad_minima_preventa : item.cantidad_minima;
+    const max = item.es_preventa ? item.cantidad_maxima_preventa : item.cantidad_maxima;
+    
+    if (cantidad < min || cantidad > max) {
+      // Forzar actualización de estado
+      const cambioEstado = actualizarEstadoPreventa(item);
+      if (cambioEstado) {
+        // Crear copia profunda del item
+        const itemActualizado = JSON.parse(JSON.stringify(item));
+        
+        // Asegurar que las propiedades de imagen se preserven
+        itemActualizado.imagen_principal = item.imagen_principal;
+        itemActualizado.colorImage = item.colorImage;
+        itemActualizado.image = item.image;
+        
+        // Si todas las propiedades de imagen están ausentes, usar la original
+        if (!itemActualizado.imagen_principal && !itemActualizado.colorImage && !itemActualizado.image) {
+          itemActualizado.image = originalImage;
+        }
+        
+        // Regenerar ID único
+        itemActualizado.uniqueId = generarUniqueId(itemActualizado);
+        
+        // Reemplazar item en el carrito
+        productos.value.splice(index, 1);
+        productos.value.push(itemActualizado);
+      }
+    }
+    
+    saveCartToStorage();
+    recalcularDescuento();
+  }
+
   return {
     // Estado
     productos,
     
-    // Getters (propiedades calculadas)
+    // Getters
     totalItems,
     totalAmount,
     totalAfterDiscount,
     totalToPay,
     pending,
-    uniqueItemCount,
     
-    // Métodos para manipular el carrito
+    // Métodos
     addToCart,
     removeFromCart,
     updateQuantity,
     clearCart,
-    
-    // Métodos y estado para cupones/descuentos
     applyCoupon,
     removeCoupon,
+    
+    // Propiedades de descuento
     descuento,
     tipoDescuento,
     montoPorcentaje,
     montoDescuento,
     cupon_id,
-    cuponAplicado
+    cuponAplicado,
+    
+    // Métodos auxiliares
+    generarUniqueId,
+    determinarSiEsPreventa
   };
 });

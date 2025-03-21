@@ -49,6 +49,7 @@
                 <th>ID</th>
                 <th>Nombre</th>
                 <th>Precio</th>
+                <th>Precio Preventa</th>
                 <th>Categoría</th>
                 <th>Stock</th>
                 <th>Estado</th>
@@ -60,6 +61,7 @@
                 <td>{{ item.id }}</td>
                 <td>{{ item.nombre }}</td>
                 <td>{{ formatearPrecio(item.precio) }}</td>
+                <td>{{ item.precio_preventa ? formatearPrecio(item.precio_preventa) : 'N/A' }}</td>
                 <td>{{ item.categoria?.nombre || 'N/A' }}</td>
                 <td>{{ item.cantidad || 'N/A' }}</td>
                 <td>
@@ -90,6 +92,9 @@
               <div class="product-info">
                 <div class="product-detail">
                   <strong>Precio:</strong> {{ formatearPrecio(item.precio) }}
+                </div>
+                <div class="product-detail">
+                  <strong>Precio Preventa:</strong> {{ item.precio_preventa ? formatearPrecio(item.precio_preventa) : 'N/A' }}
                 </div>
                 <div class="product-detail">
                   <strong>Categoría:</strong> {{ item.categoria?.nombre || 'N/A' }}
@@ -220,6 +225,18 @@
                           <small class="text-muted">Ingrese el precio en bolivianos (BOB)</small>
                         </div>
                         <div class="col-md-6">
+                          <label for="precio_preventa" class="form-label fw-bold">Precio Preventa</label>
+                          <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-dollar-sign"></i></span>
+                            <input type="number" class="form-control" :class="{ 'is-invalid': errors.precio_preventa }"
+                              id="precio_preventa" v-model="formulario.precio_preventa" placeholder="Ej: 2000.00" min="0.01" step="0.01">
+                            <div class="invalid-feedback" v-if="errors.precio_preventa">
+                              {{ errors.precio_preventa[0] }}
+                            </div>
+                          </div>
+                          <small class="text-muted">Ingrese el precio de preventa en bolivianos (BOB)</small>
+                        </div>
+                        <div class="col-md-6">
                           <label for="categoria" class="form-label fw-bold">Categoría</label>
                           <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-folder"></i></span>
@@ -292,6 +309,30 @@
                             </div>
                           </div>
                           <small class="text-muted">Cantidad máxima que se puede comprar</small>
+                        </div>
+                        <div class="col-md-6">
+                          <label for="cantidad_minima_preventa" class="form-label fw-bold">Cantidad Mínima Preventa</label>
+                          <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-arrow-down"></i></span>
+                            <input type="number" class="form-control" :class="{ 'is-invalid': errors.cantidad_minima_preventa }"
+                              id="cantidad_minima_preventa" v-model="formulario.cantidad_minima_preventa" min="1" placeholder="Ej: 5">
+                            <div class="invalid-feedback" v-if="errors.cantidad_minima_preventa">
+                              {{ errors.cantidad_minima_preventa[0] }}
+                            </div>
+                          </div>
+                          <small class="text-muted">Cantidad mínima para precio de preventa</small>
+                        </div>
+                        <div class="col-md-6">
+                          <label for="cantidad_maxima_preventa" class="form-label fw-bold">Cantidad Máxima Preventa</label>
+                          <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-arrow-up"></i></span>
+                            <input type="number" class="form-control" :class="{ 'is-invalid': errors.cantidad_maxima_preventa }"
+                              id="cantidad_maxima_preventa" v-model="formulario.cantidad_maxima_preventa" min="1" placeholder="Ej: 50">
+                            <div class="invalid-feedback" v-if="errors.cantidad_maxima_preventa">
+                              {{ errors.cantidad_maxima_preventa[0] }}
+                            </div>
+                          </div>
+                          <small class="text-muted">Cantidad máxima para precio de preventa</small>
                         </div>
                       </div>
                     </div>
@@ -394,7 +435,7 @@
                       </button>
                     </div>
                     <div class="card-body">
-                      <div :class="{ 'is-invalid': errors.modelos && formulario.modelos.length === 0 }">
+                     <!--  <div :class="{ 'is-invalid': errors.modelos && formulario.modelos.length === 0 }"> -->
                         <div v-if="formulario.modelos.length === 0"
                           class="text-center py-3 border rounded mb-3 bg-white">
                           <i class="fas fa-info-circle text-muted me-2"></i>
@@ -424,6 +465,14 @@
                                 </div>
                               </div>
                               <div class="col-md-6">
+                                <label class="form-label">Precio Preventa</label>
+                                <div class="input-group">
+                                  <span class="input-group-text"><i class="fas fa-dollar-sign"></i></span>
+                                  <input type="number" class="form-control" v-model="modelo.precio_preventa"
+                                    placeholder="Ej: 2500.00" min="0.01" step="0.01">
+                                </div>
+                              </div>
+                              <div class="col-md-6">
                                 <label class="form-label">Cantidad mínima <span class="text-danger">*</span></label>
                                 <input type="number" class="form-control" v-model="modelo.cantidad_minima"
                                   placeholder="Ej: 20" min="1" required>
@@ -433,13 +482,23 @@
                                 <input type="number" class="form-control" v-model="modelo.cantidad_maxima"
                                   placeholder="Ej: 200" min="1" required>
                               </div>
+                              <div class="col-md-6">
+                                <label class="form-label">Cantidad mínima preventa</label>
+                                <input type="number" class="form-control" v-model="modelo.cantidad_minima_preventa"
+                                  placeholder="Ej: 10" min="1">
+                              </div>
+                              <div class="col-md-6">
+                                <label class="form-label">Cantidad máxima preventa</label>
+                                <input type="number" class="form-control" v-model="modelo.cantidad_maxima_preventa"
+                                  placeholder="Ej: 100" min="1">
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                      <div class="invalid-feedback d-block" v-if="errors.modelos">
+                      <!-- </div> -->
+                    <!--   <div class="invalid-feedback d-block" v-if="errors.modelos">
                         {{ errors.modelos[0] }}
-                      </div>
+                      </div> -->
                       <small class="text-muted">Agregue los diferentes modelos o variantes del producto</small>
                     </div>
                   </div>
@@ -560,10 +619,13 @@
               <div class="col-md-6">
                 <h4 class="product-title">{{ productoSeleccionado.nombre }}</h4>
                 <p><strong>Precio:</strong> {{ formatearPrecio(productoSeleccionado.precio) }}</p>
+                <p v-if="productoSeleccionado.precio_preventa"><strong>Precio Preventa:</strong> {{ formatearPrecio(productoSeleccionado.precio_preventa) }}</p>
                 <p><strong>Categoría:</strong> {{ productoSeleccionado.categoria?.nombre || 'N/A' }}</p>
                 <p><strong>Descripción:</strong> {{ productoSeleccionado.descripcion || 'N/A' }}</p>
                 <p><strong>Cantidad Mínima:</strong> {{ productoSeleccionado.cantidad_minima }}</p>
                 <p><strong>Cantidad Máxima:</strong> {{ productoSeleccionado.cantidad_maxima }}</p>
+                <p v-if="productoSeleccionado.cantidad_minima_preventa"><strong>Cantidad Mínima Preventa:</strong> {{ productoSeleccionado.cantidad_minima_preventa }}</p>
+                <p v-if="productoSeleccionado.cantidad_maxima_preventa"><strong>Cantidad Máxima Preventa:</strong> {{ productoSeleccionado.cantidad_maxima_preventa }}</p>
                 <p><strong>Estado:</strong>
                   <span class="badge" :class="productoSeleccionado.estado ? 'bg-success' : 'bg-danger'">
                     {{ productoSeleccionado.estado ? 'Activo' : 'Inactivo' }}
@@ -596,16 +658,22 @@
                   <tr>
                     <th>Nombre</th>
                     <th>Precio</th>
+                    <th>Precio Preventa</th>
                     <th>Cantidad Mínima</th>
                     <th>Cantidad Máxima</th>
+                    <th>Mín. Preventa</th>
+                    <th>Máx. Preventa</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="modelo in productoSeleccionado.modelos" :key="modelo.id">
                     <td>{{ modelo.nombre }}</td>
                     <td>{{ formatearPrecio(modelo.precio) }}</td>
+                    <td>{{ modelo.precio_preventa ? formatearPrecio(modelo.precio_preventa) : 'N/A' }}</td>
                     <td>{{ modelo.cantidad_minima }}</td>
                     <td>{{ modelo.cantidad_maxima }}</td>
+                    <td>{{ modelo.cantidad_minima_preventa || 'N/A' }}</td>
+                    <td>{{ modelo.cantidad_maxima_preventa || 'N/A' }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -655,11 +723,14 @@ const posicion = ref('');
 const formulario = ref({
   nombre: '',
   precio: '',
+  precio_preventa: '',
   categoria_id: '',
   descripcion: '',
   cantidad: '',
   cantidad_minima: '',
   cantidad_maxima: '',
+  cantidad_minima_preventa: '',
+  cantidad_maxima_preventa: '',
   imagen_principal: '',
   caracteristicas: [],
   modelos: [],
@@ -745,11 +816,14 @@ const abrirModal = () => {
   formulario.value = {
     nombre: '',
     precio: '',
+    precio_preventa: '',
     categoria_id: '',
     descripcion: '',
     cantidad: '',
     cantidad_minima: '',
     cantidad_maxima: '',
+    cantidad_minima_preventa: '',
+    cantidad_maxima_preventa: '',
     imagen_principal: '',
     caracteristicas: [],
     modelos: [],
@@ -880,10 +954,10 @@ const validarFormulario = () => {
     esValido = false;
   }
 
-  if (formulario.value.modelos.length === 0) {
+/*   if (formulario.value.modelos.length === 0) {
     errors.value.modelos = ['El campo modelos es obligatorio.'];
     esValido = false;
-  } 
+  }  */
 
   if (formulario.value.images.length === 0 && !posicion.value) {
     errors.value.images = ['El campo images es obligatorio.'];
@@ -1010,14 +1084,22 @@ const mostrarProducto = async (id) => {
     formulario.value = {
       nombre: data.dato.nombre,
       precio: data.dato.precio,
+      precio_preventa: data.dato.precio_preventa,
       categoria_id: data.dato.categoria_id,
       descripcion: data.dato.descripcion,
       cantidad: data.dato.cantidad,
       cantidad_minima: data.dato.cantidad_minima,
       cantidad_maxima: data.dato.cantidad_maxima,
+      cantidad_minima_preventa: data.dato.cantidad_minima_preventa,
+      cantidad_maxima_preventa: data.dato.cantidad_maxima_preventa,
       imagen_principal: data.dato.imagen_principal, // Guardar la URL completa
       caracteristicas: data.dato.caracteristicas.map(c => c.caracteristica),
-      modelos: data.dato.modelos,
+      modelos: data.dato.modelos.map(m => ({
+        ...m,
+        precio_preventa: m.precio_preventa || '',
+        cantidad_minima_preventa: m.cantidad_minima_preventa || '',
+        cantidad_maxima_preventa: m.cantidad_maxima_preventa || ''
+      })),
       images: data.dato.images.map(img => ({
         id: img.id,
         preview: img.imagen,
@@ -1066,8 +1148,11 @@ const agregarModelo = () => {
   formulario.value.modelos.push({
     nombre: '',
     precio: '',
+    precio_preventa: '',
     cantidad_minima: '',
-    cantidad_maxima: ''
+    cantidad_maxima: '',
+    cantidad_minima_preventa: '',
+    cantidad_maxima_preventa: ''
   });
 };
 
@@ -1118,11 +1203,14 @@ const mostrarDatosPrueba = () => {
       nombre: 'Motocicleta electrica',
       descripcion: null,
       precio: '2500.00',
+      precio_preventa: '2000.00',
       estado: 1,
       cantidad: 0,
       imagen_principal: 'http://neotechbol.test/images/imagenes_principales/01a0cb6696e17c86fb70b669472b61f9.jpeg',
       cantidad_minima: 10,
       cantidad_maxima: 100,
+      cantidad_minima_preventa: 5,
+      cantidad_maxima_preventa: 50,
       created_at: '2025-02-28T06:40:55.000000Z',
       updated_at: '2025-02-28T06:40:55.000000Z',
       images: [
@@ -1221,8 +1309,11 @@ const mostrarDatosPrueba = () => {
           producto_id: 1,
           nombre: 'exclusive',
           precio: '3000.00',
+          precio_preventa: '2500.00',
           cantidad_minima: 20,
           cantidad_maxima: 200,
+          cantidad_minima_preventa: 10,
+          cantidad_maxima_preventa: 100,
           created_at: '2025-02-28T06:40:55.000000Z',
           updated_at: '2025-02-28T06:40:55.000000Z'
         }

@@ -7,14 +7,13 @@
           <div class="logo-container">
             <img src="../../public/logo/Logo Neofetch PNG.png" alt="Logo de la empresa" class="company-logo" />
           </div>
-          
         </div>
         <h1>Finalizar Pedido <span class="items-badge">{{ totalItems }}</span></h1>
         <div class="actions-container">
-          <button @click="emptyCart" class="empty-cart-btn" :disabled="items.length === 0">
+          <button @click="emptyCart" class="empty-cart-btn" :disabled="items.length === 0" aria-label="Vaciar carrito">
             <i class="fas fa-trash-alt"></i> <span class="btn-text">Vaciar</span>
           </button>
-          <div class="lock-icon">
+          <div class="lock-icon" aria-hidden="true">
             <i class="fas fa-lock"></i>
           </div>
         </div>
@@ -23,24 +22,23 @@
       <!-- Improved Mobile Progress Indicator -->
       <div class="mobile-progress">
         <div class="steps-indicator">
-          <div v-for="(step, index) in checkoutSteps" :key="index" 
-               :class="['step-indicator', {
-                 'active': activeStep === index,
-                 'completed': activeStep > index,
-                 'clickable': index <= activeStep || (index === activeStep + 1 && checkoutSteps[activeStep].completed)
-               }]" 
-               @click="handleStepClick(index)">
+          <div v-for="(step, index) in checkoutSteps" :key="index" :class="['step-indicator', {
+            'active': activeStep === index,
+            'completed': activeStep > index,
+            'clickable': index <= activeStep || (index === activeStep + 1 && checkoutSteps[activeStep].completed)
+          }]" @click="handleStepClick(index)" :aria-label="`Paso ${index + 1}: ${step.title}`" :tabindex="index <= activeStep || (index === activeStep + 1 && checkoutSteps[activeStep].completed) ? 0 : -1">
             <div class="step-number-container">
               <span class="step-number">{{ index + 1 }}</span>
-              <i v-if="activeStep > index" class="fas fa-check check-icon"></i>
+              <i v-if="activeStep > index" class="fas fa-check check-icon" aria-hidden="true"></i>
             </div>
             <span class="step-label">{{ step.shortTitle || step.title }}</span>
-            <div v-if="index <= activeStep || (index === activeStep + 1 && checkoutSteps[activeStep].completed)" class="step-tooltip">
+            <div v-if="index <= activeStep || (index === activeStep + 1 && checkoutSteps[activeStep].completed)"
+              class="step-tooltip">
               Ir al paso {{ index + 1 }}
             </div>
           </div>
         </div>
-        <div class="progress-bar">
+        <div class="progress-bar" role="progressbar" :aria-valuenow="progressPercentage" aria-valuemin="0" aria-valuemax="100">
           <div class="progress" :style="{ width: progressPercentage + '%' }"></div>
         </div>
       </div>
@@ -50,49 +48,46 @@
       <div class="main-content">
         <div class="checkout-steps">
           <!-- Step 1: Delivery Information -->
-          <div class="step" :class="{ 'active-step': activeStep === 0, 'completed-step': activeStep > 0 }">
+          <div class="step" :class="{ 'active-step': activeStep === 0, 'completed-step': activeStep > 0 }" :aria-expanded="activeStep === 0 || (stepsVisible[0] && checkoutSteps[0].completed)">
             <div class="step-header" @click="toggleStepVisibility(0)">
               <div class="step-header-left">
                 <div class="step-number-wrapper">
                   <span class="step-number">1</span>
-                  <i v-if="activeStep > 0" class="fas fa-check check-icon"></i>
+                  <i v-if="activeStep > 0" class="fas fa-check check-icon" aria-hidden="true"></i>
                 </div>
                 <h2>Ubicación de Entrega</h2>
               </div>
               <div class="step-header-right">
                 <button v-if="activeStep >= 0 && checkoutSteps[0].completed" @click.stop="toggleEdit(0)"
-                  class="edit-button">
-                  <i class="fas" :class="checkoutSteps[0].editing ? 'fa-save' : 'fa-edit'"></i>
+                  class="edit-button" :aria-label="checkoutSteps[0].editing ? 'Guardar información' : 'Editar información'">
+                  <i class="fas" :class="checkoutSteps[0].editing ? 'fa-save' : 'fa-edit'" aria-hidden="true"></i>
                   <span class="btn-text">{{ checkoutSteps[0].editing ? 'Guardar' : 'Editar' }}</span>
                 </button>
                 <i v-if="activeStep !== 0" class="fas"
-                  :class="stepsVisible[0] ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                  :class="stepsVisible[0] ? 'fa-chevron-up' : 'fa-chevron-down'" aria-hidden="true"></i>
               </div>
             </div>
             <div class="step-content" v-show="activeStep === 0 || (stepsVisible[0] && checkoutSteps[0].completed)">
               <div v-if="!checkoutSteps[0].editing && isDeliveryInfoComplete" class="delivery-info-display">
                 <div class="info-card">
-                  <p v-if="deliveryInfo.nombre"><i class="fas fa-user"></i> {{ deliveryInfo.nombre }} {{ deliveryInfo.apellido }}</p>
-                  <p v-if="deliveryInfo.direccion"><i class="fas fa-map-marker-alt"></i> {{ deliveryInfo.direccion }}</p>
-                  <p v-if="deliveryInfo.telefono"><i class="fas fa-phone"></i> {{ deliveryInfo.telefono }}</p>
-                  <p v-if="deliveryInfo.email"><i class="fas fa-envelope"></i> {{ deliveryInfo.email }}</p>
+                  <p v-if="deliveryInfo.nombre"><i class="fas fa-user" aria-hidden="true"></i> {{ deliveryInfo.nombre }} {{
+                    deliveryInfo.apellido }}</p>
+                  <p v-if="deliveryInfo.direccion"><i class="fas fa-map-marker-alt" aria-hidden="true"></i> {{ deliveryInfo.direccion }}
+                  </p>
+                  <p v-if="deliveryInfo.telefono"><i class="fas fa-phone" aria-hidden="true"></i> {{ deliveryInfo.telefono }}</p>
+                  <p v-if="deliveryInfo.email"><i class="fas fa-envelope" aria-hidden="true"></i> {{ deliveryInfo.email }}</p>
                 </div>
               </div>
               <div v-else class="form-grid">
                 <div class="form-group">
                   <label for="nombre">Nombre *</label>
                   <div class="input-wrapper">
-                    <i class="fas fa-user input-icon"></i>
-                    <input 
-                      id="nombre" 
-                      v-model="deliveryInfo.nombre" 
-                      placeholder="Ingrese su nombre" 
-                      required 
-                      class="responsive-input"
-                      :class="{ 'input-error': !deliveryInfo.nombre && formSubmitted }"
-                    >
+                    <i class="fas fa-user input-icon" aria-hidden="true"></i>
+                    <input id="nombre" v-model="deliveryInfo.nombre" placeholder="Ingrese su nombre" required
+                      class="responsive-input" :class="{ 'input-error': !deliveryInfo.nombre && formSubmitted }"
+                      aria-describedby="nombre-error">
                     <span class="input-focus-indicator"></span>
-                    <span v-if="!deliveryInfo.nombre && formSubmitted" class="error-message">
+                    <span v-if="!deliveryInfo.nombre && formSubmitted" class="error-message" id="nombre-error">
                       Este campo es obligatorio
                     </span>
                   </div>
@@ -100,17 +95,12 @@
                 <div class="form-group">
                   <label for="apellido">Apellido *</label>
                   <div class="input-wrapper">
-                    <i class="fas fa-user input-icon"></i>
-                    <input 
-                      id="apellido" 
-                      v-model="deliveryInfo.apellido" 
-                      placeholder="Ingrese su apellido" 
-                      required 
-                      class="responsive-input"
-                      :class="{ 'input-error': !deliveryInfo.apellido && formSubmitted }"
-                    >
+                    <i class="fas fa-user input-icon" aria-hidden="true"></i>
+                    <input id="apellido" v-model="deliveryInfo.apellido" placeholder="Ingrese su apellido" required
+                      class="responsive-input" :class="{ 'input-error': !deliveryInfo.apellido && formSubmitted }"
+                      aria-describedby="apellido-error">
                     <span class="input-focus-indicator"></span>
-                    <span v-if="!deliveryInfo.apellido && formSubmitted" class="error-message">
+                    <span v-if="!deliveryInfo.apellido && formSubmitted" class="error-message" id="apellido-error">
                       Este campo es obligatorio
                     </span>
                   </div>
@@ -118,17 +108,13 @@
                 <div class="form-group full-width">
                   <label for="direccion">Dirección *</label>
                   <div class="input-wrapper">
-                    <i class="fas fa-map-marker-alt input-icon"></i>
-                    <input 
-                      id="direccion" 
-                      v-model="deliveryInfo.direccion" 
-                      placeholder="Ingrese su dirección completa" 
-                      required 
-                      class="responsive-input"
+                    <i class="fas fa-map-marker-alt input-icon" aria-hidden="true"></i>
+                    <input id="direccion" v-model="deliveryInfo.direccion" placeholder="Ingrese su dirección completa"
+                      required class="responsive-input"
                       :class="{ 'input-error': !deliveryInfo.direccion && formSubmitted }"
-                    >
+                      aria-describedby="direccion-error">
                     <span class="input-focus-indicator"></span>
-                    <span v-if="!deliveryInfo.direccion && formSubmitted" class="error-message">
+                    <span v-if="!deliveryInfo.direccion && formSubmitted" class="error-message" id="direccion-error">
                       Este campo es obligatorio
                     </span>
                   </div>
@@ -136,20 +122,13 @@
                 <div class="form-group">
                   <label for="telefono">Teléfono *</label>
                   <div class="input-wrapper">
-                    <i class="fas fa-phone input-icon"></i>
-                    <input 
-                      id="telefono" 
-                      v-model="deliveryInfo.telefono" 
-                      placeholder="Ingrese su número" 
-                      required 
-                      type="tel"
-                      pattern="[0-9]*" 
-                      inputmode="numeric" 
-                      class="responsive-input"
+                    <i class="fas fa-phone input-icon" aria-hidden="true"></i>
+                    <input id="telefono" v-model="deliveryInfo.telefono" placeholder="Ingrese su número" required
+                      type="tel" pattern="[0-9]*" inputmode="numeric" class="responsive-input"
                       :class="{ 'input-error': !deliveryInfo.telefono && formSubmitted }"
-                    >
+                      aria-describedby="telefono-error">
                     <span class="input-focus-indicator"></span>
-                    <span v-if="!deliveryInfo.telefono && formSubmitted" class="error-message">
+                    <span v-if="!deliveryInfo.telefono && formSubmitted" class="error-message" id="telefono-error">
                       Este campo es obligatorio
                     </span>
                   </div>
@@ -157,129 +136,217 @@
                 <div class="form-group">
                   <label for="email">Email *</label>
                   <div class="input-wrapper">
-                    <i class="fas fa-envelope input-icon"></i>
-                    <input 
-                      id="email" 
-                      v-model="deliveryInfo.email" 
-                      placeholder="Ingrese su email" 
-                      required 
-                      type="email" 
-                      class="responsive-input"
-                      :class="{ 'input-error': !deliveryInfo.email && formSubmitted }"
-                    >
+                    <i class="fas fa-envelope input-icon" aria-hidden="true"></i>
+                    <input id="email" v-model="deliveryInfo.email" placeholder="Ingrese su email" required type="email"
+                      class="responsive-input" :class="{ 'input-error': !deliveryInfo.email && formSubmitted }"
+                      aria-describedby="email-error">
                     <span class="input-focus-indicator"></span>
-                    <span v-if="!deliveryInfo.email && formSubmitted" class="error-message">
+                    <span v-if="!deliveryInfo.email && formSubmitted" class="error-message" id="email-error">
                       Este campo es obligatorio
                     </span>
                   </div>
                 </div>
               </div>
               <div class="step-actions" v-if="activeStep === 0">
-                <button @click="nextStep" class="next-button">
-                  Continuar <i class="fas fa-arrow-right"></i>
+                <button @click="nextStep" class="next-button" aria-label="Continuar al siguiente paso">
+                  Continuar <i class="fas fa-arrow-right" aria-hidden="true"></i>
                 </button>
               </div>
             </div>
           </div>
 
           <!-- Step 2: Review Items -->
-          <div class="step" :class="{ 'active-step': activeStep === 1, 'completed-step': activeStep > 1 }">
+          <div class="step" :class="{ 'active-step': activeStep === 1, 'completed-step': activeStep > 1 }" :aria-expanded="activeStep === 1 || (stepsVisible[1] && checkoutSteps[1].completed)">
             <div class="step-header" @click="toggleStepVisibility(1)">
               <div class="step-header-left">
                 <div class="step-number-wrapper">
                   <span class="step-number">2</span>
-                  <i v-if="activeStep > 1" class="fas fa-check check-icon"></i>
+                  <i v-if="activeStep > 1" class="fas fa-check check-icon" aria-hidden="true"></i>
                 </div>
                 <h2>Revise los Items y Envío</h2>
               </div>
               <div class="step-header-right">
                 <i v-if="activeStep !== 1" class="fas"
-                  :class="stepsVisible[1] ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                  :class="stepsVisible[1] ? 'fa-chevron-up' : 'fa-chevron-down'" aria-hidden="true"></i>
               </div>
             </div>
             <div class="step-content" v-show="activeStep === 1 || (stepsVisible[1] && checkoutSteps[1].completed)">
               <div v-if="items.length === 0" class="empty-cart-message">
-                <i class="fas fa-shopping-cart"></i>
+                <i class="fas fa-shopping-cart" aria-hidden="true"></i>
                 <p>Tu carrito está vacío</p>
                 <button @click="goShopping" class="go-shopping-btn">
-                  <i class="fas fa-store"></i> Ir a comprar
+                  <i class="fas fa-store" aria-hidden="true"></i> Ir a comprar
                 </button>
               </div>
               <div v-else class="product-list">
+                <!-- Product Item - Improved UI for Price Type Selection -->
                 <div v-for="product in items" :key="product.uniqueId" class="product-item">
                   <div class="product-image-container">
-                    <img :src="product.image" :alt="product.nombre" class="product-image">
+                    <img :src="getProductImage(product)" :alt="product.nombre" class="product-image"
+                      @error="handleImageError">
+                    <div v-if="product.color" class="color-indicator">
+                      <div class="color-circle" :style="{ backgroundColor: product.color }" aria-hidden="true"></div>
+                      <span class="color-name">{{ product.color }}</span>
+                    </div>
                   </div>
                   <div class="product-info">
-                    <h3>{{ product.nombre }}</h3>
+                    <div class="product-header">
+                      <h3>{{ product.nombre }}</h3>
+                      <div class="price-type-badge"
+                        :class="{ 'preventa': product.es_preventa, 'regular': !product.es_preventa }">
+                        <i class="fas" :class="product.es_preventa ? 'fa-bolt' : 'fa-tag'" aria-hidden="true"></i>
+                        {{ product.es_preventa ? 'Preventa' : 'Regular' }}
+                      </div>
+                    </div>
+
                     <p v-if="product.specs" class="specs">{{ product.specs }}</p>
-                    <div class="price-container">
-                      <p class="price">{{ formatPrice(product.precio * product.cantidad) }}</p>
-                      <p class="unit-price">Precio unitario: {{ formatPrice(product.precio) }}</p>
-                    </div>
-                    <div class="product-details">
-                      <div class="detail-item">
-                        <span class="detail-label">Cantidad mínima:</span>
-                        <span class="detail-value">{{ product.cantidad_minima }} und.</span>
-                      </div>
-                      <div class="detail-item">
-                        <span class="detail-label">Cantidad máxima:</span>
-                        <span class="detail-value">{{ product.cantidad_maxima }} und.</span>
-                      </div>
-                      <div class="detail-item" v-if="product.modelo">
-                        <span class="detail-label">Modelo:</span>
-                        <span class="detail-value">{{ product.modelo }}</span>
-                      </div>
-                      <div class="detail-item" v-if="product.color">
-                        <span class="detail-label">Color:</span>
-                        <span class="detail-value" :style="{ color: product.color }">{{ product.color }}</span>
-                      </div>
-                      <div class="detail-item" v-if="product.colorImage">
-                        <span class="detail-label">Imagen del Color:</span>
-                        <img :src="product.colorImage" alt="Color seleccionado" class="color-image" />
-                      </div>
-                    </div>
-                    <div class="quantity-controls">
-                      <div class="quantity-selector">
-                        <button @click="decreaseQuantity(product)" :disabled="product.cantidad <= product.cantidad_minima" class="quantity-btn">
-                          <i class="fas fa-minus"></i>
+
+                    <!-- Enhanced Price Type Selector with Better UX -->
+                    <div class="price-type-container">
+                      <div class="price-type-tabs" role="tablist">
+                        <button 
+                          @click="switchToPriceType(product, false)" 
+                          :class="['tab-btn', { 'active': !product.es_preventa }]"
+                          :disabled="!canSwitchToRegular(product)"
+                          role="tab"
+                          :aria-selected="!product.es_preventa"
+                          :aria-controls="`regular-price-${product.uniqueId}`">
+                          <i class="fas fa-tag" aria-hidden="true"></i> Precio Regular
                         </button>
-                        <span class="quantity">{{ product.cantidad }}</span>
-                        <button @click="increaseQuantity(product)" :disabled="product.cantidad >= product.cantidad_maxima" class="quantity-btn">
-                          <i class="fas fa-plus"></i>
+                        <button 
+                          @click="switchToPriceType(product, true)" 
+                          :class="['tab-btn', { 'active': product.es_preventa }]"
+                          :disabled="!canSwitchToPreventa(product)"
+                          role="tab"
+                          :aria-selected="product.es_preventa"
+                          :aria-controls="`preventa-price-${product.uniqueId}`">
+                          <i class="fas fa-bolt" aria-hidden="true"></i> Precio Preventa
                         </button>
                       </div>
-                      <button @click="removeProduct(product)" class="remove-btn">
-                        <i class="fas fa-trash"></i> <span class="btn-text">Eliminar</span>
-                      </button>
+                      
+                      <div class="price-type-content">
+                        <!-- Current Price Card -->
+                        <div class="current-price-card" :id="product.es_preventa ? `preventa-price-${product.uniqueId}` : `regular-price-${product.uniqueId}`" role="tabpanel">
+                          <div class="price-card-header">
+                            <i :class="product.es_preventa ? 'fas fa-bolt' : 'fas fa-tag'" aria-hidden="true"></i>
+                            <span>{{ product.es_preventa ? 'Precio de Preventa' : 'Precio Regular' }}</span>
+                          </div>
+                          <div class="price-card-body">
+                            <div class="price-row">
+                              <span class="price-label">Precio unitario:</span>
+                              <span class="price-value">{{ formatPrice(product.es_preventa ? product.precio_preventa : product.precio) }}</span>
+                            </div>
+                            <div class="price-row">
+                              <span class="price-label">Total:</span>
+                              <span class="price-value total">{{ formatPrice((product.es_preventa ? product.precio_preventa : product.precio) * product.cantidad) }}</span>
+                            </div>
+                            <div class="price-row">
+                              <span class="price-label">Rango de cantidad:</span>
+                              <span class="price-value">{{ product.es_preventa ? 
+                                `${product.cantidad_minima_preventa} - ${product.cantidad_maxima_preventa}` : 
+                                `${product.cantidad_minima} - ${product.cantidad_maxima}` }} unidades</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <!-- Price Comparison Info -->
+                        <div class="price-comparison" v-if="canSwitchToPreventa(product) && canSwitchToRegular(product)">
+                          <div class="comparison-header">
+                            <i class="fas fa-info-circle" aria-hidden="true"></i> Comparación de precios
+                          </div>
+                          <div class="comparison-body">
+                            <div class="comparison-row">
+                              <div class="comparison-item">
+                                <div class="comparison-label">Regular</div>
+                                <div class="comparison-value">{{ formatPrice(product.precio) }}</div>
+                                <div class="comparison-range">{{ product.cantidad_minima }}-{{ product.cantidad_maxima }} und.</div>
+                              </div>
+                              <div class="comparison-divider" aria-hidden="true">vs</div>
+                              <div class="comparison-item">
+                                <div class="comparison-label">Preventa</div>
+                                <div class="comparison-value">{{ formatPrice(product.precio_preventa) }}</div>
+                                <div class="comparison-range">{{ product.cantidad_minima_preventa }}-{{ product.cantidad_maxima_preventa }} und.</div>
+                              </div>
+                            </div>
+                            <div class="savings-info" v-if="product.precio > product.precio_preventa">
+                              <i class="fas fa-piggy-bank" aria-hidden="true"></i> Ahorro por unidad: 
+                              <span>{{ formatPrice(product.precio - product.precio_preventa) }}</span>
+                              ({{ Math.round((1 - product.precio_preventa/product.precio) * 100) }}%)
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Información del modelo si existe -->
+                    <div class="model-info" v-if="product.nombreModelo">
+                      <div class="model-badge">
+                        <i class="fas fa-cube" aria-hidden="true"></i> Modelo: {{ product.nombreModelo }}
+                      </div>
+                    </div>
+
+                    <!-- Control de cantidad mejorado -->
+                    <div class="quantity-control-section">
+                      <div class="quantity-label">
+                        <span>Cantidad:</span>
+                        <span class="quantity-status" :class="{
+                          'warning': isNearRangeLimit(product),
+                          'error': isQuantityOutOfRange(product)
+                        }">
+                          <i class="fas" :class="getQuantityStatusIcon(product)" aria-hidden="true"></i>
+                          {{ getQuantityStatusText(product) }}
+                        </span>
+                      </div>
+
+                      <div class="quantity-controls">
+                        <div class="quantity-selector" role="group" aria-label="Control de cantidad">
+                          <button @click="decreaseQuantity(product)" :disabled="isAtMinQuantity(product)"
+                            class="quantity-btn decrease" aria-label="Disminuir cantidad">
+                            <i class="fas fa-minus" aria-hidden="true"></i>
+                          </button>
+                          <div class="quantity-input-container">
+                            <input type="number" v-model.number="product.cantidad"
+                              @change="validateAndUpdateQuantity(product)" class="quantity-input"
+                              :min="getMinQuantity(product)" :max="getMaxQuantity(product)" 
+                              :aria-label="`Cantidad de ${product.nombre}`" />
+                          </div>
+                          <button @click="increaseQuantity(product)" :disabled="isAtMaxQuantity(product)"
+                            class="quantity-btn increase" aria-label="Aumentar cantidad">
+                            <i class="fas fa-plus" aria-hidden="true"></i>
+                          </button>
+                        </div>
+                        <button @click="removeProduct(product)" class="remove-btn" :aria-label="`Eliminar ${product.nombre} del carrito`">
+                          <i class="fas fa-trash" aria-hidden="true"></i> <span class="btn-text">Eliminar</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
               <div class="step-actions" v-if="activeStep === 1">
-                <button @click="prevStep" class="prev-button">
-                  <i class="fas fa-arrow-left"></i> Anterior
+                <button @click="prevStep" class="prev-button" aria-label="Volver al paso anterior">
+                  <i class="fas fa-arrow-left" aria-hidden="true"></i> Anterior
                 </button>
-                <button @click="nextStep" class="next-button" :disabled="items.length === 0">
-                  Continuar <i class="fas fa-arrow-right"></i>
+                <button @click="nextStep" class="next-button" :disabled="items.length === 0" aria-label="Continuar al siguiente paso">
+                  Continuar <i class="fas fa-arrow-right" aria-hidden="true"></i>
                 </button>
               </div>
             </div>
           </div>
 
           <!-- Step 3: Coupon -->
-          <div class="step" :class="{ 'active-step': activeStep === 2, 'completed-step': activeStep > 2 }">
+          <div class="step" :class="{ 'active-step': activeStep === 2, 'completed-step': activeStep > 2 }" :aria-expanded="activeStep === 2 || (stepsVisible[2] && checkoutSteps[2].completed)">
             <div class="step-header" @click="toggleStepVisibility(2)">
               <div class="step-header-left">
                 <div class="step-number-wrapper">
                   <span class="step-number">3</span>
-                  <i v-if="activeStep > 2" class="fas fa-check check-icon"></i>
+                  <i v-if="activeStep > 2" class="fas fa-check check-icon" aria-hidden="true"></i>
                 </div>
                 <h2>Cupón de Descuento</h2>
               </div>
               <div class="step-header-right">
                 <i v-if="activeStep !== 2" class="fas"
-                  :class="stepsVisible[2] ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                  :class="stepsVisible[2] ? 'fa-chevron-up' : 'fa-chevron-down'" aria-hidden="true"></i>
               </div>
             </div>
             <div class="step-content" v-show="activeStep === 2 || (stepsVisible[2] && checkoutSteps[2].completed)">
@@ -288,146 +355,171 @@
                   <label for="cupon">Código de Cupón</label>
                   <div class="coupon-input-group">
                     <div class="input-wrapper">
-                      <i class="fas fa-tag input-icon"></i>
-                      <input id="cupon" type="text" v-model="cuponForm.codigo" placeholder="Ingrese el código del cupón" class="coupon-input responsive-input" />
+                      <i class="fas fa-tag input-icon" aria-hidden="true"></i>
+                      <input id="cupon" type="text" v-model="cuponForm.codigo" placeholder="Ingrese el código del cupón"
+                        class="coupon-input responsive-input" aria-describedby="coupon-message" />
                       <span class="input-focus-indicator"></span>
                     </div>
-                    <button @click="applyCoupon" class="apply-coupon-btn" :disabled="!cuponForm.codigo">
-                      <i class="fas fa-check"></i> <span class="btn-text">Aplicar</span>
+                    <button @click="applyCoupon" class="apply-coupon-btn" :disabled="!cuponForm.codigo" aria-label="Aplicar cupón">
+                      <i class="fas fa-check" aria-hidden="true"></i> <span class="btn-text">Aplicar</span>
                     </button>
                   </div>
                 </div>
-                <p v-if="couponMessage" class="coupon-message" :class="{ 'error-message': couponError }">
-                  <i :class="couponError ? 'fas fa-exclamation-circle' : 'fas fa-check-circle'"></i>
+                <p v-if="couponMessage" class="coupon-message" :class="{ 'error-message': couponError }" id="coupon-message" role="status">
+                  <i :class="couponError ? 'fas fa-exclamation-circle' : 'fas fa-check-circle'" aria-hidden="true"></i>
                   {{ couponMessage }}
                 </p>
                 <div v-if="cartStore.descuento > 0" class="discount-info">
-                  <p><i class="fas fa-money-bill-wave"></i> Descuento aplicado: {{ formatPrice(cartStore.montoDescuento) }}</p>
-                  <p v-if="cartStore.tipoDescuento === 'porcentaje'"><i class="fas fa-percentage"></i> Porcentaje de descuento: {{ cartStore.descuento }}%</p>
-                  <button @click="removeCoupon" class="remove-coupon-btn">
-                    <i class="fas fa-times"></i> <span class="btn-text">Eliminar Cupón</span>
+                  <p><i class="fas fa-money-bill-wave" aria-hidden="true"></i> Descuento aplicado: {{ formatPrice(cartStore.montoDescuento) }}</p>
+                  <p v-if="cartStore.tipoDescuento === 'porcentaje'"><i class="fas fa-percentage" aria-hidden="true"></i> Porcentaje de
+                    descuento: {{ cartStore.descuento }}%</p>
+                  <button @click="removeCoupon" class="remove-coupon-btn" aria-label="Eliminar cupón">
+                    <i class="fas fa-times" aria-hidden="true"></i> <span class="btn-text">Eliminar Cupón</span>
                   </button>
                 </div>
               </div>
               <div class="step-actions" v-if="activeStep === 2">
-                <button @click="prevStep" class="prev-button">
-                  <i class="fas fa-arrow-left"></i> Anterior
+                <button @click="prevStep" class="prev-button" aria-label="Volver al paso anterior">
+                  <i class="fas fa-arrow-left" aria-hidden="true"></i> Anterior
                 </button>
-                <button @click="nextStep" class="next-button">
-                  Continuar <i class="fas fa-arrow-right"></i>
+                <button @click="nextStep" class="next-button" aria-label="Continuar al siguiente paso">
+                  Continuar <i class="fas fa-arrow-right" aria-hidden="true"></i>
                 </button>
               </div>
             </div>
           </div>
 
           <!-- Step 4: Payment Method -->
-          <div class="step" :class="{ 'active-step': activeStep === 3, 'completed-step': activeStep > 3 }">
-            <div class="step-header" @click="toggleStepVisibility(3)">
-              <div class="step-header-left">
-                <div class="step-number-wrapper">
-                  <span class="step-number">4</span>
-                  <i v-if="activeStep > 3" class="fas fa-check check-icon"></i>
-                </div>
-                <h2>Método de Pago</h2>
-              </div>
-              <div class="step-header-right">
-                <i v-if="activeStep !== 3" class="fas"
-                  :class="stepsVisible[3] ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-              </div>
+          <div class="step" :class="{ 'active-step': activeStep === 3, 'completed-step': activeStep > 3 }" :aria-expanded="activeStep === 3 || (stepsVisible[3] && checkoutSteps[3].completed)">
+    <div class="step-header" @click="toggleStepVisibility(3)">
+      <div class="step-header-left">
+        <div class="step-number-wrapper">
+          <span class="step-number">4</span>
+          <i v-if="activeStep > 3" class="fas fa-check check-icon" aria-hidden="true"></i>
+        </div>
+        <h2>Método de Pago</h2>
+      </div>
+      <div class="step-header-right">
+        <i v-if="activeStep !== 3" class="fas"
+          :class="stepsVisible[3] ? 'fa-chevron-up' : 'fa-chevron-down'" aria-hidden="true"></i>
+      </div>
+    </div>
+    <div class="step-content" v-show="activeStep === 3 || (stepsVisible[3] && checkoutSteps[3].completed)">
+      <div class="payment-options">
+        <!-- Opción de pago por QR -->
+        <div class="payment-option" :class="{ 'selected': paymentMethod === 'qr' }"
+          @click="paymentMethod = 'qr'">
+          <div class="payment-option-header">
+            <div class="custom-radio">
+              <input type="radio" id="qr-payment" name="payment-method" value="qr" v-model="paymentMethod" class="radio-input">
+              <span class="radio-checkmark"></span>
             </div>
-            <div class="step-content" v-show="activeStep === 3 || (stepsVisible[3] && checkoutSteps[3].completed)">
-              <div class="payment-options">
-                <div class="payment-option" :class="{ 'selected': paymentMethod === 'qr' }" @click="paymentMethod = 'qr'">
-                  <div class="payment-option-header">
-                    <input type="radio" id="qr-payment" name="payment-method" value="qr" v-model="paymentMethod">
-                    <label for="qr-payment"><i class="fas fa-qrcode"></i> Pago por QR</label>
-                  </div>
-                  <div v-if="paymentMethod === 'qr'" class="payment-details">
-                    <p>Escanea el siguiente código QR para realizar el pago:</p>
-                    <div class="qr-payment-image">
-                      <img src="https://placehold.co/300x300/png?text=QR+Code" alt="QR Code para pago">
-                    </div>
-                    <div class="voucher-upload">
-                      <label for="voucher-file">Subir comprobante de pago (requerido)</label>
-                      <div class="file-upload-container">
-                        <input type="file" id="voucher-file" @change="handleFileUpload" accept="image/*" class="file-input" capture="environment">
-                        <div class="file-upload-button">
-                          <i class="fas fa-upload"></i> Seleccionar archivo
-                        </div>
-                        <span v-if="voucherFile" class="file-name">{{ voucherFile.name }}</span>
-                      </div>
-                      <div v-if="voucherPreview" class="voucher-preview">
-                        <img :src="voucherPreview" alt="Vista previa del comprobante">
-                        <button @click="removeVoucher" class="remove-voucher-btn">
-                          <i class="fas fa-times"></i>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+            <label for="qr-payment" class="payment-label">
+              <i class="fas fa-qrcode" aria-hidden="true"></i> Pago por QR
+            </label>
+          </div>
+          <div v-if="paymentMethod === 'qr'" class="payment-details">
+            <p>Escanea el siguiente código QR para realizar el pago:</p>
+            <div class="qr-payment-image">
+              <img src="https://placehold.co/300x300/png?text=QR+Code" alt="QR Code para pago">
+            </div>
+            <div class="voucher-upload">
+              <label for="voucher-file">Subir comprobante de pago (requerido)</label>
+              <div class="file-upload-container">
+                <input type="file" id="voucher-file" @change="handleFileUpload" accept="image/*"
+                  class="file-input" capture="environment" aria-describedby="file-name">
+                <div class="file-upload-button">
+                  <i class="fas fa-upload" aria-hidden="true"></i> Seleccionar archivo
                 </div>
-                <div class="payment-option" :class="{ 'selected': paymentMethod === 'in-person' }" @click="paymentMethod = 'in-person'">
-                  <div class="payment-option-header">
-                    <input type="radio" id="in-person" name="payment-method" value="in-person" v-model="paymentMethod">
-                    <label for="in-person"><i class="fas fa-store"></i> Pago en Instalaciones</label>
-                  </div>
-                  <div v-if="paymentMethod === 'in-person'" class="payment-details">
-                    <p>Puedes realizar el pago directamente en nuestras instalaciones. Por favor selecciona una ubicación:</p>
-                    <div class="location-selector">
-                      <div v-for="(location, key) in locationOptions" :key="key" :class="['location-option', { 'selected': selectedLocation === key }]" @click="selectedLocation = key">
-                        <input type="radio" :id="`location-${key}`" name="location" :value="key" v-model="selectedLocation">
-                        <label :for="`location-${key}`">{{ location.name }}</label>
-                      </div>
-                    </div>
-                    <div v-if="selectedLocation" class="store-info">
-                      <div class="store-info-item">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <div>
-                          <h4>Dirección:</h4>
-                          <p>{{ locationOptions[selectedLocation].address }}</p>
-                        </div>
-                      </div>
-                      <div class="store-info-item">
-                        <i class="fas fa-clock"></i>
-                        <div>
-                          <h4>Horario:</h4>
-                          <p>{{ locationOptions[selectedLocation].hours }}</p>
-                        </div>
-                      </div>
-                      <div class="store-info-item">
-                        <i class="fas fa-phone"></i>
-                        <div>
-                          <h4>Teléfono:</h4>
-                          <p>{{ locationOptions[selectedLocation].phone }}</p>
-                        </div>
-                      </div>
-                      <div class="store-info-item">
-                        <i class="fas fa-envelope"></i>
-                        <div>
-                          <h4>Email:</h4>
-                          <p>{{ locationOptions[selectedLocation].email }}</p>
-                        </div>
-                      </div>
-                      <div class="store-info-item">
-                        <i class="fas fa-info-circle"></i>
-                        <div>
-                          <h4>Información adicional:</h4>
-                          <p>{{ locationOptions[selectedLocation].additionalInfo }}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <span v-if="voucherFile" class="file-name" id="file-name">{{ voucherFile.name }}</span>
               </div>
-              <div class="step-actions" v-if="activeStep === 3">
-                <button @click="prevStep" class="prev-button">
-                  <i class="fas fa-arrow-left"></i> Anterior
-                </button>
-                <button @click="finalizeOrder" class="checkout-button" :disabled="!isPaymentValid">
-                  <i class="fas fa-check-circle"></i> FINALIZAR PEDIDO
+              <div v-if="voucherPreview" class="voucher-preview">
+                <img :src="voucherPreview" alt="Vista previa del comprobante">
+                <button @click="removeVoucher" class="remove-voucher-btn" aria-label="Eliminar comprobante">
+                  <i class="fas fa-times" aria-hidden="true"></i>
                 </button>
               </div>
             </div>
           </div>
+        </div>
+        
+        <!-- Opción de pago en instalaciones -->
+        <div class="payment-option" :class="{ 'selected': paymentMethod === 'in-person' }"
+          @click="paymentMethod = 'in-person'">
+          <div class="payment-option-header">
+            <div class="custom-radio">
+              <input type="radio" id="in-person" name="payment-method" value="in-person" v-model="paymentMethod" class="radio-input">
+              <span class="radio-checkmark"></span>
+            </div>
+            <label for="in-person" class="payment-label">
+              <i class="fas fa-store" aria-hidden="true"></i> Pago en Instalaciones
+            </label>
+          </div>
+          <div v-if="paymentMethod === 'in-person'" class="payment-details">
+            <p>Puedes realizar el pago directamente en nuestras instalaciones. Por favor selecciona una ubicación:</p>
+            <div class="location-selector" role="radiogroup" aria-labelledby="location-heading">
+              <h3 id="location-heading" class="sr-only">Selecciona una ubicación</h3>
+              <div v-for="(location, key) in locationOptions" :key="key"
+                :class="['location-option', { 'selected': selectedLocation === key }]"
+                @click.stop="selectedLocation = key">
+                <div class="custom-radio location-radio">
+                  <input type="radio" :id="`location-${key}`" name="location" :value="key"
+                    v-model="selectedLocation" class="radio-input">
+                  <span class="radio-checkmark"></span>
+                </div>
+                <label :for="`location-${key}`" class="location-label">{{ location.name }}</label>
+              </div>
+            </div>
+            <div v-if="selectedLocation" class="store-info">
+              <div class="store-info-item">
+                <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+                <div>
+                  <h4>Dirección:</h4>
+                  <p>{{ locationOptions[selectedLocation].address }}</p>
+                </div>
+              </div>
+              <div class="store-info-item">
+                <i class="fas fa-clock" aria-hidden="true"></i>
+                <div>
+                  <h4>Horario:</h4>
+                  <p>{{ locationOptions[selectedLocation].hours }}</p>
+                </div>
+              </div>
+              <div class="store-info-item">
+                <i class="fas fa-phone" aria-hidden="true"></i>
+                <div>
+                  <h4>Teléfono:</h4>
+                  <p>{{ locationOptions[selectedLocation].phone }}</p>
+                </div>
+              </div>
+              <div class="store-info-item">
+                <i class="fas fa-envelope" aria-hidden="true"></i>
+                <div>
+                  <h4>Email:</h4>
+                  <p>{{ locationOptions[selectedLocation].email }}</p>
+                </div>
+              </div>
+              <div class="store-info-item">
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
+                <div>
+                  <h4>Información adicional:</h4>
+                  <p>{{ locationOptions[selectedLocation].additionalInfo }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step-actions" v-if="activeStep === 3">
+        <button @click="prevStep" class="prev-button" aria-label="Volver al paso anterior">
+          <i class="fas fa-arrow-left" aria-hidden="true"></i> Anterior
+        </button>
+        <button @click="finalizeOrder" class="checkout-button" :disabled="!isPaymentValid" aria-label="Finalizar pedido">
+          <i class="fas fa-check-circle" aria-hidden="true"></i> FINALIZAR PEDIDO
+        </button>
+      </div>
+    </div>
+  </div>
         </div>
       </div>
 
@@ -438,15 +530,15 @@
             <h2>Resumen del pedido</h2>
             <div class="summary-badge" v-if="items.length > 0">{{ items.length }}</div>
           </div>
-          <div class="toggle-summary-btn">
-            <i class="fas" :class="showSummary ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+          <div class="toggle-summary-btn" aria-label="Mostrar u ocultar resumen">
+            <i class="fas" :class="showSummary ? 'fa-chevron-up' : 'fa-chevron-down'" aria-hidden="true"></i>
           </div>
         </div>
 
         <transition name="fade">
           <div class="summary-content" v-if="showSummary">
             <div v-if="items.length === 0" class="empty-summary">
-              <i class="fas fa-shopping-cart"></i>
+              <i class="fas fa-shopping-cart" aria-hidden="true"></i>
               <p>No hay productos en el carrito</p>
             </div>
             <div v-else>
@@ -480,7 +572,7 @@
               <div class="mini-cart-preview mobile-only">
                 <div class="mini-cart-scroll">
                   <div v-for="product in items" :key="product.uniqueId" class="mini-cart-item">
-                    <img :src="product.image" :alt="product.nombre" class="mini-cart-image">
+                    <img :src="getProductImage(product)" :alt="product.nombre" class="mini-cart-image">
                     <div class="mini-cart-details">
                       <p class="mini-cart-name">{{ product.nombre }}</p>
                       <p class="mini-cart-price">{{ formatPrice(product.precio * product.cantidad) }}</p>
@@ -491,7 +583,7 @@
               </div>
             </div>
             <div class="checkout-progress desktop-only">
-              <div class="progress-bar">
+              <div class="progress-bar" role="progressbar" :aria-valuenow="progressPercentage" aria-valuemin="0" aria-valuemax="100">
                 <div class="progress" :style="{ width: progressPercentage + '%' }"></div>
               </div>
               <p class="progress-text">Paso {{ activeStep + 1 }} de {{ checkoutSteps.length }}</p>
@@ -501,8 +593,8 @@
               <a href="/terminos-condiciones">términos y condiciones</a> del servicio.
             </p>
             <div class="mobile-finalize-container" v-if="activeStep === 3 && !orderFinalized">
-              <button @click="finalizeOrder" class="mobile-finalize-button" :disabled="!isPaymentValid">
-                <i class="fas fa-check-circle"></i> FINALIZAR PEDIDO
+              <button @click="finalizeOrder" class="mobile-finalize-button" :disabled="!isPaymentValid" aria-label="Finalizar pedido">
+                <i class="fas fa-check-circle" aria-hidden="true"></i> FINALIZAR PEDIDO
               </button>
             </div>
           </div>
@@ -510,12 +602,12 @@
 
         <div v-if="orderFinalized" class="order-finalized">
           <div class="success-animation">
-            <i class="fas fa-check-circle"></i>
+            <i class="fas fa-check-circle" aria-hidden="true"></i>
           </div>
           <h3>¡Gracias por tu pedido!</h3>
           <p>Puedes contactarnos por WhatsApp para cualquier consulta:</p>
           <a :href="whatsappLink" class="whatsapp-button">
-            <i class="fab fa-whatsapp"></i> Contactar por WhatsApp
+            <i class="fab fa-whatsapp" aria-hidden="true"></i> Contactar por WhatsApp
           </a>
           <div class="qr-code">
             <img src="https://placehold.co/200x200/png?text=QR+Code" alt="QR Code para seguimiento de pedido" />
@@ -528,19 +620,20 @@
     <!-- Navigation Controls for Mobile -->
     <div class="mobile-nav-controls" v-if="!orderFinalized">
       <div class="nav-buttons-container">
-        <button v-if="activeStep > 0" @click="prevStep" class="mobile-nav-btn prev-btn">
-          <i class="fas fa-arrow-left"></i>
+        <button v-if="activeStep > 0" @click="prevStep" class="mobile-nav-btn prev-btn" aria-label="Paso anterior">
+          <i class="fas fa-arrow-left" aria-hidden="true"></i>
         </button>
-        <button @click="toggleSummary" class="mobile-cart-btn">
-          <i class="fas fa-shopping-cart"></i>
+        <button @click="toggleSummary" class="mobile-cart-btn" aria-label="Ver resumen del carrito">
+          <i class="fas fa-shopping-cart" aria-hidden="true"></i>
           <span class="cart-count" v-if="items.length > 0">{{ items.length }}</span>
           <span class="cart-total">{{ formatPrice(totalAmount) }}</span>
         </button>
-        <button v-if="activeStep < checkoutSteps.length - 1" @click="nextStep" class="mobile-nav-btn next-btn" :disabled="(activeStep === 1 && items.length === 0)">
-          <i class="fas fa-arrow-right"></i>
+        <button v-if="activeStep < checkoutSteps.length - 1" @click="nextStep" class="mobile-nav-btn next-btn"
+          :disabled="(activeStep === 1 && items.length === 0)" aria-label="Siguiente paso">
+          <i class="fas fa-arrow-right" aria-hidden="true"></i>
         </button>
-        <button v-else @click="finalizeOrder" class="mobile-nav-btn checkout-btn" :disabled="!isPaymentValid">
-          <i class="fas fa-check"></i>
+        <button v-else @click="finalizeOrder" class="mobile-nav-btn checkout-btn" :disabled="!isPaymentValid" aria-label="Finalizar pedido">
+          <i class="fas fa-check" aria-hidden="true"></i>
         </button>
       </div>
     </div>
@@ -551,9 +644,9 @@
         <div class="modal-overlay" @click="cancelEmptyCart"></div>
         <div class="modal-content" @click.stop>
           <div class="modal-header">
-            <h3><i class="fas fa-exclamation-triangle"></i> Vaciar carrito</h3>
+            <h3><i class="fas fa-exclamation-triangle" aria-hidden="true"></i> Vaciar carrito</h3>
             <button class="close-modal" @click="cancelEmptyCart" aria-label="Cerrar">
-              <i class="fas fa-times"></i>
+              <i class="fas fa-times" aria-hidden="true"></i>
             </button>
           </div>
           <div class="modal-body">
@@ -561,10 +654,10 @@
           </div>
           <div class="modal-footer">
             <button class="cancel-btn" @click="cancelEmptyCart">
-              <i class="fas fa-times"></i> Cancelar
+              <i class="fas fa-times" aria-hidden="true"></i> Cancelar
             </button>
             <button class="confirm-btn" @click="confirmEmptyCart">
-              <i class="fas fa-trash-alt"></i> Vaciar carrito
+              <i class="fas fa-trash-alt" aria-hidden="true"></i> Vaciar carrito
             </button>
           </div>
         </div>
@@ -577,24 +670,25 @@
         <div class="modal-overlay" @click="cancelLoginPrompt"></div>
         <div class="modal-content login-prompt" @click.stop>
           <div class="modal-header">
-            <h3><i class="fas fa-user-lock"></i> Iniciar sesión</h3>
+            <h3><i class="fas fa-user-lock" aria-hidden="true"></i> Iniciar sesión</h3>
             <button class="close-modal" @click="cancelLoginPrompt" aria-label="Cerrar">
-              <i class="fas fa-times"></i>
+              <i class="fas fa-times" aria-hidden="true"></i>
             </button>
           </div>
           <div class="modal-body">
-            <p>Para guardar tus datos de envío y facilitar futuras compras, te recomendamos iniciar sesión o registrarte.</p>
+            <p>Para guardar tus datos de envío y facilitar futuras compras, te recomendamos iniciar sesión o
+              registrarte.</p>
             <p>Sin embargo, puedes continuar como invitado si lo prefieres.</p>
           </div>
           <div class="modal-footer login-options">
             <button class="guest-btn" @click="continueAsGuest">
-              <i class="fas fa-user"></i> Continuar como invitado
+              <i class="fas fa-user" aria-hidden="true"></i> Continuar como invitado
             </button>
             <button class="login-btn" @click="goToLogin">
-              <i class="fas fa-sign-in-alt"></i> Iniciar sesión
+              <i class="fas fa-sign-in-alt" aria-hidden="true"></i> Iniciar sesión
             </button>
             <button class="register-btn" @click="goToRegister">
-              <i class="fas fa-user-plus"></i> Registrarse
+              <i class="fas fa-user-plus" aria-hidden="true"></i> Registrarse
             </button>
           </div>
         </div>
@@ -630,7 +724,7 @@ const showEmptyCartModal = ref(false);
 const showLoginPrompt = ref(false);
 const formSubmitted = ref(false);
 const redirectAfterLogin = ref(false);
-const activeStepClicked = ref(null); // Track which step was clicked for animation
+const activeStepClicked = ref(null);
 
 const deliveryInfo = ref({
   nombre: '',
@@ -662,14 +756,6 @@ const locationOptions = ref({
     email: 'tienda.cochabamba@empresa.com',
     additionalInfo: 'Referencia: A media cuadra de la Plaza Principal, local con fachada verde.'
   },
-  'santa-cruz': {
-    name: 'Santa Cruz',
-    address: 'Av. Irala #456, Zona Central, Santa Cruz',
-    hours: 'Lunes a Viernes de 8:00 a 19:00, Sábados de 9:00 a 15:00',
-    phone: '+591 3 3445566',
-    email: 'tienda.santacruz@empresa.com',
-    additionalInfo: 'Referencia: Centro Comercial Las Brisas, Local 12. Amplio estacionamiento disponible.'
-  }
 });
 
 const activeStep = ref(0);
@@ -679,6 +765,7 @@ const checkoutSteps = ref([
   { id: 'coupon', title: 'Cupón de Descuento', shortTitle: 'Cupón', editable: false, editing: false, completed: false },
   { id: 'payment', title: 'Método de Pago', shortTitle: 'Pago', editable: false, editing: false, completed: false }
 ]);
+const placeholderImage = ref('https://placehold.co/100x100/png?text=Image+Not+Found');
 
 const progressPercentage = computed(() => {
   return (activeStep.value / (checkoutSteps.value.length - 1)) * 100;
@@ -711,7 +798,6 @@ const isAuthenticated = computed(() => {
   return !!localStorage.getItem('token');
 });
 
-// Check for redirect from login page
 const checkRedirectFromLogin = () => {
   const redirectParam = new URLSearchParams(window.location.search).get('fromLogin');
   if (redirectParam === 'true' && !isAuthenticated.value) {
@@ -720,7 +806,7 @@ const checkRedirectFromLogin = () => {
 };
 
 onMounted(() => {
-  if (themeStore.currentDepartment === 'la-paz' || themeStore.currentDepartment === 'cochabamba' || themeStore.currentDepartment === 'santa-cruz') {
+  if (themeStore.currentDepartment === 'la-paz' || themeStore.currentDepartment === 'cochabamba') {
     selectedLocation.value = themeStore.currentDepartment;
   } else {
     selectedLocation.value = 'la-paz';
@@ -753,7 +839,7 @@ onMounted(() => {
   if (!isAuthenticated.value && activeStep.value === 0) {
     showLoginPrompt.value = true;
   }
-  
+
   checkRedirectFromLogin();
   document.addEventListener('keydown', handleKeyDown);
 });
@@ -766,7 +852,6 @@ onBeforeUnmount(() => {
 });
 
 const handleTouchStart = (e) => {
-  // Improve touch responsiveness
   if (e.target.closest('.toggle-summary-btn') || e.target.closest('.summary-header')) {
     e.preventDefault();
   }
@@ -787,19 +872,15 @@ const handleResize = () => {
   if (window.innerWidth > 768) {
     showSummary.value = true;
   } else {
-    // En móvil, mantener el estado actual o mostrar en el último paso
     if (activeStep.value === checkoutSteps.value.length - 1) {
       showSummary.value = true;
     }
   }
 };
 
-// Enhanced step click handler with feedback
 const handleStepClick = (index) => {
   if (index <= activeStep.value || (index === activeStep.value + 1 && checkoutSteps.value[activeStep.value].completed)) {
-    activeStepClicked.value = index; // Set which step was clicked for animation
-    
-    // Provide visual feedback
+    activeStepClicked.value = index;
     const stepElement = document.querySelector(`.step-indicator:nth-child(${index + 1})`);
     if (stepElement) {
       stepElement.classList.add('step-clicked');
@@ -807,11 +888,7 @@ const handleStepClick = (index) => {
         stepElement.classList.remove('step-clicked');
       }, 300);
     }
-    
-    // Navigate to the step
     goToStep(index);
-    
-    // Show a brief toast notification
     if (index !== activeStep.value) {
       Swal.fire({
         toast: true,
@@ -847,7 +924,7 @@ const goToStep = (index) => {
 };
 
 const nextStep = () => {
-  formSubmitted.value = true; // Activar validación visual
+  formSubmitted.value = true;
   if (activeStep.value === 0 && !isDeliveryInfoComplete.value) {
     Swal.fire({
       title: "Información incompleta",
@@ -855,7 +932,7 @@ const nextStep = () => {
       icon: "warning",
       confirmButtonText: "Entendido",
     });
-    return; // No avanzar si la información no está completa
+    return;
   }
   if (activeStep.value < checkoutSteps.value.length - 1) {
     checkoutSteps.value[activeStep.value].completed = true;
@@ -903,33 +980,110 @@ const totalToPay = computed(() => cartStore.totalToPay);
 const pending = computed(() => cartStore.pending);
 const items = computed(() => cartStore.productos);
 
-const increaseQuantity = (product) => {
-  if (product.cantidad < product.cantidad_maxima) {
-    cartStore.updateQuantity(product.uniqueId, product.cantidad + 1);
-  } else {
-    Swal.fire({
-      title: "Advertencia",
-      text: `No se puede aumentar la cantidad del producto ${product.nombre} más allá de ${product.cantidad_maxima}.`,
-      icon: "warning",
-      confirmButtonText: "Aceptar",
-    });
-  }
-};
+// Function to check if quantity is near range limit
+function isNearRangeLimit(product) {
+  const min = getMinQuantity(product);
+  const max = getMaxQuantity(product);
 
-const decreaseQuantity = (product) => {
-  if (product.cantidad > product.cantidad_minima) {
-    cartStore.updateQuantity(product.uniqueId, product.cantidad - 1);
-  } else {
-    Swal.fire({
-      title: "Advertencia",
-      text: `La cantidad mínima para el producto ${product.nombre} es ${product.cantidad_minima}.`,
-      icon: "warning",
-      confirmButtonText: "Aceptar",
-    });
-  }
-};
+  return (product.cantidad - min <= 2) || (max - product.cantidad <= 2);
+}
 
-const removeProduct = (product) => {
+// Improved function to validate and update quantity
+function validateAndUpdateQuantity(product) {
+  const min = getMinQuantity(product);
+  const max = getMaxQuantity(product);
+
+  if (isNaN(product.cantidad) || product.cantidad === '') {
+    product.cantidad = min;
+    updateQuantityWithoutPriceChange(product, min);
+    return;
+  }
+
+  // Convert to number to ensure proper comparison
+  let cantidad = parseInt(product.cantidad);
+
+  if (cantidad < min || cantidad > max) {
+    let message, options;
+
+    if (product.es_preventa) {
+      if (cantidad < min) {
+        message = `La cantidad (${cantidad}) es menor que el mínimo de preventa (${min}).`;
+        options = [
+          { text: `Ajustar a mínimo (${min})`, action: 'adjust-min' },
+          { text: 'Cambiar a precio regular', action: 'switch-regular' }
+        ];
+      } else {
+        message = `La cantidad (${cantidad}) es mayor que el máximo de preventa (${max}).`;
+        options = [
+          { text: `Ajustar a máximo (${max})`, action: 'adjust-max' },
+          { text: 'Cambiar a precio regular', action: 'switch-regular' }
+        ];
+      }
+    } else {
+      if (cantidad < min) {
+        message = `La cantidad (${cantidad}) es menor que el mínimo regular (${min}).`;
+        options = [
+          { text: `Ajustar a mínimo (${min})`, action: 'adjust-min' }
+        ];
+        if (canSwitchToPreventa(product) && 
+            cantidad >= product.cantidad_minima_preventa && 
+            cantidad <= product.cantidad_maxima_preventa) {
+          options.push({ text: 'Cambiar a precio de preventa', action: 'switch-preventa' });
+        }
+      } else {
+        message = `La cantidad (${cantidad}) es mayor que el máximo regular (${max}).`;
+        options = [
+          { text: `Ajustar a máximo (${max})`, action: 'adjust-max' }
+        ];
+      }
+    }
+
+    Swal.fire({
+      title: "Cantidad fuera de rango",
+      text: message,
+      icon: "warning",
+      input: 'radio',
+      inputOptions: options.reduce((acc, opt, idx) => {
+        acc[idx] = opt.text;
+        return acc;
+      }, {}),
+      inputValidator: (value) => {
+        if (!value) {
+          return 'Debes seleccionar una opción';
+        }
+      },
+      showCancelButton: true,
+      confirmButtonText: "Aplicar",
+      cancelButtonText: "Cancelar"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const selectedOption = options[result.value];
+        switch (selectedOption.action) {
+          case 'adjust-min':
+            updateQuantityWithoutPriceChange(product, min);
+            break;
+          case 'adjust-max':
+            updateQuantityWithoutPriceChange(product, max);
+            break;
+          case 'switch-regular':
+            switchToPriceType(product, false);
+            break;
+          case 'switch-preventa':
+            switchToPriceType(product, true);
+            break;
+        }
+      } else {
+        // If canceled, reset to the appropriate minimum
+        updateQuantityWithoutPriceChange(product, min);
+      }
+    });
+  } else {
+    // If within range, just update the quantity without changing price type
+    updateQuantityWithoutPriceChange(product, cantidad);
+  }
+}
+
+function removeProduct(product) {
   Swal.fire({
     title: "¿Eliminar producto?",
     text: `¿Estás seguro de eliminar ${product.nombre} del carrito?`,
@@ -942,7 +1096,7 @@ const removeProduct = (product) => {
       cartStore.removeFromCart(product.uniqueId);
     }
   });
-};
+}
 
 const emptyCart = () => {
   if (items.value.length === 0) return;
@@ -992,8 +1146,55 @@ const goShopping = () => {
   router.push('/productos');
 };
 
+// Function to generate unique ID for cart items
 function generarUniqueId(product) {
-  return `${product.id}-${product.modeloId || 'default'}-${product.color || 'default'}`;
+  const preventaStatus = product.es_preventa ? 'preventa' : 'regular';
+  return `${product.id}-${product.modeloId || "default"}-${product.color || "default"}-${preventaStatus}`;
+}
+
+function getProductImage(product) {
+  // Si hay un color seleccionado, buscar la imagen correspondiente en 'images'
+  if (product.color && product.images && product.images.length > 0) {
+    const imageForColor = product.images.find(img => img.color === product.color);
+    if (imageForColor && imageForColor.imagen && imageForColor.imagen !== 'undefined' && imageForColor.imagen !== '') {
+      return imageForColor.imagen;
+    }
+  }
+
+  // Priorizar propiedades en orden si no hay color o no se encontró imagen para el color
+  if (product.imagen_principal && product.imagen_principal !== 'undefined' && product.imagen_principal !== '') {
+    return product.imagen_principal;
+  }
+  if (product.colorImage && product.colorImage !== 'undefined' && product.colorImage !== '') {
+    return product.colorImage;
+  }
+  if (product.image && product.image !== 'undefined' && product.image !== '') {
+    return product.image;
+  }
+
+  // Si no hay imagen válida, devolver el placeholder
+  return placeholderImage.value;
+}
+
+// Improved function to handle image loading errors
+function handleImageError(event) {
+  if (event.target.src !== placeholderImage.value) {
+    event.target.src = placeholderImage.value;
+  }
+}
+
+// Check if product can switch to preventa price
+function canSwitchToPreventa(product) {
+  return product.precio_preventa > 0 &&
+    product.cantidad_minima_preventa > 0 &&
+    product.cantidad_maxima_preventa > 0;
+}
+
+// Check if product can switch to regular price
+function canSwitchToRegular(product) {
+  return product.precio > 0 &&
+    product.cantidad_minima > 0 &&
+    product.cantidad_maxima > 0;
 }
 
 const formatPrice = (price) => {
@@ -1129,6 +1330,8 @@ const processOrder = async () => {
     formData.append(`productos[${index}][id]`, producto.id);
     formData.append(`productos[${index}][cantidad]`, producto.cantidad);
     formData.append(`productos[${index}][precio]`, producto.precio);
+    formData.append(`productos[${index}][es_preventa]`, producto.es_preventa ? '1' : '0');
+    if (producto.precio_preventa) formData.append(`productos[${index}][precio_preventa]`, producto.precio_preventa);
     if (producto.modeloId) formData.append(`productos[${index}][modelo_id]`, producto.modeloId);
     if (producto.color) formData.append(`productos[${index}][color]`, producto.color);
   });
@@ -1245,6 +1448,242 @@ const toggleEdit = async (index) => {
     showLoginPrompt.value = true;
   }
 };
+
+function getMinQuantity(product) {
+  return product.es_preventa ? (product.cantidad_minima_preventa || 1) : (product.cantidad_minima || 1);
+}
+
+function getMaxQuantity(product) {
+  return product.es_preventa ? (product.cantidad_maxima_preventa || 999) : (product.cantidad_maxima || 999);
+}
+
+function isAtMinQuantity(product) {
+  return product.cantidad <= getMinQuantity(product);
+}
+
+function isAtMaxQuantity(product) {
+  return product.cantidad >= getMaxQuantity(product);
+}
+
+function isQuantityOutOfRange(product) {
+  const min = getMinQuantity(product);
+  const max = getMaxQuantity(product);
+
+  return product.cantidad < min || product.cantidad > max;
+}
+
+function getQuantityStatusIcon(product) {
+  if (isQuantityOutOfRange(product)) {
+    return 'fa-exclamation-circle';
+  } else if (isNearRangeLimit(product)) {
+    return 'fa-exclamation-triangle';
+  } else {
+    return 'fa-check-circle';
+  }
+}
+
+function getQuantityStatusText(product) {
+  const min = getMinQuantity(product);
+  const max = getMaxQuantity(product);
+
+  if (product.cantidad < min) {
+    return `Por debajo del mínimo (${min})`;
+  } else if (product.cantidad > max) {
+    return `Por encima del máximo (${max})`;
+  } else if (isNearRangeLimit(product)) {
+    if (product.cantidad - min <= 2) {
+      return `Cerca del mínimo (${min})`;
+    } else if (max - product.cantidad <= 2) {
+      return `Cerca del máximo (${max})`;
+    }
+  }
+  return `Dentro del rango (${min}-${max})`;
+}
+
+// Improved functions for quantity changes
+function increaseQuantity(product) {
+  if (product.cantidad < getMaxQuantity(product)) {
+    const nuevaCantidad = parseInt(product.cantidad) + 1;
+
+    if (product.es_preventa && nuevaCantidad > product.cantidad_maxima_preventa) {
+      Swal.fire({
+        title: "Límite de preventa alcanzado",
+        text: `Has alcanzado el máximo para preventa (${product.cantidad_maxima_preventa}). ¿Deseas cambiar a precio regular?`,
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Cambiar a precio regular",
+        cancelButtonText: "Mantener en preventa"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          switchToPriceType(product, false);
+        } else {
+          updateQuantityWithoutPriceChange(product, product.cantidad_maxima_preventa);
+        }
+      });
+      return;
+    }
+
+    updateQuantityWithoutPriceChange(product, nuevaCantidad);
+  } else {
+    Swal.fire({
+      title: "Cantidad máxima",
+      text: `No se puede aumentar más allá de ${getMaxQuantity(product)} unidades.`,
+      icon: "info",
+      toast: true,
+      position: "top-end",
+      showConfirmButton: false,
+      timer: 3000
+    });
+  }
+}
+
+function decreaseQuantity(product) {
+  if (product.cantidad > getMinQuantity(product)) {
+    const nuevaCantidad = parseInt(product.cantidad) - 1;
+
+    if (!product.es_preventa && canSwitchToPreventa(product) &&
+        nuevaCantidad >= product.cantidad_minima_preventa &&
+        nuevaCantidad <= product.cantidad_maxima_preventa) {
+      Swal.fire({
+        title: "Cambio de precio",
+        text: `Al disminuir a ${nuevaCantidad}, entra en el rango de preventa (${product.cantidad_minima_preventa}-${product.cantidad_maxima_preventa}). ¿Desea cambiar a precio de preventa?`,
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Sí, cambiar",
+        cancelButtonText: "No, mantener regular"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          switchToPriceType(product, true);
+        } else {
+          updateQuantityWithoutPriceChange(product, nuevaCantidad);
+        }
+      });
+      return;
+    }
+
+    updateQuantityWithoutPriceChange(product, nuevaCantidad);
+  } else {
+    Swal.fire({
+      title: "Cantidad mínima",
+      text: `No se puede disminuir por debajo de ${getMinQuantity(product)} unidades.`,
+      icon: "info",
+      toast: true,
+      position: "top-end",
+      showConfirmButton: false,
+      timer: 3000
+    });
+  }
+}
+
+// Función para cambiar el tipo de precio y preservar imágenes
+function switchToPriceType(product, isPreventa) {
+  if (isPreventa && !canSwitchToPreventa(product)) {
+    Swal.fire({
+      title: "No se puede cambiar a preventa",
+      text: "Este producto no tiene precio de preventa válido.",
+      icon: "warning",
+      confirmButtonText: "Entendido"
+    });
+    return;
+  }
+  
+  if (!isPreventa && !canSwitchToRegular(product)) {
+    Swal.fire({
+      title: "No se puede cambiar a regular",
+      text: "Este producto no tiene precio regular válido.",
+      icon: "warning",
+      confirmButtonText: "Entendido"
+    });
+    return;
+  }
+
+  // Guardar la imagen actual antes de cualquier cambio
+  const currentImageUrl = getProductImage(product);
+
+  if (isPreventa !== product.es_preventa) {
+    let nuevaCantidad = product.cantidad;
+    
+    if (isPreventa) {
+      nuevaCantidad = Math.max(product.cantidad_minima_preventa, Math.min(product.cantidad_maxima_preventa, nuevaCantidad));
+    } else {
+      nuevaCantidad = Math.max(product.cantidad_minima, Math.min(product.cantidad_maxima, nuevaCantidad));
+    }
+
+    // Crear una copia del producto con el nuevo tipo de precio
+    const productoActualizado = {
+      ...product,
+      es_preventa: isPreventa,
+      cantidad: nuevaCantidad,
+      uniqueId: generarUniqueId({ ...product, es_preventa: isPreventa }),
+      imagen_principal: product.imagen_principal || currentImageUrl, // Priorizar la imagen existente
+      colorImage: product.colorImage,
+      image: product.image || currentImageUrl // Asegurar que image tenga un valor
+    };
+
+    // Actualizar el carrito
+    cartStore.removeFromCart(product.uniqueId);
+    cartStore.addToCart(productoActualizado);
+
+    Swal.fire({
+      title: "Precio actualizado",
+      text: `Se ha cambiado al precio de ${isPreventa ? 'preventa' : 'regular'}${nuevaCantidad !== product.cantidad ? ` y la cantidad se ajustó a ${nuevaCantidad}` : ''}`,
+      icon: "success",
+      toast: true,
+      position: "top-end",
+      showConfirmButton: false,
+      timer: 3000
+    });
+  }
+}
+
+function updateQuantityWithoutPriceChange(product, newQuantity) {
+  const currentImageUrl = getProductImage(product);
+
+  // Crear una copia del producto con la nueva cantidad
+  const updatedProduct = {
+    ...product,
+    cantidad: newQuantity,
+    uniqueId: generarUniqueId(product),
+    imagen_principal: product.imagen_principal || currentImageUrl,
+    colorImage: product.colorImage,
+    image: product.image || currentImageUrl
+  };
+
+  // Actualizar el carrito
+  cartStore.removeFromCart(product.uniqueId);
+  cartStore.addToCart(updatedProduct);
+}
+
+function showToast(message, type = 'info') {
+  Swal.fire({
+    toast: true,
+    position: 'top-end',
+    icon: type,
+    title: message,
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true
+  });
+}
+</script>
+
+<script>
+// Añade estos métodos a tu componente existente
+export default {
+  methods: {
+    // Método para seleccionar el método de pago
+    selectPaymentMethod(method) {
+      this.paymentMethod = method;
+    },
+    
+    // Método para seleccionar la ubicación
+    selectLocation(key) {
+      this.selectedLocation = key;
+      // Detener la propagación para evitar que se active el evento del contenedor padre
+      event.stopPropagation();
+    }
+  }
+}
 </script>
 
 <style scoped>
@@ -1363,9 +1802,20 @@ h1 {
 }
 
 @keyframes pulse {
-  0% { opacity: 0.7; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.1); }
-  100% { opacity: 0.7; transform: scale(1); }
+  0% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+
+  100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
 }
 
 /* Empty Cart Button */
@@ -1548,9 +1998,17 @@ h1 {
 }
 
 @keyframes clickPulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.2); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.2);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* Progress Bar */
@@ -1572,8 +2030,13 @@ h1 {
 }
 
 @keyframes progress-bar-stripes {
-  from { background-position: 1rem 0; }
-  to { background-position: 0 0; }
+  from {
+    background-position: 1rem 0;
+  }
+
+  to {
+    background-position: 0 0;
+  }
 }
 
 /* Layout Styles */
@@ -1599,8 +2062,15 @@ h1 {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Checkout Steps */
@@ -1630,8 +2100,15 @@ h1 {
 }
 
 @keyframes slideIn {
-  from { opacity: 0; transform: translateX(-10px); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .completed-step .step-number {
@@ -1788,9 +2265,15 @@ h2 {
 }
 
 @keyframes bounce {
-  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-  40% { transform: translateY(-20px); }
-  60% { transform: translateY(-10px); }
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-20px);
+  }
+  60% {
+    transform: translateY(-10px);
+  }
 }
 
 .empty-cart-message p,
@@ -1888,7 +2371,7 @@ input:focus {
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
 }
 
-input:focus + .input-icon {
+input:focus+.input-icon {
   color: var(--primary-color);
 }
 
@@ -1902,7 +2385,7 @@ input:focus + .input-icon {
   transition: width 0.3s ease;
 }
 
-input:focus ~ .input-focus-indicator {
+input:focus~.input-focus-indicator {
   width: 100%;
 }
 
@@ -2013,14 +2496,16 @@ input:focus ~ .input-focus-indicator {
 
 .product-image-container {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
 .product-image {
-  width: 120px;
-  height: 120px;
-  object-fit: cover;
+  width: 180px;
+  height: 140px;
+  object-fit: contain;
   border-radius: 8px;
   transition: transform 0.3s ease;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
@@ -2031,13 +2516,43 @@ input:focus ~ .input-focus-indicator {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
+.color-indicator {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 8px;
+  font-size: 14px;
+  color: #666;
+}
+
+.color-circle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid #ccc;
+  display: inline-block;
+}
+
+.color-name {
+  font-size: 14px;
+}
+
 .product-info {
   flex: 1;
   min-width: 0;
 }
 
+.product-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .product-info h3 {
-  margin: 0 0 10px 0;
+  margin: 0;
   font-size: clamp(16px, 3vw, 20px);
   font-weight: 600;
   color: #343a40;
@@ -2049,148 +2564,341 @@ input:focus ~ .input-focus-indicator {
   font-size: clamp(12px, 2vw, 14px);
 }
 
-.price-container {
-  margin: 10px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
+/* New styles for the enhanced price type selector */
+.price-type-container {
+  margin-bottom: 20px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.price {
+.price-type-tabs {
+  display: flex;
+  width: 100%;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 12px;
+  background-color: #f5f5f5;
+  border: none;
   font-weight: 600;
-  color: var(--primary-color);
-  font-size: clamp(16px, 3vw, 18px);
-  margin: 0;
-}
-
-.unit-price {
-  color: #000000;
-  font-size: clamp(12px, 2vw, 14px);
-  margin: 0;
-  font-weight: 500;
-  background-color: #f0f8ff;
-  padding: 5px 8px;
-  border-radius: 4px;
-  display: inline-block;
-  border-left: 3px solid var(--primary-color);
-}
-
-.product-details {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 15px 0;
-  background-color: #f8f9fa;
-  padding: 10px;
-  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #666;
 }
 
-.product-details:hover {
-  background-color: #e9ecef;
+.tab-btn.active {
+  background-color: white;
+  color: #0288d1;
+  box-shadow: inset 0 -3px 0 #0288d1;
 }
 
-.detail-item {
+.tab-btn:first-child.active {
+  color: #689f38;
+  box-shadow: inset 0 -3px 0 #689f38;
+}
+
+.tab-btn:hover:not(:disabled) {
+  background-color: #e9e9e9;
+}
+
+.tab-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.price-type-content {
+  padding: 15px;
+  background-color: white;
+}
+
+.current-price-card {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 15px;
+}
+
+.price-card-header {
+  padding: 10px 15px;
+  color: white;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #689f38;
+}
+
+.price-card-header i {
+  font-size: 16px;
+}
+
+.price-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+}
+
+.price-type-badge.preventa {
+  background-color: #0288d1;
+}
+
+.price-type-badge.regular {
+  background-color: #689f38;
+}
+
+.price-card-body {
+  padding: 15px;
+}
+
+.price-row {
   display: flex;
   justify-content: space-between;
-  font-size: clamp(12px, 2vw, 14px);
-  padding: 5px 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 6px 0;
+  border-bottom: 1px solid #f0f0f0;
 }
 
-.detail-item:last-child {
+.price-row:last-child {
   border-bottom: none;
 }
 
-.detail-label {
-  color: #000000;
-  font-weight: 500;
+.price-label {
+  color: #666;
 }
 
-.detail-value {
-  color: #343a40;
+.price-value {
   font-weight: 600;
+  color: #333;
 }
 
-.color-image {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid white;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+.price-value.total {
+  font-size: 18px;
+  color: #0288d1;
+}
+
+.price-comparison {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-top: 15px;
+}
+
+.comparison-header {
+  padding: 10px 15px;
+  background-color: #f5f5f5;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #333;
+}
+
+.comparison-body {
+  padding: 15px;
+}
+
+.comparison-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.comparison-item {
+  flex: 1;
+  text-align: center;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+.comparison-divider {
+  padding: 0 15px;
+  font-weight: bold;
+  color: #666;
+}
+
+.comparison-label {
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #666;
+}
+
+.comparison-value {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.comparison-range {
+  font-size: 13px;
+  color: #666;
+}
+
+.savings-info {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #e8f5e9;
+  border-radius: 8px;
+  color: #2e7d32;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.savings-info span {
+  font-weight: 700;
+}
+
+.model-info {
+  margin-bottom: 20px;
+}
+
+.model-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.quantity-control-section {
+  margin-top: 20px;
+}
+
+.quantity-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.quantity-label>span:first-child {
+  font-weight: 600;
+  color: #333;
+}
+
+.quantity-status {
+  font-size: 13px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #e8f5e9;
+  color: #388e3c;
+}
+
+.quantity-status.warning {
+  background-color: #fff8e1;
+  color: #ff8f00;
+}
+
+.quantity-status.error {
+  background-color: #ffebee;
+  color: #d32f2f;
 }
 
 .quantity-controls {
   display: flex;
   align-items: center;
   gap: 15px;
-  margin-top: 15px;
-  flex-wrap: wrap;
 }
 
 .quantity-selector {
   display: flex;
   align-items: center;
-  gap: 10px;
-  background-color: #f8f9fa;
-  padding: 5px 10px;
+  background-color: #f5f5f5;
   border-radius: 8px;
-  transition: all 0.3s ease;
+  padding: 4px;
 }
 
-.quantity-selector:hover {
-  background-color: #e9ecef;
-}
-
-.quantity-btn,
-.remove-btn {
-  padding: clamp(6px, 2vw, 8px) clamp(10px, 3vw, 12px);
-  background-color: var(--primary-color);
-  color: white;
+.quantity-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
   border: none;
-  border-radius: 8px;
+  background-color: white;
+  color: #333;
+  font-size: 16px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: clamp(14px, 2vw, 16px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
 }
 
-.quantity-btn:hover:not(:disabled),
-.remove-btn:hover {
-  background-color: var(--primary-hover-color);
+.quantity-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
-}
-
-.quantity-btn:active:not(:disabled),
-.remove-btn:active {
-  transform: scale(0.95);
-  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .quantity-btn:disabled {
-  background-color: #707070;
+  opacity: 0.5;
   cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
 }
 
-.quantity {
-  font-weight: bold;
-  font-size: clamp(16px, 3vw, 18px);
-  min-width: 30px;
+.quantity-input-container {
+  width: 60px;
+  padding: 0 10px;
+}
+
+.quantity-input {
+  width: 100%;
   text-align: center;
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  padding: 8px 0;
+}
+
+.quantity-input::-webkit-inner-spin-button,
+.quantity-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.quantity-input:focus {
+  outline: none;
 }
 
 .remove-btn {
-  background-color: var(--danger-color);
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
   display: flex;
   align-items: center;
   gap: 8px;
+  transition: all 0.2s ease;
 }
 
 .remove-btn:hover {
-  background-color: #c82333;
+  background-color: #d32f2f;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(244, 67, 54, 0.3);
 }
 
 /* Coupon Section */
@@ -2770,9 +3478,17 @@ input:focus ~ .input-focus-indicator {
 }
 
 @keyframes successBounce {
-  0% { transform: scale(0); }
-  50% { transform: scale(1.2); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(0);
+  }
+
+  50% {
+    transform: scale(1.2);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 .order-finalized h3 {
@@ -2952,8 +3668,15 @@ input:focus ~ .input-focus-indicator {
 }
 
 @keyframes modalFadeIn {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .modal-header {
@@ -3116,11 +3839,25 @@ input:focus ~ .input-focus-indicator {
   transform: translateY(-10px);
 }
 
+/* Accessibility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
 /* Media Queries */
 @media (max-width: 768px) {
   .checkout-container {
     padding: 10px;
-    padding-bottom: 70px; /* Space for fixed navigation */
+    padding-bottom: 70px;
+    /* Space for fixed navigation */
   }
 
   .checkout-content {
@@ -3252,7 +3989,7 @@ input:focus ~ .input-focus-indicator {
     width: 150px;
     scroll-snap-align: start;
   }
-  
+
   /* Adjust bottom padding when summary is expanded */
   .summary-open {
     padding-bottom: 0;
@@ -3263,9 +4000,19 @@ input:focus ~ .input-focus-indicator {
     display: flex;
     align-items: center;
   }
-  
+
   .price-value {
     flex-shrink: 0;
+  }
+
+  /* Responsive comparison row */
+  .comparison-row {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .comparison-divider {
+    padding: 10px 0;
   }
 }
 
@@ -3277,7 +4024,7 @@ input:focus ~ .input-focus-indicator {
   .desktop-only {
     display: block;
   }
-  
+
   .mobile-nav-controls {
     display: none;
   }
@@ -3334,16 +4081,16 @@ input:focus ~ .input-focus-indicator {
     font-size: clamp(16px, 4vw, 18px);
     height: clamp(44px, 8vw, 56px);
   }
-  
+
   /* Smaller payment option buttons */
   .payment-option {
     padding: 10px;
   }
-  
+
   .payment-option-header label {
     font-size: 14px;
   }
-  
+
   .payment-details {
     padding-left: 15px;
     font-size: 13px;
@@ -3379,6 +4126,209 @@ input:focus ~ .input-focus-indicator {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+</style>
+
+<style>
+/* Estilos para los radio buttons personalizados */
+.custom-radio {
+  position: relative;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+.radio-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.radio-checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  background-color: #fff;
+  border: 2px solid #ccc;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.radio-input:checked ~ .radio-checkmark {
+  border-color: var(--primary-color);
+}
+
+.radio-checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  transform: translate(-50%, -50%);
+}
+
+.radio-input:checked ~ .radio-checkmark:after {
+  display: block;
+}
+
+/* Estilos para las opciones de pago */
+.payment-option {
+  padding: 15px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 15px;
+}
+
+.payment-option:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.payment-option.selected {
+  border-color: var(--primary-color);
+  background-color: #f0f8ff;
+}
+
+.payment-option-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.payment-label {
+  font-weight: 600;
+  font-size: 16px;
+  color: #343a40;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.payment-details {
+  padding-left: 30px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Estilos para las opciones de ubicación */
+.location-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.location-option {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.location-option:hover {
+  border-color: var(--primary-color);
+  background-color: rgba(0, 123, 255, 0.05);
+}
+
+.location-option.selected {
+  border-color: var(--primary-color);
+  background-color: #f0f8ff;
+}
+
+.location-radio {
+  margin-right: 8px;
+}
+
+.location-label {
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* Estilos para la información de la tienda */
+.store-info {
+  margin-top: 15px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid var(--primary-color);
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+  .payment-details {
+    padding-left: 15px;
+  }
+  
+  .payment-label {
+    font-size: 15px;
+  }
+  
+  .location-option {
+    padding: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .custom-radio {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .radio-checkmark {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .radio-checkmark:after {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .payment-label {
+    font-size: 14px;
+  }
+  
+  .location-label {
+    font-size: 13px;
   }
 }
 </style>

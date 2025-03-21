@@ -162,7 +162,7 @@
                 <i class="fas fa-tag"></i> {{ product.categoria?.nombre || categoria.nombre }}
               </div>
               <h3 class="product-name">{{ product.nombre }}</h3>
-              <div class="rating-container">
+         <!--      <div class="rating-container">
                 <div class="rating">
                   <span v-for="star in 5" :key="star" class="star"
                     :class="{ filled: star <= (userRatings.find(r => r.producto_id === product.id)?.rating || 0) }"
@@ -173,7 +173,7 @@
                 <div class="rating-count">
                   {{userRatings.find(r => r.producto_id === product.id)?.total_users || 0}} calificaciones
                 </div>
-              </div>
+              </div> -->
               <div class="price-container">
                 <div class="price">
                   <span class="current-price">{{ formatPrice(product.precio) }}</span>
@@ -240,7 +240,7 @@
             </div>
             <h3 class="product-name">{{ product.nombre }}</h3>
 
-            <div class="rating-container">
+       <!--      <div class="rating-container">
               <div class="rating">
                 <span v-for="star in 5" :key="star" class="star"
                   :class="{ 'filled': star <= (userRatings.find(r => r.producto_id === product.id)?.rating || 0) }"
@@ -251,7 +251,7 @@
               <div class="rating-count">
                 {{userRatings.find(r => r.producto_id === product.id)?.total_users || 0}} calificaciones
               </div>
-            </div>
+            </div> -->
 
             <div class="price-container">
               <div class="price">
