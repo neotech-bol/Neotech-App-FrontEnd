@@ -304,12 +304,12 @@
       </div>
     </div>
 
-    <!-- Modal de detalles del pedido -->
+    <!-- Modal de detalles del pedido - Ajustado para la estructura de datos proporcionada -->
     <div class="modal fade" id="orderDetailModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
       aria-labelledby="orderDetailModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content">
-          <!-- Encabezado del Modal -->
+          <!-- Encabezado del Modal permanece igual -->
           <div class="modal-header bg-primary bg-opacity-10">
             <h5 class="modal-title" id="orderDetailModalLabel">
               <i class="fas fa-info-circle me-2"></i>Detalle del Pedido #{{ detailOrder.id }}
@@ -319,7 +319,7 @@
 
           <!-- Cuerpo del Modal -->
           <div class="modal-body">
-            <!-- Barra de estado del pedido -->
+            <!-- Barra de estado del pedido permanece igual -->
             <div class="order-status-bar mb-4">
               <div class="progress" style="height: 5px;">
                 <div class="progress-bar bg-success" role="progressbar" :style="{ width: detailOrder.estado ? '100%' : '50%' }" 
@@ -345,7 +345,7 @@
             </div>
 
             <div class="row g-4">
-              <!-- Columna 1: Datos del Usuario -->
+              <!-- Columna 1: Datos del Usuario permanece igual -->
               <div class="col-12 col-md-4">
                 <div class="card h-100 border-0 shadow-sm">
                   <div class="card-header bg-primary bg-opacity-10">
@@ -372,7 +372,7 @@
                       </li>
                       <li class="list-group-item d-flex justify-content-between px-0">
                         <span class="text-muted"><i class="fas fa-globe me-2"></i>País:</span>
-                        <span class="fw-medium">Bolivia</span>
+                        <span class="fw-medium">{{ detailOrder.user?.pais || 'Bolivia' }}</span>
                       </li>
                       <li class="list-group-item d-flex justify-content-between px-0">
                         <span class="text-muted"><i class="fas fa-map me-2"></i>Departamento:</span>
@@ -390,59 +390,60 @@
               <!-- Columna 2: Productos del Pedido -->
               <div class="col-12 col-md-4">
                 <div class="card h-100 border-0 shadow-sm">
-                  <div class="card-header bg-primary bg-opacity-10 d-flex justify-content-between align-items-center">
-                    <span class="card-title h5 mb-0">
-                      <i class="fas fa-shopping-cart me-2"></i>Productos
+                  <div class="card-header bg-primary bg-opacity-10">
+                    <span class="card-title h5">
+                      <i class="fas fa-box me-2"></i>Productos del Pedido
                     </span>
-                    <span class="badge bg-info rounded-pill">{{ detailOrder.productos?.length || 0 }}</span>
                   </div>
                   <div class="card-body p-0">
-                    <div class="list-group list-group-flush">
-  <!-- Modificación en la sección de productos del modal de detalles -->
-  <div class="list-group-item p-3" v-for="(item, index) in detailOrder.productos" :key="item.id">
-    <div class="d-flex justify-content-between align-items-start">
-      <div>
-        <div class="d-flex align-items-center">
-          <span class="badge bg-primary rounded-pill me-2">{{ item.pivot?.cantidad }}</span>
-          <span class="fw-medium">{{ item.nombre }}</span>
-          <!-- Badge para indicar si es preventa -->
-          <span v-if="item.pivot?.es_preventa" class="badge bg-warning ms-2">Preventa</span>
-        </div>
-        <div class="text-muted small mt-1">
-          Precio unitario: {{ formatCurrency(item.pivot?.precio) }}
-        </div>
-        <!-- Información de preventa si aplica -->
-        <div v-if="item.pivot?.es_preventa" class="preventa-info mt-1">
-          <div class="text-primary small">
-            <i class="fas fa-tag me-1"></i>Precio preventa: {{ formatCurrency(item.pivot?.precio_preventa) }}
-          </div>
-          <div class="text-primary small">
-            <i class="fas fa-sort-numeric-down me-1"></i>Cantidad mínima: {{ item.pivot?.cantidad_minima_preventa }}
-          </div>
-          <div class="text-primary small">
-            <i class="fas fa-sort-numeric-up me-1"></i>Cantidad máxima: {{ item.pivot?.cantidad_maxima_preventa }}
-          </div>
-        </div>
-        <!-- Información de precio regular si está disponible -->
-        <div v-if="item.pivot?.precio_original && item.pivot?.es_preventa" class="text-muted small mt-1">
-          <i class="fas fa-info-circle me-1"></i>Precio regular: {{ formatCurrency(item.pivot?.precio_original) }}
-        </div>
-        <div class="text-muted small mt-1">
-          Modelo: {{ item.pivot?.modelo_id ? getModelName(item.pivot.modelo_id) : 'N/A' }}
-        </div>
-        <div class="text-muted small mt-1">
-          Color: {{ item.pivot?.color ? item.pivot.color : 'N/A' }}
-        </div>
-      </div>
-      <span class="fw-bold">{{ formatCurrency(item.pivot?.precio * item.pivot?.cantidad) }}</span>
-    </div>
-  </div>
+                    <div class="table-responsive">
+                      <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                          <tr>
+                            <th>Producto</th>
+                            <th class="text-center">Cant.</th>
+                            <th class="text-end">Precio</th>
+                            <th class="text-end">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr v-for="(producto, index) in detailOrder.productos" :key="index">
+                            <td>
+                              <div class="d-flex align-items-center">
+                                <div class="product-img-small me-2">
+                                  <img :src="getProductImageUrl(producto.imagen_principal)" 
+                                       alt="Imagen del producto" class="img-fluid rounded">
+                                </div>
+                                <div>
+                                  <div class="fw-medium">{{ producto.nombre }}</div>
+                                  <div v-if="producto.pivot?.modelo_id" class="small text-muted">
+                                    Modelo: {{ getModelName(producto.pivot.modelo_id, producto) }}
+                                  </div>
+                                  <div v-if="producto.pivot?.color" class="small text-muted">
+                                    Color: {{ producto.pivot.color }}
+                                  </div>
+                                  <div class="badge" :class="producto.pivot?.es_preventa ? 'bg-warning' : 'bg-info'">
+                                    {{ producto.pivot?.es_preventa ? 'Preventa' : 'Regular' }}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td class="text-center">{{ producto.pivot?.cantidad }}</td>
+                            <td class="text-end">
+                              {{ formatCurrency(producto.pivot?.es_preventa ? producto.pivot?.precio_preventa : producto.pivot?.precio) }}
+                            </td>
+                            <td class="text-end fw-medium">
+                              {{ formatCurrency((producto.pivot?.es_preventa ? producto.pivot?.precio_preventa : producto.pivot?.precio) * producto.pivot?.cantidad) }}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <!-- Columna 3: Resumen Financiero -->
+              <!-- Columna 3: Resumen Financiero Mejorado -->
               <div class="col-12 col-md-4">
                 <div class="card h-100 border-0 shadow-sm">
                   <div class="card-header bg-primary bg-opacity-10">
@@ -451,6 +452,7 @@
                     </span>
                   </div>
                   <div class="card-body">
+                    <!-- Alerta de estado de pago -->
                     <div class="alert" :class="detailOrder.pending > 0 ? 'alert-warning' : 'alert-success'" role="alert">
                       <div class="d-flex">
                         <div class="me-3">
@@ -463,23 +465,66 @@
                       </div>
                     </div>
                     
+                    <!-- Resumen financiero mejorado -->
                     <ul class="list-group list-group-flush">
+                      <!-- Subtotal (antes de descuentos) -->
                       <li class="list-group-item d-flex justify-content-between px-0">
-                        <span class="text-muted">Monto Total:</span>
-                        <span class="fw-bold">{{ formatCurrency(detailOrder.total_amount) }}</span>
+                        <span class="text-muted">Subtotal:</span>
+                        <span class="fw-medium">{{ formatCurrency(detailOrder.total_amount) }}</span>
                       </li>
+                      
+                      <!-- Información del cupón mejorada -->
+                      <li class="list-group-item px-0" v-if="detailOrder.cupon">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                          <span class="text-muted">Cupón Aplicado:</span>
+                          <div class="text-end">
+                            <div class="d-flex align-items-center">
+                              <span class="badge bg-info me-2">{{ detailOrder.cupon.codigo }}</span>
+                              <span class="badge" :class="detailOrder.cupon.tipo === 'porcentaje' ? 'bg-primary' : 'bg-success'">
+                                {{ detailOrder.cupon.tipo === 'porcentaje' ? 
+                                   detailOrder.cupon.descuento + '%' : 
+                                   'Bs. ' + detailOrder.cupon.descuento }}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <!-- Detalles del descuento -->
+                        <div class="discount-details p-2 mb-2 rounded" :class="detailOrder.cupon.tipo === 'porcentaje' ? 'bg-primary bg-opacity-10' : 'bg-success bg-opacity-10'">
+                          <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Tipo:</span>
+                            <span class="fw-medium">{{ detailOrder.cupon.tipo === 'porcentaje' ? 'Porcentaje' : 'Monto Fijo' }}</span>
+                          </div>
+                          <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Valor:</span>
+                            <span class="fw-medium">{{ detailOrder.cupon.tipo === 'porcentaje' ? 
+                              detailOrder.cupon.descuento + '%' : 
+                              formatCurrency(detailOrder.cupon.descuento) }}</span>
+                          </div>
+                          <div class="d-flex justify-content-between">
+                            <span class="text-muted">Descuento aplicado:</span>
+                            <span class="fw-medium text-danger">-{{ formatCurrency(calcularMontoDescuento()) }}</span>
+                          </div>
+                        </div>
+                      </li>
+                      
+                      <!-- Total después del descuento -->
+                      <li class="list-group-item d-flex justify-content-between px-0 fw-bold">
+                        <span class="text-muted">Total con descuento:</span>
+                        <span class="text-primary">{{ formatCurrency(detailOrder.total_amount - calcularMontoDescuento()) }}</span>
+                      </li>
+                      
+                      <!-- Desglose de pagos -->
                       <li class="list-group-item d-flex justify-content-between px-0">
                         <span class="text-muted">Monto Pagado:</span>
-                        <span class="fw-bold text-success">{{ formatCurrency(detailOrder.total_to_pay) }}</span>
+                        <span class="fw-medium text-success">{{ formatCurrency(detailOrder.total_to_pay) }}</span>
                       </li>
                       <li class="list-group-item d-flex justify-content-between px-0">
                         <span class="text-muted">Saldo Pendiente:</span>
-                        <span class="fw-bold text-danger">{{ formatCurrency(detailOrder.pending) }}</span>
+                        <span class="fw-medium text-danger">{{ formatCurrency(detailOrder.pending) }}</span>
                       </li>
-                      <li class="list-group-item d-flex justify-content-between px-0" v-if="detailOrder.cupon">
-                        <span class="text-muted">Cupón Aplicado:</span>
-                        <span class="badge bg-info">{{ detailOrder.cupon?.codigo }} ({{ detailOrder.cupon?.descuento }}%)</span>
-                      </li>
+                      
+                      <!-- Método de pago y estado -->
                       <li class="list-group-item d-flex justify-content-between px-0">
                         <span class="text-muted">Método de Pago:</span>
                         <span class="badge"
@@ -498,7 +543,7 @@
                 </div>
               </div>
               
-              <!-- Sección de Comprobante/Voucher -->
+              <!-- Sección de Comprobante/Voucher permanece igual -->
               <div class="col-12" v-if="detailOrder.payment_method === 'qr' && detailOrder.voucher">
                 <div class="card border-0 shadow-sm">
                   <div class="card-header bg-primary bg-opacity-10">
@@ -531,7 +576,7 @@
             </div>
           </div>
 
-          <!-- Pie del Modal -->
+          <!-- Pie del Modal permanece igual -->
           <div class="modal-footer">
             <div class="d-flex justify-content-between w-100">
               <div>
@@ -554,6 +599,7 @@
         </div>
       </div>
     </div>
+    
     
     <!-- Modal para ver el voucher en tamaño completo -->
     <div class="modal fade" id="voucherModal" tabindex="-1" aria-labelledby="voucherModalLabel" aria-hidden="true">
@@ -593,6 +639,7 @@
     </div>
   </div>
 </template>
+
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
@@ -784,6 +831,15 @@ const getVoucherUrl = (voucherPath) => {
   return voucherPath ? `/vouchers/${voucherPath}` : '';
 };
 
+const getProductImageUrl = (imagePath) => {
+  // Si la ruta ya es una URL completa, devolverla
+  if (imagePath && imagePath.startsWith('http')) {
+    return imagePath;
+  }
+  // Si no, construir la URL completa
+  return imagePath ? `/productos/${imagePath}` : '/placeholder.jpg';
+};
+
 const openVoucherModal = (voucherPath) => {
   currentVoucherUrl.value = getVoucherUrl(voucherPath);
   voucherModal.show();
@@ -935,7 +991,14 @@ const loadModels = async () => {
   }
 };
 
-const getModelName = (modeloId) => {
+const getModelName = (modeloId, producto) => {
+  // Primero buscar en los modelos del producto si están disponibles
+  if (producto.modelos && producto.modelos.length > 0) {
+    const modeloEnProducto = producto.modelos.find(m => m.id === modeloId);
+    if (modeloEnProducto) return modeloEnProducto.nombre;
+  }
+  
+  // Si no se encuentra en el producto, buscar en los modelos globales
   const model = models.value.find(m => m.id === modeloId);
   return model ? model.nombre : 'Desconocido';
 };
@@ -1025,9 +1088,37 @@ const showToast = (type, title, message) => {
   toastMessage.value = message;
   liveToast.show();
 };
+
+// Función mejorada para calcular el monto de descuento basada en la estructura de datos proporcionada
+const calcularMontoDescuento = () => {
+  if (!detailOrder.value.cupon) return 0;
+  
+  const subtotal = parseFloat(detailOrder.value.total_amount);
+  let discountAmount = 0;
+  
+  if (detailOrder.value.cupon.tipo === 'porcentaje') {
+    // Calcular descuento porcentual
+    discountAmount = (subtotal * parseFloat(detailOrder.value.cupon.descuento)) / 100;
+  } else {
+    // Descuento de monto fijo
+    discountAmount = parseFloat(detailOrder.value.cupon.descuento);
+  }
+  
+  // Asegurar que el descuento no exceda el monto total
+  return Math.min(discountAmount, subtotal);
+};
 </script>
 
 <style scoped>
+.badge {
+  font-size: 0.85rem;
+  padding: 0.35rem 0.65rem;
+}
+
+.text-danger {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
 .card {
   transition: box-shadow 0.3s ease-in-out;
 }
@@ -1257,6 +1348,278 @@ const showToast = (type, title, message) => {
   padding: 5px 8px;
   margin: 5px 0;
   border-radius: 0 4px 4px 0;
+}
+.badge {
+  font-size: 0.85rem;
+  padding: 0.35rem 0.65rem;
+}
+
+.text-danger {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.card {
+  transition: box-shadow 0.3s ease-in-out;
+}
+
+.hover-card {
+  transition: all 0.3s ease;
+}
+
+.hover-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.btn-group .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 767.98px) {
+  .btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .btn-group .btn {
+    width: 100%;
+  }
+}
+
+.list-group-item {
+  border-left: none;
+  border-right: none;
+  padding: 0.75rem 0;
+}
+
+.list-group-item:first-child {
+  border-top: none;
+}
+
+.list-group-item:last-child {
+  border-bottom: none;
+}
+
+.modal-header,
+.modal-footer {
+  padding: 1rem;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+/* Estilos para el voucher */
+.voucher-container {
+  max-width: 100%;
+  margin: 0 auto;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.voucher-container:hover {
+  transform: scale(1.02);
+}
+
+.voucher-image {
+  max-height: 300px;
+  object-fit: contain;
+}
+
+#voucherModal .modal-body {
+  background-color: #f8f9fa;
+  padding: 0;
+}
+
+#voucherModal img {
+  max-height: 80vh;
+}
+
+/* Estilos para los avatares */
+.avatar-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.avatar-circle-lg {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 28px;
+}
+
+.fw-medium {
+  font-weight: 500;
+}
+
+/* Estilos para la barra de estado del pedido */
+.order-status-bar {
+  position: relative;
+  padding: 0 20px;
+}
+
+.status-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #f8f9fa;
+  border: 2px solid #dee2e6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+}
+
+.status-circle.active {
+  background-color: #198754;
+  border-color: #198754;
+  color: white;
+}
+
+/* Estilos para paginación */
+.pagination {
+  margin-bottom: 0;
+}
+
+.page-item.active .page-link {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.page-link {
+  color: #0d6efd;
+}
+
+.page-link:hover {
+  color: #0a58ca;
+  background-color: #e9ecef;
+}
+
+/* Animaciones */
+.btn {
+  transition: all 0.2s ease-in-out;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Toast personalizado */
+.toast-header {
+  padding: 0.5rem 0.75rem;
+}
+
+.toast-header .btn-close {
+  filter: brightness(0) invert(1);
+}
+
+/* Estilos para el dropdown personalizado */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 1000;
+  display: none;
+  min-width: 10rem;
+  padding: 0.5rem 0;
+  margin: 0.125rem 0 0;
+  font-size: 1rem;
+  color: #212529;
+  text-align: left;
+  list-style: none;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 0.25rem;
+}
+
+.dropdown-menu.show {
+  display: block;
+}
+
+.dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 0.25rem 1.5rem;
+  clear: both;
+  font-weight: 400;
+  color: #212529;
+  text-align: inherit;
+  white-space: nowrap;
+  background-color: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.dropdown-item:hover, .dropdown-item:focus {
+  color: #16181b;
+  text-decoration: none;
+  background-color: #f8f9fa;
+}
+
+/* Estilos adicionales para la información de preventa */
+.preventa-info {
+  background-color: rgba(255, 193, 7, 0.1);
+  border-left: 3px solid #ffc107;
+  padding: 5px 8px;
+  margin: 5px 0;
+  border-radius: 0 4px 4px 0;
+}
+
+/* Estilos para los detalles del descuento */
+.discount-details {
+  border-left: 3px solid;
+  border-color: inherit;
+}
+
+.bg-primary.bg-opacity-10 .discount-details {
+  border-left-color: #0d6efd;
+}
+
+.bg-success.bg-opacity-10 .discount-details {
+  border-left-color: #198754;
+}
+
+/* Estilos para las imágenes de productos */
+.product-img-small {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f9fa;
+}
+
+.product-img-small img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 </style>
 

@@ -4,7 +4,10 @@
     <header class="checkout-header" :class="{ 'header-scrolled': isScrolled }">
       <div class="header-content">
         <div class="header-left">
-          <div class="logo-container">
+          <button @click="goBack" class="back-button" aria-label="Volver atrás">
+            <i class="fas fa-arrow-left"></i>
+          </button>
+          <div class="logo-container" @click="goToHome" role="button" tabindex="0">
             <img src="../../public/logo/Logo Neofetch PNG.png" alt="Logo de la empresa" class="company-logo" />
           </div>
         </div>
@@ -708,6 +711,15 @@ import Swal from 'sweetalert2';
 import { computed, ref, onMounted, watch, onBeforeUnmount } from 'vue';
 
 const router = useRouter();
+
+const goBack = () => {
+  router.go(-1);
+};
+
+const goToHome = () => {
+  router.push('/');
+};
+
 const cartStore = useCartStore();
 const themeStore = useThemeStore();
 const userData = ref({});
@@ -1201,6 +1213,30 @@ const formatPrice = (price) => {
   return price ? `${price.toLocaleString()} Bs` : '0 Bs';
 };
 
+/**
+ * Calcula el monto de descuento basado en el tipo y valor del descuento
+ * @param {number} totalAmount - Monto total antes del descuento
+ * @param {string} discountType - Tipo de descuento ('porcentaje' o 'fijo')
+ * @param {number} discountValue - Valor del descuento (porcentaje o monto fijo)
+ * @returns {number} - El monto de descuento calculado
+ */
+function calculateDiscountAmount(totalAmount, discountType, discountValue) {
+  if (!totalAmount || !discountValue) return 0;
+  
+  let discountAmount = 0;
+  
+  if (discountType === 'porcentaje') {
+    // Calcular descuento porcentual
+    discountAmount = (totalAmount * discountValue) / 100;
+  } else if (discountType === 'fijo') {
+    // Descuento de monto fijo
+    discountAmount = discountValue;
+  }
+  
+  // Asegurar que el descuento no exceda el monto total
+  return Math.min(discountAmount, totalAmount);
+}
+
 const applyCoupon = async () => {
   if (!cuponForm.value.codigo) {
     Swal.fire({
@@ -1214,12 +1250,30 @@ const applyCoupon = async () => {
   try {
     const response = await validateCuponBE(cuponForm.value);
     if (response.data.success) {
-      cartStore.applyCoupon(response.data.cupon);
-      couponMessage.value = `Cupón aplicado: ${response.data.cupon.codigo}`;
+      // Aplicar el cupón usando la función mejorada de cálculo de descuento
+      const cupon = response.data.cupon;
+      
+      // Calcular el monto de descuento usando la nueva función
+      const discountAmount = calculateDiscountAmount(
+        totalAmount.value,
+        cupon.tipo,
+        cupon.descuento
+      );
+      
+      // Actualizar el objeto del cupón con el monto calculado
+      const cuponConMontoCalculado = {
+        ...cupon,
+        montoCalculado: discountAmount
+      };
+      
+      // Aplicar el cupón al carrito
+      cartStore.applyCoupon(cuponConMontoCalculado);
+      
+      couponMessage.value = `Cupón aplicado: ${cupon.codigo}`;
       couponError.value = false;
       Swal.fire({
         title: "¡Éxito!",
-        text: `Cupón aplicado: ${response.data.cupon.codigo}`,
+        text: `Cupón aplicado: ${cupon.codigo}`,
         icon: "success",
         confirmButtonText: "Aceptar",
       });
@@ -1257,28 +1311,7 @@ const removeCoupon = () => {
   });
 };
 
-const finalizeOrder = async () => {
-  if (!isAuthenticated.value) {
-    Swal.fire({
-      title: "Iniciar sesión",
-      text: "Para finalizar tu pedido, te recomendamos iniciar sesión o registrarte. ¿Deseas continuar?",
-      icon: "info",
-      showCancelButton: true,
-      confirmButtonText: "Iniciar sesión",
-      cancelButtonText: "Continuar como invitado"
-    }).then((result) => {
-      if (result.isConfirmed) {
-        goToLogin();
-        return;
-      } else {
-        processOrder();
-      }
-    });
-  } else {
-    processOrder();
-  }
-};
-
+// Función mejorada para procesar el pedido
 const processOrder = async () => {
   if (items.value.length === 0) {
     Swal.fire({
@@ -1335,10 +1368,20 @@ const processOrder = async () => {
     if (producto.modeloId) formData.append(`productos[${index}][modelo_id]`, producto.modeloId);
     if (producto.color) formData.append(`productos[${index}][color]`, producto.color);
   });
-  formData.append('total_amount', totalAmount.value);
-  formData.append('total_to_pay', totalToPay.value);
-  formData.append('pending', pending.value);
-  formData.append('cupon_id', cartStore.cupon_id || '');
+  
+  // Usar el monto después del descuento como total_amount
+  formData.append('total_amount', cartStore.totalAfterDiscount);
+  formData.append('total_to_pay', cartStore.totalToPay);
+  formData.append('pending', cartStore.pending);
+  
+  // Información del descuento aplicado
+  if (cartStore.cupon_id) {
+    formData.append('cupon_id', cartStore.cupon_id);
+    formData.append('descuento_aplicado', cartStore.montoDescuento);
+    formData.append('tipo_descuento', cartStore.tipoDescuento);
+    formData.append('valor_descuento', cartStore.descuento);
+  }
+  
   formData.append('payment_method', paymentMethod.value);
   formData.append('is_guest', !isAuthenticated.value);
   if (paymentMethod.value === 'in-person' && selectedLocation.value) {
@@ -1368,7 +1411,18 @@ const processOrder = async () => {
             Swal.showLoading();
           }
         });
+        
+        // Mostrar en consola los valores que se están enviando (para depuración)
+        console.log('Enviando pedido con los siguientes valores:');
+        console.log('Total original:', cartStore.totalAmount);
+        console.log('Descuento aplicado:', cartStore.montoDescuento);
+        console.log('Total después del descuento:', cartStore.totalAfterDiscount);
+        console.log('Total a pagar (70%):', cartStore.totalToPay);
+        console.log('Pendiente (30%):', cartStore.pending);
+        
         const { data } = await storePedido(formData);
+        console.log('Respuesta del servidor:', data);
+        
         Swal.fire({
           title: "¡Pedido Finalizado!",
           text: "Tu pedido ha sido realizado con éxito.",
@@ -1653,7 +1707,38 @@ function updateQuantityWithoutPriceChange(product, newQuantity) {
   cartStore.removeFromCart(product.uniqueId);
   cartStore.addToCart(updatedProduct);
 }
-
+// Función finalizeOrder que llama a processOrder
+const finalizeOrder = async () => {
+  // Validaciones básicas antes de procesar el pedido
+  if (items.value.length === 0) {
+    Swal.fire({
+      title: "Advertencia",
+      text: "Tu carrito está vacío. Agrega productos antes de finalizar el pedido.",
+      icon: "warning",
+      confirmButtonText: "Aceptar",
+    });
+    return;
+  }
+  
+  if (!isPaymentValid.value) {
+    let warningMessage = "Por favor, selecciona un método de pago.";
+    if (paymentMethod.value === 'qr') {
+      warningMessage = "Por favor, sube el comprobante de pago antes de finalizar el pedido.";
+    } else if (paymentMethod.value === 'in-person' && !selectedLocation.value) {
+      warningMessage = "Por favor, selecciona una ubicación para el pago en instalaciones.";
+    }
+    Swal.fire({
+      title: "Método de pago incompleto",
+      text: warningMessage,
+      icon: "warning",
+      confirmButtonText: "Entendido",
+    });
+    return;
+  }
+  
+  // Llamar a processOrder que ya tiene la lógica para enviar el total con descuento
+  await processOrder();
+};
 function showToast(message, type = 'info') {
   Swal.fire({
     toast: true,
@@ -1745,6 +1830,7 @@ body {
   margin-bottom: 20px;
   padding: clamp(10px, 3vw, 15px);
   transition: all 0.3s ease;
+  width: 100%;
 }
 
 .header-scrolled {
@@ -1763,7 +1849,8 @@ body {
 .header-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  width: 100%;
+  justify-content: flex-start;
 }
 
 .actions-container {
@@ -4128,6 +4215,114 @@ input:focus~.input-focus-indicator {
     scroll-behavior: auto !important;
   }
 }
+
+/* Back Button Styles */
+.back-button {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  margin-right: 10px;
+}
+
+.back-button:hover {
+  background-color: rgba(0, 123, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.back-button:active {
+  transform: translateY(0);
+}
+
+/* Make logo clickable */
+.logo-container {
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.logo-container:hover {
+  transform: scale(1.05);
+}
+
+/* Improve mobile header layout */
+@media (max-width: 768px) {
+  .header-left {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: flex-start;
+  }
+  
+  .company-logo {
+    height: 30px;
+  }
+  
+  .back-button {
+    font-size: 18px;
+  }
+}
+
+/* Improved mobile UX */
+@media (max-width: 480px) {
+  .checkout-container {
+    padding-bottom: 80px;
+  }
+  
+  .step-header {
+    padding: 12px 8px;
+  }
+  
+  .step-header-left {
+    gap: 10px;
+  }
+  
+  .step-number-wrapper {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+  }
+  
+  .toggle-summary-btn, 
+  .mobile-nav-btn,
+  .quantity-btn,
+  .remove-btn {
+    min-height: 48px;
+    min-width: 48px;
+  }
+  
+  .mobile-nav-controls {
+    padding: 12px;
+  }
+  
+  .nav-buttons-container {
+    gap: 12px;
+  }
+  
+  /* Improve form inputs for mobile */
+  .responsive-input {
+    font-size: 16px;
+    padding: 14px 14px 14px 45px;
+  }
+  
+  /* Improve scrolling experience */
+  .mini-cart-scroll {
+    -webkit-overflow-scrolling: touch;
+    scroll-padding: 10px;
+  }
+  
+  /* Better tap targets */
+  .payment-option-header,
+  .location-option {
+    padding: 12px;
+  }
+}
 </style>
 
 <style>
@@ -4332,3 +4527,4 @@ input:focus~.input-focus-indicator {
   }
 }
 </style>
+

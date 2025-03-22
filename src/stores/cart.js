@@ -3,12 +3,6 @@ import { ref, computed } from 'vue';
 
 /**
  * Store de Pinia para gestionar el carrito de compras
- * Implementa todas las funcionalidades relacionadas con el carrito:
- * - Agregar/eliminar productos
- * - Actualizar cantidades
- * - Aplicar cupones de descuento
- * - Calcular totales
- * - Manejar precios de preventa
  */
 export const useCartStore = defineStore('cart', () => {
   // ===== ESTADO DEL CARRITO =====
@@ -33,6 +27,10 @@ export const useCartStore = defineStore('cart', () => {
     const savedCart = localStorage.getItem("cart");
     return savedCart ? JSON.parse(savedCart) : [];
   }
+  // Propiedad computada que calcula el número de productos únicos en el carrito
+  const uniqueItemCount = computed(() => {
+    return productos.value.length; // Devuelve la cantidad de productos únicos
+  });
 
   // ===== PROPIEDADES CALCULADAS (GETTERS) =====
   const totalItems = computed(() => {
@@ -86,7 +84,6 @@ export const useCartStore = defineStore('cart', () => {
 
   /**
    * Añade un producto al carrito o actualiza su cantidad si ya existe
-   * SOLUCIÓN: Completamente reescrita para preservar correctamente las propiedades de imagen
    * @param {Object} product - Producto a añadir
    */
   function addToCart(product) {
@@ -162,6 +159,30 @@ export const useCartStore = defineStore('cart', () => {
   }
 
   /**
+   * Calcula el monto de descuento basado en el tipo y valor del descuento
+   * @param {number} totalAmount - Monto total antes del descuento
+   * @param {string} discountType - Tipo de descuento ('porcentaje' o 'fijo')
+   * @param {number} discountValue - Valor del descuento (porcentaje o monto fijo)
+   * @returns {number} - El monto de descuento calculado
+   */
+  function calculateDiscountAmount(totalAmount, discountType, discountValue) {
+    if (!totalAmount || !discountValue) return 0;
+    
+    let discountAmount = 0;
+    
+    if (discountType === 'porcentaje') {
+      // Calcular descuento porcentual
+      discountAmount = (totalAmount * discountValue) / 100;
+    } else if (discountType === 'fijo') {
+      // Descuento de monto fijo
+      discountAmount = discountValue;
+    }
+    
+    // Asegurar que el descuento no exceda el monto total
+    return Math.min(discountAmount, totalAmount);
+  }
+
+  /**
    * Aplica un cupón de descuento
    * @param {Object} cupon - Cupón a aplicar
    */
@@ -169,6 +190,7 @@ export const useCartStore = defineStore('cart', () => {
     cuponAplicado.value = cupon;
     cupon_id.value = cupon.id;
     tipoDescuento.value = cupon.tipo;
+    descuento.value = cupon.descuento;
     recalcularDescuento();
   }
 
@@ -195,16 +217,21 @@ export const useCartStore = defineStore('cart', () => {
       return;
     }
 
+    // Usar la función mejorada para calcular el descuento
+    montoDescuento.value = calculateDiscountAmount(
+      totalAmount.value,
+      cuponAplicado.value.tipo,
+      cuponAplicado.value.descuento
+    );
+
+    // Calcular el porcentaje equivalente para mostrar en la UI
     if (cuponAplicado.value.tipo === "porcentaje") {
-      montoDescuento.value = (totalAmount.value * cuponAplicado.value.descuento) / 100;
       montoPorcentaje.value = cuponAplicado.value.descuento;
-      descuento.value = cuponAplicado.value.descuento;
     } else if (cuponAplicado.value.tipo === "fijo") {
-      montoDescuento.value = Math.min(cuponAplicado.value.descuento, totalAmount.value);
-      montoPorcentaje.value = (montoDescuento.value / totalAmount.value) * 100;
-      descuento.value = cuponAplicado.value.descuento;
+      montoPorcentaje.value = totalAmount.value > 0 ? (montoDescuento.value / totalAmount.value) * 100 : 0;
     }
 
+    // Asegurar que el descuento nunca exceda el monto total
     montoDescuento.value = Math.min(montoDescuento.value, totalAmount.value);
   }
 
@@ -315,6 +342,7 @@ export const useCartStore = defineStore('cart', () => {
     totalAfterDiscount,
     totalToPay,
     pending,
+    uniqueItemCount,
     
     // Métodos
     addToCart,
@@ -323,6 +351,7 @@ export const useCartStore = defineStore('cart', () => {
     clearCart,
     applyCoupon,
     removeCoupon,
+    calculateDiscountAmount,
     
     // Propiedades de descuento
     descuento,

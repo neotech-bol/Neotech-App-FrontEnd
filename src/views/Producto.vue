@@ -1,24 +1,26 @@
 <template>
   <div class="product-detail">
-    <!-- Cabecera Móvil -->
+    <!-- Cabecera Móvil Mejorada -->
     <div class="mobile-header">
       <div class="mobile-nav">
         <button class="back-button" @click="goBack" aria-label="Volver">
           <i class="fas fa-arrow-left"></i>
         </button>
-        <div class="badge-container">
-          <span v-if="isNewProduct" class="new-badge">
-            <i class="fas fa-star"></i> NUEVO
-          </span>
-        </div>
+<!--         <div class="logo-container" @click="goToHome">
+          <img src="/logo.png" alt="Logo" class="logo-img" />
+        </div> -->
+        <button class="mobile-share-button-header" @click="shareProduct" aria-label="Compartir producto">
+          <i class="fas fa-share-alt"></i>
+        </button>
       </div>
+      
+      <div class="badge-container">
+        <span v-if="isNewProduct" class="new-badge">
+          <i class="fas fa-star"></i> NUEVO
+        </span>
+      </div>
+      
       <h1 class="product-title">{{ dato.nombre }}</h1>
-
-      <!-- Vista rápida de precio para móvil - Mejorada -->
-      <div class="mobile-price-preview">
-        <span class="current-price">{{ formatPrice(selectedPrice) }}</span>
-        <span v-if="originalPrice > selectedPrice" class="original-price">{{ formatPrice(originalPrice) }}</span>
-      </div>
     </div>
 
     <div class="product-container">
@@ -29,13 +31,7 @@
           <div class="main-image-container" @mousemove="handleImageZoom" @mouseleave="resetZoom"
             @touchstart="handleTouchStart" @touchmove="handleTouchMove" @touchend="resetZoom">
             <img :src="currentImage" :alt="dato.nombre" class="main-image-img" ref="mainImage">
-            <div class="image-overlay">
-              <span class="zoom-hint">
-                <i class="fas fa-search-plus"></i>
-                <span>Zoom</span>
-              </span>
-            </div>
-
+            
             <!-- Flechas de Navegación de Imágenes -->
             <button class="image-nav prev" @click="prevImage" v-if="allImages.length > 1" aria-label="Imagen anterior">
               <i class="fas fa-chevron-left"></i>
@@ -59,7 +55,6 @@
             <div v-for="(image, index) in allImages" :key="index"
               :class="['thumbnail', { active: selectedImage === index }]" @click="selectThumbnail(index)">
               <img :src="image" :alt="`Vista ${index + 1} de ${dato.nombre}`" loading="lazy">
-              <div class="thumbnail-overlay"></div>
             </div>
           </div>
         </div>
@@ -81,120 +76,48 @@
         <h2 class="product-subtitle mobile-only">{{ dato.subtitulo || 'Producto de Alta Calidad' }}</h2>
 
         <div class="info-content">
-          <!-- Indicador de Tipo de Precio Actual - Más compacto -->
-          <div class="current-price-type">
-            <div class="price-type-badge" :class="{ 'preventa': isPreventaActive, 'regular': !isPreventaActive }">
+          <!-- Precio Unificado - Más limpio -->
+          <div class="unified-price-display">
+            <div class="price-badge" :class="{ 'preventa': isPreventaActive, 'regular': !isPreventaActive }">
               <i class="fas" :class="isPreventaActive ? 'fa-bolt' : 'fa-tag'"></i>
-              <span>{{ isPreventaActive ? 'Precio de Preventa' : 'Precio Regular' }}</span>
+              <span>{{ isPreventaActive ? 'Preventa' : 'Regular' }}</span>
             </div>
+            
             <div class="price-value-display">
               <span class="price-value">{{ formatPrice(selectedPrice) }}</span>
+              <span v-if="originalPrice > selectedPrice" class="original-price">{{ formatPrice(originalPrice) }}</span>
+              <span v-if="originalPrice > selectedPrice" class="discount-percentage">
+                -{{ Math.round((1 - selectedPrice/originalPrice) * 100) }}%
+              </span>
             </div>
-            <div class="quantity-limits-display">
-              <span class="quantity-limit">
-                <i class="fas fa-arrow-down"></i> Mín: <strong>{{ minQuantity }}</strong>
-              </span>
-              <span class="quantity-limit">
-                <i class="fas fa-arrow-up"></i> Máx: <strong>{{ maxQuantity }}</strong>
-              </span>
+            
+            <div class="quantity-range">
+              <span class="range-label">Rango: </span>
+              <span class="range-value">{{ minQuantity }} - {{ maxQuantity }} unidades</span>
             </div>
           </div>
 
-          <!-- MEJORADO: Resumen de Precios - Cajas lado a lado más compactas -->
-          <div class="pricing-overview">
-            <div class="pricing-boxes-container">
-              <!-- Caja de Precio de Preventa - Más compacta -->
-              <div class="preventa-box" v-if="hasPreventaPrice">
-                <div class="preventa-header">
-                  <i class="fas fa-bolt"></i> Preventa
-                </div>
-                <div class="preventa-content">
-                  <div class="price-info-row">
-                    <span class="preventa-price-value">{{ formatPrice(preventaPrice) }}</span>
-                    <div class="preventa-limits">
-                      <span>Mín: <strong>{{ cantidadMinimaPreventa }}</strong></span>
-                      <span>Máx: <strong>{{ cantidadMaximaPreventa }}</strong></span>
-                    </div>
-                  </div>
-                  <button class="apply-preventa-btn" @click="applyPreventaPrice" :disabled="isPreventaActive">
-                    <i class="fas" :class="isPreventaActive ? 'fa-check' : 'fa-bolt'"></i>
-                    {{ isPreventaActive ? 'Aplicado' : 'Usar' }}
-                  </button>
-                </div>
-              </div>
-
-              <!-- Caja de Precio Regular - Más compacta -->
-              <div class="regular-box">
-                <div class="regular-header">
-                  <i class="fas fa-tag"></i> Regular
-                </div>
-                <div class="regular-content">
-                  <div class="price-info-row">
-                    <span class="regular-price-value">{{ formatPrice(regularPrice) }}</span>
-                    <div class="regular-limits">
-                      <span>Mín: <strong>{{ cantidadMinima }}</strong></span>
-                      <span>Máx: <strong>{{ cantidadMaxima }}</strong></span>
-                    </div>
-                  </div>
-                  <button v-if="isPreventaActive" class="apply-regular-btn" @click="applyRegularPrice">
-                    <i class="fas fa-tag"></i> Usar
-                  </button>
-                </div>
-              </div>
+          <!-- Selector de Tipo de Precio - Simplificado -->
+          <div class="price-type-selector" v-if="hasPreventaPrice && canSwitchToRegular(regularPrice)">
+            <div class="price-tabs">
+              <button 
+                @click="applyRegularPrice" 
+                :class="['price-tab', { 'active': !isPreventaActive }]"
+                aria-pressed="!isPreventaActive">
+                <i class="fas fa-tag"></i> Regular
+              </button>
+              <button 
+                @click="applyPreventaPrice" 
+                :class="['price-tab', { 'active': isPreventaActive }]"
+                aria-pressed="isPreventaActive">
+                <i class="fas fa-bolt"></i> Preventa
+              </button>
             </div>
           </div>
 
           <!-- Secciones de Acordeón para Móvil -->
           <div class="accordion-sections">
-            <!-- Sección de Precio para Móvil - Mejorada -->
-            <div class="accordion-section price-accordion" :class="{ 'expanded': expandedSection === 'price' }">
-              <div class="accordion-header" @click="toggleSection('price')">
-                <h3 class="section-title">Precio</h3>
-                <div class="mobile-price-info">
-                  <span class="current-price">{{ formatPrice(selectedPrice) }}</span>
-                  <i class="fas" :class="expandedSection === 'price' ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-                </div>
-              </div>
-              <div class="accordion-content">
-                <!-- MEJORADO: Precios en móvil lado a lado más compactos -->
-                <div class="mobile-prices-container">
-                  <!-- Sección de precio de preventa para móvil -->
-                  <div class="preventa-price-info mobile-preventa" v-if="hasPreventaPrice">
-                    <div class="mobile-price-header">
-                      <div class="preventa-badge">
-                        <i class="fas fa-bolt"></i> Preventa
-                      </div>
-                      <span class="preventa-price">{{ formatPrice(preventaPrice) }}</span>
-                    </div>
-                    <div class="mobile-price-details">
-                      <span>{{ cantidadMinimaPreventa }}-{{ cantidadMaximaPreventa }}</span>
-                      <button class="apply-preventa-btn-mobile" @click="applyPreventaPrice" :disabled="isPreventaActive">
-                        <i class="fas" :class="isPreventaActive ? 'fa-check' : 'fa-bolt'"></i>
-                        {{ isPreventaActive ? 'Aplicado' : 'Usar' }}
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- Sección de precio regular para móvil -->
-                  <div class="regular-price-info mobile-regular">
-                    <div class="mobile-price-header">
-                      <div class="regular-badge">
-                        <i class="fas fa-tag"></i> Regular
-                      </div>
-                      <span class="regular-price">{{ formatPrice(regularPrice) }}</span>
-                    </div>
-                    <div class="mobile-price-details">
-                      <span>{{ cantidadMinima }}-{{ cantidadMaxima }}</span>
-                      <button v-if="isPreventaActive" class="apply-regular-btn-mobile" @click="applyRegularPrice">
-                        <i class="fas fa-tag"></i> Usar
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Sección de Características - Más compacta -->
+            <!-- Sección de Características -->
             <div class="accordion-section" :class="{ 'expanded': expandedSection === 'features' }">
               <div class="accordion-header" @click="toggleSection('features')">
                 <h3 class="section-title">Características</h3>
@@ -202,9 +125,7 @@
               </div>
               <div class="accordion-content">
                 <ul class="features">
-                  <li v-for="caracteristica in visibleCaracteristicas" :key="caracteristica.id" class="feature-item"
-                    :class="{ 'feature-hover': hoveredFeature === caracteristica.id }"
-                    @mouseover="hoveredFeature = caracteristica.id" @mouseleave="hoveredFeature = null">
+                  <li v-for="caracteristica in visibleCaracteristicas" :key="caracteristica.id" class="feature-item">
                     <i class="fas fa-check-circle"></i>
                     <span>{{ caracteristica.caracteristica }}</span>
                   </li>
@@ -216,7 +137,7 @@
               </div>
             </div>
 
-            <!-- Colores Disponibles - Más compacto -->
+            <!-- Colores Disponibles -->
             <div v-if="hasColors" class="accordion-section" :class="{ 'expanded': expandedSection === 'colors' }">
               <div class="accordion-header" @click="toggleSection('colors')">
                 <h3 class="section-title">Colores</h3>
@@ -239,7 +160,7 @@
               </div>
             </div>
 
-            <!-- Selección de Modelo - Más compacto -->
+            <!-- Selección de Modelo -->
             <div v-if="dato.modelos && dato.modelos.length > 0" class="accordion-section"
               :class="{ 'expanded': expandedSection === 'models' }">
               <div class="accordion-header" @click="toggleSection('models')">
@@ -251,20 +172,10 @@
                   <button v-for="model in dato.modelos" :key="model.id"
                     :class="['model-card', { active: selectedModel === model.id }]" @click="selectModel(model)">
                     <span class="model-name">{{ model.nombre }}</span>
-                    <div class="model-prices">
-                      <span class="model-price">{{ formatPrice(model.precio) }}</span>
-                      <span class="model-preventa-price" v-if="model.precio_preventa">
-                        {{ formatPrice(model.precio_preventa) }}
-                      </span>
-                    </div>
-                    <div class="model-limits">
-                      <div class="model-regular-limits">
-                        {{ model.cantidad_minima || 1 }}-{{ model.cantidad_maxima || 10 }}
-                      </div>
-                      <div class="model-stock" v-if="model.cantidad_maxima <= 5">
-                        <i class="fas fa-exclamation-circle"></i>
-                        Últimas unidades
-                      </div>
+                    <div class="model-price">{{ formatPrice(model.precio) }}</div>
+                    <div class="model-stock" v-if="model.cantidad_maxima <= 5">
+                      <i class="fas fa-exclamation-circle"></i>
+                      Últimas unidades
                     </div>
                   </button>
                 </div>
@@ -272,7 +183,7 @@
             </div>
           </div>
 
-          <!-- Sección de Características para Escritorio - Más compacta -->
+          <!-- Sección de Características para Escritorio -->
           <div class="features-section desktop-only">
             <h3 class="section-title">Características</h3>
             <ul class="features">
@@ -289,7 +200,7 @@
             </button>
           </div>
 
-          <!-- Sección de Colores para Escritorio - Más compacta -->
+          <!-- Sección de Colores para Escritorio -->
           <div v-if="hasColors" class="color-section desktop-only">
             <h3 class="section-title">Colores</h3>
             <div class="color-options">
@@ -307,39 +218,26 @@
             </div>
           </div>
 
-          <!-- Selección de Modelo para Escritorio - Más compacta -->
+          <!-- Selección de Modelo para Escritorio -->
           <div v-if="dato.modelos && dato.modelos.length > 0" class="model-section desktop-only">
             <h3 class="section-title">Modelos</h3>
             <div class="model-grid">
               <button v-for="model in dato.modelos" :key="model.id"
                 :class="['model-card', { active: selectedModel === model.id }]" @click="selectModel(model)">
                 <span class="model-name">{{ model.nombre }}</span>
-                <div class="model-prices">
-                  <span class="model-price">{{ formatPrice(model.precio) }}</span>
-                  <span class="model-preventa-price" v-if="model.precio_preventa">
-                    {{ formatPrice(model.precio_preventa) }}
-                  </span>
-                </div>
-                <div class="model-limits">
-                  <div class="model-regular-limits">
-                    {{ model.cantidad_minima || 1 }}-{{ model.cantidad_maxima || 10 }}
-                  </div>
-                  <div class="model-stock" v-if="model.cantidad_maxima <= 5">
-                    <i class="fas fa-exclamation-circle"></i>
-                    Últimas unidades
-                  </div>
+                <div class="model-price">{{ formatPrice(model.precio) }}</div>
+                <div class="model-stock" v-if="model.cantidad_maxima <= 5">
+                  <i class="fas fa-exclamation-circle"></i>
+                  Últimas unidades
                 </div>
               </button>
             </div>
           </div>
 
-          <!-- Sección de cantidad - Más compacta -->
+          <!-- Sección de cantidad -->
           <div class="quantity-section">
             <div class="quantity-header">
               <span class="quantity-label">Cantidad:</span>
-              <span class="quantity-limits">
-                Mín: {{ minQuantity }} | Máx: {{ maxQuantity }}
-              </span>
             </div>
             <div class="quantity-controls">
               <button @click="decreaseQuantity" :disabled="quantity <= minQuantity" class="quantity-btn"
@@ -361,21 +259,17 @@
             </div>
           </div>
 
-          <!-- Sección de Compra - Más compacta -->
+          <!-- Sección de Compra -->
           <div class="purchase-section">
             <div class="action-buttons">
               <button class="add-to-cart" @click="addToCart" :disabled="addingToCart"
                 :class="{ 'loading': addingToCart }" aria-label="Agregar al carrito">
                 <i class="fas" :class="addingToCart ? 'fa-spinner fa-spin' : 'fa-shopping-cart'"></i>
                 <span>{{ addingToCart ? 'Agregando...' : 'Agregar al carrito' }}</span>
-                <span class="btn-shine"></span>
               </button>
               <button class="add-to-wishlist" :class="{ 'in-wishlist': isInWishlist }" @click="toggleWishlist"
                 aria-label="Agregar a favoritos">
                 <i class="fas" :class="isInWishlist ? 'fa-heart' : 'fa-heart'"></i>
-                <div class="tooltip">
-                  {{ isInWishlist ? 'Quitar de favoritos' : 'Agregar a favoritos' }}
-                </div>
               </button>
             </div>
           </div>
@@ -383,7 +277,7 @@
       </div>
     </div>
 
-    <!-- Calificaciones - Más compactas -->
+    <!-- Calificaciones -->
     <div class="rating-section" v-if="dato.id">
       <h2 class="section-title">
         Calificaciones y <span class="text-accent">Opiniones</span>
@@ -446,13 +340,13 @@
       </div>
     </div>
 
-    <!-- Productos Similares - Más compactos -->
+    <!-- Productos Similares -->
     <div class="similar-products-section" v-if="productosSimilares.length > 0">
       <h2 class="section-title">
         Productos <span class="text-accent">Similares</span>
       </h2>
 
-      <!-- Cuadrícula de Productos - Más compacta -->
+      <!-- Cuadrícula de Productos -->
       <div class="products-grid">
         <div v-for="(product, index) in productosSimilares" :key="product.id" class="product-card"
           :style="{ '--index': index }" @click="navegarAProducto(product.id)">
@@ -499,7 +393,7 @@
               </div>
             </div>
           </div>
-          <!-- Información del Producto - Más compacta -->
+          <!-- Información del Producto -->
           <div class="product-info-card">
             <div class="category">
               <i class="fas fa-tag"></i> {{ product.categoria?.nombre || 'Sin categoría' }}
@@ -530,10 +424,9 @@
       </div>
     </div>
 
-    <!-- Barra Fija de Agregar al Carrito para Móvil - Más compacta -->
+    <!-- Barra Fija de Agregar al Carrito para Móvil -->
     <div class="mobile-sticky-bar">
       <div class="mobile-price">
-        <div class="mobile-product-name">{{ dato.nombre }}</div>
         <div class="price-container">
           <span class="current-price">{{ formatPrice(selectedPrice) }}</span>
           <span class="original-price" v-if="originalPrice > selectedPrice">{{ formatPrice(originalPrice) }}</span>
@@ -711,18 +604,15 @@ const maxQuantity = computed(() => {
   return isPreventaActive.value ? cantidadMaximaPreventa.value : cantidadMaxima.value;
 });
 
-// Calcular porcentaje de descuento
-const calcularDescuento = (precioOriginal, precioFinal) => {
-  if (precioOriginal <= 0 || precioFinal <= 0) return 0;
-  const descuento = ((precioOriginal - precioFinal) / precioOriginal) * 100;
-  return Math.round(descuento);
+// Verificar si se puede cambiar a precio regular
+const canSwitchToRegular = (price) => {
+  return price > 0 && cantidadMinima.value > 0 && cantidadMaxima.value > 0;
 };
 
 // Obtener la etiqueta correspondiente a una calificación
 const getRatingLabel = (rating) => {
   return ratingLabels[rating] || '';
 };
-
 // Aplicar precio de preventa manualmente
 const applyPreventaPrice = () => {
   if (hasPreventaPrice.value) {
@@ -862,23 +752,6 @@ const shouldShowMoreButton = computed(() => {
 const toggleShowAllFeatures = (event) => {
   if (event) event.stopPropagation();
   showAllFeatures.value = !showAllFeatures.value;
-};
-
-// Animar elementos al cargar
-const animateElements = () => {
-  const elements = document.querySelectorAll('.product-detail .animate-on-load');
-  elements.forEach((el, index) => {
-    setTimeout(() => {
-      el.classList.add('animated');
-    }, index * 100);
-  });
-};
-
-// Verificar si se necesitan botones de desplazamiento para miniaturas
-const checkThumbnailScroll = () => {
-  if (!thumbnailScroll.value) return;
-  const container = thumbnailScroll.value.querySelector('.thumbnail-container');
-  showScrollButtons.value = container.scrollWidth > container.clientWidth;
 };
 
 // Seleccionar un modelo
@@ -1237,7 +1110,6 @@ const navegarAProducto = async (productId) => {
 
     // Animar elementos después de cargar
     nextTick(() => {
-      animateElements();
       document.querySelector('.product-detail')?.classList.add('loaded');
       window.scrollTo(0, 0); // Desplazar al inicio
     });
@@ -1256,18 +1128,6 @@ const goBack = () => {
 
 const goToHome = () => {
   router.push('/');
-};
-
-const goToSearch = () => {
-  router.push('/buscar');
-};
-
-const goToCategories = () => {
-  router.push('/categorias');
-};
-
-const goToCart = () => {
-  router.push('/carrito');
 };
 
 const shareProduct = async () => {
@@ -1348,7 +1208,6 @@ const storeFavorite = async (data) => {
 const verProducto = async () => {
   try {
     const { data } = await detalleProducto(route.params.idProducto);
-    console.log('Datos del producto:', data);
     dato.value = data.dato;
     
     // Inicializar precio original con el precio del producto principal
@@ -1371,11 +1230,6 @@ const verProducto = async () => {
     
     // Validar la cantidad inicial
     validateQuantity();
-
-    // Animar elementos después de cargar
-    nextTick(() => {
-      animateElements();
-    });
 
     // Cargar calificaciones de usuarios
     indexRatingUser();
@@ -1407,10 +1261,7 @@ onMounted(() => {
   }, 100);
 
   if (window.innerWidth <= 768) {
-    expandedSection.value = 'price'; // Mostrar sección de precio por defecto en móvil
-    // Mostrar el mobile header
-    const mobileHeader = document.querySelector('.mobile-header');
-    if (mobileHeader) mobileHeader.style.display = 'block';
+    expandedSection.value = 'features'; // Mostrar sección de características por defecto en móvil
   }
 
   // Si ya tenemos un ID de producto, cargar las estadísticas de calificación
@@ -1425,6 +1276,13 @@ onMounted(() => {
     }
   }, 5000);
 });
+
+// Verificar si se necesitan botones de desplazamiento para miniaturas
+const checkThumbnailScroll = () => {
+  if (!thumbnailScroll.value) return;
+  const container = thumbnailScroll.value.querySelector('.thumbnail-container');
+  showScrollButtons.value = container.scrollWidth > container.clientWidth;
+};
 
 // Al desmontar el componente
 onUnmounted(() => {
@@ -1481,7 +1339,7 @@ const storeRatingUser = async (productId, rating) => {
 
 /* Estilos Base */
 .product-detail {
-  padding: 2rem 1.5rem;
+  padding: 1rem;
   min-height: 100vh;
   opacity: 0;
   animation: fadeIn 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
@@ -1512,23 +1370,23 @@ const storeRatingUser = async (productId, rating) => {
   display: none;
 }
 
-/* Indicador de Tipo de Precio Actual - Más compacto */
-.current-price-type {
+/* Precio Unificado - Más limpio */
+.unified-price-display {
   background: #f8f9fa;
   border-radius: 0.75rem;
-  padding: 0.75rem;
+  padding: 1rem;
   margin-bottom: 1rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   border-left: 4px solid #2ecc71;
   transition: all 0.3s ease;
 }
 
-.current-price-type:hover {
+.unified-price-display:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.price-type-badge {
+.price-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -1540,15 +1398,18 @@ const storeRatingUser = async (productId, rating) => {
   color: white;
 }
 
-.price-type-badge.preventa {
+.price-badge.preventa {
   background: #3498db;
 }
 
-.price-type-badge.regular {
+.price-badge.regular {
   background: #2ecc71;
 }
 
 .price-value-display {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   margin-bottom: 0.5rem;
 }
 
@@ -1556,23 +1417,15 @@ const storeRatingUser = async (productId, rating) => {
   font-size: 1.5rem;
   font-weight: 700;
   color: #333;
-  display: block;
 }
 
-.price-original {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.25rem;
-}
-
-.original-value {
+.original-price {
   color: #999;
   text-decoration: line-through;
   font-size: 0.9rem;
 }
 
-.discount-tag {
+.discount-percentage {
   background: #ff4444;
   color: white;
   padding: 0.25rem 0.5rem;
@@ -1581,181 +1434,58 @@ const storeRatingUser = async (productId, rating) => {
   font-weight: 600;
 }
 
-.quantity-limits-display {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.quantity-limit {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.quantity-range {
   font-size: 0.8rem;
   color: #666;
 }
 
-.quantity-limit i {
-  color: #3498db;
+.range-label {
+  font-weight: 600;
 }
 
-/* MEJORADO: Resumen de Precios - Cajas lado a lado más compactas */
-.pricing-overview {
-  margin-bottom: 1rem;
-  border-radius: 0.75rem;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+/* Selector de Tipo de Precio - Simplificado */
+.price-type-selector {
+  margin-bottom: 1.5rem;
 }
 
-.pricing-boxes-container {
+.price-tabs {
   display: flex;
-  flex-direction: row;
-  gap: 0.5rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 0.5rem;
+  overflow: hidden;
 }
 
-.preventa-box,
-.regular-box {
+.price-tab {
   flex: 1;
-  border-radius: 0.5rem;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.preventa-box {
-  border: 1px solid #3498db;
-}
-
-.regular-box {
-  border: 1px solid #2ecc71;
-}
-
-.preventa-header,
-.regular-header {
-  padding: 0.5rem 0.75rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: white;
-  font-size: 0.9rem;
-}
-
-.preventa-header {
-  background: #3498db;
-}
-
-.regular-header {
-  background: #2ecc71;
-}
-
-.preventa-content,
-.regular-content {
   padding: 0.75rem;
-  background: white;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.price-info-row {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.preventa-price-value,
-.regular-price-value {
-  font-size: 1.25rem;
-  font-weight: 700;
-  text-align: center;
-}
-
-.preventa-price-value {
-  color: #3498db;
-}
-
-.regular-price-value {
-  color: #2ecc71;
-}
-
-.preventa-limits,
-.regular-limits {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.7rem;
-  color: #666;
-  text-align: center;
-}
-
-.apply-preventa-btn,
-.apply-regular-btn,
-.apply-preventa-btn-mobile,
-.apply-regular-btn-mobile {
-  padding: 0.4rem 0.75rem;
+  background: #f8f9fa;
   border: none;
-  border-radius: 0.5rem;
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
   justify-content: center;
-  width: 100%;
-}
-
-.apply-preventa-btn,
-.apply-preventa-btn-mobile {
-  background: #3498db;
-  color: white;
-}
-
-.apply-regular-btn,
-.apply-regular-btn-mobile {
-  background: #2ecc71;
-  color: white;
-}
-
-.apply-preventa-btn:hover:not(:disabled),
-.apply-regular-btn:hover:not(:disabled),
-.apply-preventa-btn-mobile:hover:not(:disabled),
-.apply-regular-btn-mobile:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.apply-preventa-btn:disabled,
-.apply-preventa-btn-mobile:disabled {
-  background: #a8d4f5;
-  cursor: not-allowed;
-}
-
-.apply-preventa-btn-mobile,
-.apply-regular-btn-mobile {
-  margin-top: 0.5rem;
-  width: 100%;
-  padding: 0.4rem;
-  font-size: 0.75rem;
-}
-
-/* MEJORADO: Precios en móvil lado a lado más compactos */
-.mobile-prices-container {
-  display: flex;
-  flex-direction: row;
   gap: 0.5rem;
 }
 
-.mobile-preventa,
-.mobile-regular {
-  flex: 1;
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
-  padding: 0.5rem;
+.price-tab.active {
+  background: white;
+  box-shadow: inset 0 -2px 0 #007bff;
+  color: #007bff;
 }
 
-/* Cabecera Móvil */
+.price-tab:first-child.active {
+  color: #2ecc71;
+  box-shadow: inset 0 -2px 0 #2ecc71;
+}
+
+.price-tab:hover:not(.active) {
+  background: #e9ecef;
+}
+
+/* Cabecera Móvil Mejorada */
 .mobile-header {
   display: none;
   padding: 1rem 0;
@@ -1789,55 +1519,33 @@ const storeRatingUser = async (productId, rating) => {
   background: #e9ecef;
 }
 
-/* Vista previa de precio para móvil - Más compacta */
-.mobile-price-preview {
-  display: none;
+.logo-container {
+  height: 40px;
+  display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 0.5rem;
-  background-color: #f8f9fa;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.75rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
 }
 
-.mobile-price-preview .current-price {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #333;
+.logo-img {
+  height: 100%;
+  width: auto;
 }
 
-.mobile-price-preview .original-price {
-  font-size: 0.8rem;
-  color: #999;
-  text-decoration: line-through;
+.mobile-share-button-header {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f8f9fa;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Clases de Animación */
-.animate-on-load {
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
-}
-
-.animate-on-load.animated {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Sección de Imágenes - Más compacta */
+/* Sección de Imágenes */
 .product-images {
   position: sticky;
   top: 1rem;
@@ -1850,11 +1558,6 @@ const storeRatingUser = async (productId, rating) => {
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.main-image-wrapper:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
 }
 
 .main-image-container {
@@ -1879,25 +1582,7 @@ const storeRatingUser = async (productId, rating) => {
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-.image-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.03);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.main-image-container:hover .image-overlay {
-  opacity: 1;
-}
-
-/* Navegación de Imágenes - Más compacta */
+/* Navegación de Imágenes */
 .image-nav {
   position: absolute;
   top: 50%;
@@ -1917,10 +1602,6 @@ const storeRatingUser = async (productId, rating) => {
   justify-content: center;
 }
 
-.main-image-container:hover .image-nav {
-  opacity: 1;
-}
-
 .image-nav.prev {
   left: 10px;
 }
@@ -1935,7 +1616,7 @@ const storeRatingUser = async (productId, rating) => {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
-/* Paginación de Imágenes para Móvil - Más compacta */
+/* Paginación de Imágenes para Móvil */
 .image-pagination {
   position: absolute;
   bottom: 10px;
@@ -1959,23 +1640,7 @@ const storeRatingUser = async (productId, rating) => {
   transform: scale(1.4);
 }
 
-.zoom-hint {
-  background: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 0.4rem 0.8rem;
-  border-radius: 2rem;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.8rem;
-}
-
-.main-image-container:hover .zoom-hint {
-  transform: translateY(0);
-  opacity: 1;
-}
-
-/* Miniaturas - Más compactas */
+/* Miniaturas */
 .thumbnail-list {
   position: relative;
   display: flex;
@@ -2018,21 +1683,6 @@ const storeRatingUser = async (productId, rating) => {
   transition: transform 0.3s ease;
 }
 
-.thumbnail-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.1);
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.thumbnail:hover .thumbnail-overlay {
-  opacity: 1;
-}
-
 .thumbnail:hover img {
   transform: scale(1.1);
 }
@@ -2042,7 +1692,7 @@ const storeRatingUser = async (productId, rating) => {
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
 }
 
-/* Secciones de Acordeón para Móvil - Más compactas */
+/* Secciones de Acordeón para Móvil */
 .accordion-sections {
   display: none;
 }
@@ -2058,26 +1708,6 @@ const storeRatingUser = async (productId, rating) => {
 .accordion-section.expanded {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
   border-color: #007bff;
-}
-
-.price-accordion {
-  background-color: #f8f9fa;
-  border-color: #007bff;
-  margin-bottom: 0.75rem;
-}
-
-.price-accordion .accordion-header {
-  background-color: rgba(0, 123, 255, 0.05);
-  padding: 0.75rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.mobile-price-info {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
 }
 
 .accordion-header {
@@ -2112,68 +1742,7 @@ const storeRatingUser = async (productId, rating) => {
   padding: 0.75rem 1rem;
 }
 
-/* Preventa and Regular Price Info - Más compactas */
-.preventa-price-info,
-.regular-price-info {
-  padding: 0.5rem;
-  border-radius: 0.75rem;
-}
-
-.preventa-price-info {
-  background: rgba(52, 152, 219, 0.1);
-  border-left: 3px solid #3498db;
-}
-
-.regular-price-info {
-  background: rgba(46, 204, 113, 0.1);
-  border-left: 3px solid #2ecc71;
-}
-
-.preventa-badge,
-.regular-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 1rem;
-  font-size: 0.7rem;
-  font-weight: 600;
-  margin-bottom: 0.25rem;
-}
-
-.preventa-badge {
-  background: #3498db;
-  color: white;
-}
-
-.regular-badge {
-  background: #2ecc71;
-  color: white;
-}
-
-.preventa-price,
-.regular-price {
-  font-size: 1.1rem;
-  font-weight: 700;
-  display: block;
-  margin-bottom: 0.25rem;
-}
-
-.preventa-price {
-  color: #3498db;
-}
-
-.regular-price {
-  color: #2ecc71;
-}
-
-.preventa-details,
-.regular-details {
-  font-size: 0.7rem;
-  color: #666;
-}
-
-/* Sección de Características - Más compacta */
+/* Sección de Características */
 .features-section {
   margin: 1.25rem 0;
 }
@@ -2185,21 +1754,6 @@ const storeRatingUser = async (productId, rating) => {
   color: #333;
   position: relative;
   display: inline-block;
-}
-
-.section-title::after {
-  content: '';
-  position: absolute;
-  bottom: -4px;
-  left: 0;
-  width: 30px;
-  height: 2px;
-  background: linear-gradient(45deg, #2196F3, #00BCD4);
-  transition: width 0.3s ease;
-}
-
-.section-title:hover::after {
-  width: 100%;
 }
 
 .features {
@@ -2234,7 +1788,7 @@ const storeRatingUser = async (productId, rating) => {
   box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
 }
 
-/* Botón "Ver más" para Características - Más compacto */
+/* Botón "Ver más" para Características */
 .show-more-btn {
   margin-top: 0.75rem;
   background: none;
@@ -2256,11 +1810,7 @@ const storeRatingUser = async (productId, rating) => {
   transform: translateY(-2px);
 }
 
-.show-more-btn.desktop {
-  margin-top: 0.75rem;
-}
-
-/* Sección de Colores - Más compacta */
+/* Sección de Colores */
 .color-section {
   margin: 1.25rem 0;
 }
@@ -2301,7 +1851,6 @@ const storeRatingUser = async (productId, rating) => {
   color: white;
   font-size: 0.7rem;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .selected-color-info {
@@ -2310,17 +1859,7 @@ const storeRatingUser = async (productId, rating) => {
   color: #666;
 }
 
-@keyframes scaleIn {
-  from {
-    transform: translate(-50%, -50%) scale(0);
-  }
-
-  to {
-    transform: translate(-50%, -50%) scale(1);
-  }
-}
-
-/* Sección de Modelo - Más compacta */
+/* Sección de Modelo */
 .model-section {
   margin: 1.25rem 0;
 }
@@ -2333,7 +1872,7 @@ const storeRatingUser = async (productId, rating) => {
 }
 
 .model-card {
-  padding: 0.5rem;
+  padding: 0.75rem;
   border: 1px solid #e0e0e0;
   border-radius: 0.75rem;
   background: white;
@@ -2347,26 +1886,10 @@ const storeRatingUser = async (productId, rating) => {
   overflow: hidden;
 }
 
-.model-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(45deg, rgba(33, 150, 243, 0.1), rgba(0, 188, 212, 0.1));
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
 .model-card:hover {
   border-color: #007bff;
   transform: translateY(-3px);
   box-shadow: 0 6px 16px rgba(0, 123, 255, 0.15);
-}
-
-.model-card:hover::before {
-  opacity: 1;
 }
 
 .model-card.active {
@@ -2393,42 +1916,13 @@ const storeRatingUser = async (productId, rating) => {
   color: #333;
 }
 
-.model-prices {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
 .model-price {
   font-size: 0.75rem;
   color: #666;
 }
 
-.model-preventa-price {
-  font-size: 0.7rem;
-  color: #3498db;
-  font-weight: 500;
-}
-
-.model-limits {
-  font-size: 0.65rem;
-  color: #777;
-  margin-top: 0.25rem;
-}
-
-.model-regular-limits,
-.model-preventa-limits {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.model-preventa-limits {
-  color: #3498db;
-}
-
 .model-stock {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   color: #f57c00;
   display: flex;
   align-items: center;
@@ -2436,7 +1930,7 @@ const storeRatingUser = async (productId, rating) => {
   margin-top: 0.25rem;
 }
 
-/* Sección de cantidad - Más compacta */
+/* Sección de cantidad */
 .quantity-section {
   display: flex;
   flex-direction: column;
@@ -2454,11 +1948,6 @@ const storeRatingUser = async (productId, rating) => {
   font-size: 0.85rem;
   color: #333;
   font-weight: 500;
-}
-
-.quantity-limits {
-  font-size: 0.7rem;
-  color: #666;
 }
 
 .quantity-controls {
@@ -2502,30 +1991,7 @@ const storeRatingUser = async (productId, rating) => {
   cursor: not-allowed;
 }
 
-.quantity-btn.pulse:not(:disabled) {
-  animation: btnPulse 1.5s infinite;
-}
-
-@keyframes btnPulse {
-  0% {
-    background: #f8f9fa;
-  }
-
-  50% {
-    background: rgba(0, 123, 255, 0.1);
-  }
-
-  100% {
-    background: #f8f9fa;
-  }
-}
-
-.quantity-btn i {
-  font-size: 0.7rem;
-}
-
 .quantity-input {
-  color: #000;
   width: 2.5rem;
   height: 2.25rem;
   border: none;
@@ -2557,7 +2023,7 @@ const storeRatingUser = async (productId, rating) => {
   font-size: 0.9rem;
 }
 
-/* Sección de Compra - Más compacta */
+/* Sección de Compra */
 .purchase-section {
   margin-top: 1.25rem;
   padding-top: 1.25rem;
@@ -2590,72 +2056,15 @@ const storeRatingUser = async (productId, rating) => {
   box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
 }
 
-.add-to-cart::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: all 0.5s ease;
-}
-
-.add-to-cart:hover::before {
-  left: 100%;
-}
-
 .add-to-cart:hover:not(:disabled) {
   background-color: #0069d9;
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(0, 123, 255, 0.4);
 }
 
-.add-to-cart:active:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(0, 123, 255, 0.3);
-}
-
 .add-to-cart:disabled {
   opacity: 0.7;
   cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-.add-to-cart i {
-  font-size: 0.85rem;
-}
-
-.btn-shine {
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg,
-      rgba(255, 255, 255, 0) 0%,
-      rgba(255, 255, 255, 0.2) 50%,
-      rgba(255, 255, 255, 0) 100%);
-  animation: shine 3s infinite;
-}
-
-@keyframes shine {
-  0% {
-    left: -100%;
-  }
-
-  20% {
-    left: 100%;
-  }
-
-  100% {
-    left: 100%;
-  }
-}
-
-.add-to-cart.success {
-  background: linear-gradient(45deg, #4CAF50, #2E7D32);
 }
 
 .add-to-wishlist {
@@ -2688,289 +2097,7 @@ const storeRatingUser = async (productId, rating) => {
   box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
 }
 
-.add-to-wishlist i {
-  font-size: 0.9rem;
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.add-to-wishlist:hover i {
-  transform: scale(1.2);
-}
-
-.add-to-wishlist.animate-heart i {
-  animation: heartBeat 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-@keyframes heartBeat {
-  0% {
-    transform: scale(1);
-  }
-
-  15% {
-    transform: scale(1.3);
-  }
-
-  30% {
-    transform: scale(0.9);
-  }
-
-  45% {
-    transform: scale(1.2);
-  }
-
-  60% {
-    transform: scale(0.9);
-  }
-
-  100% {
-    transform: scale(1);
-  }
-}
-
-.tooltip {
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%) translateY(-8px);
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  padding: 0.4rem 0.6rem;
-  border-radius: 0.5rem;
-  font-size: 0.7rem;
-  white-space: nowrap;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s ease;
-  pointer-events: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.tooltip::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 4px;
-  border-style: solid;
-  border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
-}
-
-.add-to-wishlist:hover .tooltip {
-  opacity: 1;
-  visibility: visible;
-  transform: translateX(-50%) translateY(-4px);
-}
-
-/* Barra Fija para Móvil - Más compacta */
-.mobile-sticky-bar {
-  display: none;
-  position: fixed;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(100% - 32px);
-  max-width: 480px;
-  background: white;
-  padding: 0.6rem 0.8rem;
-  border-radius: 0.8rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  z-index: 100;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.mobile-price {
-  display: flex;
-  flex-direction: column;
-}
-
-.mobile-product-name {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: #333;
-  margin-bottom: 0.2rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 160px;
-}
-
-.price-container {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.mobile-price .current-price {
-  font-size: 1rem;
-}
-
-.mobile-price .original-price {
-  font-size: 0.8rem;
-}
-
-.mobile-add-to-cart {
-  height: 2.25rem;
-  padding: 0 1rem;
-  border: none;
-  border-radius: 0.5rem;
-  background: linear-gradient(45deg, #007bff, #0056b3);
-  color: white;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.8rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
-}
-
-.mobile-add-to-cart:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-/* Botón de Compartir para Móvil - Más compacto */
-.mobile-share-button {
-  display: none;
-  position: fixed;
-  bottom: 70px;
-  right: 16px;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: #007bff;
-  color: white;
-  border: none;
-  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
-  z-index: 90;
-  cursor: pointer;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-}
-
-.mobile-share-button:active {
-  transform: scale(0.95);
-  background: #0056b3;
-}
-
-/* Indicador de Deslizamiento - Más compacto */
-.swipe-indicator {
-  display: none;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 0.6rem 0.8rem;
-  border-radius: 0.8rem;
-  z-index: 10;
-  text-align: center;
-  animation: fadeInOut 3s ease-in-out;
-}
-
-.swipe-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  margin-bottom: 0.4rem;
-  font-size: 1.1rem;
-}
-
-@keyframes fadeInOut {
-  0%, 100% {
-    opacity: 0;
-  }
-
-  20%, 80% {
-    opacity: 1;
-  }
-}
-
-/* Notificaciones Toast - Más compactas */
-.toast-container {
-  position: fixed;
-  bottom: 70px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  width: 90%;
-  max-width: 280px;
-}
-
-.toast {
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  padding: 0.6rem 0.8rem;
-  border-radius: 0.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  opacity: 0;
-  transform: translateY(20px);
-  transition: all 0.3s ease;
-  font-size: 0.85rem;
-}
-
-.toast.toast-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.toast.success {
-  background: rgba(40, 167, 69, 0.9);
-}
-
-.toast.error {
-  background: rgba(220, 53, 69, 0.9);
-}
-
-.toast.warning {
-  background: rgba(255, 193, 7, 0.9);
-}
-
-.toast.info {
-  background: rgba(23, 162, 184, 0.9);
-}
-
-/* Estado de Carga */
-.loading {
-  position: relative;
-  overflow: hidden;
-}
-
-.loading::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-/* Sección de Calificaciones - Más compacta */
+/* Sección de Calificaciones */
 .rating-section {
   max-width: 1440px;
   margin: 2.5rem auto;
@@ -3000,6 +2127,12 @@ const storeRatingUser = async (productId, rating) => {
   height: 3px;
   background: linear-gradient(45deg, #007bff, #00bcd4);
   border-radius: 3px;
+}
+
+.text-accent {
+  color: #3498db;
+  position: relative;
+  display: inline-block;
 }
 
 .rating-overview {
@@ -3169,11 +2302,9 @@ const storeRatingUser = async (productId, rating) => {
   0% {
     transform: scale(1);
   }
-
   50% {
     transform: scale(1.3);
   }
-
   100% {
     transform: scale(1);
   }
@@ -3229,11 +2360,7 @@ const storeRatingUser = async (productId, rating) => {
   cursor: not-allowed;
 }
 
-.submit-rating.loading {
-  background: #0056b3;
-}
-
-/* Productos Similares - Más compactos */
+/* Productos Similares */
 .similar-products-section {
   max-width: 1440px;
   margin: 2.5rem auto;
@@ -3250,13 +2377,6 @@ const storeRatingUser = async (productId, rating) => {
   position: relative;
 }
 
-.text-accent {
-  color: #3498db;
-  position: relative;
-  display: inline-block;
-}
-
-/* Cuadrícula de Productos - Más compacta */
 .products-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -3466,7 +2586,170 @@ const storeRatingUser = async (productId, rating) => {
   right: 8px;
 }
 
-/* Diseño Responsivo - Optimizado */
+/* Barra Fija para Móvil */
+.mobile-sticky-bar {
+  display: none;
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 480px;
+  background: white;
+  padding: 0.6rem 0.8rem;
+  border-radius: 0.8rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mobile-price {
+  display: flex;
+  flex-direction: column;
+}
+
+.price-container {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.mobile-price .current-price {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.mobile-price .original-price {
+  font-size: 0.8rem;
+  color: #999;
+  text-decoration: line-through;
+}
+
+.mobile-add-to-cart {
+  height: 2.25rem;
+  padding: 0 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: linear-gradient(45deg, #007bff, #0056b3);
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+/* Botón de Compartir para Móvil */
+.mobile-share-button {
+  display: none;
+  position: fixed;
+  bottom: 70px;
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #007bff;
+  color: white;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+  z-index: 90;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+/* Indicador de Deslizamiento */
+.swipe-indicator {
+  display: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 0.6rem 0.8rem;
+  border-radius: 0.8rem;
+  z-index: 10;
+  text-align: center;
+  animation: fadeInOut 3s ease-in-out;
+}
+
+.swipe-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+  font-size: 1.1rem;
+}
+
+@keyframes fadeInOut {
+  0%, 100% {
+    opacity: 0;
+  }
+
+  20%, 80% {
+    opacity: 1;
+  }
+}
+
+/* Notificaciones Toast */
+.toast-container {
+  position: fixed;
+  bottom: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 90%;
+  max-width: 280px;
+}
+
+.toast {
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 0.6rem 0.8rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.3s ease;
+  font-size: 0.85rem;
+}
+
+.toast.toast-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast.success {
+  background: rgba(40, 167, 69, 0.9);
+}
+
+.toast.error {
+  background: rgba(220, 53, 69, 0.9);
+}
+
+.toast.warning {
+  background: rgba(255, 193, 7, 0.9);
+}
+
+.toast.info {
+  background: rgba(23, 162, 184, 0.9);
+}
+
+/* Diseño Responsivo */
 @media (max-width: 1024px) {
   .product-container {
     gap: 1.25rem;
@@ -3479,12 +2762,6 @@ const storeRatingUser = async (productId, rating) => {
 
   .product-title {
     font-size: 1.5rem;
-  }
-  
-  /* MODIFICADO: Cajas de precio en tablet */
-  .pricing-boxes-container {
-    flex-direction: row;
-    gap: 0.5rem;
   }
 }
 
@@ -3501,25 +2778,8 @@ const storeRatingUser = async (productId, rating) => {
     display: block !important;
   }
 
-  .main-image-wrapper {
-    border-radius: 0.8rem;
-  }
-
-  .thumbnail {
-    flex: 0 0 70px;
-    height: 70px;
-  }
-
-  .action-buttons {
-    grid-template-columns: 1fr;
-  }
-
   .mobile-header {
     display: block;
-  }
-
-  .mobile-price-preview {
-    display: flex;
   }
 
   .mobile-sticky-bar {
@@ -3539,12 +2799,6 @@ const storeRatingUser = async (productId, rating) => {
     margin-top: 1.25rem;
   }
 
-  /* MODIFICADO: Cajas de precio en móvil - Mantener lado a lado */
-  .pricing-boxes-container {
-    flex-direction: row;
-    gap: 0.5rem;
-  }
-
   /* Mejorar objetivos táctiles para móvil */
   .quantity-btn {
     width: 36px;
@@ -3556,62 +2810,10 @@ const storeRatingUser = async (productId, rating) => {
     height: 36px;
     font-size: 16px; /* Evitar zoom en iOS */
   }
-
-  /* Mejorar secciones de acordeón para mejor UX móvil */
-  .accordion-section {
-    margin-bottom: 0.75rem;
-  }
-
-  .accordion-header {
-    padding: 0.75rem;
-  }
-
-  .accordion-content {
-    padding: 0 0.75rem;
-  }
-
-  .accordion-section.expanded .accordion-content {
-    padding: 0.75rem;
-  }
-
-  /* Mejorar navegación de imágenes en móvil */
-  .image-nav {
-    width: 32px;
-    height: 32px;
-    opacity: 0.9;
-  }
-
-  .pagination-dot {
-    width: 6px;
-    height: 6px;
-  }
-
-  /* Mejorar muestras de color para táctil */
-  .color-swatch {
-    width: 30px;
-    height: 30px;
-  }
-
-  .price-value {
-    font-size: 1.25rem; /* Reducido para tablets */
-  }
-
-  .preventa-price-value,
-  .regular-price-value {
-    font-size: 1.25rem; /* Reducido para tablets */
-  }
-
-  .current-price {
-    font-size: 1.25rem; /* Reducido para tablets */
-  }
 }
 
 @media (max-width: 480px) {
   .product-title {
-    font-size: 1.25rem;
-  }
-
-  .current-price {
     font-size: 1.25rem;
   }
 
@@ -3634,24 +2836,9 @@ const storeRatingUser = async (productId, rating) => {
     justify-content: center;
   }
 
-  /* MODIFICADO: Mantener precios en móvil pequeño lado a lado */
-  .mobile-prices-container {
-    flex-direction: row;
-    gap: 0.5rem;
-  }
-
   /* Ajustar barra fija para pantallas más pequeñas */
   .mobile-sticky-bar {
     padding: 0.4rem 0.8rem;
-  }
-
-  .mobile-product-name {
-    font-size: 0.8rem;
-    max-width: 140px;
-  }
-
-  .mobile-price .current-price {
-    font-size: 1rem;
   }
 
   .mobile-add-to-cart {
@@ -3667,33 +2854,18 @@ const storeRatingUser = async (productId, rating) => {
     padding: 0.5rem 0.7rem;
     font-size: 0.8rem;
   }
+}
 
-  .price-value {
-    font-size: 1.1rem; /* Reducido aún más para móvil */
+/* Animaciones */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
 
-  .preventa-price-value,
-  .regular-price-value {
-    font-size: 1.1rem; /* Reducido aún más para móvil */
-  }
-
-  .current-price {
-    font-size: 1.1rem; /* Reducido aún más para móvil */
-  }
-
-  /* Mejorar visualización de precio en acordeón para móvil */
-  .mobile-price-info .current-price {
-    font-size: 1rem;
-  }
-
-  .preventa-price,
-  .regular-price {
-    font-size: 1rem;
-  }
-
-  /* Mejorar vista previa de precio para móvil */
-  .mobile-price-preview .current-price {
-    font-size: 1rem;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -3708,14 +2880,6 @@ const storeRatingUser = async (productId, rating) => {
 
   .add-to-wishlist:hover i {
     transform: none;
-  }
-
-  .tooltip {
-    display: none;
-  }
-
-  .zoom-hint {
-    display: none;
   }
 
   .image-nav {
@@ -3800,10 +2964,6 @@ const storeRatingUser = async (productId, rating) => {
 
   .toast {
     transition: none;
-  }
-
-  .btn-shine {
-    animation: none;
   }
 }
 </style>

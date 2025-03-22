@@ -45,9 +45,6 @@
                 <span class="badge badge-new">
                   <i class="fas fa-star-of-life"></i> NUEVO
                 </span>
-                <span v-if="product.descuento" class="badge badge-sale">
-                  <i class="fas fa-bolt"></i> -{{ product.descuento }}%
-                </span>
               </div>
 
               <!-- Product Actions -->
@@ -72,35 +69,13 @@
               <i class="fas fa-tag"></i> {{ product.categoria?.nombre || 'General' }}
             </div>
             <h3 class="product-name">{{ product.nombre }}</h3>
-
-          <!--   <div class="rating-container">
-              <div class="rating">
-                <span v-for="star in 5" :key="star" class="star"
-                  :class="{ 'filled': star <= (userRatings.find(r => r.producto_id === product.id)?.rating || 0) }"
-                  @click.stop="storeRatingUser(product.id, star)">
-                  ★
-                </span>
-              </div>
-              <div class="rating-count">
-                {{userRatings.find(r => r.producto_id === product.id)?.total_users || 0}} calificaciones
-              </div>
-            </div> -->
-
             <div class="price-container">
               <div class="price">
                 <span class="current-price">{{ formatPrice(product.precio) }}</span>
-                <span v-if="product.precio_anterior" class="old-price">{{ formatPrice(product.precio_anterior) }}</span>
               </div>
             </div>
           </div>
         </div>
-      </div>
-
-      <div class="view-all-container" v-if="recentProducts.length > 0">
-        <button class="view-all-btn" @click="viewAllProducts">
-          Ver todos los productos
-          <i class="fas fa-arrow-right"></i>
-        </button>
       </div>
     </div>
   </section>
@@ -112,21 +87,19 @@ import { useRouter } from 'vue-router';
 import { useCartStore } from '@/stores/cart';
 import { recientesProductos } from '@/Services/ProductoService';
 import { storeFavorite } from '@/Services/FavoriteService';
-import { indexRatings, storeRating } from '@/Services/RatingService';
+import bootstrapBundleMin from 'bootstrap/dist/js/bootstrap.bundle.min';
 
 const router = useRouter();
 const cartStore = useCartStore();
 const recentProducts = ref([]);
-const loading = ref(true);
+const loading = ref(true); 
 const error = ref(null);
 const addingToCart = ref(null);
 const favoriteProducts = ref([]);
-const userRatings = ref([]);
 const currentImageIndex = ref({});
 
 onMounted(async () => {
   await fetchRecentProducts();
-  await indexRatingUser();
 });
 
 const fetchRecentProducts = async () => {
@@ -208,31 +181,6 @@ const addToFavorites = async (productId) => {
     showNotification('Error al agregar a favoritos', 'error');
   }
 };
-
-const storeRatingUser = async (productId, rating) => {
-  try {
-    await storeRating({ producto_id: productId, rating });
-    await indexRatingUser();
-    showNotification('Calificación guardada', 'success');
-  } catch (err) {
-    console.error('Error al calificar:', err);
-    showNotification('Error al guardar calificación', 'error');
-  }
-};
-
-const indexRatingUser = async () => {
-  try {
-    const { data } = await indexRatings();
-    userRatings.value = data;
-  } catch (err) {
-    console.error('Error cargando calificaciones:', err);
-  }
-};
-
-const viewAllProducts = () => {
-  router.push('/productos');
-};
-
 const formatPrice = (price) => {
   return new Intl.NumberFormat('es-BO', {
     style: 'currency',
@@ -242,9 +190,60 @@ const formatPrice = (price) => {
 };
 
 const showNotification = (message, type) => {
-  // Implementación de notificaciones
+  // Crear un ID único para el toast
+  const toastId = `toast-${Date.now()}`;
+  
+  // Determinar la clase de color según el tipo
+  let bgClass = 'bg-primary text-white';
+  let icon = 'info-circle';
+  
+  if (type === 'success') {
+    bgClass = 'bg-success text-white';
+    icon = 'check-circle';
+  } else if (type === 'error') {
+    bgClass = 'bg-danger text-white';
+    icon = 'exclamation-circle';
+  } else if (type === 'warning') {
+    bgClass = 'bg-warning';
+    icon = 'exclamation-triangle';
+  }
+  
+  // Crear el elemento toast
+  const toastHTML = `
+    <div id="${toastId}" class="toast align-items-center ${bgClass} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body">
+          <i class="fas fa-${icon} me-2"></i> ${message}
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+  `;
+  
+  // Crear contenedor de toasts si no existe
+  let toastContainer = document.getElementById('toast-container');
+  if (!toastContainer) {
+    toastContainer = document.createElement('div');
+    toastContainer.id = 'toast-container';
+    toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+    toastContainer.style.zIndex = '1080';
+    document.body.appendChild(toastContainer);
+  }
+  
+  // Añadir el toast al contenedor
+  toastContainer.innerHTML += toastHTML;
+  
+  // Inicializar y mostrar el toast
+  const toastElement = document.getElementById(toastId);
+  const bsToast = new bootstrapBundleMin.Toast(toastElement, {
+    autohide: true,
+    delay: 3000
+  });
+  
+  bsToast.show();
+  
+  // También mantener el log en consola para debugging
   console.log(`${type}: ${message}`);
-  // Aquí podrías implementar un sistema de notificaciones toast
 };
 </script>
 
@@ -534,11 +533,6 @@ const showNotification = (message, type) => {
   animation: pulse 2s infinite;
 }
 
-.badge-sale {
-  background: linear-gradient(45deg, #ed8936, #dd6b20);
-  color: white;
-}
-
 @keyframes pulse {
   0% {
     transform: scale(1);
@@ -659,36 +653,6 @@ const showNotification = (message, type) => {
   color: #3498db;
 }
 
-/* Rating */
-.rating-container {
-  margin-bottom: 0.5rem;
-}
-
-.rating {
-  display: flex;
-  gap: 2px;
-  margin-bottom: 0.25rem;
-}
-
-.star {
-  color: #e2e8f0;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: transform 0.2s ease, color 0.2s ease;
-}
-
-.star:hover {
-  transform: scale(1.2);
-}
-
-.star.filled {
-  color: #f6ad55;
-}
-
-.rating-count {
-  font-size: 0.65rem;
-  color: #718096;
-}
 
 /* Price */
 .price-container {
@@ -715,47 +679,6 @@ const showNotification = (message, type) => {
   font-size: 0.75rem;
   color: #a0aec0;
   text-decoration: line-through;
-}
-
-/* View All Button */
-.view-all-container {
-  display: flex;
-  justify-content: center;
-  margin-top: 1.5rem;
-}
-
-.view-all-btn {
-  padding: 0.6rem 1.5rem;
-  background: transparent;
-  color: var(--primary-color);
-  border: 2px solid var(--primary-color);
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.view-all-btn:hover {
-  background: var(--primary-color);
-  color: white;
-  transform: translateY(-3px);
-  box-shadow: 0 6px 15px rgba(52, 152, 219, 0.2);
-}
-
-.view-all-btn:active {
-  transform: translateY(-1px);
-}
-
-.view-all-btn i {
-  transition: transform 0.3s ease;
-}
-
-.view-all-btn:hover i {
-  transform: translateX(5px);
 }
 
 /* Transitions */
@@ -785,9 +708,6 @@ const showNotification = (message, type) => {
     height: 2.8rem;
   }
 
-  .star {
-    font-size: 1rem;
-  }
 
   .current-price {
     font-size: 1.1rem;
@@ -884,18 +804,6 @@ const showNotification = (message, type) => {
     margin-bottom: 0.25rem;
   }
 
-  .rating {
-    gap: 1px;
-  }
-
-  .star {
-    font-size: 0.75rem;
-  }
-
-  .rating-count {
-    font-size: 0.6rem;
-  }
-
   .current-price {
     font-size: 0.85rem;
   }
@@ -945,19 +853,6 @@ const showNotification = (message, type) => {
     font-size: 0.65rem;
     margin-bottom: 0.25rem;
   }
-
-  .rating {
-    gap: 1px;
-  }
-
-  .star {
-    font-size: 0.75rem;
-  }
-
-  .rating-count {
-    font-size: 0.6rem;
-  }
-
   .current-price {
     font-size: 0.85rem;
   }
@@ -997,18 +892,6 @@ const showNotification = (message, type) => {
     margin-bottom: 0.25rem;
   }
 
-  .rating {
-    gap: 1px;
-  }
-
-  .star {
-    font-size: 0.7rem;
-  }
-
-  .rating-count {
-    font-size: 0.55rem;
-  }
-
   .current-price {
     font-size: 0.8rem;
   }
@@ -1031,11 +914,6 @@ const showNotification = (message, type) => {
   .badge {
     padding: 0.15rem 0.3rem;
     font-size: 0.55rem;
-  }
-
-  .view-all-btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.8rem;
   }
 }
 
@@ -1089,8 +967,7 @@ const showNotification = (message, type) => {
   }
 
   .retry-button:hover,
-  .action-button:hover,
-  .view-all-btn:hover {
+  .action-button:hover {
     transform: none;
   }
 
