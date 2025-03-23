@@ -675,7 +675,6 @@ onMounted(() => {
 }
 
 .category-banner:hover {
-  transform: translateY(-5px);
   box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
 }
 
@@ -686,9 +685,6 @@ onMounted(() => {
   transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
-.category-banner:hover img {
-  transform: scale(1.05);
-}
 
 /* Overlay con gradiente mejorado y animaciones */
 .banner-overlay {
@@ -743,10 +739,6 @@ onMounted(() => {
 @media (min-width: 768px) {
   .banner-content {
     max-width: 600px;
-  }
-  
-  .category-banner:hover .banner-content {
-    transform: translateY(-5px);
   }
 }
 
@@ -1186,13 +1178,6 @@ onMounted(() => {
   object-fit: contain;
   transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
-
-@media (min-width: 768px) {
-  .product-card:hover .product-image img {
-    transform: scale(1.05);
-  }
-}
-
 /* Navigation Buttons */
 .nav-button {
   position: absolute;

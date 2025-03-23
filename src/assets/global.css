@@ -82,8 +82,7 @@
   --primary-hover-color: #2563eb;
 }
 
-/* Añadir otros departamentos según sea necesario */
-.theme-santa-cruz {
+/* .theme-santa-cruz {
   --primary-color: #10b981;
   --primary-hover-color: #059669;
 }
@@ -117,7 +116,7 @@
   --primary-color: #14b8a6;
   --primary-hover-color: #0d9488;
 }
-
+ */
 /* Estilos para el botón de alternar tema */
 .theme-toggle-btn {
   background-color: var(--surface-color);

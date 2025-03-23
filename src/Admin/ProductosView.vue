@@ -428,7 +428,7 @@
                   <div class="card border-0 bg-light">
                     <div class="card-header bg-primary bg-opacity-10 d-flex justify-content-between align-items-center">
                       <h5 class="mb-0">
-                        <i class="fas fa-cubes me-2"></i>Modelos <span class="text-danger">*</span>
+                        <i class="fas fa-cubes me-2"></i>Modelos
                       </h5>
                       <button type="button" class="btn btn-sm btn-primary" @click="agregarModelo">
                         <i class="fas fa-plus me-1"></i>Agregar

@@ -45,10 +45,10 @@
               <p><i class="fas fa-envelope" style="color: var(--primary-color);"></i> contacto@neotechbo.com</p>
             </div>
             <div class="social-links">
-              <a href="#" class="social-link">
+              <a href="https://www.facebook.com/NeoTech.Bol" class="social-link" target="_blank">
                 <i class="fab fa-facebook-f"></i>
               </a>
-              <a href="#" class="social-link">
+<!--               <a href="#" class="social-link">
                 <i class="fab fa-twitter"></i>
               </a>
               <a href="#" class="social-link">
@@ -56,7 +56,7 @@
               </a>
               <a href="#" class="social-link">
                 <i class="fab fa-instagram"></i>
-              </a>
+              </a> -->
             </div>
           </div>
         </transition>

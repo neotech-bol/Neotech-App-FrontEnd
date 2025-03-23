@@ -181,6 +181,7 @@ const addToFavorites = async (productId) => {
     showNotification('Error al agregar a favoritos', 'error');
   }
 };
+
 const formatPrice = (price) => {
   return new Intl.NumberFormat('es-BO', {
     style: 'currency',
@@ -458,10 +459,6 @@ const showNotification = (message, type) => {
   height: 100%;
   object-fit: contain;
   transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
-}
-
-.product-card:hover .product-image img {
-  transform: scale(1.05);
 }
 
 /* Navigation Buttons */

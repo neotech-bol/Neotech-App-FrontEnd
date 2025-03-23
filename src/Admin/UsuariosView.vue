@@ -792,6 +792,7 @@ const listarRoles = async () => {
 const listarUsuarios = async () => {
     try {
         const { data } = await indexUsers(search.value);
+        console.log(data);
         datos.value = data.datos.data;
     } catch (error) {
         console.error('Error al cargar usuarios:', error);
@@ -866,6 +867,7 @@ const mostarUser = async (id) => {
     errors.value = {};
     try {
         const { data } = await showUser(id);
+        console.log(data);
         formulario.value = {
             nombre: data.dato.nombre,
             apellido: data.dato.apellido,

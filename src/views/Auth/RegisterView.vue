@@ -339,6 +339,12 @@ const mostrarErrorPaso = (mensaje) => {
     }, 500);
   }
 };
+
+/**
+ * Versión actual del registro de usuario
+ * Esta función registra al usuario y lo redirige directamente a la página principal
+ * o al panel de administración según su rol, sin animaciones de transición
+ */
 const registrarUsuario = async () => {
   errors.value = {};
   isLoading.value = true;
@@ -362,9 +368,9 @@ const registrarUsuario = async () => {
     localStorage.setItem('datosUser', JSON.stringify(datosUser));
 
     if (data.user.roles[0].name === 'cliente') {
-      router.replace('/');
+      router.push('/');
     } else {
-      router.replace('/admin-panel');
+      router.push('/admin-panel');
     }
   } catch (error) {
     manejarError(error);
@@ -372,6 +378,19 @@ const registrarUsuario = async () => {
     isLoading.value = false;
   }
 };
+
+/**
+ * Versión alternativa del registro de usuario con verificación por correo
+ * 
+ * Esta función incluye:
+ * - Validación adicional de campos obligatorios
+ * - Verificación de aceptación de términos y condiciones
+ * - Animación de transición antes de redirigir
+ * - Redirección a la página de verificación pendiente
+ * 
+ * Para usar esta versión, comenta la función registrarUsuario actual
+ * y descomenta esta función.
+ */
 /* const registrarUsuario = async () => {
   // Validar campos del último paso
   if (!formulario.value.fecha_nacimiento || !formulario.value.genero) {
@@ -455,13 +474,34 @@ const manejarError = (error) => {
   }
 };
 
+/**
+ * Navega a la página de inicio de sesión
+ * Usa router.push para mantener el historial de navegación
+ */
 const irALogin = () => {
   router.push('/login');
 };
 
+/**
+ * Navega a la página principal
+ * Usa router.push para mantener el historial de navegación
+ */
 const irAHome = () => {
   router.push('/');
 };
+
+/**
+ * Para usar navegación sin animaciones, puedes reemplazar router.push por router.replace
+ * en las funciones irALogin e irAHome:
+ * 
+ * const irALogin = () => {
+ *   router.replace('/login');
+ * };
+ * 
+ * const irAHome = () => {
+ *   router.replace('/');
+ * };
+ */
 </script>
 
 <style scoped>

@@ -24,41 +24,66 @@
     </div>
 
     <div class="product-container">
-      <!-- Sección de Imágenes del Producto -->
-      <div class="product-images">
-        <!-- Imagen Principal con Zoom -->
-        <div class="main-image-wrapper">
-          <div class="main-image-container" @mousemove="handleImageZoom" @mouseleave="resetZoom"
-            @touchstart="handleTouchStart" @touchmove="handleTouchMove" @touchend="resetZoom">
-            <img :src="currentImage" :alt="dato.nombre" class="main-image-img" ref="mainImage">
-            
-            <!-- Flechas de Navegación de Imágenes -->
-            <button class="image-nav prev" @click="prevImage" v-if="allImages.length > 1" aria-label="Imagen anterior">
-              <i class="fas fa-chevron-left"></i>
-            </button>
-            <button class="image-nav next" @click="nextImage" v-if="allImages.length > 1" aria-label="Imagen siguiente">
-              <i class="fas fa-chevron-right"></i>
-            </button>
+    <!-- Sección de Imágenes del Producto -->
+    <div class="product-images">
+      <!-- Imagen Principal con Zoom -->
+      <div class="main-image-wrapper">
+        <div class="main-image-container" @mousemove="handleImageZoom" @mouseleave="resetZoom"
+          @touchstart="handleTouchStart" @touchmove="handleTouchMove" @touchend="resetZoom">
+          <img :src="currentImage" :alt="dato.nombre" class="main-image-img" ref="mainImage">
+          
+          <!-- Cursor de lupa al pasar el mouse -->
+          <div class="magnifier-cursor" v-if="showMagnifier" :style="magnifierStyle">
+            <i class="fas fa-search-plus"></i>
+          </div>
+          
+          <!-- Flechas de Navegación de Imágenes -->
+          <button class="image-nav prev" @click="prevImage" v-if="allImages.length > 1" aria-label="Imagen anterior">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <button class="image-nav next" @click="nextImage" v-if="allImages.length > 1" aria-label="Imagen siguiente">
+            <i class="fas fa-chevron-right"></i>
+          </button>
 
-            <!-- Puntos de Paginación para Móvil -->
-            <div class="image-pagination">
-              <span v-for="(_, index) in allImages" :key="index"
-                :class="['pagination-dot', { active: selectedImage === index }]" @click="selectThumbnail(index)">
-              </span>
-            </div>
+          <!-- Puntos de Paginación para Móvil -->
+          <div class="image-pagination">
+            <span v-for="(_, index) in allImages" :key="index"
+              :class="['pagination-dot', { active: selectedImage === index }]" @click="selectThumbnail(index)">
+            </span>
           </div>
         </div>
+      </div>
 
-        <!-- Galería de Miniaturas - Más compacta -->
-        <div class="thumbnail-list" ref="thumbnailScroll">
-          <div class="thumbnail-container">
+      <!-- Galería de Miniaturas - Con Paginación -->
+      <div class="thumbnail-list" ref="thumbnailScroll">
+        <!-- Botones de Navegación de Miniaturas -->
+        <button class="thumbnail-nav prev" @click="prevThumbnailPage" :disabled="currentThumbnailPage === 0" 
+          aria-label="Miniaturas anteriores">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        
+        <div class="thumbnail-container" ref="thumbnailContainer">
+          <div class="thumbnail-wrapper" :style="thumbnailWrapperStyle">
             <div v-for="(image, index) in allImages" :key="index"
               :class="['thumbnail', { active: selectedImage === index }]" @click="selectThumbnail(index)">
               <img :src="image" :alt="`Vista ${index + 1} de ${dato.nombre}`" loading="lazy">
             </div>
           </div>
         </div>
+        
+        <button class="thumbnail-nav next" @click="nextThumbnailPage" :disabled="currentThumbnailPage >= maxThumbnailPage" 
+          aria-label="Miniaturas siguientes">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+        
+        <!-- Indicador de Página -->
+        <div class="thumbnail-pagination" v-if="totalThumbnailPages > 1">
+          <span v-for="page in totalThumbnailPages" :key="page" 
+            :class="['thumbnail-page-dot', { active: currentThumbnailPage === page - 1 }]"
+            @click="goToThumbnailPage(page - 1)"></span>
+        </div>
       </div>
+    </div>
 
       <!-- Sección de Información del Producto -->
       <div class="product-info">
@@ -534,7 +559,15 @@ const ratingLabels = {
   4: 'Bueno',
   5: 'Excelente'
 };
-
+// Variables para la paginación de miniaturas
+const thumbnailsPerPage = ref(5); // Número de miniaturas por página
+const currentThumbnailPage = ref(0);
+const thumbnailWidth = ref(80); // Ancho de cada miniatura en px
+const thumbnailGap = ref(8); // Espacio entre miniaturas en px
+const thumbnailContainer = ref(0); //
+// Variables para el cursor de lupa
+const showMagnifier = ref(false);
+const magnifierPosition = ref({ x: 0, y: 0 });
 // Propiedades computadas para precios y cantidades
 const regularPrice = computed(() => {
   if (selectedModelData.value) {
@@ -826,13 +859,25 @@ const decreaseQuantity = () => {
   }
 };
 
-// Manejar zoom de imagen
+// Mejorar el manejo del zoom de imagen con cursor de lupa
 const handleImageZoom = (event) => {
   if (!mainImage.value) return;
+  
+  // Mostrar el cursor de lupa
+  showMagnifier.value = true;
+  
+  // Calcular la posición del cursor
   const { left, top, width, height } = mainImage.value.getBoundingClientRect();
-  const x = (event.clientX - left) / width;
-  const y = (event.clientY - top) / height;
-  mainImage.value.style.transformOrigin = `${x * 100}% ${y * 100}%`;
+  const x = event.clientX - left;
+  const y = event.clientY - top;
+  
+  // Actualizar la posición del cursor de lupa
+  magnifierPosition.value = { x, y };
+  
+  // Aplicar el zoom
+  const xPercent = x / width;
+  const yPercent = y / height;
+  mainImage.value.style.transformOrigin = `${xPercent * 100}% ${yPercent * 100}%`;
   mainImage.value.style.transform = 'scale(1.8)';
 };
 
@@ -874,24 +919,29 @@ const handleTouchMove = (event) => {
   }
 };
 
-// Resetear zoom
+// Resetear zoom y ocultar cursor de lupa
 const resetZoom = () => {
-  if (mainImage.value) mainImage.value.style.transform = 'scale(1)';
+  if (mainImage.value) {
+    mainImage.value.style.transform = 'scale(1)';
+  }
+  showMagnifier.value = false;
 };
 
-// Seleccionar miniatura
+// Modificar la función selectThumbnail para asegurar que la miniatura seleccionada esté visible
 const selectThumbnail = (index) => {
   const imgElement = mainImage.value;
   if (imgElement) {
     imgElement.classList.add('changing');
     setTimeout(() => {
       selectedImage.value = index;
+      ensureSelectedThumbnailVisible(); // Asegurar que la miniatura seleccionada esté visible
       setTimeout(() => {
         imgElement.classList.remove('changing');
       }, 300);
     }, 150);
   } else {
     selectedImage.value = index;
+    ensureSelectedThumbnailVisible(); // Asegurar que la miniatura seleccionada esté visible
   }
 };
 
@@ -1250,9 +1300,9 @@ const verProductoConRatings = async () => {
   }
 };
 
-// Al montar el componente
+// Modificar onMounted para inicializar la paginación
 onMounted(() => {
-  verProductoConRatings(); // Usar la versión extendida aquí
+  verProductoConRatings();
   checkThumbnailScroll();
   window.addEventListener('resize', checkThumbnailScroll);
 
@@ -1261,15 +1311,13 @@ onMounted(() => {
   }, 100);
 
   if (window.innerWidth <= 768) {
-    expandedSection.value = 'features'; // Mostrar sección de características por defecto en móvil
+    expandedSection.value = 'features';
   }
 
-  // Si ya tenemos un ID de producto, cargar las estadísticas de calificación
   if (route.params.idProducto) {
     loadProductRatingStats(route.params.idProducto);
   }
   
-  // Auto-ocultar indicador de deslizamiento después de 5 segundos
   setTimeout(() => {
     if (!hasScrolled.value) {
       showSwipeIndicator.value = false;
@@ -1277,11 +1325,16 @@ onMounted(() => {
   }, 5000);
 });
 
-// Verificar si se necesitan botones de desplazamiento para miniaturas
+// Actualizar la función checkThumbnailScroll para manejar la paginación
 const checkThumbnailScroll = () => {
-  if (!thumbnailScroll.value) return;
-  const container = thumbnailScroll.value.querySelector('.thumbnail-container');
-  showScrollButtons.value = container.scrollWidth > container.clientWidth;
+  if (!thumbnailContainer.value) return;
+  
+  // Calcular el número de miniaturas visibles basado en el ancho del contenedor
+  const containerWidth = thumbnailContainer.value.clientWidth;
+  thumbnailsPerPage.value = Math.floor(containerWidth / (thumbnailWidth.value + thumbnailGap.value));
+  
+  // Asegurar que la miniatura seleccionada esté visible
+  ensureSelectedThumbnailVisible();
 };
 
 // Al desmontar el componente
@@ -1330,6 +1383,60 @@ const storeRatingUser = async (productId, rating) => {
   } catch (error) {
     console.error('Error al calificar el producto:', error.response?.data?.message || error);
     showToast('Error al guardar calificación', 'error');
+  }
+};
+// Calcular el estilo del wrapper de miniaturas para la paginación
+const thumbnailWrapperStyle = computed(() => {
+  const translateX = -currentThumbnailPage.value * (thumbnailsPerPage.value * (thumbnailWidth.value + thumbnailGap.value));
+  return {
+    transform: `translateX(${translateX}px)`,
+    transition: 'transform 0.3s ease',
+    display: 'flex',
+    gap: `${thumbnailGap.value}px`
+  };
+});
+// Calcular el número total de páginas de miniaturas
+const totalThumbnailPages = computed(() => {
+  if (!allImages.value.length) return 1;
+  return Math.ceil(allImages.value.length / thumbnailsPerPage.value);
+});
+// Calcular la página máxima de miniaturas
+const maxThumbnailPage = computed(() => {
+  return totalThumbnailPages.value - 1;
+});
+
+// Estilo para el cursor de lupa
+const magnifierStyle = computed(() => {
+  return {
+    left: `${magnifierPosition.value.x}px`,
+    top: `${magnifierPosition.value.y}px`
+  };
+});
+// Ir a la página anterior de miniaturas
+const prevThumbnailPage = () => {
+  if (currentThumbnailPage.value > 0) {
+    currentThumbnailPage.value--;
+  }
+};
+
+// Ir a la página siguiente de miniaturas
+const nextThumbnailPage = () => {
+  if (currentThumbnailPage.value < maxThumbnailPage.value) {
+    currentThumbnailPage.value++;
+  }
+};
+// Ir a una página específica de miniaturas
+const goToThumbnailPage = (page) => {
+  if (page >= 0 && page <= maxThumbnailPage.value) {
+    currentThumbnailPage.value = page;
+  }
+};
+
+// Asegurarse de que la miniatura seleccionada esté visible
+const ensureSelectedThumbnailVisible = () => {
+  const thumbnailPage = Math.floor(selectedImage.value / thumbnailsPerPage.value);
+  if (thumbnailPage !== currentThumbnailPage.value) {
+    currentThumbnailPage.value = thumbnailPage;
   }
 };
 </script>
@@ -1630,13 +1737,13 @@ const storeRatingUser = async (productId, rating) => {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(170, 184, 214, 0.6);
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .pagination-dot.active {
-  background: white;
+  background: rgb(69, 67, 211);
   transform: scale(1.4);
 }
 
@@ -2964,6 +3071,150 @@ const storeRatingUser = async (productId, rating) => {
 
   .toast {
     transition: none;
+  }
+}
+/* Estilos para la paginación de miniaturas */
+.thumbnail-list {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin: 1rem 0;
+}
+
+.thumbnail-container {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  height: 90px; /* Altura para acomodar miniaturas y paginación */
+}
+
+.thumbnail-wrapper {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  height: 80px;
+}
+
+.thumbnail {
+  flex: 0 0 80px;
+  height: 80px;
+  border-radius: 0.75rem;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.thumbnail:hover img {
+  transform: scale(1.1);
+}
+
+.thumbnail.active {
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
+}
+
+.thumbnail-nav {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: white;
+  border: 1px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 5;
+  margin: 0 0.5rem;
+  flex-shrink: 0;
+}
+
+.thumbnail-nav:hover:not(:disabled) {
+  background: #f8f9fa;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.thumbnail-nav:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.thumbnail-pagination {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px 0;
+}
+
+.thumbnail-page-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.thumbnail-page-dot.active {
+  background: #007bff;
+  transform: scale(1.2);
+}
+
+/* Estilos para el cursor de lupa */
+.magnifier-cursor {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transform: translate(-50%, -50%);
+  color: #333;
+  font-size: 14px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .thumbnail-nav {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+  
+  .thumbnail {
+    flex: 0 0 60px;
+    height: 60px;
+  }
+  
+  .thumbnail-container {
+    height: 70px;
+  }
+  
+  .thumbnail-wrapper {
+    height: 60px;
   }
 }
 </style>

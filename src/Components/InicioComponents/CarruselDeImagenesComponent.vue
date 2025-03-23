@@ -256,10 +256,6 @@ onUnmounted(() => {
   transition: transform 0.6s ease-out;
 }
 
-.carousel:hover .carousel-image {
-  transform: scale(1.03);
-}
-
 .carousel-overlay {
   position: absolute;
   top: 0;

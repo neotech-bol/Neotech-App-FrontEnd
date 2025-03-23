@@ -441,7 +441,6 @@ watch(() => router.currentRoute.value.params.idCatalogoActivo, (newId) => {
 }
 
 .category-banner:hover {
-  transform: translateY(-5px);
   box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
 }
 
@@ -450,10 +449,6 @@ watch(() => router.currentRoute.value.params.idCatalogoActivo, (newId) => {
   height: 100%;
   object-fit: cover;
   transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
-}
-
-.category-banner:hover img {
-  transform: scale(1.05);
 }
 
 /* Overlay con gradiente mejorado y animaciones */
@@ -865,11 +860,6 @@ watch(() => router.currentRoute.value.params.idCatalogoActivo, (newId) => {
   object-fit: contain;
   transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
-
-.product-card:hover .product-image img {
-  transform: scale(1.05);
-}
-
 /* Navigation Buttons */
 .nav-button {
   position: absolute;

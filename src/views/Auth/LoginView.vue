@@ -21,61 +21,42 @@
         <div class="formulario-contenedor" :class="{ 'form-active': formActive }">
           <h1 class="titulo-auth">Bienvenido de nuevo</h1>
           <p class="subtitulo-auth">Inicia sesión para acceder a tu cuenta</p>
-          
+
           <transition name="fade">
             <div v-if="error" class="error-mensaje">
               <i class="fas fa-exclamation-circle"></i>
               {{ error }}
             </div>
           </transition>
-          
+
           <form class="formulario" @submit.prevent="iniciarSesion">
             <div class="campo-formulario" :class="{ 'campo-activo': campoActivo === 'email' }">
               <label for="email">
                 <i class="fas fa-envelope"></i> Correo electrónico
               </label>
-              <input 
-                id="email" 
-                v-model="credenciales.email" 
-                type="email" 
-                required 
-                placeholder="tu@email.com"
-                autocomplete="email"
-                :class="{ 'campo-con-valor': credenciales.email }"
-                @focus="campoActivo = 'email'"
-                @blur="campoActivo = ''"
-              >
+              <input id="email" v-model="credenciales.email" type="email" required placeholder="tu@email.com"
+                autocomplete="email" :class="{ 'campo-con-valor': credenciales.email }" @focus="campoActivo = 'email'"
+                @blur="campoActivo = ''">
               <span class="campo-barra"></span>
             </div>
-            
+
             <div class="campo-formulario" :class="{ 'campo-activo': campoActivo === 'password' }">
               <label for="password">
                 <i class="fas fa-lock"></i> Contraseña
               </label>
               <div class="password-container">
-                <input 
-                  id="password" 
-                  v-model="credenciales.password" 
-                  :type="mostrarPassword ? 'text' : 'password'"
-                  required 
-                  placeholder="Tu contraseña" 
-                  autocomplete="current-password"
-                  :class="{ 'campo-con-valor': credenciales.password }"
-                  @focus="campoActivo = 'password'"
-                  @blur="campoActivo = ''"
-                >
-                <button 
-                  type="button" 
-                  class="toggle-password" 
-                  @click="mostrarPassword = !mostrarPassword"
-                  :aria-label="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
-                >
+                <input id="password" v-model="credenciales.password" :type="mostrarPassword ? 'text' : 'password'"
+                  required placeholder="Tu contraseña" autocomplete="current-password"
+                  :class="{ 'campo-con-valor': credenciales.password }" @focus="campoActivo = 'password'"
+                  @blur="campoActivo = ''">
+                <button type="button" class="toggle-password" @click="mostrarPassword = !mostrarPassword"
+                  :aria-label="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'">
                   <i :class="mostrarPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
                 </button>
                 <span class="campo-barra"></span>
               </div>
             </div>
-            
+
             <div class="opciones-adicionales">
               <label class="recordar-usuario">
                 <input type="checkbox" v-model="recordar">
@@ -83,18 +64,15 @@
                 <span>Recordarme</span>
               </label>
             </div>
-            
-            <button 
-              type="submit" 
-              class="boton-auth"
+
+            <button type="submit" class="boton-auth"
               :disabled="isLoading || !credenciales.email || !credenciales.password"
-              :class="{ 'boton-cargando': isLoading }"
-            >
+              :class="{ 'boton-cargando': isLoading }">
               <span v-if="isLoading" class="loader"></span>
               <span>{{ isLoading ? 'Iniciando sesión...' : 'Iniciar sesión' }}</span>
             </button>
           </form>
-          
+
           <p class="texto-alternativa">
             ¿No tienes una cuenta? <a href="#" @click.prevent="irARegistro" class="enlace-auth">Regístrate ahora</a>
           </p>
@@ -107,11 +85,10 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { login } from '@/Services/AuthService'; // Asegúrate de que esta importación sea correcta
+import { login } from '@/Services/AuthService';
 import { Buffer } from "buffer";
 
 const router = useRouter();
-const route = useRoute();
 const credenciales = ref({
   email: '',
   password: ''
@@ -122,32 +99,28 @@ const isLoading = ref(false);
 const mostrarPassword = ref(false);
 const campoActivo = ref('');
 const formActive = ref(false);
-const redirectPath = ref(''); // Para almacenar la ruta de redirección
 
-// Obtener el parámetro redirect de la URL
-const obtenerParametroRedireccion = () => {
-  const redirect = route.query.redirect;
-  return redirect && typeof redirect === 'string' ? redirect : '';
-};
+
+
 
 onMounted(() => {
   // Activar animación del formulario
   setTimeout(() => {
     formActive.value = true;
   }, 100);
-  
+
   // Verificar si hay credenciales guardadas
   const savedEmail = localStorage.getItem('savedEmail');
   if (savedEmail) {
     credenciales.value.email = savedEmail;
     recordar.value = true;
   }
-  
+
   // Enfocar el campo adecuado
   setTimeout(() => {
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
-    
+
     if (!credenciales.value.email && emailInput) {
       emailInput.focus();
       campoActivo.value = 'email';
@@ -157,18 +130,12 @@ onMounted(() => {
     }
   }, 500);
 
-  // Obtener el parámetro de redirección al montar el componente
-  redirectPath.value = obtenerParametroRedireccion();
-  if (redirectPath.value) {
-    console.log('Parámetro de redirección detectado:', redirectPath.value);
-  }
 });
 
 const iniciarSesion = async () => {
   if (!credenciales.value.email || !credenciales.value.password) {
     return;
   }
-  
   error.value = '';
   isLoading.value = true;
   
@@ -178,13 +145,13 @@ const iniciarSesion = async () => {
   } else {
     localStorage.removeItem('savedEmail');
   }
-  
+
   try {
     const { data } = await login(credenciales.value);
-    
+
     const tokenEncrypt = Buffer.from(data.access_token).toString('base64');
     localStorage.setItem('token', tokenEncrypt);
-    
+
     const datosUser = {
       id: data.user.id,
       nombre: data.user.nombre,
@@ -194,29 +161,14 @@ const iniciarSesion = async () => {
       telefono: data.user.telefono,
       rol: data.user.roles[0].name
     };
-    
+
     localStorage.setItem('datosUser', JSON.stringify(datosUser));
-    
-    // Animación de salida antes de redirigir
-    formActive.value = false;
-    
-    // Redirigir después de la animación
-    setTimeout(() => {
-      console.log('Intentando redirigir a:', redirectPath.value || 'ruta por defecto basada en rol');
-      
-      // Si hay un redirectPath válido, usarlo
-      if (redirectPath.value) {
-        router.push(redirectPath.value);
+
+      if (data.user.roles[0].name === 'cliente') {
+        router.push('/');
       } else {
-        // Si no hay redirectPath, usar la lógica basada en roles
-        if (data.user.roles[0].name === 'cliente') {
-          router.push('/');
-        } else {
-          router.push('/admin-panel');
-        }
+        router.push('/admin-panel');
       }
-    }, 300);
-    
   } catch (err) {
     manejarError(err);
   } finally {
@@ -237,7 +189,7 @@ const manejarError = (err) => {
   } else {
     error.value = 'No se pudo conectar con el servidor. Por favor, verifica tu conexión a internet.';
   }
-  
+
   // Animación de error
   const formulario = document.querySelector('.formulario');
   if (formulario) {
@@ -256,6 +208,7 @@ const irARegistro = () => {
   router.push('/register');
 };
 </script>
+
 <style scoped>
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
 
@@ -554,11 +507,11 @@ const irARegistro = () => {
   transition: all 0.2s ease;
 }
 
-.recordar-usuario:hover input ~ .checkmark {
+.recordar-usuario:hover input~.checkmark {
   background-color: #f0f0f0;
 }
 
-.recordar-usuario input:checked ~ .checkmark {
+.recordar-usuario input:checked~.checkmark {
   background-color: #4361ee;
   border-color: #4361ee;
 }
@@ -569,7 +522,7 @@ const irARegistro = () => {
   display: none;
 }
 
-.recordar-usuario input:checked ~ .checkmark:after {
+.recordar-usuario input:checked~.checkmark:after {
   display: block;
 }
 
@@ -711,30 +664,41 @@ const irARegistro = () => {
   font-size: 1.2rem;
 }
 
-.fade-enter-active, .fade-leave-active {
+.fade-enter-active,
+.fade-leave-active {
   transition: opacity 0.3s, transform 0.3s;
 }
 
-.fade-enter-from, .fade-leave-to {
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
   transform: translateY(-10px);
 }
 
 .shake {
-  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+  animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
 }
 
 @keyframes shake {
-  10%, 90% {
+
+  10%,
+  90% {
     transform: translateX(-1px);
   }
-  20%, 80% {
+
+  20%,
+  80% {
     transform: translateX(2px);
   }
-  30%, 50%, 70% {
+
+  30%,
+  50%,
+  70% {
     transform: translateX(-4px);
   }
-  40%, 60% {
+
+  40%,
+  60% {
     transform: translateX(4px);
   }
 }
@@ -755,39 +719,39 @@ const irARegistro = () => {
   .contenedor-auth {
     background: linear-gradient(135deg, #4361ee 0%, #3a56d4 100%);
   }
-  
+
   .formulario-auth {
     background: transparent;
     padding: 1rem;
   }
-  
+
   .formulario-contenedor {
     padding: 1.5rem;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
   }
-  
+
   .titulo-auth {
     font-size: 2rem;
     text-align: center;
   }
-  
+
   .subtitulo-auth {
     text-align: center;
   }
-  
+
   .boton-home {
     padding: 0.5rem 1rem;
     font-size: 0.9rem;
   }
-  
+
   .formulario-contenedor {
     padding: 1.25rem;
   }
-  
+
   .campo-formulario input {
     padding: 0.8rem;
   }
-  
+
   .boton-auth {
     height: 48px;
   }
@@ -797,24 +761,24 @@ const irARegistro = () => {
   .barra-navegacion {
     padding: 0.75rem 1rem;
   }
-  
+
   .logo-image {
     height: 32px;
   }
-  
+
   .boton-home {
     padding: 0.5rem 0.75rem;
     font-size: 0.85rem;
   }
-  
+
   .formulario-contenedor {
     padding: 1.25rem;
   }
-  
+
   .campo-formulario input {
     padding: 0.8rem;
   }
-  
+
   .boton-auth {
     height: 48px;
   }
@@ -825,12 +789,13 @@ const irARegistro = () => {
   .formulario-contenedor {
     animation: slideUpMobile 0.5s ease forwards;
   }
-  
+
   @keyframes slideUpMobile {
     from {
       transform: translateY(50px);
       opacity: 0;
     }
+
     to {
       transform: translateY(0);
       opacity: 1;
@@ -839,61 +804,61 @@ const irARegistro = () => {
 }
 </style>
 /* const iniciarSesion = async () => {
-  error.value = '';
-  isLoading.value = true;
-  
-  // Guardar email si "recordarme" está activado
-  if (recordar.value) {
-    localStorage.setItem('savedEmail', credenciales.value.email);
-  } else {
-    localStorage.removeItem('savedEmail');
-  }
-  
-  try {
-    const { data } = await login(credenciales.value);
+error.value = '';
+isLoading.value = true;
 
-    // Verificar si el correo está verificado
-    if (data.email_verified === false) {
-      // Si no está verificado, guardar datos para poder reenviar el correo
-      const datosUser = {
-        email: credenciales.value.email
-      };
-      localStorage.setItem('datosUser', JSON.stringify(datosUser));
+// Guardar email si "recordarme" está activado
+if (recordar.value) {
+localStorage.setItem('savedEmail', credenciales.value.email);
+} else {
+localStorage.removeItem('savedEmail');
+}
 
-      // Redirigir a la página de verificación pendiente
-      router.replace('/verificacion-pendiente');
-      return;
-    }
+try {
+const { data } = await login(credenciales.value);
 
-    // Si el correo está verificado, continuar con el flujo normal
-    const tokenEncrypt = Buffer.from(data.access_token).toString('base64');
-    localStorage.setItem('token', tokenEncrypt);
+// Verificar si el correo está verificado
+if (data.email_verified === false) {
+// Si no está verificado, guardar datos para poder reenviar el correo
+const datosUser = {
+email: credenciales.value.email
+};
+localStorage.setItem('datosUser', JSON.stringify(datosUser));
 
-    const datosUser = {
-      id: data.user.id,
-      nombre: data.user.nombre,
-      apellido: data.user.apellido,
-      email: data.user.email,
-      direccion: data.user.direccion,
-      telefono: data.user.telefono,
-    };
+// Redirigir a la página de verificación pendiente
+router.replace('/verificacion-pendiente');
+return;
+}
 
-    localStorage.setItem('datosUser', JSON.stringify(datosUser));
+// Si el correo está verificado, continuar con el flujo normal
+const tokenEncrypt = Buffer.from(data.access_token).toString('base64');
+localStorage.setItem('token', tokenEncrypt);
 
-    // Animación de salida antes de redirigir
-    formActive.value = false;
-    
-    setTimeout(() => {
-      if (data.user.roles[0].name === 'cliente') {
-        router.replace('/');
-      } else {
-        router.replace('/admin-panel');
-      }
-    }, 300);
-    
-  } catch (err) {
-    manejarError(err);
-  } finally {
-    isLoading.value = false;
-  }
+const datosUser = {
+id: data.user.id,
+nombre: data.user.nombre,
+apellido: data.user.apellido,
+email: data.user.email,
+direccion: data.user.direccion,
+telefono: data.user.telefono,
+};
+
+localStorage.setItem('datosUser', JSON.stringify(datosUser));
+
+// Animación de salida antes de redirigir
+formActive.value = false;
+
+setTimeout(() => {
+if (data.user.roles[0].name === 'cliente') {
+router.replace('/');
+} else {
+router.replace('/admin-panel');
+}
+}, 300);
+
+} catch (err) {
+manejarError(err);
+} finally {
+isLoading.value = false;
+}
 }; */

@@ -361,6 +361,7 @@ const listarCategorias = async (page = 1) => {
   error.value = null;
   try {
     const { data } = await indexCategoriasConProductos();
+    console.log(data);
     categorias.value = data.datos.data;
     totalPages.value = data.datos.last_page;
     currentPage.value = page;
@@ -457,18 +458,6 @@ const favoriteUser = async (idProducto) => {
   } catch (error) {
     console.error('Error al agregar a favoritos:', error.response?.data?.message || error);
     showNotification('Error al agregar a favoritos', 'error');
-  }
-};
-
-// Calificaciones
-const storeRatingUser = async (productID, rating) => {
-  try {
-    await storeRating({ producto_id: productID, rating });
-    await indexRatingUser();
-    showNotification('Calificación guardada', 'success');
-  } catch (error) {
-    console.error('Error al calificar el producto:', error.response?.data?.message || error);
-    showNotification('Error al guardar calificación', 'error');
   }
 };
 
@@ -966,7 +955,6 @@ onMounted(async () => {
 }
 
 .category-banner:hover {
-  transform: translateY(-5px);
   box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
 }
 
@@ -975,10 +963,6 @@ onMounted(async () => {
   height: 100%;
   object-fit: cover;
   transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
-}
-
-.category-banner:hover img {
-  transform: scale(1.05);
 }
 
 /* Overlay con gradiente mejorado y animaciones */
@@ -1482,11 +1466,7 @@ onMounted(async () => {
   transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
-@media (min-width: 768px) {
-  .product-card:hover .product-image img {
-    transform: scale(1.05);
-  }
-}
+
 
 /* Navigation Buttons */
 .nav-button {

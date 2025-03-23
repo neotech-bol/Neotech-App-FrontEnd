@@ -889,10 +889,6 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
-.product-card:hover .product-image img {
-  transform: scale(1.05);
-}
-
 /* Navigation Buttons */
 .nav-button {
   position: absolute;

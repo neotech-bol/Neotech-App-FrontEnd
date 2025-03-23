@@ -759,22 +759,22 @@ onMounted(() => {
                 <p>Sábados: 9:00 - 13:00</p>
               </div>
             </div>
-            <div class="location-item">
+<!--             <div class="location-item">
               <i class="fas fa-info-circle" :style="{ color: getDepartmentColor(selectedDepartment) }"></i>
               <div>
                 <h4>Información Adicional</h4>
                 <p>{{ currentLocation.additionalInfo || 'Estacionamiento disponible para clientes.' }}</p>
               </div>
-            </div>
+            </div> -->
           </div>
-          <div class="location-actions">
+<!--           <div class="location-actions">
             <a :href="currentLocation.directionsUrl" target="_blank" class="direction-btn">
               <i class="fas fa-directions"></i> Cómo llegar
             </a>
             <button class="virtual-tour-btn" @click="showVirtualTour">
               <i class="fas fa-street-view"></i> Tour Virtual
             </button>
-          </div>
+          </div> -->
         </div>
         
         <div class="map-container">
@@ -866,7 +866,6 @@ onMounted(() => {
 .contact-section {
   padding: 80px 20px;
   min-height: 100vh;
-  background-color: #f9fafb;
   color: #1f2937;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }

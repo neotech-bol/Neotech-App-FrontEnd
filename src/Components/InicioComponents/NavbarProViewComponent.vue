@@ -119,8 +119,6 @@
               'location-button',
               currentDepartment === 'la-paz' ? 'location-button-naranja' : '',
               currentDepartment === 'cochabamba' ? 'location-button-azul' : '',
-              currentDepartment === 'santa-cruz' ? 'location-button-verde' : '',
-              currentDepartment === 'tarija' ? 'location-button-rojo' : ''
             ]"
             @click.stop="openLocationModal"
           >
@@ -245,7 +243,7 @@
             :class="{ 'active': currentDepartment === dept.value }" 
             @click="selectDepartmentAndClose(dept.value)"
           >
-            <i :class="['fas', dept.icon]"></i>
+            <i></i>
             <span>{{ dept.label }}</span>
             <i class="fas fa-check" v-if="currentDepartment === dept.value"></i>
           </div>
