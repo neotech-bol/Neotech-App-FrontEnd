@@ -104,11 +104,11 @@
       </div>
     </div>
 
-    <div class="services-cta">
+<!--     <div class="services-cta">
       <h3>¿Necesitas un servicio personalizado?</h3>
       <p>Contáctanos para discutir opciones adaptadas a tus necesidades específicas.</p>
       <button class="contact-btn" @click="contactUs">Contactar ahora</button>
-    </div>
+    </div> -->
   </section>
 </template>
 

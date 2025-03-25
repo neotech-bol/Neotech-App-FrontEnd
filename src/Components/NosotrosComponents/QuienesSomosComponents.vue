@@ -49,7 +49,7 @@
             <p>{{ paragraph }}</p>
           </div>
 
-          <div class="stats-container">
+<!--           <div class="stats-container">
             <div v-for="(stat, index) in stats" :key="index" class="stat-item" :style="{ animationDelay: `${index * 0.2}s` }">
               <div class="stat-icon">
                 <i :class="stat.icon"></i>
@@ -57,7 +57,7 @@
               <div class="stat-value">{{ stat.value }}</div>
               <div class="stat-label">{{ stat.label }}</div>
             </div>
-          </div>
+          </div> -->
         </div>
       </div>
     </div>

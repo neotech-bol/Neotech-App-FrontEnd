@@ -7,3 +7,6 @@ export const indexFavorites = () => {
 export const storeFavorite = (formIdProducto) => {
     return http().post(`${urlBase}favorite-nuevo`, formIdProducto);
 }
+export const removeFavorite = (formIdProducto) => {
+    return http().delete(`${urlBase}favorite/${formIdProducto}`);
+}

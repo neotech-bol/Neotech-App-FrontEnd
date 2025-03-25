@@ -8,13 +8,13 @@ const themeStore = useThemeStore()
 
 // Enhanced department locations with more details
 const departmentLocations = {
-  'la-paz': {
+/*   'la-paz': {
     address: 'Av. 16 de Julio #1490, El Prado, La Paz - BO',
     mapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3825.3681896113545!2d-68.13309!3d-16.499611!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTbCsDI5JzU4LjYiUyA2OMKwMDcnNTkuMSJX!5e0!3m2!1ses!2sbo!4v1234567890!5m2!1ses!2sbo',
     directionsUrl: 'https://goo.gl/maps/abcdefg123456',
     additionalInfo: 'Edificio Torre Azul, planta baja. Referencia: Frente al Banco Nacional.',
     color: '#F8A812' // Naranja para La Paz
-  },
+  }, */
   'cochabamba': {
     address: 'Calle Tarija #234, esquina América, Cochabamba - BO',
     mapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3807.3758801973644!2d-66.1552!3d-17.393611!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTfCsDIyJzIyLjciUyA2NsKwMDknMzguNyJX!5e0!3m2!1ses!2sbo!4v1234567890!5m2!1ses!2sbo',
@@ -22,13 +22,13 @@ const departmentLocations = {
     additionalInfo: 'Local con fachada verde. Referencia: A media cuadra de la Plaza Principal.',
     color: '#3B82F6' // Azul para Cochabamba
   },
-  'santa-cruz': {
+/*   'santa-cruz': {
     address: 'Av. Irala #456, Santa Cruz - BO',
     mapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3799.1234567890123!2d-63.1234!3d-17.7890!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTfCsDQ3JzIwLjQiUyA2M8KwMDcnMjAuMiJX!5e0!3m2!1ses!2sbo!4v1234567890!5m2!1ses!2sbo',
     directionsUrl: 'https://goo.gl/maps/opqrstu345678',
     additionalInfo: 'Centro Comercial Las Brisas, Local 12. Amplio estacionamiento disponible.',
     color: '#10B981' // Verde para Santa Cruz
-  }
+  } */
 }
 
 // State variables

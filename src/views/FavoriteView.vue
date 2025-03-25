@@ -106,7 +106,7 @@
 </template>
 
 <script setup>
-import { indexFavorites } from '@/Services/FavoriteService'
+import { indexFavorites, removeFavorite } from '@/Services/FavoriteService'
 import { useCartStore } from '@/stores/cart'
 import { onMounted, ref, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -140,7 +140,8 @@ const handleResize = () => {
 const removeFromFavorites = async (favoriteId) => {
   try {
     await removeFavorite(favoriteId)
-    favorites.value = favorites.value.filter(item => item.id !== favoriteId)
+    favorites.value = favorites.value.filter(item => item.id !== favoriteId);
+    userFavorites();
     showNotificationMessage('Producto eliminado de favoritos', 'success')
   } catch (error) {
     console.error('Error al eliminar de favoritos:', error)

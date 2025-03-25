@@ -48,3 +48,7 @@ export const recientesProductos = () => {
 export const filtrosProductos = (categoriaID, catalogoID, search) => {
     return httpNotToken().get(`${urlBase}productos/filtrar?categoria_id=${categoriaID}&catalogo_id=${catalogoID}&search=${search}`);
 }
+
+export const changeStatus = (idProducto) => {
+  return http().delete(`${urlBase}producto/${idProducto}`);
+}

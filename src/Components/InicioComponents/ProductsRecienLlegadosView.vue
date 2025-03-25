@@ -69,9 +69,30 @@
               <i class="fas fa-tag"></i> {{ product.categoria?.nombre || 'General' }}
             </div>
             <h3 class="product-name">{{ product.nombre }}</h3>
-            <div class="price-container">
-              <div class="price">
-                <span class="current-price">{{ formatPrice(product.precio) }}</span>
+            <!-- Descripción truncada -->
+            <p v-if="product.descripcion" class="product-description">
+              {{ truncateDescription(product.descripcion, 60) }}
+            </p>
+            
+            <div class="prices-container">
+              <!-- Precio Regular -->
+              <div class="price-item">
+                <span class="price-label">Precio:</span>
+                <span class="price-value" :class="{ 'with-discount': product.precio_venta }">
+                  {{ formatPrice(product.precio) }}
+                </span>
+              </div>
+              
+              <!-- Precio de Venta (si existe) -->
+              <div class="price-item" v-if="product.precio_venta">
+                <span class="price-label">Venta:</span>
+                <span class="price-value sale">{{ formatPrice(product.precio_venta) }}</span>
+              </div>
+              
+              <!-- Precio Preventa (si existe) -->
+              <div class="price-item" v-if="product.precio_preventa">
+                <span class="price-label">Preventa:</span>
+                <span class="price-value preventa">{{ formatPrice(product.precio_preventa) }}</span>
               </div>
             </div>
           </div>
@@ -92,7 +113,7 @@ import bootstrapBundleMin from 'bootstrap/dist/js/bootstrap.bundle.min';
 const router = useRouter();
 const cartStore = useCartStore();
 const recentProducts = ref([]);
-const loading = ref(true); 
+const loading = ref(true);
 const error = ref(null);
 const addingToCart = ref(null);
 const favoriteProducts = ref([]);
@@ -190,14 +211,20 @@ const formatPrice = (price) => {
   }).format(price);
 };
 
+// Función para truncar descripción
+const truncateDescription = (text, maxLength) => {
+  if (!text) return '';
+  return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+};
+
 const showNotification = (message, type) => {
   // Crear un ID único para el toast
   const toastId = `toast-${Date.now()}`;
-  
+
   // Determinar la clase de color según el tipo
   let bgClass = 'bg-primary text-white';
   let icon = 'info-circle';
-  
+
   if (type === 'success') {
     bgClass = 'bg-success text-white';
     icon = 'check-circle';
@@ -208,7 +235,7 @@ const showNotification = (message, type) => {
     bgClass = 'bg-warning';
     icon = 'exclamation-triangle';
   }
-  
+
   // Crear el elemento toast
   const toastHTML = `
     <div id="${toastId}" class="toast align-items-center ${bgClass} border-0" role="alert" aria-live="assertive" aria-atomic="true">
@@ -220,7 +247,7 @@ const showNotification = (message, type) => {
       </div>
     </div>
   `;
-  
+
   // Crear contenedor de toasts si no existe
   let toastContainer = document.getElementById('toast-container');
   if (!toastContainer) {
@@ -230,19 +257,19 @@ const showNotification = (message, type) => {
     toastContainer.style.zIndex = '1080';
     document.body.appendChild(toastContainer);
   }
-  
+
   // Añadir el toast al contenedor
   toastContainer.innerHTML += toastHTML;
-  
+
   // Inicializar y mostrar el toast
   const toastElement = document.getElementById(toastId);
   const bsToast = new bootstrapBundleMin.Toast(toastElement, {
     autohide: true,
     delay: 3000
   });
-  
+
   bsToast.show();
-  
+
   // También mantener el log en consola para debugging
   console.log(`${type}: ${message}`);
 };
@@ -258,7 +285,7 @@ const showNotification = (message, type) => {
 .container {
   max-width: 1440px;
   margin: 0 auto;
-/*   padding: 0 1rem; */
+  /*   padding: 0 1rem; */
 }
 
 /* Section Header */
@@ -461,6 +488,10 @@ const showNotification = (message, type) => {
   transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
+.product-card:hover .product-image img {
+  transform: scale(1.05);
+}
+
 /* Navigation Buttons */
 .nav-button {
   position: absolute;
@@ -650,32 +681,85 @@ const showNotification = (message, type) => {
   color: #3498db;
 }
 
-
-/* Price */
-.price-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: auto;
-}
-
-.price {
-  display: flex;
-  align-items: baseline;
-  gap: 0.25rem;
-  flex-wrap: wrap;
-}
-
-.current-price {
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: var(--text-color);
-}
-
-.old-price {
+/* Descripción del producto - AÑADIDO */
+.product-description {
   font-size: 0.75rem;
-  color: #a0aec0;
+  color: #718096;
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (min-width: 768px) {
+  .product-description {
+    font-size: 0.8rem;
+    margin-bottom: 0.75rem;
+  }
+}
+
+/* Precios - ACTUALIZADO para igualar estilos */
+.prices-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.price-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.price-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #4a5568;
+  min-width: 4rem;
+}
+
+.price-value {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+.price-value.with-discount {
   text-decoration: line-through;
+  color: #a0aec0;
+  font-weight: 500;
+}
+
+.price-value.sale {
+  color: #e53e3e;
+}
+
+.price-value.preventa {
+  color: #e53e3e;
+}
+
+@media (min-width: 768px) {
+  .prices-container {
+    margin-top: 0.75rem;
+  }
+
+  .price-label {
+    font-size: 0.75rem;
+  }
+
+  .price-value {
+    font-size: 0.95rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .price-value {
+    font-size: 1.1rem;
+  }
 }
 
 /* Transitions */
@@ -703,11 +787,6 @@ const showNotification = (message, type) => {
   .product-name {
     font-size: 1rem;
     height: 2.8rem;
-  }
-
-
-  .current-price {
-    font-size: 1.1rem;
   }
 
   .action-button {
@@ -801,14 +880,6 @@ const showNotification = (message, type) => {
     margin-bottom: 0.25rem;
   }
 
-  .current-price {
-    font-size: 0.85rem;
-  }
-
-  .old-price {
-    font-size: 0.7rem;
-  }
-
   .action-button {
     width: 26px;
     height: 26px;
@@ -850,23 +921,12 @@ const showNotification = (message, type) => {
     font-size: 0.65rem;
     margin-bottom: 0.25rem;
   }
-  .current-price {
-    font-size: 0.85rem;
-  }
-
-  .old-price {
-    font-size: 0.7rem;
-  }
 }
 
 @media (max-width: 399px) {
   .recently-arrived {
     padding: 1.5rem 0;
   }
-
-/*   .container {
-    padding: 0 0.5rem;
-  } */
 
   .products-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -887,14 +947,6 @@ const showNotification = (message, type) => {
   .category {
     font-size: 0.6rem;
     margin-bottom: 0.25rem;
-  }
-
-  .current-price {
-    font-size: 0.8rem;
-  }
-
-  .old-price {
-    font-size: 0.65rem;
   }
 
   .action-button {

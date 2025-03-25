@@ -550,7 +550,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Modal } from 'bootstrap/dist/js/bootstrap.bundle.min';
-import { indexCatalogoItems } from '@/Services/CatalogoService';
+import { indexCatalogosactives } from '@/Services/CatalogoService';
 import { destroyCategoria, indexCategorias, showCategoria, storeCategoria, updateCategoria } from '@/Services/CategoriaService';
 
 const categorias = ref([]);
@@ -816,7 +816,7 @@ const mostrarCategoria = async (id) => {
 
 const mostrarCatalogos = async () => {
   try {
-    const { data } = await indexCatalogoItems('', '');
+    const { data } = await indexCatalogosactives();
     catalogos.value = data.datos;
     console.log(catalogos.value);
   } catch (error) {

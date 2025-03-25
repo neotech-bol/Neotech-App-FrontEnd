@@ -33,6 +33,7 @@ import CatalogoActivoView from '@/views/CatalogoActivoView.vue'
 import ContactanosPanelView from '@/Admin/ContactanosPanelView.vue'
 import VerificacionPendiente from '@/views/VerificacionPendiente.vue'
 import { ref, reactive } from 'vue'
+import CategoriaIdView from '@/views/CategoriaIdView.vue'
 
 // Crear estado reactivo para el usuario y permisos
 const authState = reactive({
@@ -267,6 +268,16 @@ const router = createRouter({
             title: 'Catálogo Activo | Neotech-Bol Bolivia',
             description: 'Explora el catálogo actual de Neotech-Bol con ofertas en tecnología en Bolivia.'
           }
+        },
+        {
+          path: 'categoria/:idCategoria?',
+          name: 'categoriaDetail',
+          component: CategoriaIdView,
+          props: true, // Permite pasar el idCategoria como prop al componente
+          meta: {
+            title: (route) => `Categoria ${route.params.idCategoria} | Neotech-Bol Bolivia`,
+            description: (route) => `Revisa el catálogo de tecnología y electrónica para la categoría ${route.params.idCategoria} en Neotech-Bol Bolivia.`
+          },
         }
       ],
     },

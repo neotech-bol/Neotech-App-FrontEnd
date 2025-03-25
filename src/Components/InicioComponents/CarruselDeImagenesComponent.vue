@@ -47,13 +47,6 @@ const images = ref([
     ctaLink: '/productos',
     ctaText: 'Ver Colección'
   },
-  {
-    title: '¡Ofertas disponibles <br/> por tiempo limitado!',
-    url: '/imagenes/home-slider-1.png',
-    alt: 'Special offer',
-    ctaLink: '/productos',
-    ctaText: 'Ver Colección'
-  },
   // Add more slides here
 ]);
 
@@ -67,14 +60,6 @@ const windowWidth = ref(window.innerWidth);
 
 // Compute isMobile based on window width
 const isMobile = computed(() => windowWidth.value <= 768);
-// Compute screen size category for more precise responsive adjustments
-const screenSize = computed(() => {
-  if (windowWidth.value <= 360) return 'xs';
-  if (windowWidth.value <= 480) return 'sm';
-  if (windowWidth.value <= 768) return 'md';
-  if (windowWidth.value <= 1024) return 'lg';
-  return 'xl';
-});
 
 let intervalId = null;
 let resizeObserver = null;

@@ -14,11 +14,6 @@
       <section class="info-perfil">
         <div class="section-header">
           <h2>Información del Perfil</h2>
-          <div class="badge-container">
-            <span class="member-badge">
-              <i class="fas fa-crown"></i> Cliente Premium
-            </span>
-          </div>
         </div>
         <div class="grid-info">
           <div class="item-info" v-for="(valor, clave) in camposEditables" :key="clave">
@@ -451,25 +446,6 @@ body {
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
   gap: 1rem;
-}
-
-.member-badge {
-  background: linear-gradient(135deg, #F59E0B, #D97706);
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 2rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  box-shadow: 0 2px 8px rgba(213, 119, 6, 0.3);
-  transition: all 0.3s ease;
-}
-
-.member-badge:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(213, 119, 6, 0.4);
 }
 
 .info-perfil,

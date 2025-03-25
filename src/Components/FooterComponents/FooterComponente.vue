@@ -12,6 +12,26 @@
         </p>
       </div>
 
+      <!-- Categorías dinámicas -->
+      <div class="footer-section">
+        <div class="section-header" @click="toggleCategorias" :class="{ 'active': categoriasOpen }">
+          <h3>Categorías</h3>
+          <span class="toggle-icon">{{ categoriasOpen ? '−' : '+' }}</span>
+        </div>
+        <transition name="slide">
+          <ul v-show="categoriasOpen || !isMobile" class="links-list">
+            <li v-for="categoria in categorias" :key="categoria.id">
+              <a href="#" @click.prevent="irCategoria(categoria.id)" class="footer-link">
+                <span class="link-text">{{ categoria.nombre }}</span>
+              </a>
+            </li>
+            <li v-if="categorias.length === 0" class="loading-text">
+              <span>Cargando categorías...</span>
+            </li>
+          </ul>
+        </transition>
+      </div>
+
       <!-- Secciones colapsables -->
       <div v-for="(section, index) in footerSections" :key="index" class="footer-section">
         <div class="section-header" @click="toggleSection(index)" :class="{ 'active': section.isOpen }">
@@ -21,7 +41,11 @@
         <transition name="slide">
           <ul v-show="section.isOpen || !isMobile" class="links-list">
             <li v-for="(link, linkIndex) in section.links" :key="linkIndex">
-              <a :href="link.url" class="footer-link">
+              <a 
+                :href="link.url === '#' ? '#' : undefined" 
+                class="footer-link"
+                @click.prevent="handleLinkClick(link)"
+              >
                 <span class="link-text">{{ link.text }}</span>
               </a>
             </li>
@@ -48,15 +72,6 @@
               <a href="https://www.facebook.com/NeoTech.Bol" class="social-link" target="_blank">
                 <i class="fab fa-facebook-f"></i>
               </a>
-<!--               <a href="#" class="social-link">
-                <i class="fab fa-twitter"></i>
-              </a>
-              <a href="#" class="social-link">
-                <i class="fab fa-linkedin-in"></i>
-              </a>
-              <a href="#" class="social-link">
-                <i class="fab fa-instagram"></i>
-              </a> -->
             </div>
           </div>
         </transition>
@@ -67,53 +82,210 @@
     <div class="footer-bottom">
       <p>Desarrollado por Tinkuna Dev. 2025.</p>
     </div>
+
+    <!-- Modal de confirmación para cerrar sesión -->
+    <div v-if="showLogoutModal" class="logout-modal">
+      <div class="logout-modal-content">
+        <div class="logout-modal-header">
+          <h3>Cerrar Sesión</h3>
+          <button class="close-modal" @click="cancelLogout">×</button>
+        </div>
+        <div class="logout-modal-body">
+          <p>¿Estás seguro que deseas cerrar sesión?</p>
+        </div>
+        <div class="logout-modal-footer">
+          <button class="cancel-btn" @click="cancelLogout">Cancelar</button>
+          <button class="logout-btn" @click="confirmLogout">
+            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+          </button>
+        </div>
+      </div>
+    </div>
   </footer>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick } from 'vue';
+import { categoriasActivesID } from '@/Services/CategoriaService';
+import { useRouter, useRoute } from 'vue-router';
+import { useUserStore } from '@/stores/userAuht'; // Asegúrate de tener este store
+import { logout } from '@/Services/AuthService'; // Importa la función de logout
+
+// Router y store
+const router = useRouter();
+const route = useRoute();
+const authStore = useUserStore();
+
+// Estado para el modal de logout
+const showLogoutModal = ref(false);
 
 // Estado para controlar las secciones colapsables
 const footerSections = ref([
-/*   {
-    title: 'Categorías',
-    isOpen: false,
-    links: [
-      { text: 'Motos Eléctricas', url: '/categorias/motos-electricas' },
-      { text: 'Calentadores a Gas', url: '/categorias/calentadores-gas' },
-      { text: 'Aspiradores Robot', url: '/categorias/aspiradores-robot' },
-      { text: 'Purificadores de Aire', url: '/categorias/purificadores-aire' },
-      { text: 'Paneles Solares', url: '/categorias/paneles-solares' },
-      { text: 'Secadores de Cabello', url: '/categorias/secadores-cabello' }
-    ]
-  }, */
   {
     title: 'Neotech Bol',
     isOpen: false,
     links: [
-      { text: 'Sobre Nosotros', url: '/sobre-nosotros' },
-      { text: 'Rastrear Pedido', url: '/rastrear-pedido' },
-      { text: 'Información Legal', url: '/informacion-legal' },
-      { text: 'Términos y condiciones', url: '/terminos-condiciones' },
-      { text: 'Pago seguro', url: '/pago-seguro' },
-      { text: 'Contáctanos', url: '/contacto' }
+      { text: 'Sobre Nosotros', url: '/nosotros', action: 'navigate', scrollTop: true },
+      { text: 'Contáctanos', url: '/contacto', action: 'navigate', scrollTop: true }
     ]
   },
   {
     title: 'Cuenta',
     isOpen: false,
     links: [
-      { text: 'Entrar', url: '/login' },
-      { text: 'Ver Carrito', url: '/carrito' },
-      { text: 'Política de devoluciones', url: '/politica-devoluciones' },
-      { text: 'Trabaja con nosotros', url: '/trabaja-con-nosotros' },
-      { text: 'Programa de afiliados', url: '/afiliados' }
+      { text: 'Entrar', url: '/login', action: 'navigate' },
+      { text: 'Ver Carrito', url: '/checkout', action: 'navigate' },
+      { text: 'Cerrar sesion', url: '#', action: 'logout' },
     ]
   }
 ]);
 
+// Estado para las categorías
+const categorias = ref([]);
+const categoriasOpen = ref(false);
 const contactSectionOpen = ref(false);
 const isMobile = ref(false);
+const isLoading = ref(false);
+
+// Función para manejar clics en enlaces
+const handleLinkClick = async (link) => {
+  if (link.action === 'logout') {
+    showLogoutModal.value = true;
+  } else if (link.action === 'navigate' && link.url) {
+    // Si estamos en la misma ruta y se requiere scroll al top
+    if (route.path === link.url && link.scrollTop) {
+      scrollToTop();
+    } else {
+      // Navegar a la nueva ruta
+      await router.push(link.url);
+      
+      // Si se requiere scroll al top, hacerlo después de la navegación
+      if (link.scrollTop) {
+        // Esperar a que el DOM se actualice
+        await nextTick();
+        scrollToTop();
+      }
+    }
+  }
+};
+
+// Función para hacer scroll al inicio de la página
+const scrollToTop = () => {
+  // Scroll suave
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+};
+
+// Funciones para el modal de logout
+const cancelLogout = () => {
+  showLogoutModal.value = false;
+};
+
+const confirmLogout = async () => {
+  try {
+    await cerrarSesion();
+    showLogoutModal.value = false;
+  } catch (error) {
+    console.error('Error al cerrar sesión:', error);
+    showNotification('Error al cerrar sesión', 'error');
+  }
+};
+
+// Función completa para cerrar sesión
+const cerrarSesion = async () => {
+  try {
+    // 1. Llamar al endpoint de logout en el backend (si existe)
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    
+    if (token) {
+      try {
+        const { data } = await logout();
+        console.log(data);
+      } catch (apiError) {
+        console.warn('Error al llamar al endpoint de logout:', apiError);
+        // Continuamos con el proceso aunque falle la API
+      }
+    }
+    
+    // 2. Limpiar tokens y datos de usuario del almacenamiento local
+    localStorage.removeItem('token');
+    localStorage.removeItem('datosUser');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('datosUser');
+    
+    // 3. Mostrar notificación de éxito
+    showNotification('Sesión cerrada correctamente', 'success');
+    
+    // 4. Redireccionar al login
+    router.push('/login');
+    
+    // 5. Hacer scroll al top después de redireccionar
+    nextTick(() => {
+      scrollToTop();
+    });
+    
+    return Promise.resolve();
+  } catch (error) {
+    console.error('Error en cerrarSesion:', error);
+    showNotification('Error al cerrar sesión', 'error');
+    return Promise.reject(error);
+  }
+};
+
+// Función para mostrar notificaciones
+const showNotification = (message, type) => {
+  // Si tienes un sistema de notificaciones, úsalo aquí
+  console.log(`${type}: ${message}`);
+  
+  // Ejemplo básico de notificación
+  const notificationElement = document.createElement('div');
+  notificationElement.className = `notification notification-${type}`;
+  notificationElement.innerHTML = `
+    <div class="notification-content">
+      <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+      <span>${message}</span>
+    </div>
+  `;
+  
+  document.body.appendChild(notificationElement);
+  
+  // Eliminar la notificación después de 3 segundos
+  setTimeout(() => {
+    notificationElement.classList.add('notification-hide');
+    setTimeout(() => {
+      document.body.removeChild(notificationElement);
+    }, 300);
+  }, 3000);
+};
+
+// Función para listar categorías desde la API
+const listarCategorias = async () => {
+  isLoading.value = true;
+  try {
+    const { data } = await categoriasActivesID();
+    if (data && data.datos) {
+      categorias.value = data.datos;
+    } else {
+      console.error('Formato de respuesta inesperado:', data);
+      categorias.value = [];
+    }
+  } catch (error) {
+    console.error('Error al cargar categorías:', error);
+    categorias.value = [];
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const irCategoria = (idCategoria) => {
+  router.push({ path: `/categoria/${idCategoria}` });
+  // Hacer scroll al top después de navegar a la categoría
+  nextTick(() => {
+    scrollToTop();
+  });
+}
 
 // Función para alternar la visibilidad de las secciones
 const toggleSection = (index) => {
@@ -126,6 +298,12 @@ const toggleSection = (index) => {
   }
 };
 
+// Función para alternar la sección de categorías
+const toggleCategorias = () => {
+  if (!isMobile.value) return;
+  categoriasOpen.value = !categoriasOpen.value;
+};
+
 // Función para verificar si es dispositivo móvil
 const checkIfMobile = () => {
   isMobile.value = window.innerWidth <= 768;
@@ -136,24 +314,38 @@ const checkIfMobile = () => {
       section.isOpen = true;
     });
     contactSectionOpen.value = true;
+    categoriasOpen.value = true;
   } else {
     // En móvil, cerrar todas las secciones por defecto
     footerSections.value.forEach(section => {
       section.isOpen = false;
     });
     contactSectionOpen.value = false;
+    categoriasOpen.value = false;
   }
 };
 
-// Configurar event listeners para el resize
+// Configurar event listeners para el resize y cargar categorías al montar
 onMounted(() => {
   checkIfMobile();
+  listarCategorias(); // Cargar categorías al montar el componente
   window.addEventListener('resize', checkIfMobile);
+  
+  // Escuchar la tecla Escape para cerrar el modal
+  window.addEventListener('keydown', handleKeyDown);
 });
 
 onUnmounted(() => {
   window.removeEventListener('resize', checkIfMobile);
+  window.removeEventListener('keydown', handleKeyDown);
 });
+
+// Manejar teclas para accesibilidad
+const handleKeyDown = (e) => {
+  if (e.key === 'Escape' && showLogoutModal.value) {
+    cancelLogout();
+  }
+};
 </script>
 
 <style scoped>
@@ -206,6 +398,12 @@ onUnmounted(() => {
 
 .footer-section ul li {
   margin-bottom: 12px;
+}
+
+.loading-text {
+  color: #6c757d;
+  font-style: italic;
+  font-size: 0.9rem;
 }
 
 .footer-link {
@@ -336,6 +534,174 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
+/* Modal de logout */
+.logout-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px);
+}
+
+.logout-modal-content {
+  background-color: white;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.logout-modal-header {
+  padding: 15px 20px;
+  border-bottom: 1px solid #e9ecef;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logout-modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.close-modal {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #6c757d;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.close-modal:hover {
+  color: #dc3545;
+}
+
+.logout-modal-body {
+  padding: 20px;
+}
+
+.logout-modal-body p {
+  margin: 0;
+  font-size: 1rem;
+  color: #333;
+}
+
+.logout-modal-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.cancel-btn, .logout-btn {
+  padding: 8px 16px;
+  border-radius: 5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-btn {
+  background-color: #f8f9fa;
+  color: #333;
+  border: 1px solid #dee2e6;
+}
+
+.cancel-btn:hover {
+  background-color: #e9ecef;
+}
+
+.logout-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logout-btn:hover {
+  background-color: #c82333;
+}
+
+/* Estilos para notificaciones */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 15px 20px;
+  border-radius: 5px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1100;
+  animation: notificationSlideIn 0.3s ease;
+  max-width: 350px;
+}
+
+.notification-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.notification-success {
+  background-color: #d4edda;
+  color: #155724;
+  border-left: 4px solid #28a745;
+}
+
+.notification-error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border-left: 4px solid #dc3545;
+}
+
+.notification-hide {
+  animation: notificationSlideOut 0.3s ease forwards;
+}
+
+@keyframes notificationSlideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes notificationSlideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
   .footer-content {
@@ -407,6 +773,10 @@ onUnmounted(() => {
     margin-top: 20px;
     padding: 15px;
   }
+  
+  .logout-modal-content {
+    width: 95%;
+  }
 }
 
 @media (max-width: 480px) {
@@ -435,6 +805,19 @@ onUnmounted(() => {
     width: 36px;
     height: 36px;
     font-size: 1rem;
+  }
+  
+  .logout-modal-header h3 {
+    font-size: 1.1rem;
+  }
+  
+  .logout-modal-body p {
+    font-size: 0.9rem;
+  }
+  
+  .cancel-btn, .logout-btn {
+    padding: 7px 14px;
+    font-size: 0.85rem;
   }
 }
 </style>

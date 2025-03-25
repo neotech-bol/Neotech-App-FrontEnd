@@ -35,7 +35,7 @@
                       </button>
                     </p>
                   </div>
-                  <button class="banner-cta">
+                  <button class="banner-cta" @click="irCategoria(categoria.id)">
                     <span>Ver Colección</span>
                     <i class="fas fa-arrow-right"></i>
                   </button>
@@ -96,16 +96,6 @@
                     <i class="fas fa-chevron-right"></i>
                   </button>
 
-                  <!-- Badges -->
-                  <div class="badges">
-                    <span v-if="product.badge" class="badge badge-new">
-                      <i class="fas fa-star-of-life"></i> {{ product.badge }}
-                    </span>
-                    <span v-if="product.descuento" class="badge badge-sale">
-                      <i class="fas fa-bolt"></i> -{{ product.descuento }}%
-                    </span>
-                  </div>
-
                   <!-- Product Actions -->
                   <div class="product-actions-bottom">
                     <button class="action-button cart-btn" @click.stop="addToCart(product)"
@@ -131,25 +121,27 @@
                   <i class="fas fa-tag"></i> {{ categoria?.nombre || 'General' }}
                 </div>
                 <h3 class="product-name">{{ product.nombre }}</h3>
-
-           <!--      <div class="rating-container">
-                  <div class="rating">
-                    <span v-for="star in 5" :key="star" class="star"
-                      :class="{ 'filled': star <= (userRatings.find(r => r.producto_id === product.id)?.rating || 0) }"
-                      @click.stop="storeRatingUser(product.id, star)">
-                      ★
+                
+                <!-- Precios - Actualizado para igualar estilos -->
+                <div class="prices-container">
+                  <!-- Precio Regular -->
+                  <div class="price-item">
+                    <span class="price-label">Precio:</span>
+                    <span class="price-value" :class="{ 'with-discount': product.precio_venta }">
+                      {{ formatPrice(product.precio) }}
                     </span>
                   </div>
-                  <div class="rating-count">
-                    {{userRatings.find(r => r.producto_id === product.id)?.total_users || 0}} calificaciones
+                  
+                  <!-- Precio de Venta (si existe) -->
+                  <div class="price-item" v-if="product.precio_venta">
+                    <span class="price-label">Venta:</span>
+                    <span class="price-value sale">{{ formatPrice(product.precio_venta) }}</span>
                   </div>
-                </div> -->
-
-                <div class="price-container">
-                  <div class="price">
-                    <span class="current-price">{{ formatPrice(product.precio) }}</span>
-                    <span v-if="product.precio_anterior" class="old-price">{{ formatPrice(product.precio_anterior)
-                    }}</span>
+                  
+                  <!-- Precio Preventa (si existe) -->
+                  <div class="price-item" v-if="product.precio_preventa">
+                    <span class="price-label">Preventa:</span>
+                    <span class="price-value preventa">{{ formatPrice(product.precio_preventa) }}</span>
                   </div>
                 </div>
               </div>
@@ -181,13 +173,12 @@ import { indexCatalogoItems } from '@/Services/CatalogoService';
 import { useCartStore } from '@/stores/cart';
 import { useRouter } from 'vue-router';
 import { storeFavorite } from '@/Services/FavoriteService';
-import { indexRatings, storeRating } from '@/Services/RatingService';
+import bootstrapBundleMin from 'bootstrap/dist/js/bootstrap.bundle.min';
 
 const cartStore = useCartStore();
 const datos = ref([]);
 const router = useRouter();
 const fovoritesForm = ref({});
-const userRatings = ref([]);
 const currentImageIndex = ref({});
 const loading = ref(true);
 const error = ref(null);
@@ -230,12 +221,10 @@ const closeModal = () => {
 // Ver colección (desde el modal)
 const viewCollectionFromModal = () => {
   closeModal();
-  viewCollection();
 };
 
 onMounted(() => {
   listarCatalogo();
-  indexRatingUser();
 
   // Cerrar modal con tecla Escape
   window.addEventListener('keydown', (e) => {
@@ -325,9 +314,60 @@ const fororiteUser = async (productId) => {
 };
 
 const showNotification = (message, type) => {
-  // This is a placeholder for a notification system
+  // Crear un ID único para el toast
+  const toastId = `toast-${Date.now()}`;
+  
+  // Determinar la clase de color según el tipo
+  let bgClass = 'bg-primary text-white';
+  let icon = 'info-circle';
+  
+  if (type === 'success') {
+    bgClass = 'bg-success text-white';
+    icon = 'check-circle';
+  } else if (type === 'error') {
+    bgClass = 'bg-danger text-white';
+    icon = 'exclamation-circle';
+  } else if (type === 'warning') {
+    bgClass = 'bg-warning';
+    icon = 'exclamation-triangle';
+  }
+  
+  // Crear el elemento toast
+  const toastHTML = `
+    <div id="${toastId}" class="toast align-items-center ${bgClass} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body">
+          <i class="fas fa-${icon} me-2"></i> ${message}
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+  `;
+  
+  // Crear contenedor de toasts si no existe
+  let toastContainer = document.getElementById('toast-container');
+  if (!toastContainer) {
+    toastContainer = document.createElement('div');
+    toastContainer.id = 'toast-container';
+    toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+    toastContainer.style.zIndex = '1080';
+    document.body.appendChild(toastContainer);
+  }
+  
+  // Añadir el toast al contenedor
+  toastContainer.innerHTML += toastHTML;
+  
+  // Inicializar y mostrar el toast
+  const toastElement = document.getElementById(toastId);
+  const bsToast = new bootstrapBundleMin.Toast(toastElement, {
+    autohide: true,
+    delay: 3000
+  });
+  
+  bsToast.show();
+  
+  // También mantener el log en consola para debugging
   console.log(`${type}: ${message}`);
-  // You could implement a toast notification system here
 };
 
 const addToCart = (product) => {
@@ -348,15 +388,6 @@ const addToCart = (product) => {
 const viewCollection = () => {
   // Implementar lógica para ver la colección
   console.log('Ver colección');
-};
-
-const indexRatingUser = async () => {
-  try {
-    const { data } = await indexRatings();
-    userRatings.value = data;
-  } catch (error) {
-    console.error('Error al obtener las calificaciones:', error);
-  }
 };
 
 const getProductImages = (product) => {
@@ -396,6 +427,9 @@ const formatPrice = (price) => {
     minimumFractionDigits: 2
   }).format(price);
 };
+const irCategoria = (idCategoria) => {
+  router.push({ path: `/categoria/${idCategoria}` });
+}
 </script>
 
 <style scoped>
@@ -833,6 +867,11 @@ const formatPrice = (price) => {
   object-fit: contain;
   transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
+
+.product-card:hover .product-image img {
+  transform: scale(1.05);
+}
+
 /* Navigation Buttons */
 .nav-button {
   position: absolute;
@@ -870,41 +909,6 @@ const formatPrice = (price) => {
   background-color: white;
   transform: translateY(-50%) scale(1.1);
   color: #3498db;
-}
-
-/* Badges */
-.badges {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  z-index: 2;
-}
-
-.badge {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.65rem;
-  font-weight: 700;
-  border-radius: 9999px;
-  text-transform: uppercase;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  letter-spacing: 0.5px;
-}
-
-.badge-new {
-  background: linear-gradient(45deg, #48bb78, #38a169);
-  color: white;
-  animation: pulse 2s infinite;
-}
-
-.badge-sale {
-  background: linear-gradient(45deg, #ed8936, #dd6b20);
-  color: white;
 }
 
 @keyframes pulse {
@@ -1027,62 +1031,65 @@ const formatPrice = (price) => {
   color: #3498db;
 }
 
-/* Rating */
-.rating-container {
-  margin-bottom: 0.5rem;
-}
-
-.rating {
+/* Precios - ACTUALIZADO para igualar estilos */
+.prices-container {
   display: flex;
-  gap: 2px;
-  margin-bottom: 0.25rem;
-}
-
-.star {
-  color: #e2e8f0;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: transform 0.2s ease, color 0.2s ease;
-}
-
-.star:hover {
-  transform: scale(1.2);
-}
-
-.star.filled {
-  color: #f6ad55;
-}
-
-.rating-count {
-  font-size: 0.65rem;
-  color: #718096;
-}
-
-/* Price */
-.price-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: auto;
-}
-
-.price {
-  display: flex;
-  align-items: baseline;
+  flex-direction: column;
   gap: 0.25rem;
-  flex-wrap: wrap;
+  margin-top: 0.5rem;
 }
 
-.current-price {
+.price-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.price-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #4a5568;
+  min-width: 4rem;
+}
+
+.price-value {
+  font-size: 0.85rem;
   font-weight: 700;
-  font-size: 0.95rem;
-  color: var(--text-color);
+  color: #2d3748;
 }
 
-.old-price {
-  font-size: 0.75rem;
-  color: #a0aec0;
+.price-value.with-discount {
   text-decoration: line-through;
+  color: #a0aec0;
+  font-weight: 500;
+}
+
+.price-value.sale {
+  color: #e53e3e;
+}
+
+.price-value.preventa {
+  color: #e53e3e;
+}
+
+@media (min-width: 768px) {
+  .prices-container {
+    margin-top: 0.75rem;
+  }
+
+  .price-label {
+    font-size: 0.75rem;
+  }
+
+  .price-value {
+    font-size: 0.95rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .price-value {
+    font-size: 1.1rem;
+  }
 }
 
 /* Loading State */
@@ -1246,10 +1253,6 @@ const formatPrice = (price) => {
     height: 2.8rem;
   }
 
-  .star {
-    font-size: 1rem;
-  }
-
   .current-price {
     font-size: 1.1rem;
   }
@@ -1263,11 +1266,6 @@ const formatPrice = (price) => {
   .nav-button {
     width: 35px;
     height: 35px;
-  }
-
-  .badge {
-    padding: 0.35rem 0.7rem;
-    font-size: 0.7rem;
   }
 }
 
@@ -1480,8 +1478,7 @@ const formatPrice = (price) => {
     transform: none;
   }
 
-  .spinner,
-  .badge-new {
+  .spinner {
     animation: none;
   }
 

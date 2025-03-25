@@ -77,6 +77,11 @@
                     <button class="btn btn-sm btn-outline-info" @click="verDetalles(item.id)">
                       <i class="fas fa-info-circle"></i>
                     </button>
+                    <button class="btn btn-sm" :class="item.estado == 1 ? 'btn-outline-danger' : 'btn-outline-success'"
+                      @click="cambiarEstado(item.id)">
+                      <i :class="item.estado == 1 ? 'fas fa-toggle-off' : 'fas fa-toggle-on'"></i>
+                      {{ item.estado == 1 ? 'Desactivar' : 'Activar' }}
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -94,7 +99,8 @@
                   <strong>Precio:</strong> {{ formatearPrecio(item.precio) }}
                 </div>
                 <div class="product-detail">
-                  <strong>Precio Preventa:</strong> {{ item.precio_preventa ? formatearPrecio(item.precio_preventa) : 'N/A' }}
+                  <strong>Precio Preventa:</strong> {{ item.precio_preventa ? formatearPrecio(item.precio_preventa) :
+                  'N/A' }}
                 </div>
                 <div class="product-detail">
                   <strong>Categoría:</strong> {{ item.categoria?.nombre || 'N/A' }}
@@ -131,23 +137,26 @@
                 </a>
               </li>
               <li class="page-item" :class="{ disabled: pagination.current_page === 1 }">
-                <a class="page-link" href="#" @click.prevent="cambiarPagina(pagination.current_page - 1)" aria-label="Página anterior">
+                <a class="page-link" href="#" @click.prevent="cambiarPagina(pagination.current_page - 1)"
+                  aria-label="Página anterior">
                   <i class="fas fa-angle-left"></i>
                 </a>
               </li>
-              
-              <li class="page-item" v-for="page in paginationRange" :key="page" 
-                  :class="{ active: pagination.current_page === page }">
+
+              <li class="page-item" v-for="page in paginationRange" :key="page"
+                :class="{ active: pagination.current_page === page }">
                 <a class="page-link" href="#" @click.prevent="cambiarPagina(page)">{{ page }}</a>
               </li>
-              
+
               <li class="page-item" :class="{ disabled: pagination.current_page === pagination.last_page }">
-                <a class="page-link" href="#" @click.prevent="cambiarPagina(pagination.current_page + 1)" aria-label="Página siguiente">
+                <a class="page-link" href="#" @click.prevent="cambiarPagina(pagination.current_page + 1)"
+                  aria-label="Página siguiente">
                   <i class="fas fa-angle-right"></i>
                 </a>
               </li>
               <li class="page-item" :class="{ disabled: pagination.current_page === pagination.last_page }">
-                <a class="page-link" href="#" @click.prevent="cambiarPagina(pagination.last_page)" aria-label="Última página">
+                <a class="page-link" href="#" @click.prevent="cambiarPagina(pagination.last_page)"
+                  aria-label="Última página">
                   <i class="fas fa-angle-double-right"></i>
                 </a>
               </li>
@@ -229,7 +238,8 @@
                           <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-dollar-sign"></i></span>
                             <input type="number" class="form-control" :class="{ 'is-invalid': errors.precio_preventa }"
-                              id="precio_preventa" v-model="formulario.precio_preventa" placeholder="Ej: 2000.00" min="0.01" step="0.01">
+                              id="precio_preventa" v-model="formulario.precio_preventa" placeholder="Ej: 2000.00"
+                              min="0.01" step="0.01">
                             <div class="invalid-feedback" v-if="errors.precio_preventa">
                               {{ errors.precio_preventa[0] }}
                             </div>
@@ -311,11 +321,13 @@
                           <small class="text-muted">Cantidad máxima que se puede comprar</small>
                         </div>
                         <div class="col-md-6">
-                          <label for="cantidad_minima_preventa" class="form-label fw-bold">Cantidad Mínima Preventa</label>
+                          <label for="cantidad_minima_preventa" class="form-label fw-bold">Cantidad Mínima
+                            Preventa</label>
                           <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-arrow-down"></i></span>
-                            <input type="number" class="form-control" :class="{ 'is-invalid': errors.cantidad_minima_preventa }"
-                              id="cantidad_minima_preventa" v-model="formulario.cantidad_minima_preventa" min="1" placeholder="Ej: 5">
+                            <input type="number" class="form-control"
+                              :class="{ 'is-invalid': errors.cantidad_minima_preventa }" id="cantidad_minima_preventa"
+                              v-model="formulario.cantidad_minima_preventa" min="1" placeholder="Ej: 5">
                             <div class="invalid-feedback" v-if="errors.cantidad_minima_preventa">
                               {{ errors.cantidad_minima_preventa[0] }}
                             </div>
@@ -323,11 +335,13 @@
                           <small class="text-muted">Cantidad mínima para precio de preventa</small>
                         </div>
                         <div class="col-md-6">
-                          <label for="cantidad_maxima_preventa" class="form-label fw-bold">Cantidad Máxima Preventa</label>
+                          <label for="cantidad_maxima_preventa" class="form-label fw-bold">Cantidad Máxima
+                            Preventa</label>
                           <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-arrow-up"></i></span>
-                            <input type="number" class="form-control" :class="{ 'is-invalid': errors.cantidad_maxima_preventa }"
-                              id="cantidad_maxima_preventa" v-model="formulario.cantidad_maxima_preventa" min="1" placeholder="Ej: 50">
+                            <input type="number" class="form-control"
+                              :class="{ 'is-invalid': errors.cantidad_maxima_preventa }" id="cantidad_maxima_preventa"
+                              v-model="formulario.cantidad_maxima_preventa" min="1" placeholder="Ej: 50">
                             <div class="invalid-feedback" v-if="errors.cantidad_maxima_preventa">
                               {{ errors.cantidad_maxima_preventa[0] }}
                             </div>
@@ -351,7 +365,7 @@
                       <div class="row">
                         <div class="col-md-8">
                           <label for="imagen_principal" class="form-label fw-bold">
-                            Seleccionar imagen 
+                            Seleccionar imagen
                             <span class="text-danger" v-if="!posicion">*</span>
                             <small v-if="posicion" class="text-muted">(Opcional para edición)</small>
                           </label>
@@ -359,8 +373,7 @@
                             <span class="input-group-text"><i class="fas fa-upload"></i></span>
                             <input type="file" class="form-control" id="imagen_principal"
                               @change="obtenerImagen($event)" accept="image/*"
-                              :class="{ 'is-invalid': errors.imagen_principal }"
-                              :required="!posicion">
+                              :class="{ 'is-invalid': errors.imagen_principal }" :required="!posicion">
                             <div class="invalid-feedback" v-if="errors.imagen_principal">
                               {{ errors.imagen_principal[0] }}
                             </div>
@@ -435,68 +448,67 @@
                       </button>
                     </div>
                     <div class="card-body">
-                     <!--  <div :class="{ 'is-invalid': errors.modelos && formulario.modelos.length === 0 }"> -->
-                        <div v-if="formulario.modelos.length === 0"
-                          class="text-center py-3 border rounded mb-3 bg-white">
-                          <i class="fas fa-info-circle text-muted me-2"></i>
-                          <span class="text-muted">No hay modelos agregados. Haga clic en "Agregar" para añadir
-                            modelos.</span>
+                      <!--  <div :class="{ 'is-invalid': errors.modelos && formulario.modelos.length === 0 }"> -->
+                      <div v-if="formulario.modelos.length === 0" class="text-center py-3 border rounded mb-3 bg-white">
+                        <i class="fas fa-info-circle text-muted me-2"></i>
+                        <span class="text-muted">No hay modelos agregados. Haga clic en "Agregar" para añadir
+                          modelos.</span>
+                      </div>
+                      <div v-for="(modelo, index) in formulario.modelos" :key="index" class="card mb-3 border">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                          <h6 class="mb-0">Modelo {{ index + 1 }}</h6>
+                          <button type="button" class="btn btn-sm btn-outline-danger" @click="eliminarModelo(index)">
+                            <i class="fas fa-trash-alt me-1"></i>Eliminar
+                          </button>
                         </div>
-                        <div v-for="(modelo, index) in formulario.modelos" :key="index" class="card mb-3 border">
-                          <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                            <h6 class="mb-0">Modelo {{ index + 1 }}</h6>
-                            <button type="button" class="btn btn-sm btn-outline-danger" @click="eliminarModelo(index)">
-                              <i class="fas fa-trash-alt me-1"></i>Eliminar
-                            </button>
-                          </div>
-                          <div class="card-body">
-                            <div class="row g-2">
-                              <div class="col-md-6">
-                                <label class="form-label">Nombre <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" v-model="modelo.nombre"
-                                  placeholder="Ej: Exclusive" required>
+                        <div class="card-body">
+                          <div class="row g-2">
+                            <div class="col-md-6">
+                              <label class="form-label">Nombre <span class="text-danger">*</span></label>
+                              <input type="text" class="form-control" v-model="modelo.nombre"
+                                placeholder="Ej: Exclusive" required>
+                            </div>
+                            <div class="col-md-6">
+                              <label class="form-label">Precio <span class="text-danger">*</span></label>
+                              <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-dollar-sign"></i></span>
+                                <input type="number" class="form-control" v-model="modelo.precio"
+                                  placeholder="Ej: 3000.00" min="0.01" step="0.01" required>
                               </div>
-                              <div class="col-md-6">
-                                <label class="form-label">Precio <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                  <span class="input-group-text"><i class="fas fa-dollar-sign"></i></span>
-                                  <input type="number" class="form-control" v-model="modelo.precio"
-                                    placeholder="Ej: 3000.00" min="0.01" step="0.01" required>
-                                </div>
+                            </div>
+                            <div class="col-md-6">
+                              <label class="form-label">Precio Preventa</label>
+                              <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-dollar-sign"></i></span>
+                                <input type="number" class="form-control" v-model="modelo.precio_preventa"
+                                  placeholder="Ej: 2500.00" min="0.01" step="0.01">
                               </div>
-                              <div class="col-md-6">
-                                <label class="form-label">Precio Preventa</label>
-                                <div class="input-group">
-                                  <span class="input-group-text"><i class="fas fa-dollar-sign"></i></span>
-                                  <input type="number" class="form-control" v-model="modelo.precio_preventa"
-                                    placeholder="Ej: 2500.00" min="0.01" step="0.01">
-                                </div>
-                              </div>
-                              <div class="col-md-6">
-                                <label class="form-label">Cantidad mínima <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" v-model="modelo.cantidad_minima"
-                                  placeholder="Ej: 20" min="1" required>
-                              </div>
-                              <div class="col-md-6">
-                                <label class="form-label">Cantidad máxima <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" v-model="modelo.cantidad_maxima"
-                                  placeholder="Ej: 200" min="1" required>
-                              </div>
-                              <div class="col-md-6">
-                                <label class="form-label">Cantidad mínima preventa</label>
-                                <input type="number" class="form-control" v-model="modelo.cantidad_minima_preventa"
-                                  placeholder="Ej: 10" min="1">
-                              </div>
-                              <div class="col-md-6">
-                                <label class="form-label">Cantidad máxima preventa</label>
-                                <input type="number" class="form-control" v-model="modelo.cantidad_maxima_preventa"
-                                  placeholder="Ej: 100" min="1">
-                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <label class="form-label">Cantidad mínima <span class="text-danger">*</span></label>
+                              <input type="number" class="form-control" v-model="modelo.cantidad_minima"
+                                placeholder="Ej: 20" min="1" required>
+                            </div>
+                            <div class="col-md-6">
+                              <label class="form-label">Cantidad máxima <span class="text-danger">*</span></label>
+                              <input type="number" class="form-control" v-model="modelo.cantidad_maxima"
+                                placeholder="Ej: 200" min="1" required>
+                            </div>
+                            <div class="col-md-6">
+                              <label class="form-label">Cantidad mínima preventa</label>
+                              <input type="number" class="form-control" v-model="modelo.cantidad_minima_preventa"
+                                placeholder="Ej: 10" min="1">
+                            </div>
+                            <div class="col-md-6">
+                              <label class="form-label">Cantidad máxima preventa</label>
+                              <input type="number" class="form-control" v-model="modelo.cantidad_maxima_preventa"
+                                placeholder="Ej: 100" min="1">
                             </div>
                           </div>
                         </div>
+                      </div>
                       <!-- </div> -->
-                    <!--   <div class="invalid-feedback d-block" v-if="errors.modelos">
+                      <!--   <div class="invalid-feedback d-block" v-if="errors.modelos">
                         {{ errors.modelos[0] }}
                       </div> -->
                       <small class="text-muted">Agregue los diferentes modelos o variantes del producto</small>
@@ -532,7 +544,7 @@
                               <div class="card-body">
                                 <div class="mb-3">
                                   <label class="form-label">
-                                    Archivo 
+                                    Archivo
                                     <span class="text-danger" v-if="!imagen.id">*</span>
                                     <small v-if="imagen.id" class="text-muted">(Opcional para edición)</small>
                                   </label>
@@ -572,7 +584,8 @@
                       <div class="invalid-feedback d-block" v-if="errors.images">
                         {{ errors.images[0] }}
                       </div>
-                      <small class="text-muted mt-2 d-block">Agregue imágenes adicionales del producto. El color es opcional.</small>
+                      <small class="text-muted mt-2 d-block">Agregue imágenes adicionales del producto. El color es
+                        opcional.</small>
                     </div>
                   </div>
                 </div>
@@ -614,18 +627,22 @@
           <div class="modal-body" v-if="productoSeleccionado">
             <div class="row">
               <div class="col-md-6">
-                <img :src="productoSeleccionado.imagen_principal" alt="Imagen principal" class="img-fluid rounded mb-3 product-main-image">
+                <img :src="productoSeleccionado.imagen_principal" alt="Imagen principal"
+                  class="img-fluid rounded mb-3 product-main-image">
               </div>
               <div class="col-md-6">
                 <h4 class="product-title">{{ productoSeleccionado.nombre }}</h4>
                 <p><strong>Precio:</strong> {{ formatearPrecio(productoSeleccionado.precio) }}</p>
-                <p v-if="productoSeleccionado.precio_preventa"><strong>Precio Preventa:</strong> {{ formatearPrecio(productoSeleccionado.precio_preventa) }}</p>
+                <p v-if="productoSeleccionado.precio_preventa"><strong>Precio Preventa:</strong> {{
+                  formatearPrecio(productoSeleccionado.precio_preventa) }}</p>
                 <p><strong>Categoría:</strong> {{ productoSeleccionado.categoria?.nombre || 'N/A' }}</p>
                 <p><strong>Descripción:</strong> {{ productoSeleccionado.descripcion || 'N/A' }}</p>
                 <p><strong>Cantidad Mínima:</strong> {{ productoSeleccionado.cantidad_minima }}</p>
                 <p><strong>Cantidad Máxima:</strong> {{ productoSeleccionado.cantidad_maxima }}</p>
-                <p v-if="productoSeleccionado.cantidad_minima_preventa"><strong>Cantidad Mínima Preventa:</strong> {{ productoSeleccionado.cantidad_minima_preventa }}</p>
-                <p v-if="productoSeleccionado.cantidad_maxima_preventa"><strong>Cantidad Máxima Preventa:</strong> {{ productoSeleccionado.cantidad_maxima_preventa }}</p>
+                <p v-if="productoSeleccionado.cantidad_minima_preventa"><strong>Cantidad Mínima Preventa:</strong> {{
+                  productoSeleccionado.cantidad_minima_preventa }}</p>
+                <p v-if="productoSeleccionado.cantidad_maxima_preventa"><strong>Cantidad Máxima Preventa:</strong> {{
+                  productoSeleccionado.cantidad_maxima_preventa }}</p>
                 <p><strong>Estado:</strong>
                   <span class="badge" :class="productoSeleccionado.estado ? 'bg-success' : 'bg-danger'">
                     {{ productoSeleccionado.estado ? 'Activo' : 'Inactivo' }}
@@ -633,7 +650,7 @@
                 </p>
               </div>
             </div>
-            
+
             <!-- Características con opción de "Ver más" -->
             <div class="features-section mt-4">
               <h5 class="section-title">Características</h5>
@@ -643,14 +660,13 @@
                   {{ caracteristica.caracteristica }}
                 </li>
               </ul>
-              <button v-if="productoSeleccionado.caracteristicas && productoSeleccionado.caracteristicas.length > 5" 
-                      @click="toggleCaracteristicas" 
-                      class="btn btn-sm btn-outline-primary mt-2">
+              <button v-if="productoSeleccionado.caracteristicas && productoSeleccionado.caracteristicas.length > 5"
+                @click="toggleCaracteristicas" class="btn btn-sm btn-outline-primary mt-2">
                 <i class="fas" :class="mostrarTodasCaracteristicas ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
                 {{ mostrarTodasCaracteristicas ? 'Ver menos' : 'Ver más' }}
               </button>
             </div>
-            
+
             <h5 class="section-title mt-4">Modelos</h5>
             <div class="table-responsive">
               <table class="table table-sm table-hover">
@@ -678,12 +694,13 @@
                 </tbody>
               </table>
             </div>
-            
+
             <!-- Productos Similares - Sección mejorada con diseño responsive -->
             <h5 class="section-title mt-4">Imágenes Adicionales</h5>
             <div class="similar-products-container">
               <div class="row g-3">
-                <div class="col-6 col-sm-4 col-md-4 col-lg-3" v-for="imagen in productoSeleccionado.images" :key="imagen.id">
+                <div class="col-6 col-sm-4 col-md-4 col-lg-3" v-for="imagen in productoSeleccionado.images"
+                  :key="imagen.id">
                   <div class="similar-product-card">
                     <div class="similar-product-image">
                       <img :src="imagen.imagen" class="img-fluid rounded" :alt="productoSeleccionado.nombre">
@@ -712,7 +729,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { Modal } from 'bootstrap/dist/js/bootstrap.bundle.min';
-import { indexProductos, indexProductosFiltrados, showProducto, storeProducto, updateProducto, deleteImage } from '@/Services/ProductoService';
+import { indexProductos, indexProductosFiltrados, showProducto, storeProducto, updateProducto, deleteImage, changeStatus } from '@/Services/ProductoService';
 import { indexActivosCategorias } from '@/Services/CategoriaService';
 
 const productos = ref([]);
@@ -768,7 +785,7 @@ const visibleCaracteristicas = computed(() => {
   if (!productoSeleccionado.value || !productoSeleccionado.value.caracteristicas) {
     return [];
   }
-  
+
   if (mostrarTodasCaracteristicas.value) {
     return productoSeleccionado.value.caracteristicas;
   } else {
@@ -786,11 +803,11 @@ const paginationRange = computed(() => {
   const maxVisiblePages = 5;
   const startPage = Math.max(1, pagination.value.current_page - Math.floor(maxVisiblePages / 2));
   const endPage = Math.min(pagination.value.last_page, startPage + maxVisiblePages - 1);
-  
+
   for (let i = startPage; i <= endPage; i++) {
     range.push(i);
   }
-  
+
   return range;
 });
 
@@ -854,9 +871,9 @@ const listarProductos = async () => {
 
 const cambiarPagina = async (page) => {
   if (page < 1 || page > pagination.value.last_page) return;
-  
+
   currentPage.value = page;
-  
+
   try {
     if (search.value.length >= 2 || categoriaSeleccionada.value) {
       const response = await indexProductosFiltrados(categoriaSeleccionada.value, search.value, page);
@@ -954,10 +971,10 @@ const validarFormulario = () => {
     esValido = false;
   }
 
-/*   if (formulario.value.modelos.length === 0) {
-    errors.value.modelos = ['El campo modelos es obligatorio.'];
-    esValido = false;
-  }  */
+  /*   if (formulario.value.modelos.length === 0) {
+      errors.value.modelos = ['El campo modelos es obligatorio.'];
+      esValido = false;
+    }  */
 
   if (formulario.value.images.length === 0 && !posicion.value) {
     errors.value.images = ['El campo images es obligatorio.'];
@@ -990,7 +1007,7 @@ const validarYGuardar = () => {
 const guardarProducto = async () => {
   try {
     const formData = new FormData();
-    
+
     // Agregar campos básicos (mantener igual)
     Object.keys(formulario.value).forEach(key => {
       if (formulario.value[key] !== '' && key !== 'images' && key !== 'caracteristicas' && key !== 'modelos') {
@@ -1012,7 +1029,7 @@ const guardarProducto = async () => {
 
     // PARTE MODIFICADA: Manejo de imágenes existentes y nuevas
     let hasNewImages = false;
-    
+
     // Primero procesar imágenes existentes
     formulario.value.images.forEach((imagen, index) => {
       if (imagen.id) {
@@ -1021,7 +1038,7 @@ const guardarProducto = async () => {
         if (imagen.color) {
           formData.append(`existing_colors[${imagen.id}]`, imagen.color);
         }
-        
+
         // Si hay un nuevo archivo para esta imagen existente
         if (imagen.file) {
           formData.append(`existing_images_files[${imagen.id}]`, imagen.file);
@@ -1055,7 +1072,7 @@ const guardarProducto = async () => {
     } else {
       await storeProducto(formData);
     }
-    
+
     await listarProductos();
     productoModal.hide();
     alert(posicion.value ? 'Producto actualizado correctamente' : 'Producto creado correctamente');
@@ -1080,7 +1097,7 @@ const mostrarProducto = async (id) => {
   try {
     const { data } = await showProducto(id);
     console.log('Datos del producto:', data);
-    
+
     formulario.value = {
       nombre: data.dato.nombre,
       precio: data.dato.precio,
@@ -1107,7 +1124,7 @@ const mostrarProducto = async (id) => {
         file: null
       }))
     };
-    
+
     imagenPreview.value = data.dato.imagen_principal;
     posicion.value = id;
     errors.value = {};
@@ -1325,6 +1342,15 @@ const mostrarDatosPrueba = () => {
   mostrarTodasCaracteristicas.value = false; // Resetear el estado de "Ver más"
   detallesModal.show();
 };
+const cambiarEstado = async (id) => {
+  try {
+    const { data } = await changeStatus(id);
+    console.log(data);
+    listarProductos();
+  } catch (error) {
+    console.log(error);
+  }
+}
 </script>
 
 <style scoped>
@@ -1581,11 +1607,11 @@ const mostrarDatosPrueba = () => {
   .btn-group .btn {
     width: 100%;
   }
-  
+
   .similar-product-card {
     margin-bottom: 1rem;
   }
-  
+
   .product-info {
     grid-template-columns: 1fr;
   }
@@ -1603,6 +1629,7 @@ const mostrarDatosPrueba = () => {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

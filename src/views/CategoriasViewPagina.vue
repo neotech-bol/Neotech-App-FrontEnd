@@ -1,10 +1,215 @@
+<template>
+  <div class="catalog-container">
+    <!-- Título Principal -->
+    <h1 class="main-title">
+      Explora Nuestras <span class="text-accent">Categorías</span>
+    </h1>
+
+    <!-- Sección de Filtros - Mejorada para pantallas grandes -->
+    <div class="filters-wrapper">
+      <div class="filters">
+        <!-- Contenedor de búsqueda y selector de categoría mejorados -->
+        <div class="filter-controls">
+          <div class="search-container">
+            <div class="search-wrapper">
+              <i class="fas fa-search search-icon"></i>
+              <input v-model="searchQuery" type="text" placeholder="Buscar productos..." class="search-input"
+                aria-label="Buscar productos" />
+            </div>
+          </div>
+          <div class="select-wrapper">
+            <select v-model="selectedCategory" class="category-select" aria-label="Filtrar por categoría">
+              <option value="">Todas las Categorías</option>
+              <option v-for="category in uniqueCategories" :key="category" :value="category">
+                {{ category }}
+              </option>
+            </select>
+            <i class="fas fa-chevron-down select-arrow"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estado de Carga -->
+    <div v-if="loading" class="loading-overlay">
+      <div class="spinner"></div>
+      <p>Cargando catálogo...</p>
+    </div>
+
+    <!-- Estado de Error -->
+    <div v-else-if="error" class="error-message">
+      <i class="fas fa-exclamation-circle error-icon"></i>
+      <p>{{ error }}</p>
+      <button @click="listarCategorias" class="retry-button">
+        <i class="fas fa-sync-alt"></i> Reintentar
+      </button>
+    </div>
+
+    <!-- Contenido del Catálogo -->
+    <div v-else class="categories-wrapper">
+      <div v-for="(categoria, index) in filteredCategorias" :key="categoria.id" class="category-section"
+        :style="{ '--index': index }">
+        <!-- Banner de ancho completo -->
+        <div class="category-banner-container">
+          <div class="category-banner" @click="viewAllProducts(categoria.id)">
+            <img :src="categoria.banner" :alt="categoria.nombre" loading="lazy" />
+            <div class="banner-overlay">
+              <div class="banner-content">
+                <h2 class="banner-title">{{ categoria.nombre }}</h2>
+                <div class="banner-description-container">
+                  <p class="banner-description">
+                    {{ getTruncatedDescription(categoria.descripcion) }}
+                    <button v-if="isDescriptionTruncated(categoria.descripcion)" class="read-more-btn"
+                      @click.stop="showDescriptionModal(categoria)" aria-label="Ver descripción completa">
+                      Ver más
+                    </button>
+                  </p>
+                </div>
+                <button class="banner-cta" @click="irCategoria(categoria.id)">
+                  <span>Ver Colección</span>
+                  <i class="fas fa-arrow-right"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Encabezado de Categoría -->
+        <div class="category-header">
+          <h2>
+            {{ categoria.titulo ? categoria.titulo.split(" ").slice(0, -1).join(" ") : '' }}
+            <span class="text-accent">{{ categoria.titulo ? getLastWord(categoria.titulo) : categoria.nombre }}</span>
+          </h2>
+          <p>{{ categoria.subtitulo }}</p>
+        </div>
+
+        <!-- Cuadrícula de Productos -->
+        <div class="products-grid">
+          <div v-for="(product, productIndex) in categoria.productos" :key="product.id" class="product-card"
+            :style="{ '--index': productIndex }" @click="viewProductDetails(product.id)">
+            <div class="product-image-wrapper">
+              <div class="product-image">
+                <transition name="fade" mode="out-in">
+                  <img :src="getCurrentImage(product)" :alt="product.nombre" loading="lazy"
+                    :key="currentImageIndex[product.id]" />
+                </transition>
+
+                <!-- Botones de Navegación -->
+                <button v-if="getProductImages(product).length > 1" class="nav-button prev"
+                  @click.stop="prevImage(product)" aria-label="Imagen anterior">
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+                <button v-if="getProductImages(product).length > 1" class="nav-button next"
+                  @click.stop="nextImage(product)" aria-label="Imagen siguiente">
+                  <i class="fas fa-chevron-right"></i>
+                </button>
+
+                <!-- Insignias de descuento -->
+                <div class="badges" v-if="product.descuento || product.badge">
+                  <span v-if="product.badge" class="badge badge-new">
+                    <i class="fas fa-star-of-life"></i> {{ product.badge }}
+                  </span>
+                  <span v-if="product.descuento" class="badge badge-sale">
+                    <i class="fas fa-bolt"></i> -{{ product.descuento }}%
+                  </span>
+                </div>
+
+                <!-- Acciones del Producto -->
+                <div class="product-actions-bottom">
+                  <button @click.stop="addToCart(product)" class="action-button cart-btn"
+                    aria-label="Agregar al carrito" :class="{ 'adding': addingToCart === product.id }">
+                    <i class="fas" :class="addingToCart === product.id ? 'fa-spinner fa-spin' : 'fa-shopping-cart'"></i>
+                  </button>
+                  <button @click.stop="viewProductDetails(product.id)" class="action-button view-btn"
+                    aria-label="Ver producto">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button @click.stop="favoriteUser(product.id)" class="action-button fav-btn"
+                    aria-label="Agregar a favoritos" :class="{ 'in-favorites': favoriteProducts.includes(product.id) }">
+                    <i class="fas fa-heart"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Información del Producto -->
+            <div class="product-info">
+              <div class="category">
+                <i class="fas fa-tag"></i> {{ product.categoria?.nombre || categoria.nombre }}
+              </div>
+              <h3 class="product-name">{{ product.nombre }}</h3>
+              <!-- Descripción truncada -->
+              <p v-if="product.descripcion" class="product-description">
+                {{ truncateDescription(product.descripcion, 60) }}
+              </p>
+              <!-- Precios - Añadido precio de venta -->
+              <div class="prices-container">
+                <!-- Precio Regular -->
+                <div class="price-item">
+                  <span class="price-label">Precio:</span>
+                  <span class="price-value">{{ formatPrice(product.precio) }}</span>
+                </div>
+
+              <!-- Precio Preventa (si existe) -->
+              <div class="price-item" v-if="product.precio_preventa">
+                <span class="price-label">Preventa:</span>
+                <span class="price-value preventa">{{ formatPrice(product.precio_preventa) }}</span>
+              </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paginación -->
+    <div v-if="totalPages > 1" class="pagination">
+      <button v-if="currentPage > 1" @click="changePage(currentPage - 1)" class="page-button page-nav"
+        aria-label="Página anterior">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+
+      <button v-for="page in totalPages" :key="page" @click="changePage(page)"
+        :class="['page-button', { active: currentPage === page }]" :aria-label="`Ir a página ${page}`">
+        {{ page }}
+      </button>
+
+      <button v-if="currentPage < totalPages" @click="changePage(currentPage + 1)" class="page-button page-nav"
+        aria-label="Página siguiente">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+
+    <!-- Modal para descripción completa -->
+    <div class="description-modal" v-if="isModalOpen && selectedCategoria" @click="closeModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>{{ selectedCategoria.nombre }}</h3>
+          <button class="close-btn" @click="closeModal" aria-label="Cerrar modal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>{{ selectedCategoria.descripcion }}</p>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn" @click="closeModal">Cerrar</button>
+          <button class="modal-btn primary" @click="viewCollectionFromModal(selectedCategoria.id)">
+            <span>Ver Colección</span>
+            <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { indexCategoriasConProductos } from '@/Services/CategoriaService';
 import { useCartStore } from '@/stores/cart';
 import { useRouter } from 'vue-router';
 import { storeFavorite } from '@/Services/FavoriteService';
-import { indexRatings, storeRating } from '@/Services/RatingService';
 
 const router = useRouter();
 const cartStore = useCartStore();
@@ -16,7 +221,6 @@ const currentPage = ref(1);
 const totalPages = ref(1);
 const searchQuery = ref('');
 const selectedCategory = ref('');
-const userRatings = ref([]);
 const currentImageIndex = ref({});
 const favoriteProducts = ref([]);
 const addingToCart = ref(null);
@@ -130,26 +334,6 @@ const favoriteUser = async (idProducto) => {
   }
 };
 
-const storeRatingUser = async (productID, rating) => {
-  try {
-    await storeRating({ producto_id: productID, rating });
-    await indexRatingUser();
-    showNotification('Calificación guardada', 'success');
-  } catch (error) {
-    console.error('Error al calificar el producto:', error.response?.data?.message || error);
-    showNotification('Error al guardar calificación', 'error');
-  }
-};
-
-const indexRatingUser = async () => {
-  try {
-    const { data } = await indexRatings();
-    userRatings.value = data;
-  } catch (error) {
-    console.error('Error al obtener las calificaciones:', error);
-  }
-};
-
 const getProductImages = (product) => {
   const mainImage = product.imagen_principal;
   const additionalImages = product.images?.map(img => img.imagen) || [];
@@ -199,6 +383,8 @@ const filteredCategorias = computed(() => {
 
 const changePage = (page) => {
   listarCategorias(page);
+  // Desplazamiento hacia arriba al cambiar de página
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 const showNotification = (message, type) => {
@@ -206,11 +392,17 @@ const showNotification = (message, type) => {
   console.log(`${type}: ${message}`);
   // Aquí podrías implementar un sistema de notificaciones toast
 };
+const irCategoria = (idCategoria) => {
+  router.push({ path: `/categoria/${idCategoria}` });
+}
+// Truncar descripción
+const truncateDescription = (text, maxLength) => {
+  if (!text) return '';
+  return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+};
 
 onMounted(() => {
   listarCategorias();
-  indexRatingUser();
-  
   // Cerrar modal con tecla Escape
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && isModalOpen.value) {
@@ -220,189 +412,10 @@ onMounted(() => {
 });
 </script>
 
-<template>
-  <div class="catalog-container">
-    <!-- Main Title -->
-    <h1 class="main-title">
-      Explora Nuestras <span class="text-accent">Categorías</span>
-    </h1>
-    
-    <!-- Filters Section -->
-    <div class="filters-wrapper">
-      <div class="filters">
-        <div class="search-container">
-          <div class="search-wrapper">
-            <i class="fas fa-search search-icon"></i>
-            <input v-model="searchQuery" type="text" placeholder="Buscar productos..." class="search-input" aria-label="Buscar productos" />
-          </div>
-        </div>
-        <div class="select-wrapper">
-          <select v-model="selectedCategory" class="category-select" aria-label="Filtrar por categoría">
-            <option value="">Todas las Categorías</option>
-            <option v-for="category in uniqueCategories" :key="category" :value="category">
-              {{ category }}
-            </option>
-          </select>
-          <i class="fas fa-chevron-down select-arrow"></i>
-        </div>
-      </div>
-    </div>
-
-    <!-- Loading State -->
-    <div v-if="loading" class="loading-overlay">
-      <div class="spinner"></div>
-      <p>Cargando catálogo...</p>
-    </div>
-
-    <!-- Error State -->
-    <div v-else-if="error" class="error-message">
-      <i class="fas fa-exclamation-circle error-icon"></i>
-      <p>{{ error }}</p>
-      <button @click="listarCategorias" class="retry-button">
-        <i class="fas fa-sync-alt"></i> Reintentar
-      </button>
-    </div>
-
-    <!-- Catalog Content -->
-    <div v-else class="categories-wrapper">
-      <div v-for="(categoria, index) in filteredCategorias" :key="categoria.id" class="category-section" :style="{ '--index': index }">
-        <!-- Full-width Banner -->
-        <div class="category-banner-container">
-          <div class="category-banner" @click="viewAllProducts(categoria.id)">
-            <img :src="categoria.banner" :alt="categoria.nombre" loading="lazy" />
-            <div class="banner-overlay">
-              <div class="banner-content">
-                <h2 class="banner-title">{{ categoria.nombre }}</h2>
-                <div class="banner-description-container">
-                  <p class="banner-description">
-                    {{ getTruncatedDescription(categoria.descripcion) }}
-                    <button 
-                      v-if="isDescriptionTruncated(categoria.descripcion)" 
-                      class="read-more-btn" 
-                      @click.stop="showDescriptionModal(categoria)"
-                      aria-label="Ver descripción completa"
-                    >
-                      Ver más
-                    </button>
-                  </p>
-                </div>
-                <button class="banner-cta">
-                  <span>Ver Colección</span>
-                  <i class="fas fa-arrow-right"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Category Header -->
-        <div class="category-header">
-          <h2>
-            {{ categoria.titulo ? categoria.titulo.split(" ").slice(0, -1).join(" ") : '' }}
-            <span class="text-accent">{{ categoria.titulo ? getLastWord(categoria.titulo) : categoria.nombre }}</span>
-          </h2>
-          <p>{{ categoria.subtitulo }}</p>
-        </div>
-
-        <!-- Products Grid -->
-        <div class="products-grid">
-          <div v-for="(product, productIndex) in categoria.productos" :key="product.id" class="product-card"
-            :style="{ '--index': productIndex }" @click="viewProductDetails(product.id)">
-            <div class="product-image-wrapper">
-              <div class="product-image">
-                <transition name="fade" mode="out-in">
-                  <img :src="getCurrentImage(product)" :alt="product.nombre" loading="lazy"
-                    :key="currentImageIndex[product.id]" />
-                </transition>
-
-                <!-- Navigation Buttons -->
-                <button v-if="getProductImages(product).length > 1" class="nav-button prev"
-                  @click.stop="prevImage(product)" aria-label="Imagen anterior">
-                  <i class="fas fa-chevron-left"></i>
-                </button>
-                <button v-if="getProductImages(product).length > 1" class="nav-button next"
-                  @click.stop="nextImage(product)" aria-label="Imagen siguiente">
-                  <i class="fas fa-chevron-right"></i>
-                </button>
-
-                <!-- Badges -->
-                <div class="badges">
-                  <span v-if="product.badge" class="badge badge-new">
-                    <i class="fas fa-star-of-life"></i> {{ product.badge }}
-                  </span>
-                  <span v-if="product.descuento" class="badge badge-sale">
-                    <i class="fas fa-bolt"></i> -{{ product.descuento }}%
-                  </span>
-                </div>
-
-                <!-- Product Actions Bottom -->
-                <div class="product-actions-bottom">
-                  <button @click.stop="addToCart(product)" class="action-button cart-btn" aria-label="Agregar al carrito"
-                    :class="{ 'adding': addingToCart === product.id }">
-                    <i class="fas" :class="addingToCart === product.id ? 'fa-spinner fa-spin' : 'fa-shopping-cart'"></i>
-                  </button>
-                  <button @click.stop="viewProductDetails(product.id)" class="action-button view-btn" aria-label="Ver producto">
-                    <i class="fas fa-eye"></i>
-                  </button>
-                  <button @click.stop="favoriteUser(product.id)" class="action-button fav-btn" aria-label="Agregar a favoritos"
-                    :class="{ 'in-favorites': favoriteProducts.includes(product.id) }">
-                    <i class="fas fa-heart"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Product Info -->
-            <div class="product-info">
-              <div class="category">
-                <i class="fas fa-tag"></i> {{ product.categoria?.nombre || categoria.nombre }}
-              </div>
-              <h3 class="product-name">{{ product.nombre }}</h3>
-              <div class="price-container">
-                <div class="price">
-                  <span class="current-price">{{ formatPrice(product.precio) }}</span>
-                  <span v-if="product.precio_anterior" class="old-price">{{ formatPrice(product.precio_anterior) }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Pagination -->
-    <div v-if="totalPages > 1" class="pagination">
-      <button v-for="page in totalPages" :key="page" @click="changePage(page)" :class="['page-button', { active: currentPage === page }]" :aria-label="`Ir a página ${page}`">
-        {{ page }}
-      </button>
-    </div>
-    
-    <!-- Modal para descripción completa -->
-    <div class="description-modal" v-if="isModalOpen && selectedCategoria" @click="closeModal">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h3>{{ selectedCategoria.nombre }}</h3>
-          <button class="close-btn" @click="closeModal" aria-label="Cerrar modal">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        <div class="modal-body">
-          <p>{{ selectedCategoria.descripcion }}</p>
-        </div>
-        <div class="modal-footer">
-          <button class="modal-btn" @click="closeModal">Cerrar</button>
-          <button class="modal-btn primary" @click="viewCollectionFromModal(selectedCategoria.id)">
-            <span>Ver Colección</span>
-            <i class="fas fa-arrow-right"></i>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
-
 <style scoped>
-/* Base Container */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
+
+/* Contenedor Base */
 .catalog-container {
   max-width: 1440px;
   margin: 0 auto;
@@ -416,7 +429,7 @@ onMounted(() => {
   }
 }
 
-/* Main Title */
+/* Título Principal */
 .main-title {
   font-size: clamp(1.5rem, 5vw, 2.5rem);
   font-weight: 500;
@@ -448,43 +461,103 @@ onMounted(() => {
   transform: scaleX(1);
 }
 
-/* Filters Section - Mejorado para móviles */
+/* Sección de Filtros - MEJORADA para pantallas grandes */
 .filters-wrapper {
   position: sticky;
   top: 0;
   z-index: 100;
   background-color: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(10px);
-  padding: 0.75rem 0;
+  padding: 1rem 0;
   margin-bottom: 1.5rem;
   border-bottom: 1px solid rgba(226, 232, 240, 0.8);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
+/* Filtros - MEJORADOS */
 .filters {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 0.5rem;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 768px) {
   .filters {
-    flex-direction: row;
-    gap: 1rem;
     padding: 0 1rem;
-  }
-  
-  .filters-wrapper {
-    padding: 1rem 0;
   }
 }
 
+/* Controles de Filtro - MEJORADOS para pantallas grandes */
+.filter-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Ajustes para tablets */
+@media (min-width: 640px) {
+  .filter-controls {
+    flex-direction: row;
+    gap: 1rem;
+  }
+
+  .search-container {
+    flex: 1;
+  }
+
+  .select-wrapper {
+    width: 40%;
+  }
+}
+
+/* Ajustes para pantallas medianas */
+@media (min-width: 768px) {
+  .filter-controls {
+    gap: 1.25rem;
+  }
+
+  .select-wrapper {
+    width: 35%;
+  }
+}
+
+/* Ajustes para pantallas grandes - SOLUCIÓN PARA DESPROPORCIONES */
+@media (min-width: 1024px) {
+  .filter-controls {
+    gap: 1.5rem;
+  }
+
+  .search-container {
+    flex: 1;
+    max-width: 60%;
+    /* Limitar el ancho del buscador */
+  }
+
+  .select-wrapper {
+    width: auto;
+    min-width: 220px;
+    /* Ancho mínimo para mantener legibilidad */
+    max-width: 300px;
+    /* Ancho máximo para evitar que sea demasiado grande */
+  }
+}
+
+/* Ajustes para pantallas extra grandes */
+@media (min-width: 1280px) {
+  .search-container {
+    max-width: 65%;
+    /* Ligeramente más ancho en pantallas muy grandes */
+  }
+
+  .select-wrapper {
+    min-width: 240px;
+    /* Ligeramente más ancho */
+  }
+}
+
+/* Contenedor de búsqueda */
 .search-container {
   position: relative;
-  flex-grow: 1;
   width: 100%;
 }
 
@@ -517,13 +590,17 @@ onMounted(() => {
   font-size: 0.875rem;
   transition: all 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  height: 42px;
+  /* Altura fija para consistencia */
 }
 
 @media (min-width: 768px) {
   .search-input {
-    padding: 1rem 1rem 1rem 3rem;
-    font-size: 1rem;
-    border-radius: 12px;
+    padding: 0.75rem 1rem 0.75rem 2.75rem;
+    font-size: 0.95rem;
+    border-radius: 10px;
+    height: 46px;
+    /* Ligeramente más alto en pantallas grandes */
   }
 }
 
@@ -533,6 +610,7 @@ onMounted(() => {
   outline: none;
 }
 
+/* Contenedor del selector */
 .select-wrapper {
   position: relative;
   width: 100%;
@@ -549,13 +627,17 @@ onMounted(() => {
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  height: 42px;
+  /* Altura fija para consistencia */
 }
 
 @media (min-width: 768px) {
   .category-select {
-    padding: 1rem 2.5rem 1rem 1rem;
-    font-size: 1rem;
-    border-radius: 12px;
+    padding: 0.75rem 2.5rem 0.75rem 1rem;
+    font-size: 0.95rem;
+    border-radius: 10px;
+    height: 46px;
+    /* Ligeramente más alto en pantallas grandes */
   }
 }
 
@@ -587,7 +669,7 @@ onMounted(() => {
   transform: translateY(-50%) rotate(180deg);
 }
 
-/* Category Section */
+/* Sección de Categorías */
 .categories-wrapper {
   display: flex;
   flex-direction: column;
@@ -622,6 +704,7 @@ onMounted(() => {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -632,12 +715,13 @@ onMounted(() => {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
 }
 
-/* Container para mantener proporciones consistentes */
+/* Contenedor para mantener proporciones consistentes */
 .category-banner-container {
   margin-bottom: 1.5rem;
   width: 100%;
@@ -685,18 +769,19 @@ onMounted(() => {
   transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
+.category-banner:hover img {
+  transform: scale(1.05);
+}
 
 /* Overlay con gradiente mejorado y animaciones */
 .banner-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to top,
-    rgba(0, 0, 0, 0.8) 0%,
-    rgba(0, 0, 0, 0.6) 40%,
-    rgba(0, 0, 0, 0.3) 70%,
-    rgba(0, 0, 0, 0) 100%
-  );
+  background: linear-gradient(to top,
+      rgba(0, 0, 0, 0.8) 0%,
+      rgba(0, 0, 0, 0.6) 40%,
+      rgba(0, 0, 0, 0.3) 70%,
+      rgba(0, 0, 0, 0) 100%);
   display: flex;
   align-items: flex-end;
   color: #fff;
@@ -706,25 +791,21 @@ onMounted(() => {
 
 @media (min-width: 768px) {
   .banner-overlay {
-    background: linear-gradient(
-      to right,
-      rgba(0, 0, 0, 0.8) 0%,
-      rgba(0, 0, 0, 0.6) 30%,
-      rgba(0, 0, 0, 0.3) 60%,
-      rgba(0, 0, 0, 0) 100%
-    );
+    background: linear-gradient(to right,
+        rgba(0, 0, 0, 0.8) 0%,
+        rgba(0, 0, 0, 0.6) 30%,
+        rgba(0, 0, 0, 0.3) 60%,
+        rgba(0, 0, 0, 0) 100%);
     align-items: center;
     padding: 2rem;
   }
-  
+
   .category-banner:hover .banner-overlay {
-    background: linear-gradient(
-      to right,
-      rgba(0, 0, 0, 0.85) 0%,
-      rgba(0, 0, 0, 0.65) 30%,
-      rgba(0, 0, 0, 0.35) 60%,
-      rgba(0, 0, 0, 0) 100%
-    );
+    background: linear-gradient(to right,
+        rgba(0, 0, 0, 0.85) 0%,
+        rgba(0, 0, 0, 0.65) 30%,
+        rgba(0, 0, 0, 0.35) 60%,
+        rgba(0, 0, 0, 0) 100%);
   }
 }
 
@@ -775,7 +856,7 @@ onMounted(() => {
     transform: scaleX(0);
     width: 60px;
   }
-  
+
   .category-banner:hover .banner-title::after {
     transform: scaleX(1);
   }
@@ -826,7 +907,8 @@ onMounted(() => {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-.read-more-btn:hover, .read-more-btn:active {
+.read-more-btn:hover,
+.read-more-btn:active {
   background: rgba(52, 152, 219, 0.4);
   transform: translateY(-1px);
 }
@@ -840,7 +922,7 @@ onMounted(() => {
     box-shadow: none;
     font-size: 0.9em;
   }
-  
+
   .read-more-btn:hover {
     color: #2980b9;
     background: none;
@@ -922,8 +1004,13 @@ onMounted(() => {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .modal-content {
@@ -940,8 +1027,15 @@ onMounted(() => {
 }
 
 @keyframes slideUp {
-  from { transform: translateY(30px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .modal-header {
@@ -1069,7 +1163,7 @@ onMounted(() => {
   overflow: hidden;
 }
 
-/* Category Header */
+/* Encabezado de Categoría */
 .category-header {
   text-align: center;
   margin-bottom: 1.5rem;
@@ -1095,7 +1189,7 @@ onMounted(() => {
   margin: 0 auto;
 }
 
-/* Products Grid - Optimizado para móviles */
+/* Cuadrícula de Productos - Optimizada para móviles */
 .products-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -1125,7 +1219,7 @@ onMounted(() => {
   }
 }
 
-/* Product Card */
+/* Tarjeta de Producto */
 .product-card {
   background: white;
   border-radius: 8px;
@@ -1146,14 +1240,14 @@ onMounted(() => {
   .product-card {
     border-radius: 10px;
   }
-  
+
   .product-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
   }
 }
 
-/* Product Image */
+/* Imagen del Producto */
 .product-image-wrapper {
   position: relative;
   width: 100%;
@@ -1178,7 +1272,42 @@ onMounted(() => {
   object-fit: contain;
   transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
-/* Navigation Buttons */
+
+.product-card:hover .product-image img {
+  transform: scale(1.05);
+}
+
+/* Insignias */
+.badges {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  z-index: 2;
+}
+
+.badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.badge-new {
+  background: linear-gradient(45deg, #4CAF50, #8BC34A);
+}
+
+.badge-sale {
+  background: linear-gradient(45deg, #FF5722, #FF9800);
+}
+
+/* Botones de Navegación */
 .nav-button {
   position: absolute;
   top: 50%;
@@ -1206,11 +1335,11 @@ onMounted(() => {
     opacity: 0;
     font-size: 0.75rem;
   }
-  
+
   .product-card:hover .nav-button {
     opacity: 1;
   }
-  
+
   .nav-button:hover {
     background-color: white;
     transform: translateY(-50%) scale(1.1);
@@ -1226,61 +1355,21 @@ onMounted(() => {
   right: 0.5rem;
 }
 
-/* Badges */
-.badges {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  z-index: 2;
-}
-
-.badge {
-  padding: 0.2rem 0.4rem;
-  font-size: 0.6rem;
-  font-weight: 700;
-  border-radius: 9999px;
-  text-transform: uppercase;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  letter-spacing: 0.5px;
-}
-
-@media (min-width: 768px) {
-  .badge {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.65rem;
-  }
-}
-
-.badge-new {
-  background: linear-gradient(45deg, #48bb78, #38a169);
-  color: white;
-  animation: pulse 2s infinite;
-}
-
-.badge-sale {
-  background: linear-gradient(45deg, #ed8936, #dd6b20);
-  color: white;
-}
-
 @keyframes pulse {
   0% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.05);
   }
+
   100% {
     transform: scale(1);
   }
 }
 
-/* Product Actions - Optimizado para móviles */
+/* Acciones del Producto - Optimizadas para móviles */
 .product-actions-bottom {
   position: absolute;
   bottom: 0;
@@ -1301,7 +1390,7 @@ onMounted(() => {
     padding: 0.5rem;
     transition: opacity 0.3s ease;
   }
-  
+
   .product-card:hover .product-actions-bottom,
   .product-image:hover .product-actions-bottom {
     opacity: 1;
@@ -1331,21 +1420,21 @@ onMounted(() => {
     height: 30px;
     font-size: 0.75rem;
   }
-  
+
   .action-button:hover {
     transform: scale(1.1);
   }
-  
+
   .cart-btn:hover {
     background-color: #3498db;
     color: white;
   }
-  
+
   .view-btn:hover {
     background-color: #6b46c1;
     color: white;
   }
-  
+
   .fav-btn:hover {
     background-color: #e53e3e;
     color: white;
@@ -1365,7 +1454,7 @@ onMounted(() => {
   pointer-events: none;
 }
 
-/* Product Info */
+/* Información del Producto */
 .product-info {
   padding: 0.5rem;
   display: flex;
@@ -1425,7 +1514,7 @@ onMounted(() => {
     height: 2.5rem;
     margin-bottom: 0.5rem;
   }
-  
+
   .product-card:hover .product-name {
     color: #3498db;
   }
@@ -1438,52 +1527,58 @@ onMounted(() => {
   }
 }
 
-/* Price */
-.price-container {
+/* Precios - MEJORADO con precio de venta */
+.prices-container {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: auto;
-}
-
-.price {
-  display: flex;
-  align-items: baseline;
+  flex-direction: column;
   gap: 0.25rem;
-  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
 }
 
-.current-price {
-  font-weight: 700;
+.price-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.price-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #4a5568;
+  min-width: 4rem;
+}
+
+.price-value {
   font-size: 0.85rem;
+  font-weight: 700;
   color: #2d3748;
 }
 
+.price-value.preventa {
+  color: #e53e3e;
+}
+
 @media (min-width: 768px) {
-  .current-price {
+  .prices-container {
+    margin-top: 0.75rem;
+  }
+
+  .price-label {
+    font-size: 0.75rem;
+  }
+
+  .price-value {
     font-size: 0.95rem;
   }
 }
 
 @media (min-width: 1200px) {
-  .current-price {
+  .price-value {
     font-size: 1.1rem;
   }
 }
 
-.old-price {
-  font-size: 0.7rem;
-  color: #a0aec0;
-  text-decoration: line-through;
-}
-
-@media (min-width: 768px) {
-  .old-price {
-    font-size: 0.75rem;
-  }
-}
-
-/* Loading Overlay */
+/* Overlay de Carga */
 .loading-overlay {
   position: fixed;
   top: 0;
@@ -1517,11 +1612,16 @@ onMounted(() => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
-/* Error State */
+/* Estado de Error */
 .error-message {
   text-align: center;
   padding: 2rem 1rem;
@@ -1571,7 +1671,7 @@ onMounted(() => {
   .retry-button {
     padding: 0.75rem 1.5rem;
   }
-  
+
   .retry-button:hover {
     background-color: #2980b9;
     transform: translateY(-2px);
@@ -1579,7 +1679,7 @@ onMounted(() => {
   }
 }
 
-/* Pagination */
+/* Paginación - MEJORADA */
 .pagination {
   display: flex;
   justify-content: center;
@@ -1608,17 +1708,32 @@ onMounted(() => {
   transition: all 0.3s ease;
   color: #4a5568;
   font-size: 0.875rem;
+  min-width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-button.page-nav {
+  background-color: white;
+  border: 1px solid #e2e8f0;
 }
 
 @media (min-width: 768px) {
   .page-button {
     padding: 0.75rem 1.25rem;
     border-radius: 8px;
+    min-width: 45px;
   }
-  
+
   .page-button:hover:not(.active) {
     background: #e2e8f0;
     transform: translateY(-2px);
+  }
+
+  .page-button.page-nav:hover {
+    background-color: #f7fafc;
+    border-color: #cbd5e0;
   }
 }
 
@@ -1627,7 +1742,7 @@ onMounted(() => {
   color: #ffffff;
 }
 
-/* Transitions */
+/* Transiciones */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s ease;
@@ -1638,7 +1753,7 @@ onMounted(() => {
   opacity: 0;
 }
 
-/* Touch Device Optimizations */
+/* Optimizaciones para dispositivos táctiles */
 @media (hover: none) {
   .product-card:hover {
     transform: none;
@@ -1686,8 +1801,9 @@ onMounted(() => {
   }
 }
 
-/* Accessibility Improvements */
+/* Mejoras de accesibilidad */
 @media (prefers-reduced-motion: reduce) {
+
   .product-card,
   .category-banner,
   .modal-content,
@@ -1710,8 +1826,7 @@ onMounted(() => {
     transform: none;
   }
 
-  .spinner,
-  .badge-new {
+  .spinner {
     animation: none;
   }
 

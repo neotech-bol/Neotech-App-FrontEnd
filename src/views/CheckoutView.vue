@@ -752,14 +752,14 @@ const voucherPreview = ref('');
 
 const selectedLocation = ref('');
 const locationOptions = ref({
-  'la-paz': {
+/*   'la-paz': {
     name: 'La Paz',
     address: 'Av. 16 de Julio #1490, Zona Central, La Paz',
     hours: 'Lunes a Viernes de 8:30 a 18:00, Sábados de 9:00 a 13:00',
     phone: '+591 2 2334455',
     email: 'tienda.lapaz@empresa.com',
     additionalInfo: 'Referencia: Frente al Banco Nacional, edificio Torre Azul, planta baja.'
-  },
+  }, */
   'cochabamba': {
     name: 'Cochabamba',
     address: 'Av. América #1234, Zona Norte, Cochabamba',
@@ -1210,7 +1210,10 @@ function canSwitchToRegular(product) {
 }
 
 const formatPrice = (price) => {
-  return price ? `${price.toLocaleString()} Bs` : '0 Bs';
+  // Convertir price a número
+  const numericPrice = parseFloat(price);
+  
+  return !isNaN(numericPrice) ? `${numericPrice.toFixed(2).toLocaleString()} Bs` : '0.00 Bs';
 };
 
 /**

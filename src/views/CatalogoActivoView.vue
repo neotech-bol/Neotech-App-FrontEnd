@@ -138,10 +138,32 @@
                   </div>
                 </div> -->
 
-                <div class="price-container">
-                  <div class="price">
-                    <span class="current-price">{{ formatPrice(product.precio) }}</span>
-                    <span v-if="product.precio_anterior" class="old-price">{{ formatPrice(product.precio_anterior) }}</span>
+                <!-- Precios - Actualizado para igualar estilos -->
+                <div class="prices-container">
+                  <!-- Precio Regular -->
+                  <div class="price-item">
+                    <span class="price-label">Precio:</span>
+                    <span class="price-value" :class="{ 'with-discount': product.precio_venta || product.precio_anterior }">
+                      {{ formatPrice(product.precio) }}
+                    </span>
+                  </div>
+                  
+                  <!-- Precio de Venta (si existe) -->
+                  <div class="price-item" v-if="product.precio_venta">
+                    <span class="price-label">Venta:</span>
+                    <span class="price-value sale">{{ formatPrice(product.precio_venta) }}</span>
+                  </div>
+                  
+                  <!-- Precio Anterior (si existe) -->
+                  <div class="price-item" v-if="product.precio_anterior && !product.precio_venta">
+                    <span class="price-label">Anterior:</span>
+                    <span class="price-value old">{{ formatPrice(product.precio_anterior) }}</span>
+                  </div>
+                  
+                  <!-- Precio Preventa (si existe) -->
+                  <div class="price-item" v-if="product.precio_preventa">
+                    <span class="price-label">Preventa:</span>
+                    <span class="price-value preventa">{{ formatPrice(product.precio_preventa) }}</span>
                   </div>
                 </div>
               </div>
@@ -860,6 +882,11 @@ watch(() => router.currentRoute.value.params.idCatalogoActivo, (newId) => {
   object-fit: contain;
   transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
+
+.product-card:hover .product-image img {
+  transform: scale(1.05);
+}
+
 /* Navigation Buttons */
 .nav-button {
   position: absolute;
@@ -1082,31 +1109,70 @@ watch(() => router.currentRoute.value.params.idCatalogoActivo, (newId) => {
   color: #718096;
 }
 
-/* Price */
-.price-container {
+/* Precios - ACTUALIZADO para igualar estilos */
+.prices-container {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: auto;
-}
-
-.price {
-  display: flex;
-  align-items: baseline;
+  flex-direction: column;
   gap: 0.25rem;
-  flex-wrap: wrap;
+  margin-top: 0.5rem;
 }
 
-.current-price {
+.price-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.price-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #4a5568;
+  min-width: 4rem;
+}
+
+.price-value {
+  font-size: 0.85rem;
   font-weight: 700;
-  font-size: 0.95rem;
   color: #2d3748;
 }
 
-.old-price {
-  font-size: 0.75rem;
+.price-value.with-discount {
+  text-decoration: line-through;
+  color: #a0aec0;
+  font-weight: 500;
+}
+
+.price-value.sale {
+  color: #e53e3e;
+}
+
+.price-value.preventa {
+  color: #e53e3e;
+}
+
+.price-value.old {
   color: #a0aec0;
   text-decoration: line-through;
+}
+
+@media (min-width: 768px) {
+  .prices-container {
+    margin-top: 0.75rem;
+  }
+
+  .price-label {
+    font-size: 0.75rem;
+  }
+
+  .price-value {
+    font-size: 0.95rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .price-value {
+    font-size: 1.1rem;
+  }
 }
 
 /* Loading Overlay */

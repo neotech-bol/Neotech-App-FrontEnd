@@ -32,3 +32,10 @@ export const indexCategoriasConProductos = () => {
 export const activesCategoriasTrue = () => {
     return httpNotToken().get(`${urlBase}categorias-activas-home`);
 }
+
+export const categoriasActivesID = () => {
+    return httpNotToken().get(`${urlBase}categorias-activas-ids`);
+}
+export const categoriaIdActives = (categoriaId) => {
+    return httpNotToken().get(`${urlBase}categoria/${categoriaId}`);
+}
