@@ -27,13 +27,14 @@
                 <div class="banner-content">
                   <h2 class="banner-title">{{ categoria.nombre }}</h2>
                   <div class="banner-description-container">
-                    <p class="banner-description">
+                    <p class="banner-description" v-if="categoria.descripcion !== null && categoria.descripcion !== '' && categoria.descripcion !== 'null'">
                       {{ getTruncatedDescription(categoria.descripcion) }}
                       <button v-if="isDescriptionTruncated(categoria.descripcion)" class="read-more-btn"
                         @click.stop="showDescriptionModal(categoria)">
                         Ver más
                       </button>
                     </p>
+                    <p v-else>No hay descripción disponible.</p>
                   </div>
                   <button class="banner-cta" @click="irCategoria(categoria.id)">
                     <span>Ver Colección</span>
@@ -121,7 +122,7 @@
                   <i class="fas fa-tag"></i> {{ categoria?.nombre || 'General' }}
                 </div>
                 <h3 class="product-name">{{ product.nombre }}</h3>
-                
+
                 <!-- Precios - Actualizado para igualar estilos -->
                 <div class="prices-container">
                   <!-- Precio Regular -->
@@ -131,13 +132,13 @@
                       {{ formatPrice(product.precio) }}
                     </span>
                   </div>
-                  
+
                   <!-- Precio de Venta (si existe) -->
                   <div class="price-item" v-if="product.precio_venta">
                     <span class="price-label">Venta:</span>
                     <span class="price-value sale">{{ formatPrice(product.precio_venta) }}</span>
                   </div>
-                  
+
                   <!-- Precio Preventa (si existe) -->
                   <div class="price-item" v-if="product.precio_preventa">
                     <span class="price-label">Preventa:</span>
@@ -316,11 +317,11 @@ const fororiteUser = async (productId) => {
 const showNotification = (message, type) => {
   // Crear un ID único para el toast
   const toastId = `toast-${Date.now()}`;
-  
+
   // Determinar la clase de color según el tipo
   let bgClass = 'bg-primary text-white';
   let icon = 'info-circle';
-  
+
   if (type === 'success') {
     bgClass = 'bg-success text-white';
     icon = 'check-circle';
@@ -331,7 +332,7 @@ const showNotification = (message, type) => {
     bgClass = 'bg-warning';
     icon = 'exclamation-triangle';
   }
-  
+
   // Crear el elemento toast
   const toastHTML = `
     <div id="${toastId}" class="toast align-items-center ${bgClass} border-0" role="alert" aria-live="assertive" aria-atomic="true">
@@ -343,7 +344,7 @@ const showNotification = (message, type) => {
       </div>
     </div>
   `;
-  
+
   // Crear contenedor de toasts si no existe
   let toastContainer = document.getElementById('toast-container');
   if (!toastContainer) {
@@ -353,19 +354,19 @@ const showNotification = (message, type) => {
     toastContainer.style.zIndex = '1080';
     document.body.appendChild(toastContainer);
   }
-  
+
   // Añadir el toast al contenedor
   toastContainer.innerHTML += toastHTML;
-  
+
   // Inicializar y mostrar el toast
   const toastElement = document.getElementById(toastId);
   const bsToast = new bootstrapBundleMin.Toast(toastElement, {
     autohide: true,
     delay: 3000
   });
-  
+
   bsToast.show();
-  
+
   // También mantener el log en consola para debugging
   console.log(`${type}: ${message}`);
 };

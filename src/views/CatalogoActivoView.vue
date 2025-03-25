@@ -27,18 +27,16 @@
                 <div class="banner-content">
                   <h2>{{ categoria.nombre }}</h2>
                   <div class="banner-description-container">
-                    <p class="banner-description">
+                    <p class="banner-description" v-if="categoria.descripcion !== null && categoria.descripcion !== '' && categoria.descripcion !== 'null'">
                       {{ getTruncatedDescription(categoria.descripcion) }}
-                      <button 
-                        v-if="isDescriptionTruncated(categoria.descripcion)" 
-                        class="read-more-btn" 
-                        @click.stop="showDescriptionModal(categoria)"
-                      >
+                      <button v-if="isDescriptionTruncated(categoria.descripcion)" class="read-more-btn"
+                        @click.stop="showDescriptionModal(categoria)">
                         Ver más
                       </button>
                     </p>
+                    <p v-else>No hay descripción disponible.</p>
                   </div>
-                  <button class="banner-cta">
+                  <button class="banner-cta" @click="irCategoria(categoria.id)">
                     <span>Ver Colección</span>
                     <i class="fas fa-arrow-right"></i>
                   </button>
@@ -426,7 +424,9 @@ const getLastWord = (title) => {
   const words = title.split(' ');
   return words[words.length - 1];
 };
-
+const irCategoria = (idCategoria) => {
+  router.push({ path: `/categoria/${idCategoria}` });
+}
 watch(() => router.currentRoute.value.params.idCatalogoActivo, (newId) => {
   idCatalogoActivo.value = newId;
   listarCatalogo();

@@ -34,6 +34,7 @@ import ContactanosPanelView from '@/Admin/ContactanosPanelView.vue'
 import VerificacionPendiente from '@/views/VerificacionPendiente.vue'
 import { ref, reactive } from 'vue'
 import CategoriaIdView from '@/views/CategoriaIdView.vue'
+import GlobalSearch from '@/Components/GlobalSearch.vue'
 
 // Crear estado reactivo para el usuario y permisos
 const authState = reactive({

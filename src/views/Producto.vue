@@ -14,12 +14,6 @@
         </button>
       </div>
       
-      <div class="badge-container">
-        <span v-if="isNewProduct" class="new-badge">
-          <i class="fas fa-star"></i> NUEVO
-        </span>
-      </div>
-      
       <h1 class="product-title">{{ dato.nombre }}</h1>
     </div>
 
@@ -88,11 +82,6 @@
       <!-- Sección de Información del Producto -->
       <div class="product-info">
         <div class="sticky-header desktop-only">
-          <div class="badge-container">
-            <span v-if="isNewProduct" class="new-badge">
-              <i class="fas fa-star"></i> NUEVO
-            </span>
-          </div>
           <h1 class="product-title">{{ dato.nombre }}</h1>
           <h2 class="product-subtitle">{{ dato.subtitulo || 'Producto de Alta Calidad' }}</h2>
         </div>
@@ -104,8 +93,7 @@
           <!-- Precio Unificado - Más limpio -->
           <div class="unified-price-display">
             <div class="price-badge" :class="{ 'preventa': isPreventaActive, 'regular': !isPreventaActive }">
-              <i class="fas" :class="isPreventaActive ? 'fa-bolt' : 'fa-tag'"></i>
-              <span>{{ isPreventaActive ? 'Preventa' : 'Regular' }}</span>
+              <span>{{ isPreventaActive ? 'Preventa Vip' : 'Preventa Básica' }}</span>
             </div>
             
             <div class="price-value-display">
@@ -129,16 +117,17 @@
                 @click="applyRegularPrice" 
                 :class="['price-tab', { 'active': !isPreventaActive }]"
                 aria-pressed="!isPreventaActive">
-                <i class="fas fa-tag"></i> Regular
+                Preventa básica
               </button>
               <button 
                 @click="applyPreventaPrice" 
                 :class="['price-tab', { 'active': isPreventaActive }]"
                 aria-pressed="isPreventaActive">
-                <i class="fas fa-bolt"></i> Preventa
+                Preventa VIP
               </button>
             </div>
           </div>
+          
 
           <!-- Secciones de Acordeón para Móvil -->
           <div class="accordion-sections">
@@ -280,7 +269,7 @@
             <!-- Indicador de precio de preventa activo -->
             <div class="preventa-indicator" v-if="isPreventaActive">
               <i class="fas fa-check-circle"></i>
-              <span>Precio de preventa aplicado</span>
+              <span>Precio de Preventa VIP aplicado</span>
             </div>
           </div>
 
@@ -365,13 +354,13 @@
       </div>
     </div>
 
-    <!-- Productos Similares -->
+    <!-- Productos Similares with updated styles -->
     <div class="similar-products-section" v-if="productosSimilares.length > 0">
       <h2 class="section-title">
         Productos <span class="text-accent">Similares</span>
       </h2>
 
-      <!-- Cuadrícula de Productos -->
+      <!-- Cuadrícula de Productos con estilos actualizados -->
       <div class="products-grid">
         <div v-for="(product, index) in productosSimilares" :key="product.id" class="product-card"
           :style="{ '--index': index }" @click="navegarAProducto(product.id)">
@@ -418,30 +407,37 @@
               </div>
             </div>
           </div>
+          
           <!-- Información del Producto -->
-          <div class="product-info-card">
+          <div class="product-info">
             <div class="category">
-              <i class="fas fa-tag"></i> {{ product.categoria?.nombre || 'Sin categoría' }}
+              <i class="fas fa-tag"></i> {{ product.categoria?.nombre || 'General' }}
             </div>
             <h3 class="product-name">{{ product.nombre }}</h3>
-
-            <div class="rating-container">
-              <div class="rating">
-                <span v-for="star in 5" :key="star" class="star"
-                  :class="{ 'filled': star <= (userRatings.find(r => r.producto_id === product.id)?.rating || 0) }"
-                  @click.stop="storeRatingUser(product.id, star)">
-                  ★
+            <!-- Descripción truncada -->
+            <p v-if="product.descripcion" class="product-description">
+              {{ truncateDescription(product.descripcion, 60) }}
+            </p>
+            
+            <div class="prices-container">
+              <!-- Precio Regular -->
+              <div class="price-item">
+                <span class="price-label">Precio:</span>
+                <span class="price-value" :class="{ 'with-discount': product.precio_venta }">
+                  {{ formatPrice(product.precio) }}
                 </span>
               </div>
-              <div class="rating-count">
-                {{userRatings.find(r => r.producto_id === product.id)?.total_users || 0}} calificaciones
+              
+              <!-- Precio de Venta (si existe) -->
+              <div class="price-item" v-if="product.precio_venta">
+                <span class="price-label">Venta:</span>
+                <span class="price-value sale">{{ formatPrice(product.precio_venta) }}</span>
               </div>
-            </div>
-
-            <div class="price-container">
-              <div class="price">
-                <span class="current-price">{{ formatPrice(product.precio) }}</span>
-                <span v-if="product.precio_anterior" class="old-price">{{ formatPrice(product.precio_anterior) }}</span>
+              
+              <!-- Precio Preventa (si existe) -->
+              <div class="price-item" v-if="product.precio_preventa">
+                <span class="price-label">Preventa:</span>
+                <span class="price-value preventa">{{ formatPrice(product.precio_preventa) }}</span>
               </div>
             </div>
           </div>
@@ -646,6 +642,7 @@ const canSwitchToRegular = (price) => {
 const getRatingLabel = (rating) => {
   return ratingLabels[rating] || '';
 };
+
 // Aplicar precio de preventa manualmente
 const applyPreventaPrice = () => {
   if (hasPreventaPrice.value) {
@@ -760,16 +757,6 @@ const getOriginalIndex = (filteredIndex) => {
 
 // Imagen actual seleccionada
 const currentImage = computed(() => allImages.value[selectedImage.value]);
-
-// Determinar si el producto es nuevo (menos de 30 días)
-const isNewProduct = computed(() => {
-  if (!dato.value.created_at) return false;
-  const productDate = new Date(dato.value.created_at);
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  return productDate > thirtyDaysAgo;
-});
-
 // Computed para mostrar características limitadas o todas
 const visibleCaracteristicas = computed(() => {
   if (!dato.value.caracteristicas) return [];
@@ -825,6 +812,20 @@ const validateQuantity = () => {
     numQuantity = minQuantity.value;
   }
   
+  // Verificar si estamos en modo preventa y la cantidad excede el máximo de preventa
+  if (hasPreventaPrice.value && isPreventaActive.value && numQuantity > cantidadMaximaPreventa.value) {
+    // Mostrar alerta para cambiar al precio regular
+    if (confirm('Has superado la cantidad máxima para precio de preventa. ¿Deseas cambiar al precio regular?')) {
+      // Cambiar al precio regular
+      applyRegularPrice();
+      return;
+    } else {
+      // Mantener en el máximo de preventa
+      quantity.value = cantidadMaximaPreventa.value;
+      return;
+    }
+  }
+  
   // Verificar si la cantidad está en el rango de preventa
   if (hasPreventaPrice.value && numQuantity >= cantidadMinimaPreventa.value && numQuantity <= cantidadMaximaPreventa.value) {
     // Estamos en rango de preventa
@@ -846,7 +847,21 @@ const validateQuantity = () => {
 // Aumentar cantidad
 const increaseQuantity = () => {
   if (quantity.value < maxQuantity.value) {
-    quantity.value++;
+    const newQuantity = quantity.value + 1;
+    
+    // Verificar si estamos en modo preventa y vamos a exceder el máximo
+    if (hasPreventaPrice.value && isPreventaActive.value && newQuantity > cantidadMaximaPreventa.value) {
+      // Mostrar alerta para cambiar al precio regular
+      if (confirm('Al aumentar la cantidad superarás el máximo para precio de preventa. ¿Deseas cambiar al precio regular?')) {
+        // Cambiar al precio regular y establecer la nueva cantidad
+        quantity.value = newQuantity;
+        validateQuantity();
+      }
+      // Si no acepta, se mantiene en el máximo de preventa
+      return;
+    }
+    
+    quantity.value = newQuantity;
     validateQuantity(); // Validar después de cambiar la cantidad
   }
 };
@@ -1385,6 +1400,13 @@ const storeRatingUser = async (productId, rating) => {
     showToast('Error al guardar calificación', 'error');
   }
 };
+
+// Función para truncar descripción
+const truncateDescription = (text, maxLength) => {
+  if (!text) return '';
+  return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+};
+
 // Calcular el estilo del wrapper de miniaturas para la paginación
 const thumbnailWrapperStyle = computed(() => {
   const translateX = -currentThumbnailPage.value * (thumbnailsPerPage.value * (thumbnailWidth.value + thumbnailGap.value));
@@ -2486,28 +2508,50 @@ const ensureSelectedThumbnailVisible = () => {
 
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 1rem;
-  margin-top: 1.5rem;
+  margin-bottom: 2rem;
 }
 
+/* Product Card */
 .product-card {
-  background: white;
-  border-radius: 0.8rem;
+  background: var(--background-color, white);
+  border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
+  box-shadow: 0 3px 6px var(--shadow-color, rgba(0, 0, 0, 0.1));
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.6s forwards;
+  animation-delay: calc(var(--index, 0) * 0.1s);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .product-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 10px 20px var(--shadow-color, rgba(0, 0, 0, 0.15));
 }
 
+/* Product Image */
 .product-image-wrapper {
   position: relative;
-  padding-top: 100%;
+  width: 100%;
+  padding-bottom: 100%;
   overflow: hidden;
 }
 
@@ -2517,180 +2561,458 @@ const ensureSelectedThumbnailVisible = () => {
   left: 0;
   width: 100%;
   height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .product-image img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  transition: transform 0.5s ease;
+  object-fit: contain;
+  transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
 .product-card:hover .product-image img {
   transform: scale(1.05);
 }
 
-.product-info-card {
-  padding: 0.8rem;
+/* Navigation Buttons */
+.nav-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 2;
+  border: none;
+  cursor: pointer;
+  color: #2d3748;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.nav-button.prev {
+  left: 0.5rem;
+}
+
+.nav-button.next {
+  right: 0.5rem;
+}
+
+.product-card:hover .nav-button {
+  opacity: 1;
+}
+
+.nav-button:hover {
+  background-color: white;
+  transform: translateY(-50%) scale(1.1);
+  color: #3498db;
+}
+
+/* Badges */
+.badges {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  z-index: 2;
+}
+
+.badge {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  letter-spacing: 0.5px;
+}
+
+.badge-new {
+  background: linear-gradient(45deg, #48bb78, #38a169);
+  color: white;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Product Actions */
+.product-actions-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 2;
+}
+
+.product-card:hover .product-actions-bottom,
+.product-image:hover .product-actions-bottom {
+  opacity: 1;
+}
+
+.action-button {
+  background-color: rgba(255, 255, 255, 0.9);
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: #2d3748;
+  font-size: 0.75rem;
+}
+
+.action-button:hover {
+  transform: scale(1.1);
+}
+
+.cart-btn:hover {
+  background-color: #3498db;
+  color: white;
+}
+
+.view-btn:hover {
+  background-color: #6b46c1;
+  color: white;
+}
+
+.fav-btn:hover {
+  background-color: #e53e3e;
+  color: white;
+}
+
+.fav-btn.in-favorites {
+  background-color: #e53e3e;
+  color: white;
+}
+
+.action-button.adding {
+  pointer-events: none;
+}
+
+/* Product Info */
+.product-info {
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  background-color: var(--background-color, white);
 }
 
 .category {
   font-size: 0.7rem;
-  color: #666;
-  margin-bottom: 0.4rem;
+  color: #718096;
+  margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
-  gap: 0.2rem;
+  gap: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
 }
 
 .product-name {
-  font-size: 0.9rem;
-  font-weight: 600;
-  margin: 0.4rem 0;
-  color: #333;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-color, #333);
+  line-height: 1.4;
+  transition: color 0.3s ease;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  height: 2.25rem;
+  height: 2.5rem;
+  margin-bottom: 0.5rem;
 }
 
-.rating-container {
-  margin: 0.4rem 0;
+.product-card:hover .product-name {
+  color: #3498db;
 }
 
-.rating {
-  display: flex;
-  gap: 0.2rem;
+/* Descripción del producto */
+.product-description {
+  font-size: 0.75rem;
+  color: #718096;
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.star {
-  color: #e0e0e0;
-  font-size: 0.8rem;
+@media (min-width: 768px) {
+  .product-description {
+    font-size: 0.8rem;
+    margin-bottom: 0.75rem;
+  }
 }
 
-.star.filled {
-  color: #FFD700;
-}
-
-.rating-count {
-  font-size: 0.7rem;
-  color: #666;
-  margin-top: 0.2rem;
-}
-
-.price {
-  display: flex;
-  align-items: baseline;
-  gap: 0.4rem;
-}
-
-.current-price {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #333;
-}
-
-.old-price {
-  font-size: 0.8rem;
-  color: #999;
-  text-decoration: line-through;
-}
-
-.badges {
-  position: absolute;
-  top: 8px;
-  left: 8px;
+/* Precios */
+.prices-container {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  z-index: 5;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
 }
 
-.badge {
-  padding: 0.2rem 0.4rem;
-  border-radius: 0.25rem;
+.price-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.price-label {
   font-size: 0.7rem;
   font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.2rem;
+  color: #4a5568;
+  min-width: 4rem;
 }
 
-.badge-new {
-  background: linear-gradient(45deg, #4CAF50, #8BC34A);
-  color: white;
+.price-value {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #2d3748;
 }
 
-.product-actions-bottom {
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  display: flex;
-  gap: 0.4rem;
-  z-index: 5;
+.price-value.with-discount {
+  text-decoration: line-through;
+  color: #a0aec0;
+  font-weight: 500;
 }
 
-.action-button {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: white;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+.price-value.sale {
+  color: #e53e3e;
 }
 
-.action-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.price-value.preventa {
+  color: #e53e3e;
 }
 
-.cart-btn {
-  color: #007bff;
+@media (min-width: 768px) {
+  .prices-container {
+    margin-top: 0.75rem;
+  }
+
+  .price-label {
+    font-size: 0.75rem;
+  }
+
+  .price-value {
+    font-size: 0.95rem;
+  }
 }
 
-.view-btn {
-  color: #333;
+@media (min-width: 1200px) {
+  .price-value {
+    font-size: 1.1rem;
+  }
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.5rem;
+  }
+  .product-name {
+    font-size: 1rem;
+    height: 2.8rem;
+  }
 }
 
-.fav-btn {
-  color: #dc3545;
+@media (min-width: 992px) and (max-width: 1199px) {
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.25rem;
+  }
 }
 
-.fav-btn.in-favorites {
-  background: #dc3545;
-  color: white;
+@media (min-width: 768px) and (max-width: 991px) {
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+  }
+
+  .product-actions-bottom {
+    opacity: 0.9;
+  }
+
+  .nav-button {
+    opacity: 0.7;
+  }
 }
 
-.nav-button {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.8);
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 5;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+@media (min-width: 576px) and (max-width: 767px) {
+  .recently-arrived {
+    padding: 2.5rem 0;
+  }
+
+  .products-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+  }
+
+  .product-actions-bottom {
+    opacity: 1;
+    padding: 0.4rem;
+  }
+
+  .action-button {
+    width: 28px;
+    height: 28px;
+  }
+
+  .nav-button {
+    opacity: 0.8;
+    width: 28px;
+    height: 28px;
+  }
 }
 
-.nav-button.prev {
-  left: 8px;
+@media (min-width: 480px) and (max-width: 575px) {
+  .recently-arrived {
+    padding: 2rem 0;
+  }
+
+  .products-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+
+  .product-info {
+    padding: 0.5rem;
+  }
+
+  .product-name {
+    font-size: 0.8rem;
+    height: 2.2rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .category {
+    font-size: 0.65rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .action-button {
+    width: 26px;
+    height: 26px;
+    font-size: 0.7rem;
+  }
+
+  .nav-button {
+    width: 26px;
+    height: 26px;
+  }
+
+  .badge {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.6rem;
+  }
 }
 
-.nav-button.next {
-  right: 8px;
+@media (min-width: 400px) and (max-width: 479px) {
+  .recently-arrived {
+    padding: 1.5rem 0;
+  }
+
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  .product-info {
+    padding: 0.5rem;
+  }
+
+  .product-name {
+    font-size: 0.8rem;
+    height: 2.2rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .category {
+    font-size: 0.65rem;
+    margin-bottom: 0.25rem;
+  }
+}
+
+@media (max-width: 399px) {
+  .recently-arrived {
+    padding: 1.5rem 0;
+  }
+
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  .product-info {
+    padding: 0.4rem;
+  }
+
+  .product-name {
+    font-size: 0.75rem;
+    height: 2.1rem;
+    margin-bottom: 0.25rem;
+    -webkit-line-clamp: 2;
+  }
+
+  .category {
+    font-size: 0.6rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .action-button {
+    width: 24px;
+    height: 24px;
+    font-size: 0.65rem;
+  }
+
+  .nav-button {
+    width: 24px;
+    height: 24px;
+  }
+
+  .badge {
+    padding: 0.15rem 0.3rem;
+    font-size: 0.55rem;
+  }
 }
 
 /* Barra Fija para Móvil */
@@ -3073,6 +3395,7 @@ const ensureSelectedThumbnailVisible = () => {
     transition: none;
   }
 }
+
 /* Estilos para la paginación de miniaturas */
 .thumbnail-list {
   position: relative;

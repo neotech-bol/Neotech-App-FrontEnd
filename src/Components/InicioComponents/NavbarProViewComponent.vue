@@ -22,30 +22,15 @@
       </div>
       <div class="main-header">
         <div class="logo">
-          <img src="/logo/Logo Neofetch PNG.png" alt="Logo" />
+          <router-link to="/">
+            <img src="/logo/Logo Neofetch PNG.png" alt="Logo" />
+          </router-link>
         </div>
+
 
         <!-- Barra de búsqueda mejorada y centrada -->
         <div class="search-container">
-          <div class="search-bar">
-            <input v-model="searchQuery" type="text" placeholder="Buscar productos, categorías y más..."
-              @keyup.enter="performSearch" @focus="searchFocused = true"
-              @blur="setTimeout(() => searchFocused = false, 200)" />
-            <button class="search-button" @click="performSearch">
-              <i class="fas fa-search"></i>
-            </button>
-
-            <!-- Sugerencias de búsqueda -->
-            <div v-if="searchFocused && searchQuery.length > 0" class="search-suggestions">
-              <div v-for="(suggestion, index) in filteredSuggestions" :key="index" class="suggestion-item"
-                @click="selectSuggestion(suggestion)" :class="{ 'active': selectedSuggestionIndex === index }">
-                <span>{{ suggestion }}</span>
-              </div>
-              <div v-if="filteredSuggestions.length === 0" class="no-suggestions">
-                No se encontraron resultados
-              </div>
-            </div>
-          </div>
+          <GlobalSearch />
         </div>
 
         <div class="header-actions">
@@ -277,7 +262,7 @@ import { useThemeStore } from '@/stores/themeStore';
 import { useThemeStoreDark } from '@/stores/themeDarkStore';
 import ThemePageWrapper from '@/components/ThemePageWrapper.vue';
 import { searchProductoCategoriaCatalogo } from '@/Services/SearchService';
-
+import GlobalSearch from '../GlobalSearch.vue';
 const router = useRouter();
 const cartStore = useCartStore();
 const searchQuery = ref('');
@@ -485,30 +470,30 @@ const closeMobileMenu = () => {
 const performSearch = async () => {
   if (searchQuery.value.trim()) {
     saveRecentSearch(searchQuery.value.trim());
-    
+
     try {
       // Mostrar estado de carga
       isSearchLoading.value = true;
-      
+
       console.log('Realizando búsqueda con query:', searchQuery.value.trim());
-      
+
       // Llamar a la API de búsqueda
       const response = await searchProductoCategoriaCatalogo(searchQuery.value.trim());
-      
+
       console.log('Respuesta de búsqueda:', response);
-      
+
       // Verificar si la respuesta tiene la estructura esperada
       if (response && response.data) {
         // Guardar los resultados
         searchResults.value = response.data.results;
-        
+
         // Navegar a la página de resultados con la consulta y resultados
-        router.push({ 
-          path: '/search', 
+        router.push({
+          path: '/search',
           query: { q: searchQuery.value },
           state: { searchResults: response.data.results }
         });
-        
+
         // Resetear la consulta de búsqueda
         searchQuery.value = '';
         closeMobileMenu();

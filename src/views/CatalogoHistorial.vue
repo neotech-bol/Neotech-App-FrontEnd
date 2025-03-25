@@ -27,21 +27,19 @@
                 <div class="banner-content">
                   <h2>{{ categoria.nombre }}</h2>
                   <div class="banner-description-container">
-                    <p class="banner-description">
+                    <p class="banner-description" v-if="categoria.descripcion !== null && categoria.descripcion !== '' && categoria.descripcion !== 'null'">
                       {{ getTruncatedDescription(categoria.descripcion) }}
-                      <button 
-                        v-if="isDescriptionTruncated(categoria.descripcion)" 
-                        class="read-more-btn" 
-                        @click.stop="showDescriptionModal(categoria)"
-                      >
+                      <button v-if="isDescriptionTruncated(categoria.descripcion)" class="read-more-btn"
+                        @click.stop="showDescriptionModal(categoria)">
                         Ver más
                       </button>
                     </p>
+                    <p v-else>No hay descripción disponible.</p>
                   </div>
-                  <button class="banner-cta">
+<!--                   <button class="banner-cta">
                     <span>Ver Colección</span>
                     <i class="fas fa-arrow-right"></i>
-                  </button>
+                  </button> -->
                 </div>
               </div>
             </div>
@@ -470,10 +468,7 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   width: 100%;
 }
 
-.category-banner:hover {
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
-  transform: translateY(-5px);
-}
+
 
 .category-banner img {
   width: 100%;
@@ -482,9 +477,6 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
-.category-banner:hover img {
-  transform: scale(1.05);
-}
 
 /* Overlay con gradiente mejorado y animaciones */
 .banner-overlay {

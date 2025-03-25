@@ -57,13 +57,14 @@
               <div class="banner-content">
                 <h2 class="banner-title">{{ categoria.nombre }}</h2>
                 <div class="banner-description-container">
-                  <p class="banner-description">
-                    {{ getTruncatedDescription(categoria.descripcion) }}
-                    <button v-if="isDescriptionTruncated(categoria.descripcion)" class="read-more-btn"
-                      @click.stop="showDescriptionModal(categoria)" aria-label="Ver descripción completa">
-                      Ver más
-                    </button>
-                  </p>
+                  <p class="banner-description" v-if="categoria.descripcion !== null && categoria.descripcion !== '' && categoria.descripcion !== 'null'">
+                      {{ getTruncatedDescription(categoria.descripcion) }}
+                      <button v-if="isDescriptionTruncated(categoria.descripcion)" class="read-more-btn"
+                        @click.stop="showDescriptionModal(categoria)">
+                        Ver más
+                      </button>
+                    </p>
+                    <p v-else>No hay descripción disponible.</p>
                 </div>
                 <button class="banner-cta" @click="irCategoria(categoria.id)">
                   <span>Ver Colección</span>
