@@ -276,6 +276,7 @@ import { useUserStore } from '@/stores/userAuht';
 import { useThemeStore } from '@/stores/themeStore';
 import { useThemeStoreDark } from '@/stores/themeDarkStore';
 import ThemePageWrapper from '@/components/ThemePageWrapper.vue';
+import { searchProductoCategoriaCatalogo } from '@/Services/SearchService';
 
 const router = useRouter();
 const cartStore = useCartStore();
@@ -317,7 +318,9 @@ const searchFocused = ref(false);
 const recentSearches = ref([]);
 const popularSearches = ref(['Laptops', 'Smartphones', 'Tablets', 'Accesorios', 'Monitores', 'Teclados']);
 const selectedSuggestionIndex = ref(-1);
-
+// Añadir una variable para el estado de carga
+const isSearchLoading = ref(false);
+const searchResults = ref(null);
 // Cargar búsquedas recientes desde localStorage
 const loadRecentSearches = () => {
   const saved = localStorage.getItem('recentSearches');
@@ -479,16 +482,52 @@ const closeMobileMenu = () => {
   isMobileMenuOpen.value = false;
 };
 
-const performSearch = () => {
+const performSearch = async () => {
   if (searchQuery.value.trim()) {
     saveRecentSearch(searchQuery.value.trim());
-    router.push({ path: '/search', query: { q: searchQuery.value } });
-    searchQuery.value = '';
-    closeMobileMenu();
-    searchFocused.value = false;
+    
+    try {
+      // Mostrar estado de carga
+      isSearchLoading.value = true;
+      
+      console.log('Realizando búsqueda con query:', searchQuery.value.trim());
+      
+      // Llamar a la API de búsqueda
+      const response = await searchProductoCategoriaCatalogo(searchQuery.value.trim());
+      
+      console.log('Respuesta de búsqueda:', response);
+      
+      // Verificar si la respuesta tiene la estructura esperada
+      if (response && response.data) {
+        // Guardar los resultados
+        searchResults.value = response.data.results;
+        
+        // Navegar a la página de resultados con la consulta y resultados
+        router.push({ 
+          path: '/search', 
+          query: { q: searchQuery.value },
+          state: { searchResults: response.data.results }
+        });
+        
+        // Resetear la consulta de búsqueda
+        searchQuery.value = '';
+        closeMobileMenu();
+        searchFocused.value = false;
+      } else {
+        console.error('La respuesta no tiene el formato esperado:', response);
+      }
+    } catch (error) {
+      console.error('Error al realizar la búsqueda:', error);
+      if (error.response) {
+        console.error('Datos del error:', error.response.data);
+        console.error('Estado del error:', error.response.status);
+      }
+    } finally {
+      // Ocultar estado de carga
+      isSearchLoading.value = false;
+    }
   }
 };
-
 const handleAccountClick = () => {
   router.push({ path: isLoggedIn.value ? '/perfil' : '/login' });
   closeMobileMenu();

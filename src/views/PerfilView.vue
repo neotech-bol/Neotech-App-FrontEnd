@@ -9,6 +9,10 @@
         <h1 class="gradient-text">{{ user.nombre }} {{ user.apellido }}</h1>
         <p>{{ user.email }}</p>
       </div>
+      <button @click="cerrarSesion" class="boton-cerrar-sesion">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Cerrar Sesión</span>
+      </button>
     </header>
     <main class="contenido-perfil">
       <section class="info-perfil">
@@ -124,7 +128,7 @@
           <div v-if="pedidosPaginados.length === 0" class="no-pedidos">
             <i class="fas fa-shopping-cart"></i>
             <p>No hay pedidos que mostrar</p>
-            <button class="boton-principal">Ir a comprar</button>
+            <button class="boton-principal" @click="irAProductos()">Ir a comprar</button>
           </div>
         </div>
       </section>
@@ -136,6 +140,8 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { updateUserWeb, userAutenticado } from '@/Services/UsuarioService'
 import { generaPDFPedidoID, repitOrder } from '@/Services/PedidoService';
+import Swal from 'sweetalert2';
+import { useRouter } from 'vue-router';
 
 // Estado reactivo
 const user = ref({});
@@ -148,6 +154,7 @@ const hoveredPedido = ref(null);
 const avatarHover = ref(false);
 const filtroActual = ref('todos');
 const validationErrors = ref({})
+const router = useRouter();
 // Mounted hook
 onMounted(() => {
   userAuth();
@@ -304,6 +311,86 @@ const formatearPrecio = (precio) => {
 const obtenerProgresoPedido = (estado) => {
   return estado === 1 ? '100%' : '60%';
 };
+// Función para hacer scroll al inicio de la página
+const scrollToTop = () => {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+};
+
+// Función para cerrar sesión con confirmación de SweetAlert
+const cerrarSesion = async () => {
+  // Mostrar diálogo de confirmación con SweetAlert
+  const result = await Swal.fire({
+    title: '¿Cerrar sesión?',
+    text: '¿Estás seguro que deseas cerrar tu sesión?',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Sí, cerrar sesión',
+    cancelButtonText: 'Cancelar'
+  });
+  
+  // Si el usuario confirma
+  if (result.isConfirmed) {
+    try {
+      // 1. Llamar al endpoint de logout en el backend (si existe)
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      
+      if (token) {
+        try {
+          const { data } = await logout();
+          console.log(data);
+        } catch (apiError) {
+          console.warn('Error al llamar al endpoint de logout:', apiError);
+          // Continuamos con el proceso aunque falle la API
+        }
+      }
+      
+      // 2. Limpiar tokens y datos de usuario del almacenamiento local
+      localStorage.removeItem('token');
+      localStorage.removeItem('datosUser');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('datosUser');
+      
+      // 3. Mostrar notificación de éxito con SweetAlert
+      await Swal.fire({
+        title: '¡Sesión cerrada!',
+        text: 'Has cerrado sesión correctamente',
+        icon: 'success',
+        timer: 2000,
+        timerProgressBar: true,
+        showConfirmButton: false
+      });
+      
+      // 4. Redireccionar al login
+      router.push('/login');
+      
+      // 5. Hacer scroll al top después de redireccionar
+      nextTick(() => {
+        scrollToTop();
+      });
+      
+      return Promise.resolve();
+    } catch (error) {
+      console.error('Error en cerrarSesion:', error);
+      
+      // Mostrar error con SweetAlert
+      await Swal.fire({
+        title: 'Error',
+        text: 'No se pudo cerrar la sesión',
+        icon: 'error'
+      });
+      
+      return Promise.reject(error);
+    }
+  }
+};
+const irAProductos = () => {
+  router.push({path:'/productos'});
+}
 
 // Watchers
 watch(filtroActual, () => {
@@ -1096,6 +1183,58 @@ h2::after {
   .botones-edicion {
     flex-direction: column;
     width: 100%;
+  }
+}
+/* Estilo para el botón de cerrar sesión */
+.boton-cerrar-sesion {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+  margin-left: auto;
+}
+
+.boton-cerrar-sesion:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 6px 15px rgba(239, 68, 68, 0.4);
+}
+
+.boton-cerrar-sesion:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Ajuste responsive para el encabezado */
+@media (max-width: 768px) {
+  .encabezado-perfil {
+    flex-wrap: wrap;
+  }
+  
+  .boton-cerrar-sesion {
+    margin-top: 1rem;
+    margin-left: 0;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .encabezado-perfil {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .boton-cerrar-sesion {
+    margin-top: 1.5rem;
   }
 }
 </style>

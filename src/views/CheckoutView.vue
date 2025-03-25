@@ -14,7 +14,7 @@
         <h1>Finalizar Pedido <span class="items-badge">{{ totalItems }}</span></h1>
         <div class="actions-container">
           <button @click="emptyCart" class="empty-cart-btn" :disabled="items.length === 0" aria-label="Vaciar carrito">
-            <i class="fas fa-trash-alt"></i> <span class="btn-text">Vaciar</span>
+            <i class="fas fa-trash-alt"></i> <span class="btn-text">Vaciar Carrito</span>
           </button>
           <div class="lock-icon" aria-hidden="true">
             <i class="fas fa-lock"></i>
@@ -58,7 +58,7 @@
                   <span class="step-number">1</span>
                   <i v-if="activeStep > 0" class="fas fa-check check-icon" aria-hidden="true"></i>
                 </div>
-                <h2>Ubicación de Entrega</h2>
+                <h2>Datos personales</h2>
               </div>
               <div class="step-header-right">
                 <button v-if="activeStep >= 0 && checkoutSteps[0].completed" @click.stop="toggleEdit(0)"
@@ -570,7 +570,7 @@
               </div>
               <div class="total">
                 <span>Monto final:</span>
-                <span class="total-amount">{{ formatPrice(cartStore.totalAfterDiscount) }}</span>
+                <span class="total-amount">{{ formatPrice(cartStore.totalToPay) }}</span>
               </div>
               <div class="mini-cart-preview mobile-only">
                 <div class="mini-cart-scroll">
@@ -2308,15 +2308,9 @@ h2 {
   background-color: #f8f9fa;
   border-radius: 8px;
   padding: 15px;
-  border-left: 4px solid var(--primary-color);
+/*   border-left: 4px solid var(--primary-color); */
   transition: all 0.3s ease;
 }
-
-.info-card:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-}
-
 .delivery-info-display p {
   margin: 10px 0;
   color: #000000;
@@ -3837,7 +3831,7 @@ input:focus~.input-focus-indicator {
 }
 
 .confirm-btn {
-  background-color: var(--danger-color);
+  background-color: #c82333;
   color: white;
   border: none;
 }

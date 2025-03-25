@@ -33,7 +33,7 @@
     <!-- Estado de Carga -->
     <div v-if="loading" class="loading-overlay">
       <div class="spinner"></div>
-      <p>Cargando catálogo...</p>
+      <p>Cargando categorias...</p>
     </div>
 
     <!-- Estado de Error -->
