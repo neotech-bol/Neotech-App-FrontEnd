@@ -28,6 +28,11 @@
                   <i class="fas fa-file-pdf me-2 text-warning"></i>PDF (En proceso)
                 </button>
               </li>
+              <li>
+  <button class="dropdown-item" @click="descargarPdfPedidosPorCatalogo">
+    <i class="fas fa-file-pdf me-2 text-primary"></i>PDF (Por Catálogo)
+  </button>
+</li>
             </ul>
           </div>
           <button class="btn btn-outline-primary" @click="listOrders">
@@ -410,10 +415,10 @@
                           <tr v-for="(producto, index) in detailOrder.productos" :key="index">
                             <td>
                               <div class="d-flex align-items-center">
-                                <div class="product-img-small me-2">
-                                  <img :src="getProductImageUrl(producto.imagen_principal)" 
+                              <!--   <div class="product-img-small me-2">
+                                  <img :src="producto.imagen_principal" 
                                        alt="Imagen del producto" class="img-fluid rounded">
-                                </div>
+                                </div> -->
                                 <div>
                                   <div class="fw-medium">{{ producto.nombre }}</div>
                                   <div v-if="producto.pivot?.modelo_id" class="small text-muted">
@@ -646,7 +651,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Modal, Toast } from 'bootstrap/dist/js/bootstrap.bundle.min';
 import { format, formatDistance } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { completeOrder, generaPDFPedidoID, generateExcel, indexPedidos, modelsAll, pdfPedidosCompletados, pdfPedidosPendientes, showPedido } from '@/Services/PedidoService';
+import { completeOrder, generaPDFPedidoID, generateExcel, indexPedidos, modelsAll, pdfPedidosCatalogo, pdfPedidosCompletados, pdfPedidosPendientes, showPedido } from '@/Services/PedidoService';
 
 // Estado
 const datos = ref([]);
@@ -815,6 +820,7 @@ const showOrder = async (id) => {
   try {
     const { data } = await showPedido(id);
     detailOrder.value = data;
+    console.log(detailOrder.value);
     orderDetailModal.show();
   } catch (error) {
     console.error('Error al obtener detalles del pedido:', error);
@@ -830,16 +836,6 @@ const getVoucherUrl = (voucherPath) => {
   // Si no, construir la URL completa
   return voucherPath ? `/vouchers/${voucherPath}` : '';
 };
-
-const getProductImageUrl = (imagePath) => {
-  // Si la ruta ya es una URL completa, devolverla
-  if (imagePath && imagePath.startsWith('http')) {
-    return imagePath;
-  }
-  // Si no, construir la URL completa
-  return imagePath ? `/productos/${imagePath}` : '/placeholder.jpg';
-};
-
 const openVoucherModal = (voucherPath) => {
   currentVoucherUrl.value = getVoucherUrl(voucherPath);
   voucherModal.show();
@@ -925,7 +921,24 @@ const descargarPdfPedidosEnProceso = async () => {
     showToast('error', 'Error', 'No se pudo generar el PDF de pedidos en proceso');
   }
 };
-
+const descargarPdfPedidosPorCatalogo = async () => {
+  try {
+    showExportDropdown.value = false; // Cerrar el dropdown después de hacer clic
+    
+    // Solicitar el ID del catálogo al usuario
+    const catalogoId = prompt("Ingrese el ID del catálogo:");
+    
+    if (catalogoId && !isNaN(catalogoId)) {
+      const response = await pdfPedidosCatalogo(catalogoId);
+      handlePdfResponse(response, `pedidos_catalogo_${catalogoId}.pdf`);
+    } else if (catalogoId !== null) {
+      showToast('error', 'Error', 'ID de catálogo inválido');
+    }
+  } catch (error) {
+    console.error('Error al descargar el PDF de pedidos por catálogo:', error);
+    showToast('error', 'Error', 'No se pudo generar el PDF de pedidos por catálogo');
+  }
+};
 const handlePdfResponse = (response, defaultFilename) => {
   // Verificar el tipo de contenido de la respuesta
   const contentType = response.headers['content-type'];

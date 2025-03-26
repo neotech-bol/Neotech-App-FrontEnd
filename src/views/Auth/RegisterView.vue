@@ -235,10 +235,11 @@
 <script setup>
 import { register } from '@/Services/AuthService';
 import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { Buffer } from "buffer";
 
 const router = useRouter();
+const route = useRoute(); // Get the current route at the top level
 const formulario = ref({
   nombre: '',
   apellido: '',
@@ -257,7 +258,7 @@ const verificationSent = ref(false);
 const formActive = ref(false);
 const campoActivo = ref('');
 const pasoActual = ref(1);
-const aceptaTerminos = ref(false);
+const aceptaTerminos = ref(true);
 
 onMounted(() => {
   // Activar animación del formulario
@@ -345,7 +346,10 @@ const mostrarErrorPaso = (mensaje) => {
  * Esta función registra al usuario y lo redirige directamente a la página principal
  * o al panel de administración según su rol, sin animaciones de transición
  */
-const registrarUsuario = async () => {
+/**
+ * Versión actualizada del registro de usuario con manejo adecuado de redirecciones
+ */
+ const registrarUsuario = async () => {
   errors.value = {};
   isLoading.value = true;
   try {
@@ -367,10 +371,19 @@ const registrarUsuario = async () => {
 
     localStorage.setItem('datosUser', JSON.stringify(datosUser));
 
+    // Verificar si hay un parámetro de redirección en la URL
+    const redirectPath = route.query.redirect;
+
+    // Redirigir según el rol o la URL de redirección
     if (data.user.roles[0].name === 'cliente') {
-      router.push('/');
+      router.replace('/');
     } else {
-      router.push('/admin-panel');
+      // Si hay una redirección, usar replace para evitar historial adicional
+      if (redirectPath) {
+        router.replace(redirectPath.toString());
+      } else {
+        router.replace('/admin-panel');
+      }
     }
   } catch (error) {
     manejarError(error);
@@ -378,6 +391,7 @@ const registrarUsuario = async () => {
     isLoading.value = false;
   }
 };
+
 
 /**
  * Versión alternativa del registro de usuario con verificación por correo

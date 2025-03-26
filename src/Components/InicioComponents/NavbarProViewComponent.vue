@@ -274,11 +274,8 @@ const catalogosAnteriores = ref([]);
 const catalogosActivos = ref([]);
 const themeStore = useThemeStore();
 const themeStoreDark = useThemeStoreDark();
-const isLocationOpen = ref(false);
 const showCartNotification = ref(false);
 const lastCartCount = ref(0);
-// Variable para controlar si se está procesando un clic
-const isProcessingClick = ref(false);
 // Variable para controlar la visibilidad del modal de ubicación
 const showLocationModal = ref(false);
 

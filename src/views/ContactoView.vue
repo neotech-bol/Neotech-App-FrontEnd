@@ -8,13 +8,13 @@ const themeStore = useThemeStore()
 
 // Enhanced department locations with more details
 const departmentLocations = {
-/*   'la-paz': {
-    address: 'Av. 16 de Julio #1490, El Prado, La Paz - BO',
-    mapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3825.3681896113545!2d-68.13309!3d-16.499611!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTbCsDI5JzU4LjYiUyA2OMKwMDcnNTkuMSJX!5e0!3m2!1ses!2sbo!4v1234567890!5m2!1ses!2sbo',
-    directionsUrl: 'https://goo.gl/maps/abcdefg123456',
-    additionalInfo: 'Edificio Torre Azul, planta baja. Referencia: Frente al Banco Nacional.',
-    color: '#F8A812' // Naranja para La Paz
-  }, */
+  /*   'la-paz': {
+      address: 'Av. 16 de Julio #1490, El Prado, La Paz - BO',
+      mapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3825.3681896113545!2d-68.13309!3d-16.499611!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTbCsDI5JzU4LjYiUyA2OMKwMDcnNTkuMSJX!5e0!3m2!1ses!2sbo!4v1234567890!5m2!1ses!2sbo',
+      directionsUrl: 'https://goo.gl/maps/abcdefg123456',
+      additionalInfo: 'Edificio Torre Azul, planta baja. Referencia: Frente al Banco Nacional.',
+      color: '#F8A812' // Naranja para La Paz
+    }, */
   'cochabamba': {
     address: 'Calle Tarija #234, esquina América, Cochabamba - BO',
     mapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3807.3758801973644!2d-66.1552!3d-17.393611!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTfCsDIyJzIyLjciUyA2NsKwMDknMzguNyJX!5e0!3m2!1ses!2sbo!4v1234567890!5m2!1ses!2sbo',
@@ -22,13 +22,13 @@ const departmentLocations = {
     additionalInfo: 'Local con fachada verde. Referencia: A media cuadra de la Plaza Principal.',
     color: '#3B82F6' // Azul para Cochabamba
   },
-/*   'santa-cruz': {
-    address: 'Av. Irala #456, Santa Cruz - BO',
-    mapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3799.1234567890123!2d-63.1234!3d-17.7890!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTfCsDQ3JzIwLjQiUyA2M8KwMDcnMjAuMiJX!5e0!3m2!1ses!2sbo!4v1234567890!5m2!1ses!2sbo',
-    directionsUrl: 'https://goo.gl/maps/opqrstu345678',
-    additionalInfo: 'Centro Comercial Las Brisas, Local 12. Amplio estacionamiento disponible.',
-    color: '#10B981' // Verde para Santa Cruz
-  } */
+  /*   'santa-cruz': {
+      address: 'Av. Irala #456, Santa Cruz - BO',
+      mapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3799.1234567890123!2d-63.1234!3d-17.7890!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTfCsDQ3JzIwLjQiUyA2M8KwMDcnMjAuMiJX!5e0!3m2!1ses!2sbo!4v1234567890!5m2!1ses!2sbo',
+      directionsUrl: 'https://goo.gl/maps/opqrstu345678',
+      additionalInfo: 'Centro Comercial Las Brisas, Local 12. Amplio estacionamiento disponible.',
+      color: '#10B981' // Verde para Santa Cruz
+    } */
 }
 
 // State variables
@@ -99,20 +99,25 @@ const faqs = ref([
   }
 ])
 
-// Send message function
 const enviarMensaje = async () => {
   errors.value = {}
   isLoading.value = true
   try {
-    const { data } = await store(formData.value)
+    // Add the selected department to the form data before sending
+    const formDataWithDepartment = {
+      ...formData.value,
+      departamento: selectedDepartment.value
+    }
     
+    const { data } = await store(formDataWithDepartment)
+
     // Show success modal instead of Swal
     successMessage.value = {
       title: '¡Mensaje Enviado!',
       message: 'Gracias por contactarnos. Te responderemos lo antes posible.'
     }
     showSuccessModal.value = true
-    
+
     formData.value = { nombre_completo: '', correo: '', telefono: '', mensaje: '' }
   } catch (error) {
     if (error.response?.status === 422) {
@@ -132,10 +137,10 @@ const enviarMensaje = async () => {
 
 // Contact cards with enhanced actions
 const contactCards = computed(() => [
-  { 
-    icon: 'fa-envelope', 
-    title: 'Escríbenos', 
-    content: 'contacto@neotechbol.com', 
+  {
+    icon: 'fa-envelope',
+    title: 'Escríbenos',
+    content: 'contacto@neotechbol.com',
     href: 'mailto:contacto@neotechbol.com',
     action: {
       icon: 'fa-copy',
@@ -143,10 +148,10 @@ const contactCards = computed(() => [
       handler: () => copyToClipboard('contacto@neotechbol.com')
     }
   },
-  { 
-    icon: 'fa-phone', 
-    title: 'Llámanos', 
-    content: '+591 77997694', 
+  {
+    icon: 'fa-phone',
+    title: 'Llámanos',
+    content: '+591 77997694',
     href: 'tel:+59177997694',
     action: {
       icon: 'fa-phone-alt',
@@ -154,9 +159,9 @@ const contactCards = computed(() => [
       handler: () => window.location.href = 'tel:+59177997694'
     }
   },
-  { 
-    icon: 'fa-map-marker-alt', 
-    title: 'Visítanos', 
+  {
+    icon: 'fa-map-marker-alt',
+    title: 'Visítanos',
     content: currentLocation.value.address,
     action: {
       icon: 'fa-directions',
@@ -184,12 +189,12 @@ const handleAppointment = () => {
     message: `Tu cita ha sido agendada para el ${formatDate(appointmentData.value.fecha)} a las ${appointmentData.value.hora}. Te hemos enviado un correo de confirmación.`
   }
   showSuccessModal.value = true
-  
-  appointmentData.value = { 
-    nombre: '', 
-    correo: '', 
-    telefono: '', 
-    fecha: '', 
+
+  appointmentData.value = {
+    nombre: '',
+    correo: '',
+    telefono: '',
+    fecha: '',
     hora: '',
     motivo: '',
     otroMotivo: ''
@@ -233,10 +238,10 @@ const copyToClipboard = (text) => {
 const formatDate = (dateString) => {
   if (!dateString) return ''
   const date = new Date(dateString)
-  return date.toLocaleDateString('es-ES', { 
-    day: '2-digit', 
-    month: 'long', 
-    year: 'numeric' 
+  return date.toLocaleDateString('es-ES', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric'
   })
 }
 
@@ -268,7 +273,7 @@ const handleTouchMove = (e) => {
 const handleTouchEnd = () => {
   const minSwipeDistance = 50
   const swipeDistance = touchStartX.value - touchEndX.value
-  
+
   if (Math.abs(swipeDistance) > minSwipeDistance) {
     if (swipeDistance > 0) {
       // Swiped left - next card
@@ -293,10 +298,10 @@ const handleScroll = () => {
   const scrollPosition = window.scrollY
   const windowHeight = window.innerHeight
   const documentHeight = document.documentElement.scrollHeight
-  
+
   // Show floating contact button when scrolled down 300px
   showFloatingContact.value = scrollPosition > 300
-  
+
   // Hide floating contact button near the bottom of the page
   if (scrollPosition + windowHeight > documentHeight - 200) {
     showFloatingContact.value = false
@@ -314,7 +319,7 @@ const setupIntersectionObserver = () => {
     threshold: 0.15,
     rootMargin: '0px 0px -100px 0px'
   }
-  
+
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -330,7 +335,7 @@ const setupIntersectionObserver = () => {
       }
     })
   }, observerOptions)
-  
+
   // Observe sections
   nextTick(() => {
     const sections = [
@@ -339,7 +344,7 @@ const setupIntersectionObserver = () => {
       '.location-section',
       '.faq-section'
     ]
-    
+
     sections.forEach(selector => {
       const element = document.querySelector(selector)
       if (element) observer.observe(element)
@@ -351,17 +356,17 @@ const setupIntersectionObserver = () => {
 const switchTab = (tab) => {
   // Disable transition temporarily when switching tabs
   formTransition.value = false
-  
+
   // Get current form height
   const formContainer = document.querySelector('.form-container')
   if (formContainer) {
     formHeight.value = formContainer.offsetHeight
   }
-  
+
   // Switch tab after a small delay
   setTimeout(() => {
     activeTab.value = tab
-    
+
     // Re-enable transition after tab switch
     setTimeout(() => {
       formTransition.value = true
@@ -382,22 +387,22 @@ onMounted(() => {
   const mm = String(today.getMonth() + 1).padStart(2, '0')
   const dd = String(today.getDate()).padStart(2, '0')
   const minDate = `${yyyy}-${mm}-${dd}`
-  
+
   const dateInputs = document.querySelectorAll('input[type="date"]')
   dateInputs.forEach(input => {
     input.min = minDate
   })
-  
+
   // Check device type
   checkDeviceType()
   window.addEventListener('resize', checkDeviceType)
-  
+
   // Setup scroll handler
   window.addEventListener('scroll', handleScroll)
-  
+
   // Setup intersection observer
   setupIntersectionObserver()
-  
+
   // Set initial card index
   cardSwipeIndex.value = 0
 })
@@ -407,7 +412,8 @@ onMounted(() => {
   <section class="contact-section">
     <div class="contact-container">
       <div class="section-header" :class="{ 'animate-in': true }">
-        <h2>Contáctanos <span class="highlight" :style="{ '--highlight-color': getDepartmentColor(selectedDepartment) }">Hoy</span></h2>
+        <h2>Contáctanos <span class="highlight"
+            :style="{ '--highlight-color': getDepartmentColor(selectedDepartment) }">Hoy</span></h2>
         <p>Conéctate con nosotros de la manera que prefieras</p>
       </div>
 
@@ -430,37 +436,36 @@ onMounted(() => {
       <!-- Contact Cards with Enhanced Visual Design -->
       <div class="contact-cards" :class="{ 'animate-in': isIntersecting.cards }">
         <!-- Mobile Card Swiper -->
-        <div v-if="isMobile" class="mobile-card-swiper"
-             @touchstart="handleTouchStart" 
-             @touchmove="handleTouchMove" 
-             @touchend="handleTouchEnd">
+        <div v-if="isMobile" class="mobile-card-swiper" @touchstart="handleTouchStart" @touchmove="handleTouchMove"
+          @touchend="handleTouchEnd">
           <div class="swiper-navigation">
             <button class="swipe-arrow prev" @click="prevCard" aria-label="Contacto anterior">
               <i class="fas fa-chevron-left"></i>
             </button>
             <div class="swiper-indicators">
-              <span v-for="(_, index) in contactCards" :key="`indicator-${index}`" 
-                    :class="['swiper-dot', { active: visibleCardIndex === index }]"></span>
+              <span v-for="(_, index) in contactCards" :key="`indicator-${index}`"
+                :class="['swiper-dot', { active: visibleCardIndex === index }]"></span>
             </div>
             <button class="swipe-arrow next" @click="nextCard" aria-label="Contacto siguiente">
               <i class="fas fa-chevron-right"></i>
             </button>
           </div>
-          
+
           <div class="swiper-container">
             <div class="swiper-track" :style="{ transform: `translateX(-${visibleCardIndex * 100}%)` }">
-              <div v-for="(card, index) in contactCards" :key="`mobile-${index}`" 
-                   class="contact-card mobile-card">
+              <div v-for="(card, index) in contactCards" :key="`mobile-${index}`" class="contact-card mobile-card">
                 <div class="icon" :style="{ background: getDepartmentColor(selectedDepartment) }">
                   <i :class="['fas', card.icon]"></i>
                 </div>
                 <h3>{{ card.title }}</h3>
-                <a v-if="card.href" :href="card.href" class="contact-link" :style="{ color: getDepartmentColor(selectedDepartment) }">
+                <a v-if="card.href" :href="card.href" class="contact-link"
+                  :style="{ color: getDepartmentColor(selectedDepartment) }">
                   {{ card.content }}
                 </a>
                 <p v-else>{{ card.content }}</p>
                 <div class="card-action" v-if="card.action">
-                  <button class="action-button" @click="card.action.handler" :style="{ background: getDepartmentColor(selectedDepartment) }">
+                  <button class="action-button" @click="card.action.handler"
+                    :style="{ background: getDepartmentColor(selectedDepartment) }">
                     <i :class="['fas', card.action.icon]"></i>
                     {{ card.action.text }}
                   </button>
@@ -469,22 +474,22 @@ onMounted(() => {
             </div>
           </div>
         </div>
-        
+
         <!-- Desktop/Tablet Cards -->
-        <div v-else v-for="(card, index) in contactCards" :key="`desktop-${index}`" 
-             class="contact-card"
-             :class="{ 'animate-card': true }"
-             :style="{ '--card-delay': `${index * 0.15}s` }">
+        <div v-else v-for="(card, index) in contactCards" :key="`desktop-${index}`" class="contact-card"
+          :class="{ 'animate-card': true }" :style="{ '--card-delay': `${index * 0.15}s` }">
           <div class="icon" :style="{ background: getDepartmentColor(selectedDepartment) }">
             <i :class="['fas', card.icon]"></i>
           </div>
           <h3>{{ card.title }}</h3>
-          <a v-if="card.href" :href="card.href" class="contact-link" :style="{ color: getDepartmentColor(selectedDepartment) }">
+          <a v-if="card.href" :href="card.href" class="contact-link"
+            :style="{ color: getDepartmentColor(selectedDepartment) }">
             {{ card.content }}
           </a>
           <p v-else>{{ card.content }}</p>
           <div class="card-action" v-if="card.action">
-            <button class="action-button" @click="card.action.handler" :style="{ background: getDepartmentColor(selectedDepartment) }">
+            <button class="action-button" @click="card.action.handler"
+              :style="{ background: getDepartmentColor(selectedDepartment) }">
               <i :class="['fas', card.action.icon]"></i>
               {{ card.action.text }}
             </button>
@@ -494,41 +499,31 @@ onMounted(() => {
 
       <!-- Tabs for Contact Forms -->
       <div class="form-tabs" :class="{ 'animate-in': isIntersecting.form }">
-        <button 
-          :class="['tab-button', { active: activeTab === 'message' }]" 
-          @click="switchTab('message')"
-          :style="activeTab === 'message' ? { borderColor: getDepartmentColor(selectedDepartment) } : {}"
-        >
+        <button :class="['tab-button', { active: activeTab === 'message' }]" @click="switchTab('message')"
+          :style="activeTab === 'message' ? { borderColor: getDepartmentColor(selectedDepartment) } : {}">
           <i class="fas fa-envelope"></i> Enviar Mensaje
         </button>
-        <button 
-          :class="['tab-button', { active: activeTab === 'appointment' }]" 
-          @click="switchTab('appointment')"
-          :style="activeTab === 'appointment' ? { borderColor: getDepartmentColor(selectedDepartment) } : {}"
-        >
+        <button :class="['tab-button', { active: activeTab === 'appointment' }]" @click="switchTab('appointment')"
+          :style="activeTab === 'appointment' ? { borderColor: getDepartmentColor(selectedDepartment) } : {}">
           <i class="fas fa-calendar-alt"></i> Agendar Cita
         </button>
       </div>
 
       <!-- Contact Forms with Improved UX -->
       <div class="contact-content" :class="{ 'animate-in': isIntersecting.form }">
-        <div class="form-wrapper" :style="formHeight ? { height: `${formHeight}px` } : {}" :class="{ 'no-transition': !formTransition }">
+        <div class="form-wrapper" :style="formHeight ? { height: `${formHeight}px` } : {}"
+          :class="{ 'no-transition': !formTransition }">
           <div v-if="activeTab === 'message'" class="form-container" key="message">
             <h3>Envíanos un Mensaje</h3>
             <form class="contact-form" @submit.prevent="handleSubmit">
               <div class="form-group">
                 <div class="input-wrapper">
                   <i class="fas fa-user input-icon"></i>
-                  <input 
-                    type="text" 
-                    v-model="formData.nombre_completo" 
-                    :class="{ 'has-error': errors.nombre_completo }"
-                    placeholder="Nombre Completo" 
-                    required
-                    aria-label="Nombre Completo"
-                  >
+                  <input type="text" v-model="formData.nombre_completo" :class="{ 'has-error': errors.nombre_completo }"
+                    placeholder="Nombre Completo" required aria-label="Nombre Completo">
                   <div class="input-status">
-                    <i v-if="formData.nombre_completo && !errors.nombre_completo" class="fas fa-check-circle valid-icon"></i>
+                    <i v-if="formData.nombre_completo && !errors.nombre_completo"
+                      class="fas fa-check-circle valid-icon"></i>
                     <i v-if="errors.nombre_completo" class="fas fa-exclamation-circle error-icon"></i>
                   </div>
                 </div>
@@ -536,18 +531,12 @@ onMounted(() => {
                   <small v-if="errors.nombre_completo" class="error-message">{{ errors.nombre_completo[0] }}</small>
                 </transition>
               </div>
-              
+
               <div class="form-group">
                 <div class="input-wrapper">
                   <i class="fas fa-envelope input-icon"></i>
-                  <input 
-                    type="email" 
-                    v-model="formData.correo"
-                    :class="{ 'has-error': errors.correo }"
-                    placeholder="Correo Electrónico" 
-                    required
-                    aria-label="Correo Electrónico"
-                  >
+                  <input type="email" v-model="formData.correo" :class="{ 'has-error': errors.correo }"
+                    placeholder="Correo Electrónico" required aria-label="Correo Electrónico">
                   <div class="input-status">
                     <i v-if="formData.correo && !errors.correo" class="fas fa-check-circle valid-icon"></i>
                     <i v-if="errors.correo" class="fas fa-exclamation-circle error-icon"></i>
@@ -557,18 +546,12 @@ onMounted(() => {
                   <small v-if="errors.correo" class="error-message">{{ errors.correo[0] }}</small>
                 </transition>
               </div>
-              
+
               <div class="form-group">
                 <div class="input-wrapper">
                   <i class="fas fa-phone input-icon"></i>
-                  <input 
-                    type="tel" 
-                    v-model="formData.telefono"
-                    :class="{ 'has-error': errors.telefono }"
-                    placeholder="Teléfono" 
-                    required
-                    aria-label="Teléfono"
-                  >
+                  <input type="tel" v-model="formData.telefono" :class="{ 'has-error': errors.telefono }"
+                    placeholder="Teléfono" required aria-label="Teléfono">
                   <div class="input-status">
                     <i v-if="formData.telefono && !errors.telefono" class="fas fa-check-circle valid-icon"></i>
                     <i v-if="errors.telefono" class="fas fa-exclamation-circle error-icon"></i>
@@ -578,18 +561,12 @@ onMounted(() => {
                   <small v-if="errors.telefono" class="error-message">{{ errors.telefono[0] }}</small>
                 </transition>
               </div>
-              
+
               <div class="form-group">
                 <div class="input-wrapper textarea-wrapper">
                   <i class="fas fa-comment input-icon textarea-icon"></i>
-                  <textarea 
-                    v-model="formData.mensaje"
-                    :class="{ 'has-error': errors.mensaje }"
-                    placeholder="Tu Mensaje" 
-                    rows="4" 
-                    required
-                    aria-label="Tu Mensaje"
-                  ></textarea>
+                  <textarea v-model="formData.mensaje" :class="{ 'has-error': errors.mensaje }" placeholder="Tu Mensaje"
+                    rows="4" required aria-label="Tu Mensaje"></textarea>
                   <div class="input-status textarea-status">
                     <i v-if="formData.mensaje && !errors.mensaje" class="fas fa-check-circle valid-icon"></i>
                     <i v-if="errors.mensaje" class="fas fa-exclamation-circle error-icon"></i>
@@ -602,13 +579,9 @@ onMounted(() => {
                   {{ formData.mensaje.length }}/300 caracteres
                 </div>
               </div>
-              
-              <button 
-                type="submit" 
-                class="submit-btn" 
-                :disabled="isLoading"
-                :style="{ background: getDepartmentColor(selectedDepartment) }"
-              >
+
+              <button type="submit" class="submit-btn" :disabled="isLoading"
+                :style="{ background: getDepartmentColor(selectedDepartment) }">
                 <span v-if="isLoading" class="spinner"></span>
                 <i class="fas fa-paper-plane" v-if="!isLoading"></i>
                 {{ isLoading ? 'Enviando...' : 'Enviar Mensaje' }}
@@ -622,86 +595,54 @@ onMounted(() => {
               <div class="form-group">
                 <div class="input-wrapper">
                   <i class="fas fa-user input-icon"></i>
-                  <input 
-                    type="text" 
-                    v-model="appointmentData.nombre" 
-                    placeholder="Nombre Completo" 
-                    required
-                    aria-label="Nombre Completo"
-                  >
+                  <input type="text" v-model="appointmentData.nombre" placeholder="Nombre Completo" required
+                    aria-label="Nombre Completo">
                 </div>
               </div>
-              
+
               <div class="form-group">
                 <div class="input-wrapper">
                   <i class="fas fa-envelope input-icon"></i>
-                  <input 
-                    type="email" 
-                    v-model="appointmentData.correo" 
-                    placeholder="Correo Electrónico" 
-                    required
-                    aria-label="Correo Electrónico"
-                  >
+                  <input type="email" v-model="appointmentData.correo" placeholder="Correo Electrónico" required
+                    aria-label="Correo Electrónico">
                 </div>
               </div>
-              
+
               <div class="form-group">
                 <div class="input-wrapper">
                   <i class="fas fa-phone input-icon"></i>
-                  <input 
-                    type="tel" 
-                    v-model="appointmentData.telefono" 
-                    placeholder="Teléfono" 
-                    required
-                    aria-label="Teléfono"
-                  >
+                  <input type="tel" v-model="appointmentData.telefono" placeholder="Teléfono" required
+                    aria-label="Teléfono">
                 </div>
               </div>
-              
+
               <div class="form-row">
                 <div class="form-group half-width">
                   <label for="appointment-date">Fecha de la cita</label>
                   <div class="input-wrapper">
                     <i class="fas fa-calendar input-icon"></i>
-                    <input 
-                      id="appointment-date"
-                      type="date" 
-                      v-model="appointmentData.fecha" 
-                      required
-                      min="2023-01-01"
-                      aria-label="Fecha de la cita"
-                    >
+                    <input id="appointment-date" type="date" v-model="appointmentData.fecha" required min="2023-01-01"
+                      aria-label="Fecha de la cita">
                   </div>
                 </div>
-                
+
                 <div class="form-group half-width">
                   <label for="appointment-time">Hora de la cita</label>
                   <div class="input-wrapper">
                     <i class="fas fa-clock input-icon"></i>
-                    <input 
-                      id="appointment-time"
-                      type="time" 
-                      v-model="appointmentData.hora" 
-                      required
-                      min="09:00"
-                      max="18:00"
-                      aria-label="Hora de la cita"
-                    >
+                    <input id="appointment-time" type="time" v-model="appointmentData.hora" required min="09:00"
+                      max="18:00" aria-label="Hora de la cita">
                   </div>
                   <small class="time-hint">Horario de atención: 9:00 - 18:00</small>
                 </div>
               </div>
-              
+
               <div class="form-group">
                 <label for="appointment-reason">Motivo de la cita</label>
                 <div class="input-wrapper">
                   <i class="fas fa-clipboard-list input-icon"></i>
-                  <select 
-                    id="appointment-reason"
-                    v-model="appointmentData.motivo" 
-                    required
-                    aria-label="Motivo de la cita"
-                  >
+                  <select id="appointment-reason" v-model="appointmentData.motivo" required
+                    aria-label="Motivo de la cita">
                     <option value="" disabled selected>Selecciona un motivo</option>
                     <option value="consulta">Consulta general</option>
                     <option value="soporte">Soporte técnico</option>
@@ -712,25 +653,16 @@ onMounted(() => {
                   <i class="fas fa-chevron-down select-arrow appointment-select-arrow"></i>
                 </div>
               </div>
-              
+
               <div class="form-group" v-if="appointmentData.motivo === 'otro'">
                 <div class="input-wrapper">
                   <i class="fas fa-comment-alt input-icon"></i>
-                  <input 
-                    type="text" 
-                    v-model="appointmentData.otroMotivo" 
-                    placeholder="Especifica el motivo" 
-                    required
-                    aria-label="Especifica el motivo"
-                  >
+                  <input type="text" v-model="appointmentData.otroMotivo" placeholder="Especifica el motivo" required
+                    aria-label="Especifica el motivo">
                 </div>
               </div>
-              
-              <button 
-                type="submit" 
-                class="submit-btn"
-                :style="{ background: getDepartmentColor(selectedDepartment) }"
-              >
+
+              <button type="submit" class="submit-btn" :style="{ background: getDepartmentColor(selectedDepartment) }">
                 <i class="fas fa-calendar-check"></i>
                 Agendar Ahora
               </button>
@@ -759,7 +691,7 @@ onMounted(() => {
                 <p>Sábados: 9:00 - 13:00</p>
               </div>
             </div>
-<!--             <div class="location-item">
+            <!--             <div class="location-item">
               <i class="fas fa-info-circle" :style="{ color: getDepartmentColor(selectedDepartment) }"></i>
               <div>
                 <h4>Información Adicional</h4>
@@ -767,7 +699,7 @@ onMounted(() => {
               </div>
             </div> -->
           </div>
-<!--           <div class="location-actions">
+          <!--           <div class="location-actions">
             <a :href="currentLocation.directionsUrl" target="_blank" class="direction-btn">
               <i class="fas fa-directions"></i> Cómo llegar
             </a>
@@ -776,18 +708,10 @@ onMounted(() => {
             </button>
           </div> -->
         </div>
-        
+
         <div class="map-container">
-          <iframe 
-            :src="currentLocation.mapUrl" 
-            width="100%" 
-            height="450" 
-            style="border:0;" 
-            allowfullscreen="" 
-            loading="lazy" 
-            referrerpolicy="no-referrer-when-downgrade"
-            title="Mapa de ubicación"
-          ></iframe>
+          <iframe :src="currentLocation.mapUrl" width="100%" height="450" style="border:0;" allowfullscreen=""
+            loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Mapa de ubicación"></iframe>
         </div>
       </div>
 
@@ -795,13 +719,9 @@ onMounted(() => {
       <div class="faq-section" :class="{ 'animate-in': isIntersecting.faq }">
         <h3>Preguntas Frecuentes</h3>
         <div class="faq-container">
-          <div 
-            v-for="(faq, index) in faqs" 
-            :key="index" 
-            class="faq-item"
+          <div v-for="(faq, index) in faqs" :key="index" class="faq-item"
             :class="{ 'active': activeFaq === index, 'animate-faq': true }"
-            :style="{ '--faq-delay': `${index * 0.1}s` }"
-          >
+            :style="{ '--faq-delay': `${index * 0.1}s` }">
             <div class="faq-question" @click="toggleFaq(index)">
               <h4>{{ faq.question }}</h4>
               <i class="fas" :class="activeFaq === index ? 'fa-minus' : 'fa-plus'"></i>
@@ -822,23 +742,23 @@ onMounted(() => {
             </div>
             <h3>{{ successMessage.title }}</h3>
             <p>{{ successMessage.message }}</p>
-            <button @click="closeSuccessModal" class="close-modal-btn" :style="{ background: getDepartmentColor(selectedDepartment) }">
+            <button @click="closeSuccessModal" class="close-modal-btn"
+              :style="{ background: getDepartmentColor(selectedDepartment) }">
               Entendido
             </button>
           </div>
         </div>
       </transition>
       <div v-if="showSuccessModal" class="modal-overlay" @click="closeSuccessModal"></div>
-      
+
       <!-- Floating Contact Button for Mobile -->
       <transition name="fade-up">
         <div v-if="showFloatingContact" class="floating-contact">
-          <button class="floating-contact-btn" 
-                  @click="toggleFloatingMenu"
-                  :style="{ background: getDepartmentColor(selectedDepartment) }">
+          <button class="floating-contact-btn" @click="toggleFloatingMenu"
+            :style="{ background: getDepartmentColor(selectedDepartment) }">
             <i class="fas" :class="showFloatingMenu ? 'fa-times' : 'fa-comment-dots'"></i>
           </button>
-          
+
           <transition name="scale">
             <div v-if="showFloatingMenu" class="floating-menu">
               <a href="tel:+59177997694" class="floating-menu-item">
@@ -984,7 +904,7 @@ onMounted(() => {
   transition: transform 0.3s ease;
 }
 
-.department-dropdown:focus + .select-arrow {
+.department-dropdown:focus+.select-arrow {
   transform: translateY(-50%) rotate(180deg);
   color: var(--primary-color, #3B82F6);
 }
@@ -1399,9 +1319,9 @@ onMounted(() => {
   outline: none;
 }
 
-.form-group input:focus + .input-icon,
-.form-group textarea:focus + .input-icon,
-.form-group select:focus + .input-icon {
+.form-group input:focus+.input-icon,
+.form-group textarea:focus+.input-icon,
+.form-group select:focus+.input-icon {
   color: var(--primary-color, #3B82F6);
 }
 
@@ -1409,7 +1329,7 @@ onMounted(() => {
   border-color: #ef4444 !important;
 }
 
-.has-error + .input-icon {
+.has-error+.input-icon {
   color: #ef4444 !important;
 }
 
@@ -1508,12 +1428,10 @@ onMounted(() => {
   height: 100%;
   top: 0;
   left: -100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.2),
-    transparent
-  );
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.2),
+      transparent);
   transition: 0.5s;
 }
 
@@ -1886,7 +1804,9 @@ onMounted(() => {
 
 /* Animations */
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes fadeInUp {
@@ -1894,6 +1814,7 @@ onMounted(() => {
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1963,11 +1884,11 @@ onMounted(() => {
   .location-section {
     grid-template-columns: 1fr;
   }
-  
+
   .section-header h2 {
     font-size: 2.2rem;
   }
-  
+
   .contact-cards {
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   }
@@ -1977,34 +1898,34 @@ onMounted(() => {
   .contact-section {
     padding: 60px 15px;
   }
-  
+
   .form-container {
     padding: 30px;
   }
-  
+
   .contact-card {
     padding: 30px 20px;
   }
-  
+
   .form-tabs {
     flex-direction: column;
     gap: 10px;
   }
-  
+
   .tab-button {
     width: 100%;
     justify-content: center;
   }
-  
+
   .location-info {
     padding: 30px;
   }
-  
+
   .floating-contact {
     bottom: 20px;
     right: 20px;
   }
-  
+
   .floating-contact-btn {
     width: 50px;
     height: 50px;
@@ -2016,40 +1937,40 @@ onMounted(() => {
   .contact-section {
     padding: 40px 15px;
   }
-  
+
   .section-header h2 {
     font-size: 1.8rem;
   }
-  
+
   .form-container {
     padding: 25px 20px;
   }
-  
+
   .submit-btn {
     padding: 14px 20px;
     font-size: 1rem;
   }
-  
+
   .select-wrapper {
     width: 100%;
   }
-  
+
   .location-item {
     gap: 15px;
   }
-  
+
   .location-item i {
     font-size: 20px;
   }
-  
+
   .location-item h4 {
     font-size: 1.1rem;
   }
-  
+
   .faq-question h4 {
     font-size: 1rem;
   }
-  
+
   .faq-answer p {
     padding: 15px 20px;
     font-size: 0.95rem;
@@ -2060,20 +1981,20 @@ onMounted(() => {
   .contact-section {
     padding: 40px 15px;
   }
-  
+
   .section-header h2 {
     font-size: 1.8rem;
   }
-  
+
   .form-container {
     padding: 25px 20px;
   }
-  
+
   .submit-btn {
     padding: 14px 20px;
     font-size: 1rem;
   }
-  
+
   .select-wrapper {
     width: 100%;
   }
@@ -2108,27 +2029,27 @@ onMounted(() => {
     font-size: 16px;
     left: 14px;
   }
-  
+
   .success-modal {
     padding: 30px 20px;
   }
-  
+
   .success-icon {
     font-size: 50px;
   }
-  
+
   .success-modal h3 {
     font-size: 1.5rem;
   }
-  
+
   .success-modal p {
     font-size: 1rem;
   }
-  
+
   .floating-menu-item span {
     display: none;
   }
-  
+
   .floating-menu-item {
     padding: 8px;
   }
@@ -2142,7 +2063,7 @@ onMounted(() => {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  
+
   .animate-in,
   .animate-card,
   .animate-faq {
@@ -2176,6 +2097,7 @@ textarea:focus {
 
 /* High contrast mode adjustments */
 @media (forced-colors: active) {
+
   .contact-card,
   .form-container,
   .submit-btn {
@@ -2183,42 +2105,3 @@ textarea:focus {
   }
 }
 </style>
-
-The enhanced contact section now features significantly improved mobile UI/UX with dynamic interactions:
-
-1. **Mobile-Optimized Card Carousel**:
-   - Touch-enabled swipeable cards with smooth transitions
-   - Visual indicators showing current position
-   - Navigation arrows for easier browsing
-
-2. **Animated Section Entrances**:
-   - Sections animate into view as the user scrolls
-   - Staggered animations for cards and FAQ items
-   - Smooth reveal effects that work across all device sizes
-
-3. **Floating Contact Button**:
-   - Fixed position button that appears when scrolling
-   - Expandable menu with quick access to contact methods
-   - Disappears near page bottom to avoid overlapping content
-
-4. **Enhanced Form Experience**:
-   - Smooth tab transitions between message and appointment forms
-   - Real-time validation feedback with visual indicators
-   - Optimized input fields for mobile touch interactions
-
-5. **Responsive Optimizations**:
-   - Reorganized layout for different screen sizes
-   - Touch-friendly tap targets on mobile
-   - Simplified UI elements on smaller screens
-
-6. **Performance Improvements**:
-   - Intersection Observer for triggering animations only when visible
-   - Optimized transitions and animations
-   - Reduced motion option for accessibility
-
-7. **Visual Feedback**:
-   - Dynamic color theming based on selected department
-   - Interactive hover and active states
-   - Clear visual hierarchy with consistent styling
-
-These enhancements create a much more engaging and user-friendly experience on mobile devices while maintaining the professional look and functionality of the original design.

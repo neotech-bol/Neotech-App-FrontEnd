@@ -15,9 +15,9 @@ import {
 // Las URLs se configuran en los archivos .env (ver abajo para la configuración de .env)
 
 // Para entorno de desarrollo local
-//export const urlBase = import.meta.env.VITE_API_URL || "http://neotechbol.test/api/"
-//export const urlBaseAsset = import.meta.env.VITE_ASSET_URL || "http://neotechbol.test/" 
-
+/* export const urlBase = import.meta.env.VITE_API_URL || "http://neotechbol.test/api/"
+export const urlBaseAsset = import.meta.env.VITE_ASSET_URL || "http://neotechbol.test/" 
+ */
 // Para entornos de producción (comentados, descomentar según sea necesario)
 // Opción 1: subdominio adm
 export const urlBase = import.meta.env.VITE_API_URL || 'https://adm.neotechbol.com/api/';

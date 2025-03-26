@@ -1,5 +1,7 @@
+import { userAutenticado } from '@/Services/UsuarioService'
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+
 
 export const useUserStore = defineStore('user', () => {
   const user = ref({
@@ -9,17 +11,37 @@ export const useUserStore = defineStore('user', () => {
   // Function to list user globally
   const listarUserGlobal = async () => {
     try {
-      // Uncomment when you have the userAutenticado function
-       const { data } = await userAutenticado()
+      const { data } = await userAutenticado()
       user.value = data.datos
-      console.log(user.value)
+      console.log('User data loaded:', user.value)
+      return data.datos // Return the data for chaining
     } catch (error) {
-      console.log(error)
+      console.error('Error loading user data:', error)
+      return null
     }
   }
 
   // Computed to check if user is authenticated
   const isAuthenticated = computed(() => !!user.value.id)
 
-  return { user, listarUserGlobal, isAuthenticated }
+  // Function to handle login redirect
+  const handleLoginRedirect = (router, redirectPath) => {
+    // If there's a specific redirect path, use it
+    if (redirectPath) {
+      router.replace(redirectPath)
+    } 
+    // Otherwise, check user role and redirect accordingly
+    else if (user.value.rol === 'super-admin') {
+      router.replace('/admin-panel')
+    } else {
+      router.replace('/')
+    }
+  }
+
+  return { 
+    user, 
+    listarUserGlobal, 
+    isAuthenticated,
+    handleLoginRedirect
+  }
 })

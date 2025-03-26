@@ -70,3 +70,7 @@ export const pdfPedidosCompletados = () => {
 export const pdfPedidosPendientes = () => {
     return httpDownload().get(`${urlBase}pedidos/pdf/en-proceso`); // Realizar una solicitud GET para generar un PDF de pedidos pendientes
 }
+// Generar un PDF de todos los pedidos de un catálogo específico
+export const pdfPedidosCatalogo = (catalogoId) => {
+    return httpDownload().get(`${urlBase}pedidos/catalogo/${catalogoId}/pdf`); // Realizar una solicitud GET para generar un PDF de pedidos de un catálogo específico
+}

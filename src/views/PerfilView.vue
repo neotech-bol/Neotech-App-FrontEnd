@@ -142,6 +142,7 @@ import { updateUserWeb, userAutenticado } from '@/Services/UsuarioService'
 import { generaPDFPedidoID, repitOrder } from '@/Services/PedidoService';
 import Swal from 'sweetalert2';
 import { useRouter } from 'vue-router';
+import { logout } from '@/Services/AuthService';
 
 // Estado reactivo
 const user = ref({});
@@ -367,12 +368,6 @@ const cerrarSesion = async () => {
       
       // 4. Redireccionar al login
       router.push('/login');
-      
-      // 5. Hacer scroll al top después de redireccionar
-      nextTick(() => {
-        scrollToTop();
-      });
-      
       return Promise.resolve();
     } catch (error) {
       console.error('Error en cerrarSesion:', error);

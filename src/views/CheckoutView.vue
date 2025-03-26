@@ -239,10 +239,10 @@
                               <span class="price-label">Precio unitario:</span>
                               <span class="price-value">{{ formatPrice(product.es_preventa ? product.precio_preventa : product.precio) }}</span>
                             </div>
-                            <div class="price-row">
+<!--                             <div class="price-row">
                               <span class="price-label">Total:</span>
                               <span class="price-value total">{{ formatPrice((product.es_preventa ? product.precio_preventa : product.precio) * product.cantidad) }}</span>
-                            </div>
+                            </div> -->
                             <div class="price-row">
                               <span class="price-label">Rango de cantidad:</span>
                               <span class="price-value">{{ product.es_preventa ? 
@@ -253,7 +253,7 @@
                         </div>
                         
                         <!-- Price Comparison Info -->
-                        <div class="price-comparison" v-if="canSwitchToPreventa(product) && canSwitchToRegular(product)">
+                   <!--      <div class="price-comparison" v-if="canSwitchToPreventa(product) && canSwitchToRegular(product)">
                           <div class="comparison-header">
                             <i class="fas fa-info-circle" aria-hidden="true"></i> Comparación de precios
                           </div>
@@ -277,7 +277,7 @@
                               ({{ Math.round((1 - product.precio_preventa/product.precio) * 100) }}%)
                             </div>
                           </div>
-                        </div>
+                        </div> -->
                       </div>
                     </div>
 
@@ -1370,6 +1370,12 @@ const processOrder = async () => {
     if (producto.precio_preventa) formData.append(`productos[${index}][precio_preventa]`, producto.precio_preventa);
     if (producto.modeloId) formData.append(`productos[${index}][modelo_id]`, producto.modeloId);
     if (producto.color) formData.append(`productos[${index}][color]`, producto.color);
+    
+    // Add the quantity range fields
+    if (producto.cantidad_minima) formData.append(`productos[${index}][cantidad_minima]`, producto.cantidad_minima);
+    if (producto.cantidad_maxima) formData.append(`productos[${index}][cantidad_maxima]`, producto.cantidad_maxima);
+    if (producto.cantidad_minima_preventa) formData.append(`productos[${index}][cantidad_minima_preventa]`, producto.cantidad_minima_preventa);
+    if (producto.cantidad_maxima_preventa) formData.append(`productos[${index}][cantidad_maxima_preventa]`, producto.cantidad_maxima_preventa);
   });
   
   // Usar el monto después del descuento como total_amount
@@ -1632,84 +1638,101 @@ function decreaseQuantity(product) {
   }
 }
 
-// Función para cambiar el tipo de precio y preservar imágenes
+// Fixed function for switching price type
 function switchToPriceType(product, isPreventa) {
   if (isPreventa && !canSwitchToPreventa(product)) {
     Swal.fire({
       title: "No se puede cambiar a preventa",
       text: "Este producto no tiene precio de preventa válido.",
       icon: "warning",
-      confirmButtonText: "Entendido"
-    });
-    return;
+      confirmButtonText: "Entendido",
+    })
+    return
   }
-  
+
   if (!isPreventa && !canSwitchToRegular(product)) {
     Swal.fire({
       title: "No se puede cambiar a regular",
       text: "Este producto no tiene precio regular válido.",
       icon: "warning",
-      confirmButtonText: "Entendido"
-    });
-    return;
+      confirmButtonText: "Entendido",
+    })
+    return
   }
 
-  // Guardar la imagen actual antes de cualquier cambio
-  const currentImageUrl = getProductImage(product);
+  // Store the original uniqueId and other important properties
+  const originalUniqueId = product.uniqueId
+  const currentImageUrl = getProductImage(product)
 
   if (isPreventa !== product.es_preventa) {
-    let nuevaCantidad = product.cantidad;
-    
+    let nuevaCantidad = product.cantidad
+
     if (isPreventa) {
-      nuevaCantidad = Math.max(product.cantidad_minima_preventa, Math.min(product.cantidad_maxima_preventa, nuevaCantidad));
+      nuevaCantidad = Math.max(
+        product.cantidad_minima_preventa,
+        Math.min(product.cantidad_maxima_preventa, nuevaCantidad),
+      )
     } else {
-      nuevaCantidad = Math.max(product.cantidad_minima, Math.min(product.cantidad_maxima, nuevaCantidad));
+      nuevaCantidad = Math.max(product.cantidad_minima, Math.min(product.cantidad_maxima, nuevaCantidad))
     }
 
-    // Crear una copia del producto con el nuevo tipo de precio
+    // Create a copy of the product with the new price type
     const productoActualizado = {
       ...product,
       es_preventa: isPreventa,
       cantidad: nuevaCantidad,
-      uniqueId: generarUniqueId({ ...product, es_preventa: isPreventa }),
-      imagen_principal: product.imagen_principal || currentImageUrl, // Priorizar la imagen existente
+      // Keep the original uniqueId to maintain product identity
+      uniqueId: originalUniqueId,
+      imagen_principal: product.imagen_principal || currentImageUrl,
       colorImage: product.colorImage,
-      image: product.image || currentImageUrl // Asegurar que image tenga un valor
-    };
+      image: product.image || currentImageUrl,
+    }
 
-    // Actualizar el carrito
-    cartStore.removeFromCart(product.uniqueId);
-    cartStore.addToCart(productoActualizado);
+    // Update the product directly in the cart array instead of removing and adding
+    const index = cartStore.productos.findIndex((item) => item.uniqueId === originalUniqueId)
+    if (index !== -1) {
+      cartStore.productos[index] = productoActualizado
+      cartStore.saveCartToStorage()
+      cartStore.recalcularDescuento()
+    }
 
     Swal.fire({
       title: "Precio actualizado",
-      text: `Se ha cambiado al precio de ${isPreventa ? 'preventa' : 'regular'}${nuevaCantidad !== product.cantidad ? ` y la cantidad se ajustó a ${nuevaCantidad}` : ''}`,
+      text: `Se ha cambiado al precio de ${isPreventa ? "preventa" : "regular"}${nuevaCantidad !== product.cantidad ? ` y la cantidad se ajustó a ${nuevaCantidad}` : ""}`,
       icon: "success",
       toast: true,
       position: "top-end",
       showConfirmButton: false,
-      timer: 3000
-    });
+      timer: 3000,
+    })
   }
 }
 
 function updateQuantityWithoutPriceChange(product, newQuantity) {
-  const currentImageUrl = getProductImage(product);
+  // Important: Store the original uniqueId before any modifications
+  const originalUniqueId = product.uniqueId
 
-  // Crear una copia del producto con la nueva cantidad
+  // Create a copy of the product with the new quantity
   const updatedProduct = {
     ...product,
     cantidad: newQuantity,
-    uniqueId: generarUniqueId(product),
-    imagen_principal: product.imagen_principal || currentImageUrl,
-    colorImage: product.colorImage,
-    image: product.image || currentImageUrl
-  };
+    // Keep the SAME uniqueId to ensure we're updating the correct product
+    uniqueId: originalUniqueId,
+  }
 
-  // Actualizar el carrito
-  cartStore.removeFromCart(product.uniqueId);
-  cartStore.addToCart(updatedProduct);
+  // Use the cart store's direct update method instead of remove/add
+  // This prevents the product from being replaced with a different one
+  const index = cartStore.productos.findIndex((item) => item.uniqueId === originalUniqueId)
+  if (index !== -1) {
+    cartStore.productos[index] = updatedProduct
+    cartStore.saveCartToStorage()
+    cartStore.recalcularDescuento()
+  }
 }
+
+
+
+
 // Función finalizeOrder que llama a processOrder
 const finalizeOrder = async () => {
   // Validaciones básicas antes de procesar el pedido

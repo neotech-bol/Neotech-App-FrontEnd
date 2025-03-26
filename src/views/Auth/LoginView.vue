@@ -87,8 +87,12 @@ import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { login } from '@/Services/AuthService';
 import { Buffer } from "buffer";
+import { useUserStore } from '@/stores/userAuht'; 
 
 const router = useRouter();
+// Verificar si hay un parámetro de redirección en la URL
+const route = useRoute();
+const userStore = useUserStore();
 const credenciales = ref({
   email: '',
   password: ''
@@ -162,13 +166,16 @@ const iniciarSesion = async () => {
       rol: data.user.roles[0].name
     };
 
+    // Update the user store with the user data
+    userStore.user = datosUser;
     localStorage.setItem('datosUser', JSON.stringify(datosUser));
 
-      if (data.user.roles[0].name === 'cliente') {
-        router.push('/');
-      } else {
-        router.push('/admin-panel');
-      }
+    // Get redirect path from route query
+    const redirectPath = route.query.redirect;
+    
+    // Use the centralized redirect handler
+    userStore.handleLoginRedirect(router, redirectPath ? redirectPath.toString() : null);
+    
   } catch (err) {
     manejarError(err);
   } finally {

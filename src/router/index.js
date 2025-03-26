@@ -35,7 +35,6 @@ import VerificacionPendiente from '@/views/VerificacionPendiente.vue'
 import { ref, reactive } from 'vue'
 import CategoriaIdView from '@/views/CategoriaIdView.vue'
 import GlobalSearch from '@/Components/GlobalSearch.vue'
-
 // Crear estado reactivo para el usuario y permisos
 const authState = reactive({
   user: null,
@@ -84,9 +83,18 @@ const fetchPermisosUser = async (forceRefresh = false) => {
   }
 };
 
+// Modificar esta función para manejar mejor los tokens y la autenticación
 const fetchAuthenticatedUser = async (forceRefresh = false) => {
   // Si ya estamos cargando, no iniciar otra solicitud
   if (authState.isLoading) return authState.user;
+  
+  // Verificar si hay un token en localStorage
+  const token = localStorage.getItem('token');
+  if (!token) {
+    console.log('No hay token disponible');
+    authState.user = null;
+    return null;
+  }
   
   // Si no forzamos la actualización y el usuario se obtuvo hace menos de 5 minutos, usar la caché
   const now = Date.now();
@@ -111,6 +119,9 @@ const fetchAuthenticatedUser = async (forceRefresh = false) => {
     } else {
       console.error('No se encontraron roles en los datos del usuario.');
       authState.user = null;
+      // Limpiar token si la respuesta no contiene datos válidos
+      localStorage.removeItem('token');
+      localStorage.removeItem('datosUser');
     }
     
     // Actualizar timestamp de última actualización
@@ -118,6 +129,11 @@ const fetchAuthenticatedUser = async (forceRefresh = false) => {
     return authState.user;
   } catch (error) {
     console.error('Error al obtener el usuario autenticado:', error);
+    // Si hay un error de autenticación (401), limpiar el token
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('datosUser');
+    }
     authState.user = null;
     return null;
   } finally {
@@ -449,49 +465,69 @@ const router = createRouter({
 
 // Inicializar la aplicación
 fetchAuthenticatedUser().then(() => {
-  // Configurar el guard de navegación
-  router.beforeEach(async (to, from, next) => {
-    // Verificar si la ruta requiere autenticación
-    const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
-    
-    // Obtener el rol y permiso requeridos para la ruta
-    const requiredRole = to.meta.requiredRole;
-    const requiredPermission = to.meta.requiredPermission;
-    
-    // Siempre verificar permisos en cada navegación para rutas protegidas
-    if (requiresAuth || requiredRole || requiredPermission) {
-      // Forzar actualización de permisos en cada navegación a rutas protegidas
-      await fetchPermisosUser(true);
+// Modificar el guard de navegación para manejar mejor las redirecciones
+router.beforeEach(async (to, from, next) => {
+  // Verificar si la ruta requiere autenticación
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
+  
+  // Obtener el rol y permiso requeridos para la ruta
+  const requiredRole = to.meta.requiredRole;
+  const requiredPermission = to.meta.requiredPermission;
+  
+  // Si es la página de login y hay un token, verificar si es válido
+  if (to.path === '/login' && localStorage.getItem('token')) {
+    try {
       const userRole = await getUserRole();
-      
-      // Si la ruta requiere autenticación y el usuario no está autenticado
-      if (requiresAuth && !userRole) {
-        console.log('Redirigiendo a login: usuario no autenticado');
-        next({ path: '/login', query: { redirect: to.fullPath } });
+      if (userRole) {
+        // Si el usuario ya está autenticado y va al login, redirigir a la página principal
+        console.log('Usuario ya autenticado, redirigiendo a página principal');
+        if (userRole === 'super-admin' || userRole === 'admin' || userRole === 'administrador') {
+          next('/admin-panel');
+        } else {
+          next('/');
+        }
         return;
       }
-      
-      // Verificar rol
-      if (requiredRole && userRole !== requiredRole) {
-        console.log(`Acceso denegado: Se requiere el rol "${requiredRole}"`);
+    } catch (error) {
+      console.error('Error al verificar autenticación en login:', error);
+      // Continuar al login si hay error
+    }
+  }
+  
+  // Siempre verificar permisos en cada navegación para rutas protegidas
+  if (requiresAuth || requiredRole || requiredPermission) {
+    // Forzar actualización de permisos en cada navegación a rutas protegidas
+    await fetchPermisosUser(true);
+    const userRole = await getUserRole();
+    
+    // Si la ruta requiere autenticación y el usuario no está autenticado
+    if (requiresAuth && !userRole) {
+      console.log('Redirigiendo a login: usuario no autenticado');
+      next({ path: '/login', query: { redirect: to.fullPath } });
+      return;
+    }
+    
+    // Verificar rol
+    if (requiredRole && userRole !== requiredRole) {
+      console.log(`Acceso denegado: Se requiere el rol "${requiredRole}"`);
+      next({ path: '/unauthorized' });
+      return;
+    }
+    
+    // Verificar permiso
+    if (requiredPermission) {
+      const hasPermission = await tienePermiso(requiredPermission);
+      if (!hasPermission) {
+        console.log(`Acceso denegado: Se requiere el permiso "${requiredPermission}"`);
         next({ path: '/unauthorized' });
         return;
       }
-      
-      // Verificar permiso
-      if (requiredPermission) {
-        const hasPermission = await tienePermiso(requiredPermission);
-        if (!hasPermission) {
-          console.log(`Acceso denegado: Se requiere el permiso "${requiredPermission}"`);
-          next({ path: '/unauthorized' });
-          return;
-        }
-      }
     }
-    
-    // Si todo está bien, permitir acceso a la ruta
-    next();
-  });
+  }
+  
+  // Si todo está bien, permitir acceso a la ruta
+  next();
+});
 });
 
 // Crear un bus de eventos para actualizar permisos

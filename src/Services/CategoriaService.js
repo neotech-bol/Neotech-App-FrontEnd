@@ -10,7 +10,7 @@ export const storeCategoria = (formulario) => {
 }
 
 export const showCategoria = (id) => {
-    return http().get(`${urlBase}categoria/${id}`);
+    return http().get(`${urlBase}categoria-ver/${id}`);
 }
 
 export const updateCategoria = (id, formulario) => {

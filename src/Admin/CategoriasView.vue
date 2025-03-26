@@ -789,17 +789,16 @@ const mostrarCategoria = async (id) => {
   try {
     const { data } = await showCategoria(id);
     formulario.value = {
-      nombre: data.datos.nombre,
-      titulo: data.datos.titulo,
-      subtitulo: data.datos.subtitulo,
-      descripcion: data.datos.descripcion,
-      catalogo_id: data.datos.catalogo_id,
+      nombre: data.dato.nombre,
+      titulo: data.dato.titulo,
+      subtitulo: data.dato.subtitulo,
+      descripcion: data.dato.descripcion,
+      catalogo_id: data.dato.catalogo_id,
       banner: ''
     };
-    imagenPreview.value = data.datos.banner;
+    imagenPreview.value = data.dato.banner;
     posicion.value = id;
     errors.value = {};
-    formValidado.value = false;
     
     // Si el modal de detalles está abierto, cerrarlo
     if (detallesModal._isShown) {
