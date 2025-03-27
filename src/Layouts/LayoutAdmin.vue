@@ -149,6 +149,11 @@ const menuItems = ref([
     name:'Contactanos',
     path: '/contactanos-admin',
     icon: 'bi-envelope',
+  },
+  {
+    name: 'Testimonios',
+    path: '/testimonios-admin',
+    icon: 'bi-chat-left-text',
   }
 ]);
 

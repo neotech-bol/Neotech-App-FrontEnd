@@ -13,7 +13,7 @@ export const usePermisoStore = defineStore('permisosUser', () => {
         
         try {
             const { data } = await obtenerPermisos();
-            
+            console.log(data);
             if (data && data.datos) {
                 // Asumiendo que data.datos es un array de strings con los permisos
                 permisosUser.value = data.datos;

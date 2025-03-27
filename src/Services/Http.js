@@ -15,14 +15,14 @@ import {
 // Las URLs se configuran en los archivos .env (ver abajo para la configuración de .env)
 
 // Para entorno de desarrollo local
-/* export const urlBase = import.meta.env.VITE_API_URL || "http://neotechbol.test/api/"
-export const urlBaseAsset = import.meta.env.VITE_ASSET_URL || "http://neotechbol.test/" 
- */
+export const urlBase = import.meta.env.VITE_API_URL || "http://neotechbol.test/api/"
+export const urlBaseAsset = import.meta.env.VITE_ASSET_URL || "http://neotechbol.test/"
+
 // Para entornos de producción (comentados, descomentar según sea necesario)
 // Opción 1: subdominio adm
-export const urlBase = import.meta.env.VITE_API_URL || 'https://adm.neotechbol.com/api/';
+/* export const urlBase = import.meta.env.VITE_API_URL || 'https://adm.neotechbol.com/api/';
 export const urlBaseAsset = import.meta.env.VITE_ASSET_URL || 'https://adm.neotechbol.com/';   
-
+ */
 // Opción 2: subdominio admin
 // export const urlBase = import.meta.env.VITE_API_URL || 'https://admin.neotechbol.com/api/';
 // export const urlBaseAsset = import.meta.env.VITE_ASSET_URL || 'https://admin.neotechbol.com/'; 
@@ -51,6 +51,7 @@ const getToken = () => {
 /**
  * Manejador global de errores para todas las peticiones axios
  * Maneja errores 401 No Autorizado limpiando localStorage y redirigiendo al login
+ * Maneja errores 403 Forbidden mostrando mensaje y redirigiendo a página de acceso denegado
  * @param {Error} error - El objeto de error de axios
  * @returns {Promise} Promesa rechazada con el error
  */
@@ -59,10 +60,24 @@ const handleError = (error) => {
     // Si no está autorizado, limpia todo el almacenamiento local y redirige al login
     localStorage.clear()
     window.location.href = "/login"
+  } 
+  else if (error.response?.status === 403) {
+    // Si está prohibido (no tiene permisos), redirige a la página de acceso denegado
+    // Opcionalmente puedes mostrar un mensaje antes de redirigir
+    const errorMessage = error.response.data?.mensaje || 'No tienes permiso para acceder a este recurso';
+    
+    // Si estás usando alguna librería de notificaciones como toast, puedes mostrar el mensaje:
+    // toast.error(errorMessage);
+    
+    // También puedes guardar el mensaje en localStorage para mostrarlo en la página de destino
+    localStorage.setItem('errorMessage', errorMessage);
+    
+    // Redirige a la página de acceso denegado
+    window.location.href = "/unauthorized";
   }
+  
   return Promise.reject(error)
 }
-
 // ===== FÁBRICA DE INTERCEPTORES AXIOS =====
 /**
  * Crea una instancia de axios con configuración personalizada e interceptores

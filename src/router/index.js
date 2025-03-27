@@ -18,7 +18,6 @@ import PedidosView from '@/Admin/PedidosView.vue'
 import CartView from '@/views/CartView.vue'
 import PerfilView from '@/views/PerfilView.vue'
 import Unauthorized from '@/views/Unauthorized.vue'
-import { obtenerPermisos, userAutenticado } from '@/Services/UsuarioService'
 import FavoriteView from '@/views/FavoriteView.vue'
 import CuponesView from '@/Admin/CuponesView.vue'
 import TerminosCondiciones from '@/views/TerminosCondiciones.vue'
@@ -31,135 +30,8 @@ import CatalogosHistorialView from '@/Admin/CatalogosHistorialView.vue'
 import CatalogoHistorial from '@/views/CatalogoHistorial.vue'
 import CatalogoActivoView from '@/views/CatalogoActivoView.vue'
 import ContactanosPanelView from '@/Admin/ContactanosPanelView.vue'
-import VerificacionPendiente from '@/views/VerificacionPendiente.vue'
-import { ref, reactive } from 'vue'
 import CategoriaIdView from '@/views/CategoriaIdView.vue'
-import GlobalSearch from '@/Components/GlobalSearch.vue'
-// Crear estado reactivo para el usuario y permisos
-const authState = reactive({
-  user: null,
-  userPermisos: [],
-  isLoading: false,
-  lastFetch: 0
-});
-
-// Función para obtener los permisos del usuario
-const fetchPermisosUser = async (forceRefresh = false) => {
-  // Si ya estamos cargando, no iniciar otra solicitud
-  if (authState.isLoading) return authState.userPermisos;
-  
-  // Si no forzamos la actualización y los permisos se obtuvieron hace menos de 5 minutos, usar la caché
-  const now = Date.now();
-  if (!forceRefresh && authState.lastFetch > 0 && now - authState.lastFetch < 300000) {
-    console.log('Usando permisos en caché');
-    return authState.userPermisos;
-  }
-  
-  try {
-    authState.isLoading = true;
-    console.log('Obteniendo permisos del servidor...');
-    
-    const { data } = await obtenerPermisos();
-    console.log('Respuesta de permisos:', data);
-    
-    // Guardar los permisos del usuario
-    if (data && data.datos) {
-      authState.userPermisos = data.datos;
-      console.log('Permisos actualizados:', authState.userPermisos);
-    } else {
-      // Si no hay datos de permisos, asumimos que no tiene permisos
-      authState.userPermisos = [];
-      console.warn('No se encontraron permisos en la respuesta');
-    }
-    
-    // Actualizar timestamp de última actualización
-    authState.lastFetch = now;
-    return authState.userPermisos;
-  } catch (error) {
-    console.error('Error al obtener permisos:', error);
-    return [];
-  } finally {
-    authState.isLoading = false;
-  }
-};
-
-// Modificar esta función para manejar mejor los tokens y la autenticación
-const fetchAuthenticatedUser = async (forceRefresh = false) => {
-  // Si ya estamos cargando, no iniciar otra solicitud
-  if (authState.isLoading) return authState.user;
-  
-  // Verificar si hay un token en localStorage
-  const token = localStorage.getItem('token');
-  if (!token) {
-    console.log('No hay token disponible');
-    authState.user = null;
-    return null;
-  }
-  
-  // Si no forzamos la actualización y el usuario se obtuvo hace menos de 5 minutos, usar la caché
-  const now = Date.now();
-  if (!forceRefresh && authState.lastFetch > 0 && now - authState.lastFetch < 300000) {
-    console.log('Usando datos de usuario en caché');
-    return authState.user;
-  }
-  
-  try {
-    authState.isLoading = true;
-    console.log('Obteniendo datos de usuario autenticado...');
-    
-    const { data } = await userAutenticado();
-    console.log('Datos del usuario autenticado:', data);
-    
-    if (data && data.datos && data.datos.roles && data.datos.roles.length > 0) {
-      authState.user = data.datos.roles[0].name;
-      console.log('Rol del usuario actualizado:', authState.user);
-      
-      // Obtener permisos después de autenticar al usuario
-      await fetchPermisosUser(true);
-    } else {
-      console.error('No se encontraron roles en los datos del usuario.');
-      authState.user = null;
-      // Limpiar token si la respuesta no contiene datos válidos
-      localStorage.removeItem('token');
-      localStorage.removeItem('datosUser');
-    }
-    
-    // Actualizar timestamp de última actualización
-    authState.lastFetch = now;
-    return authState.user;
-  } catch (error) {
-    console.error('Error al obtener el usuario autenticado:', error);
-    // Si hay un error de autenticación (401), limpiar el token
-    if (error.response && error.response.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('datosUser');
-    }
-    authState.user = null;
-    return null;
-  } finally {
-    authState.isLoading = false;
-  }
-};
-
-// Verificar si el usuario tiene un permiso específico
-const tienePermiso = async (permiso) => {
-  if (!permiso) return true; // Si no se requiere permiso específico
-  
-  // Asegurarse de que los permisos estén actualizados
-  await fetchPermisosUser();
-  
-  return authState.userPermisos.includes(permiso);
-};
-
-// Función para obtener el rol del usuario
-const getUserRole = async () => {
-  // Si no hay usuario, intentar obtenerlo
-  if (!authState.user) {
-    await fetchAuthenticatedUser();
-  }
-  return authState.user;
-};
-
+import TestimoniosView from '@/Admin/TestimoniosView.vue'
 // Crear el router
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -416,6 +288,11 @@ const router = createRouter({
             requiredPermission: 'Gestionar Usuarios'
           },
           component: ContactanosPanelView
+        },
+        {
+          path: '/testimonios-admin',
+          name:'testimonios',
+          component: TestimoniosView
         }
       ]
     },
@@ -463,114 +340,4 @@ const router = createRouter({
   ],
 })
 
-// Inicializar la aplicación
-fetchAuthenticatedUser().then(() => {
-// Modificar el guard de navegación para manejar mejor las redirecciones
-router.beforeEach(async (to, from, next) => {
-  // Verificar si la ruta requiere autenticación
-  const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
-  
-  // Obtener el rol y permiso requeridos para la ruta
-  const requiredRole = to.meta.requiredRole;
-  const requiredPermission = to.meta.requiredPermission;
-  
-  // Si es la página de login y hay un token, verificar si es válido
-  if (to.path === '/login' && localStorage.getItem('token')) {
-    try {
-      const userRole = await getUserRole();
-      if (userRole) {
-        // Si el usuario ya está autenticado y va al login, redirigir a la página principal
-        console.log('Usuario ya autenticado, redirigiendo a página principal');
-        if (userRole === 'super-admin' || userRole === 'admin' || userRole === 'administrador') {
-          next('/admin-panel');
-        } else {
-          next('/');
-        }
-        return;
-      }
-    } catch (error) {
-      console.error('Error al verificar autenticación en login:', error);
-      // Continuar al login si hay error
-    }
-  }
-  
-  // Siempre verificar permisos en cada navegación para rutas protegidas
-  if (requiresAuth || requiredRole || requiredPermission) {
-    // Forzar actualización de permisos en cada navegación a rutas protegidas
-    await fetchPermisosUser(true);
-    const userRole = await getUserRole();
-    
-    // Si la ruta requiere autenticación y el usuario no está autenticado
-    if (requiresAuth && !userRole) {
-      console.log('Redirigiendo a login: usuario no autenticado');
-      next({ path: '/login', query: { redirect: to.fullPath } });
-      return;
-    }
-    
-    // Verificar rol
-    if (requiredRole && userRole !== requiredRole) {
-      console.log(`Acceso denegado: Se requiere el rol "${requiredRole}"`);
-      next({ path: '/unauthorized' });
-      return;
-    }
-    
-    // Verificar permiso
-    if (requiredPermission) {
-      const hasPermission = await tienePermiso(requiredPermission);
-      if (!hasPermission) {
-        console.log(`Acceso denegado: Se requiere el permiso "${requiredPermission}"`);
-        next({ path: '/unauthorized' });
-        return;
-      }
-    }
-  }
-  
-  // Si todo está bien, permitir acceso a la ruta
-  next();
-});
-});
-
-// Crear un bus de eventos para actualizar permisos
-const permissionBus = {
-  // Método para actualizar permisos después de cambios
-  refreshPermissions: async () => {
-    console.log('Actualizando permisos después de cambios...');
-    await fetchPermisosUser(true);
-    return authState.userPermisos;
-  }
-};
-
-// Función para verificar si el usuario tiene acceso a una ruta específica
-// Útil para mostrar/ocultar elementos en la interfaz
-export async function tieneAccesoARuta(rutaNombre) {
-  // Asegurarse de que los permisos estén actualizados
-  await fetchPermisosUser();
-  
-  const ruta = router.options.routes.flatMap(r => 
-    r.children ? r.children : [r]
-  ).find(r => r.name === rutaNombre);
-  
-  if (!ruta) return false;
-  
-  // Verificar rol
-  if (ruta.meta?.requiredRole) {
-    const userRole = await getUserRole();
-    if (userRole !== ruta.meta.requiredRole) {
-      return false;
-    }
-  }
-  
-  // Verificar permiso
-  if (ruta.meta?.requiredPermission) {
-    const hasPermission = await tienePermiso(ruta.meta.requiredPermission);
-    if (!hasPermission) {
-      return false;
-    }
-  }
-  
-  return true;
-}
-
-// Exportar el bus de eventos junto con el router
-export { permissionBus };
 export default router;

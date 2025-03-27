@@ -10,26 +10,26 @@
          @touchend="touchEnd">
       
       <div class="testimonial-track" :style="trackStyle">
-        <div v-for="(testimonial, index) in testimonials" 
+        <div v-for="(testimonial, index) in testimoniosArray" 
              :key="index" 
              class="testimonial-card"
-             :class="{ 'active': currentIndex === index, 'prev': getPrevIndex() === index, 'next': getNextIndex() === index }">
+             :class="{ 'active': currentIndex === index }">
           
           <div class="quote-mark start">"</div>
           
           <div class="testimonial-content">
-            <p class="testimonial-text">{{ testimonial.text }}</p>
+            <p class="testimonial-text">{{ testimonial.experiencia }}</p>
             <div class="testimonial-author">
               <div class="author-avatar" :style="getAvatarStyle(testimonial)">
-                <span v-if="!testimonial.avatar">{{ getInitials(testimonial.name) }}</span>
-                <img v-else :src="testimonial.avatar" :alt="testimonial.name" />
+                <span v-if="!testimonial.avatar">{{ getInitials(testimonial.nombre_completo) }}</span>
+                <img v-else :src="testimonial.avatar" :alt="testimonial.nombre_completo" />
               </div>
               <div class="author-info">
-                <h3 class="author-name">{{ testimonial.name }}</h3>
-                <p class="author-role">{{ testimonial.role }}</p>
+                <h3 class="author-name">{{ testimonial.nombre_completo }}</h3>
+                <p class="author-role">{{ testimonial.ocupacion }}</p>
                 <div class="rating">
                   <span v-for="star in 5" :key="star" class="star" 
-                        :class="{ 'filled': star <= testimonial.rating, 'half-filled': star - 0.5 === testimonial.rating }">
+                        :class="{ 'filled': star <= testimonial.calificacion, 'half-filled': star - 0.5 === testimonial.calificacion }">
                     ★
                   </span>
                 </div>
@@ -43,12 +43,12 @@
       
       <!-- Navigation Arrows -->
       <button class="nav-arrow prev" @click="prevTestimonial" aria-label="Testimonio anterior">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <polyline points="15 18 9 12 15 6"></polyline>
         </svg>
       </button>
       <button class="nav-arrow next" @click="nextTestimonial" aria-label="Testimonio siguiente">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <polyline points="9 18 15 12 9 6"></polyline>
         </svg>
       </button>
@@ -57,11 +57,11 @@
     <!-- Indicators -->
     <div class="indicators">
       <button 
-        v-for="(_, index) in testimonials" 
+        v-for="(_, index) in testimoniosArray" 
         :key="index"
         :class="['indicator', { active: currentIndex === index }]"
         @click="setTestimonial(index)"
-        :aria-label="`Ver testimonio de ${testimonials[index].name}`"
+        :aria-label="`Ver testimonio ${index + 1}`"
       ></button>
     </div>
     
@@ -70,7 +70,7 @@
       <p>¿Has tenido una buena experiencia con nosotros?</p>
       <button class="add-testimonial-btn" @click="showAddTestimonialForm = true">
         Comparte tu opinión
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
         </svg>
       </button>
@@ -84,15 +84,15 @@
         <form @submit.prevent="submitTestimonial" class="testimonial-form">
           <div class="form-group">
             <label for="name">Nombre completo</label>
-            <input type="text" id="name" v-model="newTestimonial.name" required>
+            <input type="text" id="name" v-model="newTestimonial.nombre_completo" required>
           </div>
           <div class="form-group">
             <label for="role">Ocupación</label>
-            <input type="text" id="role" v-model="newTestimonial.role" required>
+            <input type="text" id="role" v-model="newTestimonial.ocupacion" required>
           </div>
           <div class="form-group">
             <label for="testimonial">Tu experiencia</label>
-            <textarea id="testimonial" v-model="newTestimonial.text" rows="4" required></textarea>
+            <textarea id="testimonial" v-model="newTestimonial.experiencia" rows="4" required></textarea>
           </div>
           <div class="form-group">
             <label>Calificación</label>
@@ -102,8 +102,8 @@
                 :key="rating" 
                 type="button"
                 class="rating-star" 
-                :class="{ 'selected': rating <= newTestimonial.rating }"
-                @click="newTestimonial.rating = rating"
+                :class="{ 'selected': rating <= newTestimonial.calificacion }"
+                @click="newTestimonial.calificacion = rating"
               >★</button>
             </div>
           </div>
@@ -115,7 +115,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, inject, watchEffect, nextTick } from 'vue';
+import { indexTestimoniosActivos, storeTestimonio } from '@/Services/TestimoniosService';
+import { ref, computed, onMounted, onBeforeUnmount, inject, watchEffect, nextTick, toRaw } from 'vue';
 
 const currentIndex = ref(0);
 const contentLoaded = ref(false);
@@ -131,43 +132,117 @@ const isMobile = ref(false);
 let interval = null;
 
 // Enhanced testimonials with ratings and optional avatars
-const testimonials = ref([
-  {
-    text: "NeoTech ha cambiado la forma en la que compro productos internacionales. Su atención personalizada y claridad en el proceso son lo que más valoro como cliente.",
-    name: "Andrea Rojas",
-    role: "Emprendedora",
-    rating: 5,
-    avatar: null
-  },
-  {
-    text: "Excelente servicio y atención al cliente. Los tiempos de entrega son precisos y el proceso es muy transparente. Recomendaría NeoTech a cualquier persona que busque importar productos de calidad.",
-    name: "Carlos Mendoza",
-    role: "Empresario",
-    rating: 4.5,
-    avatar: null
-  },
-  {
-    text: "La mejor opción para importar productos. Su plataforma es intuitiva y el seguimiento en tiempo real es muy útil. He realizado varias compras y siempre han cumplido con los plazos establecidos.",
-    name: "María González",
-    role: "Comerciante",
-    rating: 5,
-    avatar: null
-  },
-  {
-    text: "Después de probar varias opciones, NeoTech es definitivamente la mejor. Su equipo de soporte responde rápidamente y siempre están dispuestos a ayudar con cualquier consulta.",
-    name: "Juan Pérez",
-    role: "Diseñador",
-    rating: 4,
-    avatar: null
+const testimonials = ref([]);
+const testimoniosArray = ref([]);
+
+const listarTestimoniosAprobados = async () => {
+  try {
+    // Datos de ejemplo fijos para asegurar que siempre haya algo para mostrar
+    const datosEjemplo = [
+      {
+        id: 2,
+        nombre_completo: 'diego',
+        ocupacion: 'Desarrollador web',
+        experiencia: 'xd',
+        calificacion: 5,
+        estado: 'aprobado',
+        fecha_publicacion: null,
+        imagen: null,
+        user_id: null,
+        created_at: '2025-03-27T20:40:00.000000Z',
+        updated_at: '2025-03-27T20:40:04.000000Z'
+      }
+    ];
+    
+    // Intentar cargar desde la API
+    const response = await indexTestimoniosActivos();
+    console.log('Respuesta completa:', response);
+    
+    // Verificar diferentes estructuras de datos posibles
+    if (Array.isArray(response)) {
+      testimonials.value = response;
+      console.log('Testimonios cargados (array):', testimonials.value);
+    } 
+    else if (response && response.data) {
+      if (Array.isArray(response.data)) {
+        testimonials.value = response.data;
+        console.log('Testimonios cargados (data array):', testimonials.value);
+      }
+      else if (response.data.datos && Array.isArray(response.data.datos)) {
+        testimonials.value = response.data.datos;
+        console.log('Testimonios cargados (data.datos):', testimonials.value);
+      }
+      else {
+        console.error('Estructura de datos inesperada, usando datos de ejemplo:', response);
+        testimonials.value = datosEjemplo;
+      }
+    } 
+    else {
+      console.error('Estructura de respuesta inesperada, usando datos de ejemplo:', response);
+      testimonials.value = datosEjemplo;
+    }
+    
+    // Si después de todo no hay testimonios, usar los datos de ejemplo
+    if (!testimonials.value || testimonials.value.length === 0) {
+      console.log('No se encontraron testimonios, usando datos de ejemplo');
+      testimonials.value = datosEjemplo;
+    }
+    
+    console.log('Testimonios finales:', testimonials.value);
+    
+    // Convertir el Proxy a un array normal para evitar problemas de reactividad
+    testimoniosArray.value = Array.isArray(testimonials.value) ? [...testimonials.value] : [testimonials.value];
+    
+    // Si es un objeto con propiedades numéricas, convertirlo a array
+    if (!Array.isArray(testimoniosArray.value) && typeof testimoniosArray.value === 'object') {
+      const tempArray = [];
+      Object.keys(testimoniosArray.value).forEach(key => {
+        if (!isNaN(Number(key))) {
+          tempArray.push(testimoniosArray.value[key]);
+        }
+      });
+      if (tempArray.length > 0) {
+        testimoniosArray.value = tempArray;
+      }
+    }
+    
+    // Asegurarse de que sea un array
+    if (!Array.isArray(testimoniosArray.value)) {
+      testimoniosArray.value = [testimoniosArray.value];
+    }
+    
+    // Filtrar elementos nulos o indefinidos
+    testimoniosArray.value = testimoniosArray.value.filter(item => item && typeof item === 'object');
+    
+    console.log('Array de testimonios para renderizar:', testimoniosArray.value);
+  } catch (error) {
+    console.error('Error al cargar testimonios activos:', error);
+    
+    // En caso de error, cargar datos de ejemplo
+    testimoniosArray.value = [
+      {
+        id: 2,
+        nombre_completo: 'diego',
+        ocupacion: 'Desarrollador web',
+        experiencia: 'xd',
+        calificacion: 5,
+        estado: 'aprobado',
+        fecha_publicacion: null,
+        imagen: null,
+        user_id: null,
+        created_at: '2025-03-27T20:40:00.000000Z',
+        updated_at: '2025-03-27T20:40:04.000000Z'
+      }
+    ];
   }
-]);
+};
 
 // New testimonial form data
 const newTestimonial = ref({
-  name: '',
-  role: '',
-  text: '',
-  rating: 5,
+  nombre_completo: '',
+  ocupacion: '',
+  experiencia: '',
+  calificacion: 5,
   avatar: null
 });
 
@@ -187,12 +262,17 @@ const trackStyle = computed(() => {
 
 // Helper functions
 const getInitials = (name) => {
+  if (!name) return '';
   return name.split(' ').map(n => n[0]).join('').toUpperCase();
 };
 
 const getAvatarStyle = (testimonial) => {
+  if (!testimonial || !testimonial.nombre_completo) {
+    return { backgroundColor: '#3B82F6' };
+  }
+  
   // Generate a consistent color based on the name
-  const hash = testimonial.name.split('').reduce((acc, char) => {
+  const hash = testimonial.nombre_completo.split('').reduce((acc, char) => {
     return char.charCodeAt(0) + ((acc << 5) - acc);
   }, 0);
   
@@ -206,31 +286,37 @@ const getAvatarStyle = (testimonial) => {
 };
 
 const getPrevIndex = () => {
-  return (currentIndex.value - 1 + testimonials.value.length) % testimonials.value.length;
+  if (!testimoniosArray.value || testimoniosArray.value.length === 0) return 0;
+  return (currentIndex.value - 1 + testimoniosArray.value.length) % testimoniosArray.value.length;
 };
 
 const getNextIndex = () => {
-  return (currentIndex.value + 1) % testimonials.value.length;
+  if (!testimoniosArray.value || testimoniosArray.value.length === 0) return 0;
+  return (currentIndex.value + 1) % testimoniosArray.value.length;
 };
 
 // Navigation functions
 const nextTestimonial = () => {
+  if (!testimoniosArray.value || testimoniosArray.value.length <= 1) return;
   currentIndex.value = getNextIndex();
   resetAutoPlay();
 };
 
 const prevTestimonial = () => {
+  if (!testimoniosArray.value || testimoniosArray.value.length <= 1) return;
   currentIndex.value = getPrevIndex();
   resetAutoPlay();
 };
 
 const setTestimonial = (index) => {
+  if (!testimoniosArray.value || index >= testimoniosArray.value.length) return;
   currentIndex.value = index;
   resetAutoPlay();
 };
 
 // Auto-play functions
 const startAutoPlay = () => {
+  if (!testimoniosArray.value || testimoniosArray.value.length <= 1) return;
   interval = setInterval(nextTestimonial, 8000); // Reduced from 20s to 8s for better engagement
 };
 
@@ -290,25 +376,39 @@ const touchEnd = () => {
 };
 
 // Form submission
-const submitTestimonial = () => {
-  // In a real app, you would send this to your backend
-  // For demo purposes, we'll just add it to the local array
-  testimonials.value.push({...newTestimonial.value});
-  
-  // Reset form
-  newTestimonial.value = {
-    name: '',
-    role: '',
-    text: '',
-    rating: 5,
-    avatar: null
-  };
-  
-  // Close modal
-  showAddTestimonialForm.value = false;
-  
-  // Show success message
-  alert('¡Gracias por compartir tu experiencia!');
+const submitTestimonial = async () => {
+  try {
+    const formData = new FormData();
+    
+    // Añadir todos los campos al FormData
+    Object.keys(newTestimonial.value).forEach(key => {
+      if (newTestimonial.value[key] !== null) {
+        formData.append(key, newTestimonial.value[key]);
+      }
+    });
+    
+    // Asegurarse de que el estado sea 'pendiente'
+    formData.append('estado', 'pendiente');
+    
+    const response = await storeTestimonio(formData);
+    console.log('Testimonio enviado:', response);
+    
+    // Mostrar mensaje de éxito
+    alert('¡Gracias por compartir tu experiencia! Tu testimonio será revisado antes de ser publicado.');
+    
+    // Cerrar el modal y resetear el formulario
+    showAddTestimonialForm.value = false;
+    newTestimonial.value = {
+      nombre_completo: '',
+      ocupacion: '',
+      experiencia: '',
+      calificacion: 5,
+      avatar: null
+    };
+  } catch (error) {
+    console.error('Error al enviar testimonio:', error);
+    alert('Hubo un problema al enviar tu testimonio. Por favor, inténtalo de nuevo.');
+  }
 };
 
 const closeModal = (e) => {
@@ -350,7 +450,7 @@ const simulateLoading = () => {
 };
 
 // Lifecycle hooks
-onMounted(() => {
+onMounted(async () => {
   simulateLoading();
   checkMobile();
   window.addEventListener('resize', checkMobile);
@@ -359,7 +459,13 @@ onMounted(() => {
     updateColors(selectedLocation.value);
   }
   
-  startAutoPlay();
+  // Cargar testimonios activos antes de iniciar el autoplay
+  await listarTestimoniosAprobados();
+  
+  // Solo iniciar autoplay si hay testimonios
+  if (testimoniosArray.value && testimoniosArray.value.length > 0) {
+    startAutoPlay();
+  }
   
   // Add intersection observer for animation on scroll
   const observer = new IntersectionObserver((entries) => {
@@ -389,6 +495,22 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.debug-info {
+  font-family: monospace;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.loading-testimonials {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 15px;
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+}
 
 .testimonials {
   max-width: 1440px;
@@ -409,7 +531,7 @@ onBeforeUnmount(() => {
   text-align: center;
   font-size: 2.5rem;
   font-weight: 800;
-  color: var(--text-primary);
+  color: var(--text-primary, #333);
   margin-bottom: 40px;
   position: relative;
 }
@@ -422,20 +544,21 @@ onBeforeUnmount(() => {
   transform: translateX(-50%);
   width: 80px;
   height: 4px;
-  background-color: var(--primary-color);
+  background-color: var(--primary-color, #3B82F6);
   border-radius: 2px;
 }
 
 .highlight {
-  color: var(--primary-color);
+  color: var(--primary-color, #3B82F6);
 }
 
 .testimonials-container {
   position: relative;
   overflow: hidden;
   border-radius: 15px;
-  box-shadow: var(--card-shadow);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   margin-bottom: 30px;
+  background-color: white;
 }
 
 .testimonial-track {
@@ -446,23 +569,20 @@ onBeforeUnmount(() => {
 
 .testimonial-card {
   flex: 0 0 100%;
-  background: var(--card-bg);
+  background: white;
   padding: 40px;
   position: relative;
   display: flex;
   align-items: center;
   min-height: 300px;
   transition: opacity 0.3s ease, transform 0.5s ease;
+  opacity: 0; /* Cambiado de 1 a 0 para que solo la activa sea visible */
+  z-index: 1;
 }
 
 .testimonial-card.active {
   opacity: 1;
   z-index: 2;
-}
-
-.testimonial-card.prev,
-.testimonial-card.next {
-  opacity: 0;
 }
 
 .quote-mark {
@@ -494,7 +614,7 @@ onBeforeUnmount(() => {
 
 .testimonial-text {
   font-size: 1.2rem;
-  color: var(--text-secondary);
+  color: var(--text-secondary, #666);
   line-height: 1.8;
   margin-bottom: 30px;
   max-width: 800px;
@@ -513,7 +633,7 @@ onBeforeUnmount(() => {
   width: 70px;
   height: 70px;
   border-radius: 50%;
-  background-color: var(--primary-color);
+  background-color: var(--primary-color, #3B82F6);
   color: white;
   display: flex;
   align-items: center;
@@ -535,14 +655,14 @@ onBeforeUnmount(() => {
 }
 
 .author-name {
-  color: var(--primary-color);
+  color: var(--primary-color, #3B82F6);
   font-size: 1.3rem;
   font-weight: 700;
   margin-bottom: 5px;
 }
 
 .author-role {
-  color: var(--text-secondary);
+  color: var(--text-secondary, #666);
   font-size: 0.95rem;
 }
 
@@ -558,7 +678,7 @@ onBeforeUnmount(() => {
 }
 
 .star.filled {
-  color: var(--star-color);
+  color: var(--star-color, #FFD700);
 }
 
 .star.half-filled {
@@ -569,7 +689,7 @@ onBeforeUnmount(() => {
 .star.half-filled::before {
   content: '★';
   position: absolute;
-  color: var(--star-color);
+  color: var(--star-color, #FFD700);
   width: 50%;
   overflow: hidden;
 }
@@ -590,12 +710,12 @@ onBeforeUnmount(() => {
   cursor: pointer;
   z-index: 10;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  color: var(--text-primary);
+  color: var(--text-primary, #333);
   transition: all 0.3s ease;
 }
 
 .nav-arrow:hover {
-  background: var(--primary-color);
+  background: var(--primary-color, #3B82F6);
   color: white;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
@@ -627,7 +747,7 @@ onBeforeUnmount(() => {
 }
 
 .indicator.active {
-  background: var(--primary-color);
+  background: var(--primary-color, #3B82F6);
   transform: scale(1.2);
 }
 
@@ -636,7 +756,7 @@ onBeforeUnmount(() => {
 }
 
 .indicator.active:hover {
-  background: var(--primary-color);
+  background: var(--primary-color, #3B82F6);
 }
 
 /* Add Testimonial CTA */
@@ -650,12 +770,12 @@ onBeforeUnmount(() => {
 
 .testimonial-cta p {
   font-size: 1.1rem;
-  color: var(--text-secondary);
+  color: var(--text-secondary, #666);
   margin-bottom: 15px;
 }
 
 .add-testimonial-btn {
-  background-color: var(--primary-color);
+  background-color: var(--primary-color, #3B82F6);
   color: white;
   border: none;
   padding: 12px 25px;
@@ -673,7 +793,7 @@ onBeforeUnmount(() => {
 }
 
 .add-testimonial-btn:hover {
-  background-color: var(--primary-hover-color);
+  background-color: var(--primary-hover-color, #2563eb);
   transform: translateY(-3px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
@@ -731,7 +851,15 @@ onBeforeUnmount(() => {
 
 .modal-content h3 {
   font-size: 1.5rem;
-  color: var(--text-primary);
+}
+
+.close-modal:hover {
+  color: #333;
+}
+
+.modal-content h3 {
+  font-size: 1.5rem;
+  color: var(--text-primary, #333);
   margin-bottom: 20px;
   text-align: center;
 }
@@ -750,7 +878,7 @@ onBeforeUnmount(() => {
 
 .form-group label {
   font-size: 0.95rem;
-  color: var(--text-secondary);
+  color: var(--text-secondary, #666);
   font-weight: 500;
 }
 
@@ -765,7 +893,7 @@ onBeforeUnmount(() => {
 
 .form-group input:focus,
 .form-group textarea:focus {
-  border-color: var(--primary-color);
+  border-color: var(--primary-color, #3B82F6);
   outline: none;
 }
 
@@ -784,11 +912,11 @@ onBeforeUnmount(() => {
 }
 
 .rating-star.selected {
-  color: var(--star-color);
+  color: var(--star-color, #FFD700);
 }
 
 .submit-btn {
-  background-color: var(--primary-color);
+  background-color: var(--primary-color, #3B82F6);
   color: white;
   border: none;
   padding: 12px;
@@ -800,21 +928,27 @@ onBeforeUnmount(() => {
 }
 
 .submit-btn:hover {
-  background-color: var(--primary-hover-color);
+  background-color: var(--primary-hover-color, #2563eb);
 }
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { 
+  from {
     opacity: 0;
     transform: translateY(30px);
   }
-  to { 
+
+  to {
     opacity: 1;
     transform: translateY(0);
   }
@@ -829,7 +963,7 @@ onBeforeUnmount(() => {
   .section-title {
     font-size: 2.2rem;
   }
-  
+
   .testimonial-text {
     font-size: 1.1rem;
   }
@@ -839,12 +973,12 @@ onBeforeUnmount(() => {
   .testimonials {
     margin: 60px auto;
   }
-  
+
   .section-title {
     font-size: 1.9rem;
     margin-bottom: 30px;
   }
-  
+
   .testimonial-card {
     padding: 30px 20px;
     min-height: auto;
@@ -853,12 +987,12 @@ onBeforeUnmount(() => {
   .quote-mark {
     font-size: 80px;
   }
-  
+
   .quote-mark.start {
     top: 10px;
     left: 10px;
   }
-  
+
   .quote-mark.end {
     bottom: 10px;
     right: 10px;
@@ -874,24 +1008,24 @@ onBeforeUnmount(() => {
     height: 60px;
     font-size: 1.2rem;
   }
-  
+
   .author-name {
     font-size: 1.1rem;
   }
-  
+
   .nav-arrow {
     width: 36px;
     height: 36px;
   }
-  
+
   .nav-arrow.prev {
     left: 10px;
   }
-  
+
   .nav-arrow.next {
     right: 10px;
   }
-  
+
   .testimonial-cta {
     padding: 25px 20px;
     margin-top: 40px;
@@ -906,12 +1040,12 @@ onBeforeUnmount(() => {
   .quote-mark {
     font-size: 60px;
   }
-  
+
   .quote-mark.start {
     top: 5px;
     left: 5px;
   }
-  
+
   .quote-mark.end {
     bottom: 5px;
     right: 5px;
@@ -930,132 +1064,26 @@ onBeforeUnmount(() => {
   .author-info {
     text-align: center;
   }
-  
+
   .author-avatar {
     width: 55px;
     height: 55px;
     font-size: 1.1rem;
   }
-  
+
   .nav-arrow {
     width: 32px;
     height: 32px;
     opacity: 0.8;
   }
-  
+
   .section-title {
     font-size: 1.7rem;
   }
-  
+
   .add-testimonial-btn {
     padding: 10px 20px;
     font-size: 0.95rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .testimonials {
-    margin: 50px auto;
-    padding: 0 15px;
-  }
-  
-  .section-title {
-    font-size: 1.5rem;
-  }
-  
-  .section-title::after {
-    width: 60px;
-    height: 3px;
-  }
-  
-  .testimonial-card {
-    padding: 20px 15px 25px;
-  }
-  
-  .testimonial-text {
-    font-size: 0.9rem;
-    margin-bottom: 20px;
-  }
-  
-  .author-name {
-    font-size: 1rem;
-  }
-  
-  .author-role {
-    font-size: 0.85rem;
-  }
-  
-  .star {
-    font-size: 0.9rem;
-  }
-  
-  .modal-content {
-    padding: 20px 15px;
-  }
-  
-  .close-modal {
-    top: 10px;
-    right: 15px;
-    font-size: 1.5rem;
-  }
-  
-  .modal-content h3 {
-    font-size: 1.3rem;
-    margin-bottom: 15px;
-  }
-  
-  .form-group input,
-  .form-group textarea {
-    padding: 10px;
-    font-size: 0.9rem;
-  }
-  
-  .rating-star {
-    font-size: 1.3rem;
-  }
-}
-
-/* Touch device optimizations */
-@media (hover: none) {
-  .nav-arrow {
-    opacity: 0.9;
-    background: rgba(255, 255, 255, 0.9);
-  }
-  
-  .add-testimonial-btn:active {
-    transform: scale(0.98);
-  }
-  
-  .indicator:active {
-    transform: scale(1.1);
-  }
-  
-  .indicator.active:active {
-    transform: scale(1.2);
-  }
-}
-
-/* Accessibility Improvements */
-@media (prefers-reduced-motion: reduce) {
-  .testimonials,
-  .testimonial-card,
-  .nav-arrow,
-  .indicator,
-  .add-testimonial-btn,
-  .modal,
-  .modal-content,
-  .testimonial-track {
-    transition: none;
-    animation: none;
-  }
-  
-  .testimonials {
-    opacity: 1;
-    transform: none;
-  }
-  
-  .add-testimonial-btn:hover {
-    transform: none;
   }
 }
 </style>
