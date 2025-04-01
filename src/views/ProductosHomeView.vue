@@ -106,6 +106,9 @@
                 <span v-if="product.descuento" class="badge badge-sale">
                   <i class="fas fa-bolt"></i> -{{ product.descuento }}%
                 </span>
+                <span v-if="hasPreventaPrices(product)" class="badge badge-preventa">
+                  <i class="fas fa-tag"></i> PREVENTA
+                </span>
               </div>
 
               <div class="product-actions-bottom">
@@ -135,18 +138,74 @@
             <p v-if="product.descripcion" class="product-description">
               {{ truncateDescription(product.descripcion, 60) }}
             </p>
-            <!-- Precios -->
+            
+            <!-- Contenedor de precios mejorado -->
             <div class="prices-container">
-              <!-- Precio Regular -->
-              <div class="price-item">
-                <span class="price-label">Precio:</span>
-                <span class="price-value">{{ formatPrice(product.precio) }}</span>
+              <div class="prices-header">
+                <span class="prices-title">Precios de Preventa</span>
+                <button class="toggle-prices-btn" @click.stop="togglePriceDetails(product.id)">
+                  <i class="fas" :class="isPriceExpanded(product.id) ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                </button>
               </div>
               
-              <!-- Precio Preventa (si existe) -->
-              <div class="price-item" v-if="product.precio_preventa">
-                <span class="price-label">Preventa:</span>
-                <span class="price-value preventa">{{ formatPrice(product.precio_preventa) }}</span>
+              <div class="price-details" :class="{ 'expanded': isPriceExpanded(product.id) }">
+                <!-- Precio Estándar (Preventa por Volumen) -->
+                <div class="price-card">
+                  <div class="price-card-header">
+                    <span class="price-type">Preventa Especial</span>
+                    <span class="price-value">{{ formatPrice(product.precio) }}</span>
+                  </div>
+                  <div class="price-card-body">
+                    <div class="quantity-range">
+                      <div class="quantity-item">
+                        <span class="quantity-label">Mínimo:</span>
+                        <span class="quantity-value">{{ product.cantidad_minima || 1 }} unidades</span>
+                      </div>
+                      <div class="quantity-item">
+                        <span class="quantity-label">Máximo:</span>
+                        <span class="quantity-value">{{ product.cantidad_maxima || 'Sin límite' }} unidades</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Precio Preventa Especial -->
+                <div class="price-card special" v-if="product.precio_preventa">
+                  <div class="price-card-header">
+                    <span class="price-type">Preventa Estándar</span>
+                    <span class="price-value">{{ formatPrice(product.precio_preventa) }}</span>
+                  </div>
+                  <div class="price-card-body">
+                    <div class="quantity-range">
+                      <div class="quantity-item">
+                        <span class="quantity-label">Mínimo:</span>
+                        <span class="quantity-value">{{ product.cantidad_minima_preventa || product.cantidad_minima || 1 }} unidades</span>
+                      </div>
+                      <div class="quantity-item">
+                        <span class="quantity-label">Máximo:</span>
+                        <span class="quantity-value">{{ product.cantidad_maxima_preventa || product.cantidad_maxima || 'Sin límite' }} unidades</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Vista resumida de precios (siempre visible) -->
+              <div class="prices-summary">
+                <div class="summary-item">
+                  <span class="summary-label">Especial:</span>
+                  <div class="summary-content">
+                    <span class="summary-price">{{ formatPrice(product.precio) }}</span>
+                    <span class="summary-quantity">{{ product.cantidad_minima || 1 }}+ uds</span>
+                  </div>
+                </div>
+                <div class="summary-item special" v-if="product.precio_preventa">
+                  <span class="summary-label">Estándar:</span>
+                  <div class="summary-content">
+                    <span class="summary-price">{{ formatPrice(product.precio_preventa) }}</span>
+                    <span class="summary-quantity">{{ product.cantidad_minima_preventa || product.cantidad_minima || 1 }}+ uds</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -212,6 +271,7 @@ const totalPages = ref(1);
 const currentImageIndex = ref({});
 const favoriteProducts = ref([]);
 const addingToCart = ref(null);
+const expandedPriceDetails = ref([]); // Para controlar los detalles de precios expandidos
 
 // Estados para filtros
 const filtroCategoria = ref('');
@@ -250,6 +310,27 @@ const paginationRange = computed(() => {
   
   return range;
 });
+
+// Verificar si un producto tiene precios de preventa
+const hasPreventaPrices = (product) => {
+  return product.precio_preventa || 
+         product.precio_preventa_mayorista || 
+         product.precio_preventa_distribuidor;
+};
+
+// Funciones para manejar los detalles de precios
+const togglePriceDetails = (productId) => {
+  const index = expandedPriceDetails.value.indexOf(productId);
+  if (index > -1) {
+    expandedPriceDetails.value.splice(index, 1);
+  } else {
+    expandedPriceDetails.value.push(productId);
+  }
+};
+
+const isPriceExpanded = (productId) => {
+  return expandedPriceDetails.value.includes(productId);
+};
 
 // Obtener productos filtrados
 const listarProductos = async (page = 1) => {
@@ -829,6 +910,10 @@ onMounted(async () => {
   background: linear-gradient(45deg, #FF5722, #FF9800);
 }
 
+.badge-preventa {
+  background: linear-gradient(45deg, #ed8936, #dd6b20);
+}
+
 /* Botones de Navegación */
 .nav-button {
   position: absolute;
@@ -1055,55 +1140,179 @@ onMounted(async () => {
     margin-bottom: 0.75rem;
   }
 }
-/* Precios */
+
+/* NUEVO DISEÑO DE PRECIOS */
 .prices-container {
+  margin-top: 0.5rem;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.prices-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  background: linear-gradient(to right, #f8fafc, #edf2f7);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.prices-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #4a5568;
+}
+
+.toggle-prices-btn {
+  background: none;
+  border: none;
+  color: #718096;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.toggle-prices-btn:hover {
+  background-color: #e2e8f0;
+  color: #4a5568;
+}
+
+/* Detalles de precios expandibles */
+.price-details {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  opacity: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0 0.5rem;
+}
+
+.price-details.expanded {
+  max-height: 300px;
+  opacity: 1;
+  padding: 0.5rem;
+}
+
+/* Tarjetas de precio */
+.price-card {
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #edf2f7;
+}
+
+.price-card.special {
+  border-left: 3px solid #ed8936;
+}
+
+.price-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  background-color: #f7fafc;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.price-type {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #4a5568;
+}
+
+.price-value {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+.price-card.special .price-value {
+  color: #dd6b20;
+}
+
+.price-card-body {
+  padding: 0.5rem;
+}
+
+.quantity-range {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  margin-bottom: 0.75rem;
 }
 
-.price-item {
+.quantity-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.65rem;
+  color: #718096;
+}
+
+.quantity-label {
+  font-weight: 600;
+}
+
+.quantity-value {
+  color: #4a5568;
+}
+
+/* Vista resumida de precios */
+.prices-summary {
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.7rem;
+}
+
+.summary-item.special {
+  font-weight: 700;
+}
+
+.summary-label {
+  color: #4a5568;
+  font-weight: 600;
+}
+
+.summary-content {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.price-label {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: #4a5568;
-  min-width: 4rem;
-}
-
-.price-value {
-  font-size: 0.85rem;
+.summary-price {
   font-weight: 700;
   color: #2d3748;
 }
 
-.price-value.preventa {
-  color: #e53e3e;
+.summary-item.special .summary-price {
+  color: #dd6b20;
 }
 
-@media (min-width: 768px) {
-  .prices-container {
-    margin-bottom: 1rem;
-  }
-  
-  .price-label {
-    font-size: 0.75rem;
-  }
-  
-  .price-value {
-    font-size: 0.95rem;
-  }
-}
-
-@media (min-width: 1200px) {
-  .price-value {
-    font-size: 1.1rem;
-  }
+.summary-quantity {
+  font-size: 0.6rem;
+  color: #718096;
+  background-color: #edf2f7;
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
 }
 
 /* Overlay de Carga */
@@ -1392,6 +1601,10 @@ onMounted(async () => {
 
   .fade-enter-active,
   .fade-leave-active {
+    transition: none;
+  }
+  
+  .price-details {
     transition: none;
   }
 }

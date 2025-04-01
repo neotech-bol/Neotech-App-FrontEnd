@@ -6,9 +6,6 @@
         <button class="back-button" @click="goBack" aria-label="Volver">
           <i class="fas fa-arrow-left"></i>
         </button>
-<!--         <div class="logo-container" @click="goToHome">
-          <img src="/logo.png" alt="Logo" class="logo-img" />
-        </div> -->
         <button class="mobile-share-button-header" @click="shareProduct" aria-label="Compartir producto">
           <i class="fas fa-share-alt"></i>
         </button>
@@ -18,66 +15,66 @@
     </div>
 
     <div class="product-container">
-    <!-- Sección de Imágenes del Producto -->
-    <div class="product-images">
-      <!-- Imagen Principal con Zoom -->
-      <div class="main-image-wrapper">
-        <div class="main-image-container" @mousemove="handleImageZoom" @mouseleave="resetZoom"
-          @touchstart="handleTouchStart" @touchmove="handleTouchMove" @touchend="resetZoom">
-          <img :src="currentImage" :alt="dato.nombre" class="main-image-img" ref="mainImage">
-          
-          <!-- Cursor de lupa al pasar el mouse -->
-          <div class="magnifier-cursor" v-if="showMagnifier" :style="magnifierStyle">
-            <i class="fas fa-search-plus"></i>
-          </div>
-          
-          <!-- Flechas de Navegación de Imágenes -->
-          <button class="image-nav prev" @click="prevImage" v-if="allImages.length > 1" aria-label="Imagen anterior">
-            <i class="fas fa-chevron-left"></i>
-          </button>
-          <button class="image-nav next" @click="nextImage" v-if="allImages.length > 1" aria-label="Imagen siguiente">
-            <i class="fas fa-chevron-right"></i>
-          </button>
+      <!-- Sección de Imágenes del Producto -->
+      <div class="product-images">
+        <!-- Imagen Principal con Zoom -->
+        <div class="main-image-wrapper">
+          <div class="main-image-container" @mousemove="handleImageZoom" @mouseleave="resetZoom"
+            @touchstart="handleTouchStart" @touchmove="handleTouchMove" @touchend="resetZoom">
+            <img :src="currentImage" :alt="dato.nombre" class="main-image-img" ref="mainImage">
+            
+            <!-- Cursor de lupa al pasar el mouse -->
+            <div class="magnifier-cursor" v-if="showMagnifier" :style="magnifierStyle">
+              <i class="fas fa-search-plus"></i>
+            </div>
+            
+            <!-- Flechas de Navegación de Imágenes -->
+            <button class="image-nav prev" @click="prevImage" v-if="allImages.length > 1" aria-label="Imagen anterior">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="image-nav next" @click="nextImage" v-if="allImages.length > 1" aria-label="Imagen siguiente">
+              <i class="fas fa-chevron-right"></i>
+            </button>
 
-          <!-- Puntos de Paginación para Móvil -->
-          <div class="image-pagination">
-            <span v-for="(_, index) in allImages" :key="index"
-              :class="['pagination-dot', { active: selectedImage === index }]" @click="selectThumbnail(index)">
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Galería de Miniaturas - Con Paginación -->
-      <div class="thumbnail-list" ref="thumbnailScroll">
-        <!-- Botones de Navegación de Miniaturas -->
-        <button class="thumbnail-nav prev" @click="prevThumbnailPage" :disabled="currentThumbnailPage === 0" 
-          aria-label="Miniaturas anteriores">
-          <i class="fas fa-chevron-left"></i>
-        </button>
-        
-        <div class="thumbnail-container" ref="thumbnailContainer">
-          <div class="thumbnail-wrapper" :style="thumbnailWrapperStyle">
-            <div v-for="(image, index) in allImages" :key="index"
-              :class="['thumbnail', { active: selectedImage === index }]" @click="selectThumbnail(index)">
-              <img :src="image" :alt="`Vista ${index + 1} de ${dato.nombre}`" loading="lazy">
+            <!-- Puntos de Paginación para Móvil -->
+            <div class="image-pagination">
+              <span v-for="(_, index) in allImages" :key="index"
+                :class="['pagination-dot', { active: selectedImage === index }]" @click="selectThumbnail(index)">
+              </span>
             </div>
           </div>
         </div>
-        
-        <button class="thumbnail-nav next" @click="nextThumbnailPage" :disabled="currentThumbnailPage >= maxThumbnailPage" 
-          aria-label="Miniaturas siguientes">
-          <i class="fas fa-chevron-right"></i>
-        </button>
-        
-        <!-- Indicador de Página -->
-        <div class="thumbnail-pagination" v-if="totalThumbnailPages > 1">
-          <span v-for="page in totalThumbnailPages" :key="page" 
-            :class="['thumbnail-page-dot', { active: currentThumbnailPage === page - 1 }]"
-            @click="goToThumbnailPage(page - 1)"></span>
+
+        <!-- Galería de Miniaturas - Con Paginación -->
+        <div class="thumbnail-list" ref="thumbnailScroll">
+          <!-- Botones de Navegación de Miniaturas -->
+          <button class="thumbnail-nav prev" @click="prevThumbnailPage" :disabled="currentThumbnailPage === 0" 
+            aria-label="Miniaturas anteriores">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          
+          <div class="thumbnail-container" ref="thumbnailContainer">
+            <div class="thumbnail-wrapper" :style="thumbnailWrapperStyle">
+              <div v-for="(image, index) in allImages" :key="index"
+                :class="['thumbnail', { active: selectedImage === index }]" @click="selectThumbnail(index)">
+                <img :src="image" :alt="`Vista ${index + 1} de ${dato.nombre}`" loading="lazy">
+              </div>
+            </div>
+          </div>
+          
+          <button class="thumbnail-nav next" @click="nextThumbnailPage" :disabled="currentThumbnailPage >= maxThumbnailPage" 
+            aria-label="Miniaturas siguientes">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+          
+          <!-- Indicador de Página -->
+          <div class="thumbnail-pagination" v-if="totalThumbnailPages > 1">
+            <span v-for="page in totalThumbnailPages" :key="page" 
+              :class="['thumbnail-page-dot', { active: currentThumbnailPage === page - 1 }]"
+              @click="goToThumbnailPage(page - 1)"></span>
+          </div>
         </div>
       </div>
-    </div>
 
       <!-- Sección de Información del Producto -->
       <div class="product-info">
@@ -90,44 +87,83 @@
         <h2 class="product-subtitle mobile-only">{{ dato.subtitulo || 'Producto de Alta Calidad' }}</h2>
 
         <div class="info-content">
-          <!-- Precio Unificado - Más limpio -->
-          <div class="unified-price-display">
-            <div class="price-badge" :class="{ 'preventa': isPreventaActive, 'regular': !isPreventaActive }">
-              <span>{{ isPreventaActive ? 'Preventa Vip' : 'Preventa Básica' }}</span>
+          <!-- Sección de Precios Mejorada -->
+          <div class="price-section">
+            <!-- Indicador de Tipo de Precio Actual -->
+            <div class="price-type-indicator">
+              <div class="price-badge" :class="{ 'preventa-especial': isPreventaEspecialActive, 'preventa-estandar': isPreventaEstandarActive, 'regular': !isPreventaEspecialActive && !isPreventaEstandarActive }">
+                <i class="fas" :class="getPriceBadgeIcon"></i>
+                <span>{{ getPriceTypeName }}</span>
+              </div>
             </div>
             
-            <div class="price-value-display">
-              <span class="price-value">{{ formatPrice(selectedPrice) }}</span>
-              <span v-if="originalPrice > selectedPrice" class="original-price">{{ formatPrice(originalPrice) }}</span>
-              <span v-if="originalPrice > selectedPrice" class="discount-percentage">
-                -{{ Math.round((1 - selectedPrice/originalPrice) * 100) }}%
-              </span>
+            <!-- Precio Principal con Descuento -->
+            <div class="main-price-display">
+              <div class="price-value-display">
+                <span class="price-value">{{ formatPrice(selectedPrice) }}</span>
+                <span v-if="originalPrice > selectedPrice" class="original-price">{{ formatPrice(originalPrice) }}</span>
+                <span v-if="originalPrice > selectedPrice" class="discount-percentage">
+                  -{{ Math.round((1 - selectedPrice/originalPrice) * 100) }}%
+                </span>
+              </div>
+              
+              <div class="quantity-range">
+                <span class="range-label">Rango: </span>
+                <span class="range-value">{{ minQuantity }} - {{ maxQuantity }} unidades</span>
+              </div>
             </div>
             
-            <div class="quantity-range">
-              <span class="range-label">Rango: </span>
-              <span class="range-value">{{ minQuantity }} - {{ maxQuantity }} unidades</span>
+            <!-- Selector de Tipo de Precio Mejorado -->
+            <div class="price-type-selector" v-if="hasMultiplePriceTypes">
+              <div class="price-tabs">
+                <button 
+                  @click="applyPreventaEstandar" 
+                  :class="['price-tab', { 'active': isPreventaEstandarActive }]"
+                  :disabled="!canSwitchToPreventaEstandar"
+                  aria-pressed="isPreventaEstandarActive">
+                  <i class="fas fa-tag"></i> Preventa Especial
+                </button>
+                <button 
+                  @click="applyPreventaEspecial" 
+                  :class="['price-tab', { 'active': isPreventaEspecialActive }]"
+                  :disabled="!canSwitchToPreventaEspecial"
+                  aria-pressed="isPreventaEspecialActive">
+                  <i class="fas fa-bolt"></i> Preventa Estándar
+                </button>
+              </div>
+            </div>
+            
+            <!-- Comparación de Precios -->
+            <div class="price-comparison" v-if="hasMultiplePriceTypes">
+              <div class="comparison-header">
+                <i class="fas fa-info-circle"></i> Comparación de precios
+              </div>
+              <div class="comparison-body">
+                <div class="comparison-grid">
+                  <!-- Preventa Estándar -->
+                  <div class="comparison-item">
+                    <div class="comparison-label">Preventa Especial</div>
+                    <div class="comparison-value">{{ formatPrice(regularPrice) }}</div>
+                    <div class="comparison-range">{{ cantidadMinima }}-{{ cantidadMaxima }} und.</div>
+                  </div>
+                  
+                  <!-- Preventa Especial -->
+                  <div class="comparison-item" v-if="hasPreventaEspecialPrice">
+                    <div class="comparison-label">Preventa Estándar</div>
+                    <div class="comparison-value">{{ formatPrice(preventaEspecialPrice) }}</div>
+                    <div class="comparison-range">{{ cantidadMinimaPreventaEspecial }}-{{ cantidadMaximaPreventaEspecial }} und.</div>
+                  </div>
+                </div>
+                
+                <!-- Información de Ahorro -->
+                <div class="savings-info" v-if="regularPrice > preventaEspecialPrice && hasPreventaEspecialPrice">
+                  <i class="fas fa-piggy-bank"></i> Ahorro por unidad: 
+                  <span>{{ formatPrice(regularPrice - preventaEspecialPrice) }}</span>
+                  ({{ Math.round((1 - preventaEspecialPrice/regularPrice) * 100) }}%)
+                </div>
+              </div>
             </div>
           </div>
-
-          <!-- Selector de Tipo de Precio - Simplificado -->
-          <div class="price-type-selector" v-if="hasPreventaPrice && canSwitchToRegular(regularPrice)">
-            <div class="price-tabs">
-              <button 
-                @click="applyRegularPrice" 
-                :class="['price-tab', { 'active': !isPreventaActive }]"
-                aria-pressed="!isPreventaActive">
-                Preventa básica
-              </button>
-              <button 
-                @click="applyPreventaPrice" 
-                :class="['price-tab', { 'active': isPreventaActive }]"
-                aria-pressed="isPreventaActive">
-                Preventa VIP
-              </button>
-            </div>
-          </div>
-          
 
           <!-- Secciones de Acordeón para Móvil -->
           <div class="accordion-sections">
@@ -252,6 +288,13 @@
           <div class="quantity-section">
             <div class="quantity-header">
               <span class="quantity-label">Cantidad:</span>
+              <div class="quantity-status" :class="{
+                'warning': isNearRangeLimit,
+                'error': isQuantityOutOfRange
+              }">
+                <i class="fas" :class="quantityStatusIcon"></i>
+                <span>{{ quantityStatusText }}</span>
+              </div>
             </div>
             <div class="quantity-controls">
               <button @click="decreaseQuantity" :disabled="quantity <= minQuantity" class="quantity-btn"
@@ -267,9 +310,9 @@
             </div>
 
             <!-- Indicador de precio de preventa activo -->
-            <div class="preventa-indicator" v-if="isPreventaActive">
+            <div class="price-type-active-indicator" v-if="isPreventaEspecialActive || isPreventaEstandarActive">
               <i class="fas fa-check-circle"></i>
-              <span>Precio de Preventa VIP aplicado</span>
+              <span>{{ isPreventaEspecialActive ? 'Precio de Preventa Especial aplicado' : 'Precio de Preventa Estándar aplicado' }}</span>
             </div>
           </div>
 
@@ -386,6 +429,9 @@
                 <span v-if="isNewProductSimilar(product)" class="badge badge-new">
                   <i class="fas fa-star-of-life"></i> NUEVO
                 </span>
+                <span v-if="hasPreventaPricesSimilar(product)" class="badge badge-preventa">
+                  <i class="fas fa-tag"></i> PREVENTA
+                </span>
               </div>
 
               <!-- Acciones del Producto -->
@@ -419,25 +465,73 @@
               {{ truncateDescription(product.descripcion, 60) }}
             </p>
             
+            <!-- Contenedor de precios mejorado -->
             <div class="prices-container">
-              <!-- Precio Regular -->
-              <div class="price-item">
-                <span class="price-label">Precio:</span>
-                <span class="price-value" :class="{ 'with-discount': product.precio_venta }">
-                  {{ formatPrice(product.precio) }}
-                </span>
+              <div class="prices-header">
+                <span class="prices-title">Precios de Preventa</span>
+                <button class="toggle-prices-btn" @click.stop="togglePriceDetails(product.id)">
+                  <i class="fas" :class="isPriceExpanded(product.id) ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                </button>
               </div>
               
-              <!-- Precio de Venta (si existe) -->
-              <div class="price-item" v-if="product.precio_venta">
-                <span class="price-label">Venta:</span>
-                <span class="price-value sale">{{ formatPrice(product.precio_venta) }}</span>
+              <div class="price-details" :class="{ 'expanded': isPriceExpanded(product.id) }">
+                <!-- Precio Estándar (Preventa Estándar) -->
+                <div class="price-card">
+                  <div class="price-card-header">
+                    <span class="price-type">Preventa Estándar</span>
+                    <span class="price-value">{{ formatPrice(product.precio) }}</span>
+                  </div>
+                  <div class="price-card-body">
+                    <div class="quantity-range">
+                      <div class="quantity-item">
+                        <span class="quantity-label">Mínimo:</span>
+                        <span class="quantity-value">{{ product.cantidad_minima || 1 }} unidades</span>
+                      </div>
+                      <div class="quantity-item">
+                        <span class="quantity-label">Máximo:</span>
+                        <span class="quantity-value">{{ product.cantidad_maxima || 'Sin límite' }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Precio Preventa Especial -->
+                <div class="price-card special" v-if="product.precio_preventa">
+                  <div class="price-card-header">
+                    <span class="price-type">Preventa Especial</span>
+                    <span class="price-value">{{ formatPrice(product.precio_preventa) }}</span>
+                  </div>
+                  <div class="price-card-body">
+                    <div class="quantity-range">
+                      <div class="quantity-item">
+                        <span class="quantity-label">Mínimo:</span>
+                        <span class="quantity-value">{{ product.cantidad_minima_preventa || product.cantidad_minima || 1 }} unidades</span>
+                      </div>
+                      <div class="quantity-item">
+                        <span class="quantity-label">Máximo:</span>
+                        <span class="quantity-value">{{ product.cantidad_maxima_preventa || product.cantidad_maxima || 'Sin límite' }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
               
-              <!-- Precio Preventa (si existe) -->
-              <div class="price-item" v-if="product.precio_preventa">
-                <span class="price-label">Preventa:</span>
-                <span class="price-value preventa">{{ formatPrice(product.precio_preventa) }}</span>
+              <!-- Vista resumida de precios (siempre visible) -->
+              <div class="prices-summary">
+                <div class="summary-item">
+                  <span class="summary-label">Estándar:</span>
+                  <div class="summary-content">
+                    <span class="summary-price">{{ formatPrice(product.precio) }}</span>
+                    <span class="summary-quantity">{{ product.cantidad_minima || 1 }}+ uds</span>
+                  </div>
+                </div>
+                <div class="summary-item special" v-if="product.precio_preventa">
+                  <span class="summary-label">Especial:</span>
+                  <div class="summary-content">
+                    <span class="summary-price">{{ formatPrice(product.precio_preventa) }}</span>
+                    <span class="summary-quantity">{{ product.cantidad_minima_preventa || product.cantidad_minima || 1 }}+ uds</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -451,6 +545,9 @@
         <div class="price-container">
           <span class="current-price">{{ formatPrice(selectedPrice) }}</span>
           <span class="original-price" v-if="originalPrice > selectedPrice">{{ formatPrice(originalPrice) }}</span>
+        </div>
+        <div class="price-type-label">
+          {{ getPriceTypeName }}
         </div>
       </div>
       <button class="mobile-add-to-cart" @click="addToCart" :disabled="addingToCart"
@@ -514,6 +611,7 @@ const touchEndX = ref(0);
 const selectedColor = ref(null);
 const selectedColorImage = ref('');
 const hoveredFeature = ref(null);
+const expandedPriceDetails = ref([]);
 
 // Variables para productos similares
 const productosSimilares = ref([]);
@@ -564,6 +662,7 @@ const thumbnailContainer = ref(0); //
 // Variables para el cursor de lupa
 const showMagnifier = ref(false);
 const magnifierPosition = ref({ x: 0, y: 0 });
+
 // Propiedades computadas para precios y cantidades
 const regularPrice = computed(() => {
   if (selectedModelData.value) {
@@ -572,7 +671,7 @@ const regularPrice = computed(() => {
   return dato.value.precio || 0;
 });
 
-const preventaPrice = computed(() => {
+const preventaEspecialPrice = computed(() => {
   if (selectedModelData.value && selectedModelData.value.precio_preventa) {
     return selectedModelData.value.precio_preventa;
   }
@@ -593,72 +692,147 @@ const cantidadMaxima = computed(() => {
   return dato.value.cantidad_maxima || 1000;
 });
 
-const cantidadMinimaPreventa = computed(() => {
+const cantidadMinimaPreventaEspecial = computed(() => {
   if (selectedModelData.value && selectedModelData.value.cantidad_minima_preventa) {
     return selectedModelData.value.cantidad_minima_preventa;
   }
   return dato.value.cantidad_minima_preventa || 0;
 });
 
-const cantidadMaximaPreventa = computed(() => {
+const cantidadMaximaPreventaEspecial = computed(() => {
   if (selectedModelData.value && selectedModelData.value.cantidad_maxima_preventa) {
     return selectedModelData.value.cantidad_maxima_preventa;
   }
   return dato.value.cantidad_maxima_preventa || 0;
 });
 
-const hasPreventaPrice = computed(() => {
-  return preventaPrice.value > 0 && cantidadMinimaPreventa.value > 0 && cantidadMaximaPreventa.value > 0;
+const hasPreventaEspecialPrice = computed(() => {
+  return preventaEspecialPrice.value > 0 && cantidadMinimaPreventaEspecial.value > 0 && cantidadMaximaPreventaEspecial.value > 0;
 });
 
-// Determinar si el precio de preventa está activo según la cantidad
-const isPreventaActive = computed(() => {
-  if (hasPreventaPrice.value) {
-    return quantity.value >= cantidadMinimaPreventa.value && quantity.value <= cantidadMaximaPreventa.value;
+// Determinar si hay múltiples tipos de precio disponibles
+const hasMultiplePriceTypes = computed(() => {
+  return hasPreventaEspecialPrice.value && regularPrice.value > 0;
+});
+
+// Determinar si el precio de preventa especial está activo según la cantidad
+const isPreventaEspecialActive = computed(() => {
+  if (hasPreventaEspecialPrice.value) {
+    return quantity.value >= cantidadMinimaPreventaEspecial.value && quantity.value <= cantidadMaximaPreventaEspecial.value;
   }
   return false;
 });
 
-// Precio seleccionado (preventa o regular) basado en la cantidad
-const selectedPrice = computed(() => {
-  return isPreventaActive.value ? preventaPrice.value : regularPrice.value;
+// Determinar si el precio de preventa estándar está activo
+const isPreventaEstandarActive = computed(() => {
+  return !isPreventaEspecialActive.value && quantity.value >= cantidadMinima.value && quantity.value <= cantidadMaxima.value;
 });
 
-// Límites de cantidad basados en si es preventa o no
+// Precio seleccionado (preventa especial, preventa estándar o regular) basado en la cantidad
+const selectedPrice = computed(() => {
+  return isPreventaEspecialActive.value ? preventaEspecialPrice.value : regularPrice.value;
+});
+
+// Límites de cantidad basados en el tipo de precio activo
 const minQuantity = computed(() => {
-  return isPreventaActive.value ? cantidadMinimaPreventa.value : cantidadMinima.value;
+  return isPreventaEspecialActive.value ? cantidadMinimaPreventaEspecial.value : cantidadMinima.value;
 });
 
 const maxQuantity = computed(() => {
-  return isPreventaActive.value ? cantidadMaximaPreventa.value : cantidadMaxima.value;
+  return isPreventaEspecialActive.value ? cantidadMaximaPreventaEspecial.value : cantidadMaxima.value;
 });
 
-// Verificar si se puede cambiar a precio regular
-const canSwitchToRegular = (price) => {
-  return price > 0 && cantidadMinima.value > 0 && cantidadMaxima.value > 0;
-};
+// Verificar si se puede cambiar a precio de preventa estándar
+const canSwitchToPreventaEstandar = computed(() => {
+  return regularPrice.value > 0 && cantidadMinima.value > 0 && cantidadMaxima.value > 0;
+});
+
+// Verificar si se puede cambiar a precio de preventa especial
+const canSwitchToPreventaEspecial = computed(() => {
+  return hasPreventaEspecialPrice.value;
+});
+
+// Obtener el nombre del tipo de precio actual
+const getPriceTypeName = computed(() => {
+  if (isPreventaEspecialActive.value) return 'Preventa Especial';
+  if (isPreventaEstandarActive.value) return 'Preventa Estándar';
+  return 'Precio Regular';
+});
+
+// Obtener el icono para el badge de precio
+const getPriceBadgeIcon = computed(() => {
+  if (isPreventaEspecialActive.value) return 'fa-bolt';
+  if (isPreventaEstandarActive.value) return 'fa-tag';
+  return 'fa-dollar-sign';
+});
+
+// Verificar si la cantidad está cerca del límite del rango
+const isNearRangeLimit = computed(() => {
+  const min = minQuantity.value;
+  const max = maxQuantity.value;
+  return (quantity.value - min <= 2) || (max - quantity.value <= 2);
+});
+
+// Verificar si la cantidad está fuera del rango
+const isQuantityOutOfRange = computed(() => {
+  const min = minQuantity.value;
+  const max = maxQuantity.value;
+  return quantity.value < min || quantity.value > max;
+});
+
+// Obtener el icono para el estado de la cantidad
+const quantityStatusIcon = computed(() => {
+  if (isQuantityOutOfRange.value) {
+    return 'fa-exclamation-circle';
+  } else if (isNearRangeLimit.value) {
+    return 'fa-exclamation-triangle';
+  } else {
+    return 'fa-check-circle';
+  }
+});
+
+// Obtener el texto para el estado de la cantidad
+const quantityStatusText = computed(() => {
+  const min = minQuantity.value;
+  const max = maxQuantity.value;
+
+  if (quantity.value < min) {
+    return `Por debajo del mínimo (${min})`;
+  } else if (quantity.value > max) {
+    return `Por encima del máximo (${max})`;
+  } else if (isNearRangeLimit.value) {
+    if (quantity.value - min <= 2) {
+      return `Cerca del mínimo (${min})`;
+    } else if (max - quantity.value <= 2) {
+      return `Cerca del máximo (${max})`;
+    }
+  }
+  return `Dentro del rango (${min}-${max})`;
+});
 
 // Obtener la etiqueta correspondiente a una calificación
 const getRatingLabel = (rating) => {
   return ratingLabels[rating] || '';
 };
 
-// Aplicar precio de preventa manualmente
-const applyPreventaPrice = () => {
-  if (hasPreventaPrice.value) {
-    // Establecer la cantidad al mínimo de preventa para activar el precio de preventa
-    quantity.value = cantidadMinimaPreventa.value;
+// Aplicar precio de preventa estándar manualmente
+const applyPreventaEstandar = () => {
+  if (canSwitchToPreventaEstandar.value) {
+    // Establecer la cantidad al mínimo de preventa estándar
+    quantity.value = cantidadMinima.value;
     validateQuantity(); // Validar la cantidad para asegurar que esté en el rango correcto
-    showToast('Precio de preventa aplicado', 'success');
+    showToast('Precio de preventa estándar aplicado', 'success');
   }
 };
 
-// Aplicar precio regular manualmente
-const applyRegularPrice = () => {
-  // Establecer la cantidad al mínimo regular para desactivar el precio de preventa
-  quantity.value = cantidadMinima.value;
-  validateQuantity(); // Validar la cantidad para asegurar que esté en el rango correcto
-  showToast('Precio regular aplicado', 'success');
+// Aplicar precio de preventa especial manualmente
+const applyPreventaEspecial = () => {
+  if (hasPreventaEspecialPrice.value) {
+    // Establecer la cantidad al mínimo de preventa especial
+    quantity.value = cantidadMinimaPreventaEspecial.value;
+    validateQuantity(); // Validar la cantidad para asegurar que esté en el rango correcto
+    showToast('Precio de preventa especial aplicado', 'success');
+  }
 };
 
 // Cargar las estadísticas de calificación del producto
@@ -812,28 +986,28 @@ const validateQuantity = () => {
     numQuantity = minQuantity.value;
   }
   
-  // Verificar si estamos en modo preventa y la cantidad excede el máximo de preventa
-  if (hasPreventaPrice.value && isPreventaActive.value && numQuantity > cantidadMaximaPreventa.value) {
-    // Mostrar alerta para cambiar al precio regular
-    if (confirm('Has superado la cantidad máxima para precio de preventa. ¿Deseas cambiar al precio regular?')) {
-      // Cambiar al precio regular
-      applyRegularPrice();
+  // Verificar si estamos en modo preventa especial y la cantidad excede el máximo
+  if (hasPreventaEspecialPrice.value && isPreventaEspecialActive.value && numQuantity > cantidadMaximaPreventaEspecial.value) {
+    // Mostrar alerta para cambiar al precio de preventa estándar
+    if (confirm('Has superado la cantidad máxima para precio de preventa especial. ¿Deseas cambiar al precio de preventa estándar?')) {
+      // Cambiar al precio de preventa estándar
+      applyPreventaEstandar();
       return;
     } else {
-      // Mantener en el máximo de preventa
-      quantity.value = cantidadMaximaPreventa.value;
+      // Mantener en el máximo de preventa especial
+      quantity.value = cantidadMaximaPreventaEspecial.value;
       return;
     }
   }
   
-  // Verificar si la cantidad está en el rango de preventa
-  if (hasPreventaPrice.value && numQuantity >= cantidadMinimaPreventa.value && numQuantity <= cantidadMaximaPreventa.value) {
-    // Estamos en rango de preventa
+  // Verificar si la cantidad está en el rango de preventa especial
+  if (hasPreventaEspecialPrice.value && numQuantity >= cantidadMinimaPreventaEspecial.value && numQuantity <= cantidadMaximaPreventaEspecial.value) {
+    // Estamos en rango de preventa especial
     quantity.value = numQuantity;
   } 
-  // Si no está en rango de preventa, verificar rango regular
+  // Si no está en rango de preventa especial, verificar rango de preventa estándar
   else if (numQuantity >= cantidadMinima.value && numQuantity <= cantidadMaxima.value) {
-    // Estamos en rango regular
+    // Estamos en rango de preventa estándar
     quantity.value = numQuantity;
   } 
   // Si está fuera de ambos rangos, ajustar al límite más cercano
@@ -849,15 +1023,15 @@ const increaseQuantity = () => {
   if (quantity.value < maxQuantity.value) {
     const newQuantity = quantity.value + 1;
     
-    // Verificar si estamos en modo preventa y vamos a exceder el máximo
-    if (hasPreventaPrice.value && isPreventaActive.value && newQuantity > cantidadMaximaPreventa.value) {
-      // Mostrar alerta para cambiar al precio regular
-      if (confirm('Al aumentar la cantidad superarás el máximo para precio de preventa. ¿Deseas cambiar al precio regular?')) {
-        // Cambiar al precio regular y establecer la nueva cantidad
+    // Verificar si estamos en modo preventa especial y vamos a exceder el máximo
+    if (hasPreventaEspecialPrice.value && isPreventaEspecialActive.value && newQuantity > cantidadMaximaPreventaEspecial.value) {
+      // Mostrar alerta para cambiar al precio de preventa estándar
+      if (confirm('Al aumentar la cantidad superarás el máximo para precio de preventa especial. ¿Deseas cambiar al precio de preventa estándar?')) {
+        // Cambiar al precio de preventa estándar y establecer la nueva cantidad
         quantity.value = newQuantity;
         validateQuantity();
       }
-      // Si no acepta, se mantiene en el máximo de preventa
+      // Si no acepta, se mantiene en el máximo de preventa especial
       return;
     }
     
@@ -1021,15 +1195,15 @@ const addToCart = async () => {
       ...dato.value,
       imagen_principal: selectedColorImage.value || dato.value.imagen_principal,
       precio: regularPrice.value,
-      precio_preventa: preventaPrice.value,
-      es_preventa: isPreventaActive.value,
+      precio_preventa: preventaEspecialPrice.value,
+      es_preventa: isPreventaEspecialActive.value,
       modeloId: selectedModel.value || null,
       nombreModelo: selectedModelData.value?.nombre || '',
       cantidad: quantity.value,
       cantidad_minima: cantidadMinima.value,
       cantidad_maxima: cantidadMaxima.value,
-      cantidad_minima_preventa: cantidadMinimaPreventa.value,
-      cantidad_maxima_preventa: cantidadMaximaPreventa.value,
+      cantidad_minima_preventa: cantidadMinimaPreventaEspecial.value,
+      cantidad_maxima_preventa: cantidadMaximaPreventaEspecial.value,
       color: selectedColor.value,
       colorImage: selectedColorImage.value,
     };
@@ -1090,6 +1264,27 @@ const isNewProductSimilar = (product) => {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   return productDate > thirtyDaysAgo;
+};
+
+// Verificar si un producto tiene precios de preventa
+const hasPreventaPricesSimilar = (product) => {
+  return product.precio_preventa || 
+         product.precio_preventa_mayorista || 
+         product.precio_preventa_distribuidor;
+};
+
+// Funciones para manejar los detalles de precios
+const togglePriceDetails = (productId) => {
+  const index = expandedPriceDetails.value.indexOf(productId);
+  if (index > -1) {
+    expandedPriceDetails.value.splice(index, 1);
+  } else {
+    expandedPriceDetails.value.push(productId);
+  }
+};
+
+const isPriceExpanded = (productId) => {
+  return expandedPriceDetails.value.includes(productId);
 };
 
 const addToCartSimilar = async (product) => {
@@ -1161,8 +1356,8 @@ const navegarAProducto = async (productId) => {
     originalPrice.value = dato.value.precio;
 
     // Establecer cantidad inicial según si hay precio de preventa
-    if (hasPreventaPrice.value) {
-      quantity.value = cantidadMinimaPreventa.value;
+    if (hasPreventaEspecialPrice.value) {
+      quantity.value = cantidadMinimaPreventaEspecial.value;
     } else {
       quantity.value = cantidadMinima.value;
     }
@@ -1287,8 +1482,8 @@ const verProducto = async () => {
     });
 
     // Establecer cantidad inicial según si hay precio de preventa
-    if (hasPreventaPrice.value) {
-      quantity.value = cantidadMinimaPreventa.value;
+    if (hasPreventaEspecialPrice.value) {
+      quantity.value = cantidadMinimaPreventaEspecial.value;
     } else {
       quantity.value = cantidadMinima.value;
     }
@@ -1499,20 +1694,23 @@ const ensureSelectedThumbnailVisible = () => {
   display: none;
 }
 
-/* Precio Unificado - Más limpio */
-.unified-price-display {
+/* Sección de Precios Mejorada */
+.price-section {
+  margin-bottom: 1.5rem;
   background: #f8f9fa;
   border-radius: 0.75rem;
-  padding: 1rem;
-  margin-bottom: 1rem;
+  padding: 1.25rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border-left: 4px solid #2ecc71;
   transition: all 0.3s ease;
 }
 
-.unified-price-display:hover {
+.price-section:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.price-type-indicator {
+  margin-bottom: 0.75rem;
 }
 
 .price-badge {
@@ -1523,16 +1721,23 @@ const ensureSelectedThumbnailVisible = () => {
   border-radius: 2rem;
   font-size: 0.8rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
   color: white;
 }
 
-.price-badge.preventa {
+.price-badge.preventa-especial {
   background: #3498db;
 }
 
-.price-badge.regular {
+.price-badge.preventa-estandar {
   background: #2ecc71;
+}
+
+.price-badge.regular {
+  background: #7f8c8d;
+}
+
+.main-price-display {
+  margin-bottom: 1rem;
 }
 
 .price-value-display {
@@ -1572,9 +1777,9 @@ const ensureSelectedThumbnailVisible = () => {
   font-weight: 600;
 }
 
-/* Selector de Tipo de Precio - Simplificado */
+/* Selector de Tipo de Precio Mejorado */
 .price-type-selector {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .price-tabs {
@@ -1610,8 +1815,85 @@ const ensureSelectedThumbnailVisible = () => {
   box-shadow: inset 0 -2px 0 #2ecc71;
 }
 
-.price-tab:hover:not(.active) {
+.price-tab:hover:not(.active):not(:disabled) {
   background: #e9ecef;
+}
+
+.price-tab:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Comparación de Precios */
+.price-comparison {
+  margin-top: 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.comparison-header {
+  padding: 0.75rem;
+  background: #f5f5f5;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #333;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.comparison-body {
+  padding: 0.75rem;
+}
+
+.comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.comparison-item {
+  background: #f9f9f9;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  text-align: center;
+}
+
+.comparison-label {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: #666;
+  font-size: 0.8rem;
+}
+
+.comparison-value {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+  color: #333;
+}
+
+.comparison-range {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.savings-info {
+  background: #e8f5e9;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  color: #2e7d32;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.savings-info span {
+  font-weight: 700;
 }
 
 /* Cabecera Móvil Mejorada */
@@ -1646,18 +1928,6 @@ const ensureSelectedThumbnailVisible = () => {
 .back-button:active {
   transform: scale(0.95);
   background: #e9ecef;
-}
-
-.logo-container {
-  height: 40px;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-}
-
-.logo-img {
-  height: 100%;
-  width: auto;
 }
 
 .mobile-share-button-header {
@@ -2079,6 +2349,27 @@ const ensureSelectedThumbnailVisible = () => {
   font-weight: 500;
 }
 
+.quantity-status {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background-color: #e8f5e9;
+  color: #388e3c;
+}
+
+.quantity-status.warning {
+  background-color: #fff8e1;
+  color: #ff8f00;
+}
+
+.quantity-status.error {
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+
 .quantity-controls {
   display: flex;
   align-items: center;
@@ -2137,7 +2428,7 @@ const ensureSelectedThumbnailVisible = () => {
   margin: 0;
 }
 
-.preventa-indicator {
+.price-type-active-indicator {
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -2148,7 +2439,7 @@ const ensureSelectedThumbnailVisible = () => {
   animation: fadeIn 0.3s ease;
 }
 
-.preventa-indicator i {
+.price-type-active-indicator i {
   font-size: 0.9rem;
 }
 
@@ -2646,6 +2937,11 @@ const ensureSelectedThumbnailVisible = () => {
   animation: pulse 2s infinite;
 }
 
+.badge-preventa {
+  background: linear-gradient(45deg, #ed8936, #dd6b20);
+  color: white;
+}
+
 @keyframes pulse {
   0% {
     transform: scale(1);
@@ -2786,233 +3082,178 @@ const ensureSelectedThumbnailVisible = () => {
   }
 }
 
-/* Precios */
+/* Contenedor de precios mejorado */
 .prices-container {
+  margin-top: 0.5rem;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.prices-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  background: linear-gradient(to right, #f8fafc, #edf2f7);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.prices-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #4a5568;
+}
+
+.toggle-prices-btn {
+  background: none;
+  border: none;
+  color: #718096;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.toggle-prices-btn:hover {
+  background-color: #e2e8f0;
+  color: #4a5568;
+}
+
+/* Detalles de precios expandibles */
+.price-details {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  opacity: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0 0.5rem;
+}
+
+.price-details.expanded {
+  max-height: 300px;
+  opacity: 1;
+  padding: 0.5rem;
+}
+
+/* Tarjetas de precio */
+.price-card {
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #edf2f7;
+}
+
+.price-card.special {
+  border-left: 3px solid #ed8936;
+}
+
+.price-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  background-color: #f7fafc;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.price-type {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #4a5568;
+}
+
+.price-value {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+.price-card.special .price-value {
+  color: #dd6b20;
+}
+
+.price-card-body {
+  padding: 0.5rem;
+}
+
+.quantity-range {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  margin-top: 0.5rem;
 }
 
-.price-item {
+.quantity-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.65rem;
+  color: #718096;
+}
+
+.quantity-label {
+  font-weight: 600;
+}
+
+.quantity-value {
+  color: #4a5568;
+}
+
+/* Vista resumida de precios */
+.prices-summary {
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.7rem;
+}
+
+.summary-item.special {
+  font-weight: 700;
+}
+
+.summary-label {
+  color: #4a5568;
+  font-weight: 600;
+}
+
+.summary-content {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.price-label {
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: #4a5568;
-  min-width: 4rem;
-}
-
-.price-value {
-  font-size: 0.85rem;
+.summary-price {
   font-weight: 700;
   color: #2d3748;
 }
 
-.price-value.with-discount {
-  text-decoration: line-through;
-  color: #a0aec0;
-  font-weight: 500;
+.summary-item.special .summary-price {
+  color: #dd6b20;
 }
 
-.price-value.sale {
-  color: #e53e3e;
-}
-
-.price-value.preventa {
-  color: #e53e3e;
-}
-
-@media (min-width: 768px) {
-  .prices-container {
-    margin-top: 0.75rem;
-  }
-
-  .price-label {
-    font-size: 0.75rem;
-  }
-
-  .price-value {
-    font-size: 0.95rem;
-  }
-}
-
-@media (min-width: 1200px) {
-  .price-value {
-    font-size: 1.1rem;
-  }
-  .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 1.5rem;
-  }
-  .product-name {
-    font-size: 1rem;
-    height: 2.8rem;
-  }
-}
-
-@media (min-width: 992px) and (max-width: 1199px) {
-  .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1.25rem;
-  }
-}
-
-@media (min-width: 768px) and (max-width: 991px) {
-  .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 1rem;
-  }
-
-  .product-actions-bottom {
-    opacity: 0.9;
-  }
-
-  .nav-button {
-    opacity: 0.7;
-  }
-}
-
-@media (min-width: 576px) and (max-width: 767px) {
-  .recently-arrived {
-    padding: 2.5rem 0;
-  }
-
-  .products-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.75rem;
-  }
-
-  .product-actions-bottom {
-    opacity: 1;
-    padding: 0.4rem;
-  }
-
-  .action-button {
-    width: 28px;
-    height: 28px;
-  }
-
-  .nav-button {
-    opacity: 0.8;
-    width: 28px;
-    height: 28px;
-  }
-}
-
-@media (min-width: 480px) and (max-width: 575px) {
-  .recently-arrived {
-    padding: 2rem 0;
-  }
-
-  .products-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.5rem;
-  }
-
-  .product-info {
-    padding: 0.5rem;
-  }
-
-  .product-name {
-    font-size: 0.8rem;
-    height: 2.2rem;
-    margin-bottom: 0.25rem;
-  }
-
-  .category {
-    font-size: 0.65rem;
-    margin-bottom: 0.25rem;
-  }
-
-  .action-button {
-    width: 26px;
-    height: 26px;
-    font-size: 0.7rem;
-  }
-
-  .nav-button {
-    width: 26px;
-    height: 26px;
-  }
-
-  .badge {
-    padding: 0.2rem 0.4rem;
-    font-size: 0.6rem;
-  }
-}
-
-@media (min-width: 400px) and (max-width: 479px) {
-  .recently-arrived {
-    padding: 1.5rem 0;
-  }
-
-  .products-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem;
-  }
-
-  .product-info {
-    padding: 0.5rem;
-  }
-
-  .product-name {
-    font-size: 0.8rem;
-    height: 2.2rem;
-    margin-bottom: 0.25rem;
-  }
-
-  .category {
-    font-size: 0.65rem;
-    margin-bottom: 0.25rem;
-  }
-}
-
-@media (max-width: 399px) {
-  .recently-arrived {
-    padding: 1.5rem 0;
-  }
-
-  .products-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem;
-  }
-
-  .product-info {
-    padding: 0.4rem;
-  }
-
-  .product-name {
-    font-size: 0.75rem;
-    height: 2.1rem;
-    margin-bottom: 0.25rem;
-    -webkit-line-clamp: 2;
-  }
-
-  .category {
-    font-size: 0.6rem;
-    margin-bottom: 0.25rem;
-  }
-
-  .action-button {
-    width: 24px;
-    height: 24px;
-    font-size: 0.65rem;
-  }
-
-  .nav-button {
-    width: 24px;
-    height: 24px;
-  }
-
-  .badge {
-    padding: 0.15rem 0.3rem;
-    font-size: 0.55rem;
-  }
+.summary-quantity {
+  font-size: 0.6rem;
+  color: #718096;
+  background-color: #edf2f7;
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
 }
 
 /* Barra Fija para Móvil */
@@ -3053,6 +3294,12 @@ const ensureSelectedThumbnailVisible = () => {
   font-size: 0.8rem;
   color: #999;
   text-decoration: line-through;
+}
+
+.price-type-label {
+  font-size: 0.7rem;
+  color: #666;
+  margin-top: 0.2rem;
 }
 
 .mobile-add-to-cart {

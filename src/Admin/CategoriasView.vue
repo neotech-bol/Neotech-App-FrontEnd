@@ -21,13 +21,13 @@
             <span class="input-group-text bg-light">
               <i class="fas fa-search"></i>
             </span>
-            <input type="text" class="form-control" placeholder="Buscar por nombre, título o subtítulo..." v-model="search"
-              @input="filtrarCategorias">
+            <input type="text" class="form-control" placeholder="Buscar por nombre, título o subtítulo..."
+              v-model="search" @input="filtrarCategorias">
             <button class="btn btn-outline-secondary" type="button" @click="search = ''" v-if="search">
               <i class="fas fa-times"></i>
             </button>
           </div>
-          
+
           <!-- Contador de resultados -->
           <div class="d-flex justify-content-between align-items-center mb-3">
             <p class="text-muted mb-0">
@@ -35,10 +35,12 @@
               Mostrando {{ categoriasFiltradas.length }} de {{ categorias.length }} categorías
             </p>
             <div class="btn-group">
-              <button class="btn btn-sm" :class="vistaActual === 'tabla' ? 'btn-primary' : 'btn-outline-primary'" @click="vistaActual = 'tabla'">
+              <button class="btn btn-sm" :class="vistaActual === 'tabla' ? 'btn-primary' : 'btn-outline-primary'"
+                @click="vistaActual = 'tabla'">
                 <i class="fas fa-table me-1"></i>Tabla
               </button>
-              <button class="btn btn-sm" :class="vistaActual === 'tarjetas' ? 'btn-primary' : 'btn-outline-primary'" @click="vistaActual = 'tarjetas'">
+              <button class="btn btn-sm" :class="vistaActual === 'tarjetas' ? 'btn-primary' : 'btn-outline-primary'"
+                @click="vistaActual = 'tarjetas'">
                 <i class="fas fa-th-large me-1"></i>Tarjetas
               </button>
             </div>
@@ -56,7 +58,8 @@
         </div>
 
         <!-- Table view -->
-        <div class="table-responsive" v-if="categoriasFiltradas.length > 0 && (vistaActual === 'tabla' || windowWidth >= 768)">
+        <div class="table-responsive"
+          v-if="categoriasFiltradas.length > 0 && (vistaActual === 'tabla' || windowWidth >= 768)">
           <table class="table table-hover align-middle mb-0">
             <thead class="bg-light">
               <tr class="text-center">
@@ -96,7 +99,8 @@
                 <td>
                   <div class="d-flex align-items-center">
                     <div class="category-image me-2">
-                      <img :src="item.banner" alt="Banner" class="img-thumbnail" style="width: 40px; height: 40px; object-fit: cover;">
+                      <img :src="item.banner" alt="Banner" class="img-thumbnail"
+                        style="width: 40px; height: 40px; object-fit: cover;">
                     </div>
                     <span>{{ item.nombre }}</span>
                   </div>
@@ -196,7 +200,8 @@
                 </div>
                 <div>
                   <h5 class="alert-heading">Información importante</h5>
-                  <p class="mb-0">Los campos marcados con <span class="text-danger fw-bold">*</span> son obligatorios.</p>
+                  <p class="mb-0">Los campos marcados con <span class="text-danger fw-bold">*</span> son obligatorios.
+                  </p>
                 </div>
               </div>
             </div>
@@ -214,18 +219,12 @@
                     <div class="card-body">
                       <div class="row g-3">
                         <div class="col-md-6">
-                          <label for="nombre" class="form-label fw-bold">Nombre <span class="text-danger">*</span></label>
+                          <label for="nombre" class="form-label fw-bold">Nombre <span
+                              class="text-danger">*</span></label>
                           <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-tag"></i></span>
-                            <input 
-                              type="text" 
-                              class="form-control" 
-                              :class="{ 'is-invalid': errors.nombre }" 
-                              id="nombre"
-                              v-model="formulario.nombre" 
-                              placeholder="Ej: Motocicletas"
-                              required
-                            >
+                            <input type="text" class="form-control" :class="{ 'is-invalid': errors.nombre }" id="nombre"
+                              v-model="formulario.nombre" placeholder="Ej: Motocicletas" required>
                             <div class="invalid-feedback" v-if="errors.nombre">
                               {{ errors.nombre[0] }}
                             </div>
@@ -236,16 +235,12 @@
                           <small class="text-muted">Nombre principal de la categoría</small>
                         </div>
                         <div class="col-md-6">
-                          <label for="catalogo" class="form-label fw-bold">Catálogo <span class="text-danger">*</span></label>
+                          <label for="catalogo" class="form-label fw-bold">Catálogo <span
+                              class="text-danger">*</span></label>
                           <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-book"></i></span>
-                            <select 
-                              class="form-select" 
-                              id="catalogo" 
-                              v-model="formulario.catalogo_id"
-                              :class="{ 'is-invalid': errors.catalogo_id }"
-                              required
-                            >
+                            <select class="form-select" id="catalogo" v-model="formulario.catalogo_id"
+                              :class="{ 'is-invalid': errors.catalogo_id }" required>
                               <option value="">Seleccione un catálogo</option>
                               <option :value="item.id" v-for="item in catalogos" :key="item.id">
                                 {{ item.nombre }}
@@ -276,18 +271,12 @@
                     <div class="card-body">
                       <div class="row g-3">
                         <div class="col-md-6">
-                          <label for="titulo" class="form-label fw-bold">Título <span class="text-danger">*</span></label>
+                          <label for="titulo" class="form-label fw-bold">Título <span
+                              class="text-danger">*</span></label>
                           <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-heading"></i></span>
-                            <input 
-                              type="text" 
-                              class="form-control" 
-                              :class="{ 'is-invalid': errors.titulo }" 
-                              id="titulo"
-                              v-model="formulario.titulo" 
-                              placeholder="Ej: Movilidad Inteligente"
-                              required
-                            >
+                            <input type="text" class="form-control" :class="{ 'is-invalid': errors.titulo }" id="titulo"
+                              v-model="formulario.titulo" placeholder="Ej: Movilidad Inteligente" required>
                             <div class="invalid-feedback" v-if="errors.titulo">
                               {{ errors.titulo[0] }}
                             </div>
@@ -298,18 +287,13 @@
                           <small class="text-muted">Título principal que se mostrará en la página</small>
                         </div>
                         <div class="col-md-6">
-                          <label for="subtitulo" class="form-label fw-bold">Subtítulo <span class="text-danger">*</span></label>
+                          <label for="subtitulo" class="form-label fw-bold">Subtítulo <span
+                              class="text-danger">*</span></label>
                           <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-align-left"></i></span>
-                            <input 
-                              type="text" 
-                              class="form-control" 
-                              :class="{ 'is-invalid': errors.subtitulo }" 
-                              id="subtitulo"
-                              v-model="formulario.subtitulo" 
-                              placeholder="Ej: Velocidad, diseño y tecnología en cada modelo"
-                              required
-                            >
+                            <input type="text" class="form-control" :class="{ 'is-invalid': errors.subtitulo }"
+                              id="subtitulo" v-model="formulario.subtitulo"
+                              placeholder="Ej: Velocidad, diseño y tecnología en cada modelo" required>
                             <div class="invalid-feedback" v-if="errors.subtitulo">
                               {{ errors.subtitulo[0] }}
                             </div>
@@ -323,13 +307,8 @@
                           <label for="descripcion" class="form-label fw-bold">Descripción</label>
                           <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-align-justify"></i></span>
-                            <textarea 
-                              class="form-control" 
-                              id="descripcion" 
-                              v-model="formulario.descripcion" 
-                              rows="3"
-                              placeholder="Describa la categoría..."
-                            ></textarea>
+                            <textarea class="form-control" id="descripcion" v-model="formulario.descripcion" rows="3"
+                              placeholder="Describa la categoría..."></textarea>
                           </div>
                           <small class="text-muted">Descripción detallada de la categoría (opcional)</small>
                         </div>
@@ -349,18 +328,12 @@
                     <div class="card-body">
                       <div class="row">
                         <div class="col-md-8">
-                          <label for="banner" class="form-label fw-bold">Seleccionar imagen <span v-if="!posicion" class="text-danger">*</span></label>
+                          <label for="banner" class="form-label fw-bold">Seleccionar imagen <span v-if="!posicion"
+                              class="text-danger">*</span></label>
                           <div class="input-group mb-3">
                             <span class="input-group-text"><i class="fas fa-upload"></i></span>
-                            <input 
-                              type="file" 
-                              class="form-control" 
-                              :class="{ 'is-invalid': errors.banner }" 
-                              id="banner"
-                              @change="obtenerImagen($event)"
-                              accept="image/*"
-                              :required="!posicion"
-                            >
+                            <input type="file" class="form-control" :class="{ 'is-invalid': errors.banner }" id="banner"
+                              @change="obtenerImagen($event)" accept="image/*" :required="!posicion">
                             <div class="invalid-feedback" v-if="errors.banner">
                               {{ errors.banner[0] }}
                             </div>
@@ -378,7 +351,9 @@
                           <div v-if="imagenPreview" class="border p-2 rounded bg-white">
                             <img :src="imagenPreview" alt="Vista previa" class="img-fluid" style="max-height: 150px;">
                           </div>
-                          <div v-else class="border p-2 rounded bg-white d-flex align-items-center justify-content-center" style="height: 150px;">
+                          <div v-else
+                            class="border p-2 rounded bg-white d-flex align-items-center justify-content-center"
+                            style="height: 150px;">
                             <span class="text-muted">Vista previa no disponible</span>
                           </div>
                         </div>
@@ -401,12 +376,8 @@
                 <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">
                   <i class="fas fa-times me-1"></i>Cancelar
                 </button>
-                <button 
-                  type="button" 
-                  class="btn" 
-                  :class="posicion ? 'btn-warning' : 'btn-primary'"
-                  @click="validarYGuardar"
-                >
+                <button type="button" class="btn" :class="posicion ? 'btn-warning' : 'btn-primary'"
+                  @click="validarYGuardar">
                   <i class="fas" :class="posicion ? 'fa-save me-1' : 'fa-plus me-1'"></i>
                   {{ posicion ? 'Actualizar' : 'Guardar' }}
                 </button>
@@ -431,7 +402,8 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="card border-0 shadow-sm mb-3">
-                  <img :src="categoriaSeleccionada.banner" alt="Banner" class="card-img-top rounded-top" style="height: 200px; object-fit: cover;">
+                  <img :src="categoriaSeleccionada.banner" alt="Banner" class="card-img-top rounded-top"
+                    style="height: 200px; object-fit: cover;">
                   <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                       <h4 class="card-title mb-0">{{ categoriaSeleccionada.nombre }}</h4>
@@ -489,14 +461,15 @@
                 </div>
               </div>
             </div>
-            
+
             <!-- Productos -->
             <div class="card border-0 shadow-sm mt-4">
               <div class="card-header bg-light d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
                   <i class="fas fa-box me-2"></i>Productos
                 </h5>
-                <span class="badge bg-info text-dark">{{ categoriaSeleccionada.productos?.length || 0 }} productos</span>
+                <span class="badge bg-info text-dark">{{ categoriaSeleccionada.productos?.length || 0 }}
+                  productos</span>
               </div>
               <div class="card-body">
                 <div v-if="categoriaSeleccionada.productos && categoriaSeleccionada.productos.length > 0">
@@ -537,7 +510,8 @@
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
               <i class="fas fa-times me-1"></i>Cerrar
             </button>
-            <button type="button" class="btn btn-primary" @click="mostrarCategoria(categoriaSeleccionada.id)" v-if="categoriaSeleccionada">
+            <button type="button" class="btn btn-primary" @click="mostrarCategoria(categoriaSeleccionada.id)"
+              v-if="categoriaSeleccionada">
               <i class="fas fa-edit me-1"></i>Editar
             </button>
           </div>
@@ -552,6 +526,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Modal } from 'bootstrap/dist/js/bootstrap.bundle.min';
 import { indexCatalogosactives } from '@/Services/CatalogoService';
 import { destroyCategoria, indexCategorias, showCategoria, storeCategoria, updateCategoria } from '@/Services/CategoriaService';
+import Swal from 'sweetalert2';
 
 const categorias = ref([]);
 const catalogos = ref([]);
@@ -589,7 +564,7 @@ onMounted(() => {
   detallesModal = new Modal(document.getElementById('detallesModal'));
   listarCategorias();
   mostrarCatalogos();
-  
+
   // Agregar event listener para el cambio de tamaño de ventana
   window.addEventListener('resize', actualizarAnchoPantalla);
 });
@@ -602,7 +577,7 @@ onUnmounted(() => {
 const categoriasFiltradas = computed(() => {
   // Primero filtrar por búsqueda
   let resultado = categorias.value;
-  
+
   if (search.value) {
     resultado = resultado.filter(categoria =>
       categoria.nombre.toLowerCase().includes(search.value.toLowerCase()) ||
@@ -610,11 +585,11 @@ const categoriasFiltradas = computed(() => {
       categoria.subtitulo.toLowerCase().includes(search.value.toLowerCase())
     );
   }
-  
+
   // Luego ordenar según el campo y dirección seleccionados
   return resultado.sort((a, b) => {
     let valorA, valorB;
-    
+
     if (ordenamiento.value.campo === 'productos') {
       valorA = a.productos?.length || 0;
       valorB = b.productos?.length || 0;
@@ -622,7 +597,7 @@ const categoriasFiltradas = computed(() => {
       valorA = a[ordenamiento.value.campo];
       valorB = b[ordenamiento.value.campo];
     }
-    
+
     // Ordenar strings
     if (typeof valorA === 'string') {
       if (ordenamiento.value.direccion === 'asc') {
@@ -631,7 +606,7 @@ const categoriasFiltradas = computed(() => {
         return valorB.localeCompare(valorA);
       }
     }
-    
+
     // Ordenar números
     if (ordenamiento.value.direccion === 'asc') {
       return valorA - valorB;
@@ -684,42 +659,42 @@ const validarFormulario = () => {
   // Validar campos requeridos
   const form = document.getElementById('categoriaForm');
   formValidado.value = true;
-  
+
   if (!form.checkValidity()) {
     form.classList.add('was-validated');
     return false;
   }
-  
+
   // Validaciones adicionales
   let esValido = true;
   errors.value = {};
-  
+
   if (!formulario.value.nombre) {
     errors.value.nombre = ['El campo nombre es obligatorio.'];
     esValido = false;
   }
-  
+
   if (!formulario.value.titulo) {
     errors.value.titulo = ['El campo título es obligatorio.'];
     esValido = false;
   }
-  
+
   if (!formulario.value.subtitulo) {
     errors.value.subtitulo = ['El campo subtítulo es obligatorio.'];
     esValido = false;
   }
-  
+
   if (!formulario.value.catalogo_id) {
     errors.value.catalogo_id = ['Debe seleccionar un catálogo.'];
     esValido = false;
   }
-  
+
   // Solo validar banner si es un nuevo registro
   if (!posicion.value && !formulario.value.banner) {
     errors.value.banner = ['La imagen banner es obligatoria.'];
     esValido = false;
   }
-  
+
   return esValido;
 };
 
@@ -754,13 +729,18 @@ const guardarCategoria = async () => {
     }
     await listarCategorias();
     categoriaModal.hide();
-    
-    // Mostrar mensaje de éxito
-    alert(posicion.value ? 'Categoría actualizada correctamente' : 'Categoría creada correctamente');
+
+    // Mostrar mensaje de éxito con SweetAlert
+    await Swal.fire({
+      title: 'Éxito',
+      text: posicion.value ? 'Categoría actualizada correctamente' : 'Categoría creada correctamente',
+      icon: 'success',
+      confirmButtonText: 'Aceptar'
+    });
   } catch (error) {
     if (error.response && error.response.status === 422) {
       errors.value = error.response.data.errors;
-      
+
       // Scroll al primer error
       setTimeout(() => {
         const primerError = document.querySelector('.is-invalid');
@@ -770,7 +750,12 @@ const guardarCategoria = async () => {
       }, 100);
     } else {
       console.error('Error al guardar categoría:', error);
-      alert('Error al guardar la categoría. Intente nuevamente.');
+      await Swal.fire({
+        title: 'Error',
+        text: 'Error al guardar la categoría. Intente nuevamente.',
+        icon: 'error',
+        confirmButtonText: 'Aceptar'
+      });
     }
   }
 };
@@ -779,12 +764,26 @@ const cambiarEstado = async (id) => {
   try {
     await destroyCategoria(id);
     await listarCategorias();
+    
+    // Mostrar mensaje de éxito con SweetAlert
+    await Swal.fire({
+      title: 'Éxito',
+      text: 'Estado de la categoría actualizado correctamente',
+      icon: 'success',
+      confirmButtonText: 'Aceptar'
+    });
   } catch (error) {
     console.error('Error al cambiar estado de la categoría:', error);
-    alert('Error al cambiar el estado de la categoría. Intente nuevamente.');
+    
+    // Mostrar mensaje de error con SweetAlert
+    await Swal.fire({
+      title: 'Error',
+      text: 'Error al cambiar el estado de la categoría. Intente nuevamente.',
+      icon: 'error',
+      confirmButtonText: 'Aceptar'
+    });
   }
 };
-
 const mostrarCategoria = async (id) => {
   try {
     const { data } = await showCategoria(id);
@@ -799,12 +798,12 @@ const mostrarCategoria = async (id) => {
     imagenPreview.value = data.dato.banner;
     posicion.value = id;
     errors.value = {};
-    
+
     // Si el modal de detalles está abierto, cerrarlo
     if (detallesModal._isShown) {
       detallesModal.hide();
     }
-    
+
     // Mostrar el modal de edición
     categoriaModal.show();
   } catch (error) {

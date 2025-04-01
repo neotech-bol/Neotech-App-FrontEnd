@@ -338,13 +338,14 @@
                                                     <small class="text-muted">Opcional</small>
                                                 </div>
                                                 <div class="col-md-6">
-                                                    <label for="fecha_de_nacimiento" class="form-label fw-bold">Fecha de Nacimiento <span
-                                                            class="text-danger">*</span></label>
+                                                    <label for="fecha_de_nacimiento" class="form-label fw-bold">Fecha de
+                                                        Nacimiento <span class="text-danger">*</span></label>
                                                     <div class="input-group">
                                                         <span class="input-group-text"><i
                                                                 class="fas fa-calendar-alt"></i></span>
                                                         <input type="date" class="form-control"
-                                                            :class="{ 'is-invalid': errors?.fecha_de_nacimiento }" id="fecha_de_nacimiento"
+                                                            :class="{ 'is-invalid': errors?.fecha_de_nacimiento }"
+                                                            id="fecha_de_nacimiento"
                                                             v-model="formulario.fecha_de_nacimiento" required>
                                                         <div class="invalid-feedback" v-if="errors.fecha_de_nacimiento">
                                                             {{ errors.fecha_de_nacimiento[0] }}
@@ -373,6 +374,36 @@
                                                         </div>
                                                         <div class="invalid-feedback" v-else>
                                                             Debe seleccionar un género
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-12">
+                                                    <label for="pais" class="form-label fw-bold">País <span
+                                                            class="text-danger">*</span></label>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text"><i
+                                                                class="fas fa-globe"></i></span>
+                                                        <select class="form-select"
+                                                            :class="{ 'is-invalid': errors?.pais }" id="pais"
+                                                            v-model="formulario.pais" required>
+                                                            <option value="">Seleccione un país</option>
+                                                            <option value="Bolivia">Bolivia</option>
+                                                            <option value="Argentina">Argentina</option>
+                                                            <option value="Brasil">Brasil</option>
+                                                            <option value="Chile">Chile</option>
+                                                            <option value="Colombia">Colombia</option>
+                                                            <option value="Ecuador">Ecuador</option>
+                                                            <option value="Paraguay">Paraguay</option>
+                                                            <option value="Perú">Perú</option>
+                                                            <option value="Uruguay">Uruguay</option>
+                                                            <option value="Venezuela">Venezuela</option>
+                                                            <!-- Puedes agregar más países según sea necesario -->
+                                                        </select>
+                                                        <div class="invalid-feedback" v-if="errors?.pais">
+                                                            {{ errors.pais[0] }}
+                                                        </div>
+                                                        <div class="invalid-feedback" v-else>
+                                                            El país es obligatorio
                                                         </div>
                                                     </div>
                                                 </div>
@@ -570,13 +601,20 @@
                                             </li>
                                             <li
                                                 class="list-group-item d-flex justify-content-between align-items-center">
-                                                <span><i class="fas fa-calendar-alt me-2"></i>Fecha de Nacimiento:</span>
-                                                <span>{{ formatearFecha(usuarioSeleccionado.fecha_de_nacimiento) }}</span>
+                                                <span><i class="fas fa-calendar-alt me-2"></i>Fecha de
+                                                    Nacimiento:</span>
+                                                <span>{{ formatearFecha(usuarioSeleccionado.fecha_de_nacimiento)
+                                                }}</span>
                                             </li>
                                             <li
                                                 class="list-group-item d-flex justify-content-between align-items-center">
                                                 <span><i class="fas fa-venus-mars me-2"></i>Género:</span>
                                                 <span>{{ formatearGenero(usuarioSeleccionado.genero) }}</span>
+                                            </li>
+                                            <li
+                                                class="list-group-item d-flex justify-content-between align-items-center">
+                                                <span><i class="fas fa-globe"></i> País:</span>
+                                                <span>{{ usuarioSeleccionado.pais }}</span>
                                             </li>
                                         </ul>
                                     </div>
@@ -658,6 +696,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Modal } from 'bootstrap/dist/js/bootstrap.bundle.min';
 import { indexRoles } from '@/Services/RolesPermisosService';
 import { changeStatus, indexUsers, showUser, storeUserAdmin, updateUser } from '@/Services/UsuarioService';
+import Swal from 'sweetalert2';
 
 const formulario = ref({
     nombre: '',
@@ -772,6 +811,7 @@ const abrirModal = () => {
         genero: '',
         role: '',
         email: '',
+        pais: '',
     };
     errors.value = {};
     posicion.value = '';
@@ -837,11 +877,21 @@ const guardarUserAndUpdate = async () => {
     errors.value = {};
     try {
         if (posicion.value) {
-            await updateUser(posicion.value, formulario.value);
-            mostrarNotificacion('Usuario actualizado correctamente', 'success');
+            await updateUser (posicion.value, formulario.value);
+            await Swal.fire({
+                title: 'Éxito',
+                text: 'Usuario actualizado correctamente',
+                icon: 'success',
+                confirmButtonText: 'Aceptar'
+            });
         } else {
             await storeUserAdmin(formulario.value);
-            mostrarNotificacion('Usuario creado correctamente', 'success');
+            await Swal.fire({
+                title: 'Éxito',
+                text: 'Usuario creado correctamente',
+                icon: 'success',
+                confirmButtonText: 'Aceptar'
+            });
         }
         listarUsuarios();
         userModal.hide();
@@ -858,7 +908,12 @@ const guardarUserAndUpdate = async () => {
             }, 100);
         } else {
             console.error('Error al guardar usuario:', error);
-            mostrarNotificacion('Error al guardar usuario', 'error');
+            await Swal.fire({
+                title: 'Error',
+                text: 'Error al guardar usuario',
+                icon: 'error',
+                confirmButtonText: 'Aceptar'
+            });
         }
     }
 };
@@ -879,6 +934,7 @@ const mostarUser = async (id) => {
             genero: data.dato.genero,
             role: data.dato.roles.length > 0 ? data.dato.roles[0].name : '',
             email: data.dato.email,
+            pais: data.dato.pais,
         };
         posicion.value = id;
         formValidado.value = false;
@@ -900,10 +956,20 @@ const cambiarEstado = async (id) => {
     try {
         await changeStatus(id);
         listarUsuarios();
-        mostrarNotificacion('Estado del usuario actualizado correctamente', 'success');
+        await Swal.fire({
+            title: 'Éxito',
+            text: 'Estado del usuario actualizado correctamente',
+            icon: 'success',
+            confirmButtonText: 'Aceptar'
+        });
     } catch (error) {
         console.error('Error al cambiar estado:', error);
-        mostrarNotificacion('Error al cambiar el estado del usuario', 'error');
+        await Swal.fire({
+            title: 'Error',
+            text: 'Error al cambiar el estado del usuario',
+            icon: 'error',
+            confirmButtonText: 'Aceptar'
+        });
     }
 };
 

@@ -154,6 +154,11 @@ const menuItems = ref([
     name: 'Testimonios',
     path: '/testimonios-admin',
     icon: 'bi-chat-left-text',
+  },
+  {
+    name: 'Citas',
+    path: '/citas-admin',
+    icon: 'bi-calendar',
   }
 ]);
 

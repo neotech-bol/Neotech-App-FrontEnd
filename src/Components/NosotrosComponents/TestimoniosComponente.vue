@@ -116,6 +116,7 @@
 
 <script setup>
 import { indexTestimoniosActivos, storeTestimonio } from '@/Services/TestimoniosService';
+import Swal from 'sweetalert2';
 import { ref, computed, onMounted, onBeforeUnmount, inject, watchEffect, nextTick, toRaw } from 'vue';
 
 const currentIndex = ref(0);
@@ -393,8 +394,14 @@ const submitTestimonial = async () => {
     const response = await storeTestimonio(formData);
     console.log('Testimonio enviado:', response);
     
-    // Mostrar mensaje de éxito
-    alert('¡Gracias por compartir tu experiencia! Tu testimonio será revisado antes de ser publicado.');
+    // Mostrar mensaje de éxito con SweetAlert2
+    Swal.fire({
+      title: '¡Gracias por compartir tu experiencia!',
+      text: 'Tu testimonio será revisado antes de ser publicado.',
+      icon: 'success',
+      confirmButtonText: 'Aceptar',
+      timer: 3000 // Mostrar el mensaje por 3 segundos
+    });
     
     // Cerrar el modal y resetear el formulario
     showAddTestimonialForm.value = false;
@@ -407,7 +414,13 @@ const submitTestimonial = async () => {
     };
   } catch (error) {
     console.error('Error al enviar testimonio:', error);
-    alert('Hubo un problema al enviar tu testimonio. Por favor, inténtalo de nuevo.');
+    Swal.fire({
+      title: 'Error al enviar testimonio',
+      text: 'Hubo un problema al enviar tu testimonio. Por favor, inténtalo de nuevo.',
+      icon: 'error',
+      confirmButtonText: 'Aceptar',
+      timer: 3000 // Mostrar el mensaje por 3 segundos
+    });
   }
 };
 

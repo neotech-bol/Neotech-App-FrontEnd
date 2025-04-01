@@ -17,6 +17,12 @@
                 style="text-decoration: none; color: #838384;">Ayuda</a></router-link>
             <!--   <router-link to="/faq" style="text-decoration: none;" class="ms-2"><a href="#"
                 style="text-decoration: none; color: #838384;">FAQ</a></router-link> -->
+                          <!-- Botón de alternar tema -->
+          <button @click="themeStoreDark.toggleDarkMode" class="theme-toggle-btn"
+            :title="themeStoreDark.isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
+            <i v-if="!themeStoreDark.isDarkMode" class="fas fa-sun"></i>
+            <i v-else class="fas fa-moon"></i>
+          </button>
           </div>
         </div>
       </div>

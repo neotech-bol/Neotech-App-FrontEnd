@@ -27,7 +27,7 @@
               <i class="fas fa-times"></i>
             </button>
           </div>
-          
+
           <!-- Contador de resultados -->
           <div class="d-flex justify-content-between align-items-center mb-3">
             <p class="text-muted mb-0">
@@ -35,10 +35,12 @@
               Mostrando {{ catalogosFiltrados.length }} de {{ datos.length }} catálogos
             </p>
             <div class="btn-group">
-              <button class="btn btn-sm" :class="vistaActual === 'tabla' ? 'btn-primary' : 'btn-outline-primary'" @click="vistaActual = 'tabla'">
+              <button class="btn btn-sm" :class="vistaActual === 'tabla' ? 'btn-primary' : 'btn-outline-primary'"
+                @click="vistaActual = 'tabla'">
                 <i class="fas fa-table me-1"></i>Tabla
               </button>
-              <button class="btn btn-sm" :class="vistaActual === 'tarjetas' ? 'btn-primary' : 'btn-outline-primary'" @click="vistaActual = 'tarjetas'">
+              <button class="btn btn-sm" :class="vistaActual === 'tarjetas' ? 'btn-primary' : 'btn-outline-primary'"
+                @click="vistaActual = 'tarjetas'">
                 <i class="fas fa-th-large me-1"></i>Tarjetas
               </button>
             </div>
@@ -56,7 +58,8 @@
         </div>
 
         <!-- Table view -->
-        <div class="table-responsive" v-if="catalogosFiltrados.length > 0 && (vistaActual === 'tabla' || windowWidth >= 768)">
+        <div class="table-responsive"
+          v-if="catalogosFiltrados.length > 0 && (vistaActual === 'tabla' || windowWidth >= 768)">
           <table class="table table-hover align-middle mb-0">
             <thead class="bg-light">
               <tr>
@@ -219,7 +222,8 @@
                 </div>
                 <div>
                   <h5 class="alert-heading">Información importante</h5>
-                  <p class="mb-0">Los campos marcados con <span class="text-danger fw-bold">*</span> son obligatorios.</p>
+                  <p class="mb-0">Los campos marcados con <span class="text-danger fw-bold">*</span> son obligatorios.
+                  </p>
                 </div>
               </div>
             </div>
@@ -229,15 +233,8 @@
                 <label for="nombre" class="form-label fw-bold">Nombre <span class="text-danger">*</span></label>
                 <div class="input-group">
                   <span class="input-group-text"><i class="fas fa-tag"></i></span>
-                  <input 
-                    type="text" 
-                    class="form-control" 
-                    :class="{ 'is-invalid': errors.nombre }" 
-                    id="nombre"
-                    v-model="formulario.nombre" 
-                    placeholder="Ej: Vehículos Eléctricos"
-                    required
-                  >
+                  <input type="text" class="form-control" :class="{ 'is-invalid': errors.nombre }" id="nombre"
+                    v-model="formulario.nombre" placeholder="Ej: Vehículos Eléctricos" required>
                   <div class="invalid-feedback" v-if="errors.nombre">
                     {{ errors.nombre[0] }}
                   </div>
@@ -247,36 +244,23 @@
                 </div>
                 <small class="text-muted">Nombre principal que identificará al catálogo</small>
               </div>
-              
+
               <div class="mb-4">
                 <label for="descripcion" class="form-label fw-bold">Descripción</label>
                 <div class="input-group">
                   <span class="input-group-text"><i class="fas fa-align-left"></i></span>
-                  <textarea 
-                    class="form-control" 
-                    id="descripcion" 
-                    v-model="formulario.descripcion" 
-                    rows="3"
-                    placeholder="Describa el catálogo..."
-                  ></textarea>
+                  <textarea class="form-control" id="descripcion" v-model="formulario.descripcion" rows="3"
+                    placeholder="Describa el catálogo..."></textarea>
                 </div>
                 <small class="text-muted">Descripción detallada del catálogo (opcional)</small>
               </div>
-              
+
               <div class="mb-4">
                 <label for="orden" class="form-label fw-bold">Orden <span class="text-danger">*</span></label>
                 <div class="input-group">
                   <span class="input-group-text"><i class="fas fa-sort-numeric-down"></i></span>
-                  <input 
-                    type="number" 
-                    class="form-control" 
-                    :class="{ 'is-invalid': errors.orden }" 
-                    id="orden" 
-                    v-model="formulario.orden"
-                    min="1"
-                    required
-                    placeholder="Ej: 1, 2, 3..."
-                  >
+                  <input type="number" class="form-control" :class="{ 'is-invalid': errors.orden }" id="orden"
+                    v-model="formulario.orden" min="1" required placeholder="Ej: 1, 2, 3...">
                   <div class="invalid-feedback" v-if="errors.orden">
                     {{ errors.orden[0] }}
                   </div>
@@ -289,29 +273,20 @@
                   El orden determina la posición en que se mostrará este catálogo (menor número = mayor prioridad).
                 </div>
               </div>
-              
+
               <!-- Controles de orden rápido -->
               <div class="mb-4">
                 <label class="d-block mb-2 fw-bold">Selección rápida de orden:</label>
                 <div class="btn-group w-100">
-                  <button 
-                    type="button" 
-                    v-for="n in 5" 
-                    :key="n" 
-                    class="btn" 
+                  <button type="button" v-for="n in 5" :key="n" class="btn"
                     :class="formulario.orden == n ? 'btn-primary' : 'btn-outline-secondary'"
-                    @click="formulario.orden = n"
-                  >
+                    @click="formulario.orden = n">
                     {{ n }}
                   </button>
                 </div>
                 <div class="mt-2 text-center">
-                  <button 
-                    type="button" 
-                    class="btn btn-sm btn-outline-primary" 
-                    @click="sugerirOrdenAutomatico"
-                    title="Sugerir orden automáticamente"
-                  >
+                  <button type="button" class="btn btn-sm btn-outline-primary" @click="sugerirOrdenAutomatico"
+                    title="Sugerir orden automáticamente">
                     <i class="fas fa-magic me-1"></i>Sugerir orden automático
                   </button>
                 </div>
@@ -330,13 +305,8 @@
                 <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">
                   <i class="fas fa-times me-1"></i>Cancelar
                 </button>
-                <button 
-                  type="button" 
-                  class="btn" 
-                  :class="posicion ? 'btn-warning' : 'btn-primary'"
-                  @click="validarYGuardar"
-                  :disabled="!formularioValido"
-                >
+                <button type="button" class="btn" :class="posicion ? 'btn-warning' : 'btn-primary'"
+                  @click="validarYGuardar" :disabled="!formularioValido">
                   <i class="fas" :class="posicion ? 'fa-save me-1' : 'fa-plus me-1'"></i>
                   {{ posicion ? 'Actualizar' : 'Guardar' }}
                 </button>
@@ -368,7 +338,8 @@
                         {{ catalogoSeleccionado.estado ? 'Activo' : 'Inactivo' }}
                       </span>
                     </div>
-                    <p class="card-text" v-if="catalogoSeleccionado.descripcion">{{ catalogoSeleccionado.descripcion }}</p>
+                    <p class="card-text" v-if="catalogoSeleccionado.descripcion">{{ catalogoSeleccionado.descripcion }}
+                    </p>
                     <p class="card-text text-muted fst-italic" v-else>Sin descripción</p>
                   </div>
                 </div>
@@ -407,14 +378,15 @@
                 </div>
               </div>
             </div>
-            
+
             <!-- Categorías -->
             <div class="card border-0 shadow-sm mt-4">
               <div class="card-header bg-light d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
                   <i class="fas fa-folder me-2"></i>Categorías
                 </h5>
-                <span class="badge bg-info text-dark">{{ catalogoSeleccionado.categorias?.length || 0 }} categorías</span>
+                <span class="badge bg-info text-dark">{{ catalogoSeleccionado.categorias?.length || 0 }}
+                  categorías</span>
               </div>
               <div class="card-body">
                 <div v-if="catalogoSeleccionado.categorias && catalogoSeleccionado.categorias.length > 0">
@@ -454,7 +426,8 @@
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
               <i class="fas fa-times me-1"></i>Cerrar
             </button>
-            <button type="button" class="btn btn-primary" @click="mostrarCatalogo(catalogoSeleccionado.id)" v-if="catalogoSeleccionado">
+            <button type="button" class="btn btn-primary" @click="mostrarCatalogo(catalogoSeleccionado.id)"
+              v-if="catalogoSeleccionado">
               <i class="fas fa-edit me-1"></i>Editar
             </button>
           </div>
@@ -468,6 +441,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { Modal } from 'bootstrap/dist/js/bootstrap.bundle.min';
 import { destroyCatalogo, indexCatalogos, showCatalogo, storeCatalogo, updateCatalogo } from '@/Services/CatalogoService';
+import Swal from 'sweetalert2';
 
 const formulario = ref({
   nombre: '',
@@ -499,7 +473,7 @@ onMounted(() => {
   catalogoModal = new Modal(document.getElementById('catalogoModal'));
   detallesModal = new Modal(document.getElementById('detallesModal'));
   listarCatalogos();
-  
+
   // Agregar event listener para el cambio de tamaño de ventana
   window.addEventListener('resize', actualizarAnchoPantalla);
 });
@@ -534,18 +508,18 @@ const sugerirOrdenAutomatico = () => {
 const catalogosFiltrados = computed(() => {
   // Primero filtrar por búsqueda
   let resultado = datos.value;
-  
+
   if (search.value) {
     resultado = resultado.filter(catalogo =>
       catalogo.nombre.toLowerCase().includes(search.value.toLowerCase()) ||
       (catalogo.descripcion && catalogo.descripcion.toLowerCase().includes(search.value.toLowerCase()))
     );
   }
-  
+
   // Luego ordenar según el campo y dirección seleccionados
   return resultado.sort((a, b) => {
     let valorA, valorB;
-    
+
     if (ordenamiento.value.campo === 'categorias') {
       valorA = a.categorias?.length || 0;
       valorB = b.categorias?.length || 0;
@@ -553,7 +527,7 @@ const catalogosFiltrados = computed(() => {
       valorA = a[ordenamiento.value.campo];
       valorB = b[ordenamiento.value.campo];
     }
-    
+
     // Ordenar strings
     if (typeof valorA === 'string') {
       if (ordenamiento.value.direccion === 'asc') {
@@ -562,7 +536,7 @@ const catalogosFiltrados = computed(() => {
         return valorB.localeCompare(valorA);
       }
     }
-    
+
     // Ordenar números
     if (ordenamiento.value.direccion === 'asc') {
       return valorA - valorB;
@@ -602,26 +576,26 @@ const validarFormulario = () => {
   // Validar campos requeridos
   const form = document.getElementById('catalogoForm');
   formValidado.value = true;
-  
+
   if (!form.checkValidity()) {
     form.classList.add('was-validated');
     return false;
   }
-  
+
   // Validaciones adicionales
   let esValido = true;
   errors.value = {};
-  
+
   if (!formulario.value.nombre) {
     errors.value.nombre = ['El campo nombre es obligatorio.'];
     esValido = false;
   }
-  
+
   if (!formulario.value.orden) {
     errors.value.orden = ['El campo orden es obligatorio.'];
     esValido = false;
   }
-  
+
   return esValido;
 };
 
@@ -660,17 +634,27 @@ const guardarCatalogo = async () => {
     if (posicion.value) {
       formData.append('_method', 'PUT');
       await updateCatalogo(posicion.value, formData);
-      mostrarNotificacion('Catálogo actualizado correctamente', 'success');
+      await Swal.fire({
+        title: 'Éxito',
+        text: 'Catálogo actualizado correctamente',
+        icon: 'success',
+        confirmButtonText: 'Aceptar'
+      });
     } else {
       await storeCatalogo(formData);
-      mostrarNotificacion('Catálogo creado correctamente', 'success');
+      await Swal.fire({
+        title: 'Éxito',
+        text: 'Catálogo creado correctamente',
+        icon: 'success',
+        confirmButtonText: 'Aceptar'
+      });
     }
     await listarCatalogos();
     catalogoModal.hide();
   } catch (error) {
     if (error.response && error.response.status === 422) {
       errors.value = error.response.data.errors;
-      
+
       // Scroll al primer error
       setTimeout(() => {
         const primerError = document.querySelector('.is-invalid');
@@ -680,7 +664,12 @@ const guardarCatalogo = async () => {
       }, 100);
     } else {
       console.error('Error al guardar catálogo:', error);
-      mostrarNotificacion('Error al guardar el catálogo', 'error');
+      await Swal.fire({
+        title: 'Error',
+        text: 'Error al guardar el catálogo',
+        icon: 'error',
+        confirmButtonText: 'Aceptar'
+      });
     }
   }
 };
@@ -696,12 +685,12 @@ const mostrarCatalogo = async (id) => {
     posicion.value = id;
     errors.value = {};
     formValidado.value = false;
-    
+
     // Si el modal de detalles está abierto, cerrarlo
     if (detallesModal._isShown) {
       detallesModal.hide();
     }
-    
+
     // Mostrar el modal de edición
     catalogoModal.show();
   } catch (error) {
@@ -714,10 +703,20 @@ const cambiarEstado = async (id) => {
   try {
     await destroyCatalogo(id);
     await listarCatalogos();
-    mostrarNotificacion('Estado del catálogo actualizado correctamente', 'success');
+    await Swal.fire({
+      title: 'Éxito',
+      text: 'Estado del catálogo actualizado correctamente',
+      icon: 'success',
+      confirmButtonText: 'Aceptar'
+    });
   } catch (error) {
     console.error('Error al cambiar estado del catálogo:', error);
-    mostrarNotificacion('Error al cambiar el estado del catálogo', 'error');
+    await Swal.fire({
+      title: 'Error',
+      text: 'Error al cambiar el estado del catálogo',
+      icon: 'error',
+      confirmButtonText: 'Aceptar'
+    });
   }
 };
 
@@ -773,14 +772,14 @@ const exportarCatalogos = () => {
     'Fecha Creación': formatearFecha(catalogo.created_at),
     'Última Actualización': formatearFecha(catalogo.updated_at)
   }));
-  
+
   // Convertir a CSV
   const headers = Object.keys(datosExportar[0]);
   const csvContent = [
     headers.join(','),
     ...datosExportar.map(row => headers.map(header => JSON.stringify(row[header])).join(','))
   ].join('\n');
-  
+
   // Crear un blob y descargar
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
@@ -791,7 +790,7 @@ const exportarCatalogos = () => {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  
+
   mostrarNotificacion('Catálogos exportados correctamente', 'success');
 };
 

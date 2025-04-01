@@ -48,8 +48,8 @@
               <tr class="text-center">
                 <th>ID</th>
                 <th>Nombre</th>
-                <th>Precio</th>
-                <th>Precio Preventa</th>
+                <th>Preventa Especial</th>
+                <th>Preventa Estándar</th>
                 <th>Categoría</th>
                 <th>Stock</th>
                 <th>Estado</th>
@@ -99,7 +99,11 @@
                   <strong>Precio:</strong> {{ formatearPrecio(item.precio) }}
                 </div>
                 <div class="product-detail">
-                  <strong>Precio Preventa:</strong> {{ item.precio_preventa ? formatearPrecio(item.precio_preventa) :
+                  <strong>Preventa Estándar:</strong> {{ item.precio_preventa_estandar ? formatearPrecio(item.precio_preventa_estandar) :
+                  'N/A' }}
+                </div>
+                <div class="product-detail">
+                  <strong>Preventa Especial:</strong> {{ item.precio_preventa_especial ? formatearPrecio(item.precio_preventa_especial) :
                   'N/A' }}
                 </div>
                 <div class="product-detail">
@@ -217,7 +221,19 @@
                           </div>
                         </div>
                         <div class="col-md-6">
-                          <label for="precio" class="form-label fw-bold">Precio <span
+                          <label for="categoria" class="form-label fw-bold">Categoría</label>
+                          <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-folder"></i></span>
+                            <select class="form-select" id="categoria" v-model="formulario.categoria_id">
+                              <option value="">Seleccione una categoría</option>
+                              <option :value="item.id" v-for="item in categorias" :key="item.id">
+                                {{ item.nombre }}
+                              </option>
+                            </select>
+                          </div>
+                        </div>
+<!--                         <div class="col-md-6">
+                          <label for="precio" class="form-label fw-bold">Precio Regular <span
                               class="text-danger">*</span></label>
                           <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-dollar-sign"></i></span>
@@ -232,40 +248,41 @@
                             </div>
                           </div>
                           <small class="text-muted">Ingrese el precio en bolivianos (BOB)</small>
-                        </div>
+                        </div> -->
                         <div class="col-md-6">
-                          <label for="precio_preventa" class="form-label fw-bold">Precio Preventa</label>
+                          <label for="precio_preventa_estandar" class="form-label fw-bold">Precio Preventa Estándar</label>
                           <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-dollar-sign"></i></span>
+                            <span class="input-group-text"><i class="fas fa-bolt"></i></span>
                             <input type="number" class="form-control" :class="{ 'is-invalid': errors.precio_preventa }"
-                              id="precio_preventa" v-model="formulario.precio_preventa" placeholder="Ej: 2000.00"
+                              id="precio_preventa" v-model="formulario.precio_preventa" placeholder="Ej: 2200.00"
                               min="0.01" step="0.01">
                             <div class="invalid-feedback" v-if="errors.precio_preventa">
                               {{ errors.precio_preventa[0] }}
                             </div>
                           </div>
-                          <small class="text-muted">Ingrese el precio de preventa en bolivianos (BOB)</small>
+                          <small class="text-muted">Precio para preventa estándar en bolivianos (BOB)</small>
                         </div>
                         <div class="col-md-6">
-                          <label for="categoria" class="form-label fw-bold">Categoría</label>
+                          <label for="precio_preventa_especial" class="form-label fw-bold">Precio Preventa Especial</label>
                           <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-folder"></i></span>
-                            <select class="form-select" id="categoria" v-model="formulario.categoria_id">
-                              <option value="">Seleccione una categoría</option>
-                              <option :value="item.id" v-for="item in categorias" :key="item.id">
-                                {{ item.nombre }}
-                              </option>
-                            </select>
+                            <span class="input-group-text"><i class="fas fa-star"></i></span>
+                            <input type="number" class="form-control" :class="{ 'is-invalid': errors.precio }"
+                              id="precio" v-model="formulario.precio" placeholder="Ej: 2000.00"
+                              min="0.01" step="0.01">
+                            <div class="invalid-feedback" v-if="errors.precio">
+                              {{ errors.precio[0] }}
+                            </div>
                           </div>
+                          <small class="text-muted">Precio para preventa especial en bolivianos (BOB)</small>
                         </div>
-                        <div class="col-md-6">
+<!--                         <div class="col-md-6">
                           <label for="cantidad" class="form-label fw-bold">Cantidad</label>
                           <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-boxes"></i></span>
                             <input type="number" class="form-control" id="cantidad" v-model="formulario.cantidad"
                               min="0" placeholder="Ej: 50">
                           </div>
-                        </div>
+                        </div> -->
                         <div class="col-12">
                           <label for="descripcion" class="form-label fw-bold">Descripción</label>
                           <textarea class="form-control" id="descripcion" v-model="formulario.descripcion" rows="3"
@@ -285,68 +302,116 @@
                       </h5>
                     </div>
                     <div class="card-body">
-                      <div class="row g-3">
-                        <div class="col-md-6">
-                          <label for="cantidad_minima" class="form-label fw-bold">Cantidad Mínima <span
-                              class="text-danger">*</span></label>
-                          <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-arrow-down"></i></span>
-                            <input type="number" class="form-control" :class="{ 'is-invalid': errors.cantidad_minima }"
-                              id="cantidad_minima" v-model="formulario.cantidad_minima" min="1" placeholder="Ej: 10"
-                              required>
-                            <div class="invalid-feedback" v-if="errors.cantidad_minima">
-                              {{ errors.cantidad_minima[0] }}
+                      <!-- Precio Regular -->
+                      <div class="mb-4">
+                        <h6 class="border-bottom pb-2 mb-3">
+                          <i class="fas fa-tag me-2"></i>Precio Regular
+                        </h6>
+                  <!--       <div class="row g-3">
+                          <div class="col-md-6">
+                            <label for="cantidad_minima" class="form-label fw-bold">Cantidad Mínima <span
+                                class="text-danger">*</span></label>
+                            <div class="input-group">
+                              <span class="input-group-text"><i class="fas fa-arrow-down"></i></span>
+                              <input type="number" class="form-control" :class="{ 'is-invalid': errors.cantidad_minima }"
+                                id="cantidad_minima" v-model="formulario.cantidad_minima" min="1" placeholder="Ej: 10"
+                                required>
+                              <div class="invalid-feedback" v-if="errors.cantidad_minima">
+                                {{ errors.cantidad_minima[0] }}
+                              </div>
+                              <div class="invalid-feedback" v-else>
+                                La cantidad mínima es obligatoria
+                              </div>
                             </div>
-                            <div class="invalid-feedback" v-else>
-                              La cantidad mínima es obligatoria
-                            </div>
+                            <small class="text-muted">Cantidad mínima para precio regular</small>
                           </div>
-                          <small class="text-muted">Cantidad mínima que se puede comprar</small>
+                          <div class="col-md-6">
+                            <label for="cantidad_maxima" class="form-label fw-bold">Cantidad Máxima <span
+                                class="text-danger">*</span></label>
+                            <div class="input-group">
+                              <span class="input-group-text"><i class="fas fa-arrow-up"></i></span>
+                              <input type="number" class="form-control" :class="{ 'is-invalid': errors.cantidad_maxima }"
+                                id="cantidad_maxima" v-model="formulario.cantidad_maxima" min="1" placeholder="Ej: 100"
+                                required>
+                              <div class="invalid-feedback" v-if="errors.cantidad_maxima">
+                                {{ errors.cantidad_maxima[0] }}
+                              </div>
+                              <div class="invalid-feedback" v-else>
+                                La cantidad máxima es obligatoria
+                              </div>
+                            </div>
+                            <small class="text-muted">Cantidad máxima para precio regular</small>
+                          </div>
+                        </div> -->
+                      </div>
+
+                      <!-- Preventa Estándar -->
+                      <div class="mb-4">
+                        <h6 class="border-bottom pb-2 mb-3">
+                          <i class="fas fa-bolt me-2"></i>Preventa Estándar
+                        </h6>
+                        <div class="row g-3">
+                          <div class="col-md-6">
+                            <label for="cantidad_minima_preventa" class="form-label fw-bold">Cantidad Mínima Preventa Estándar</label>
+                            <div class="input-group">
+                              <span class="input-group-text"><i class="fas fa-arrow-down"></i></span>
+                              <input type="number" class="form-control"
+                                :class="{ 'is-invalid': errors.cantidad_minima_preventa }" id="cantidad_minima_preventa"
+                                v-model="formulario.cantidad_minima_preventa" min="1" placeholder="Ej: 5">
+                              <div class="invalid-feedback" v-if="errors.cantidad_minima_preventa">
+                                {{ errors.cantidad_minima_preventa[0] }}
+                              </div>
+                            </div>
+                            <small class="text-muted">Cantidad mínima para precio de preventa estándar</small>
+                          </div>
+                          <div class="col-md-6">
+                            <label for="cantidad_maxima_preventa" class="form-label fw-bold">Cantidad Máxima Preventa Estándar</label>
+                            <div class="input-group">
+                              <span class="input-group-text"><i class="fas fa-arrow-up"></i></span>
+                              <input type="number" class="form-control"
+                                :class="{ 'is-invalid': errors.cantidad_maxima_preventa }" id="cantidad_maxima_preventa"
+                                v-model="formulario.cantidad_maxima_preventa" min="1" placeholder="Ej: 50">
+                              <div class="invalid-feedback" v-if="errors.cantidad_maxima_preventa">
+                                {{ errors.cantidad_maxima_preventa[0] }}
+                              </div>
+                            </div>
+                            <small class="text-muted">Cantidad máxima para precio de preventa estándar</small>
+                          </div>
                         </div>
-                        <div class="col-md-6">
-                          <label for="cantidad_maxima" class="form-label fw-bold">Cantidad Máxima <span
-                              class="text-danger">*</span></label>
-                          <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-arrow-up"></i></span>
-                            <input type="number" class="form-control" :class="{ 'is-invalid': errors.cantidad_maxima }"
-                              id="cantidad_maxima" v-model="formulario.cantidad_maxima" min="1" placeholder="Ej: 100"
-                              required>
-                            <div class="invalid-feedback" v-if="errors.cantidad_maxima">
-                              {{ errors.cantidad_maxima[0] }}
+                      </div>
+
+                      <!-- Preventa Especial -->
+                      <div>
+                        <h6 class="border-bottom pb-2 mb-3">
+                          <i class="fas fa-star me-2"></i>Preventa Especial
+                        </h6>
+                        <div class="row g-3">
+                          <div class="col-md-6">
+                            <label for="cantidad_minima" class="form-label fw-bold">Cantidad Mínima Preventa Especial</label>
+                            <div class="input-group">
+                              <span class="input-group-text"><i class="fas fa-arrow-down"></i></span>
+                              <input type="number" class="form-control"
+                                :class="{ 'is-invalid': errors.cantidad_minima }" id="cantidad_minima"
+                                v-model="formulario.cantidad_minima" min="1" placeholder="Ej: 20">
+                              <div class="invalid-feedback" v-if="errors.cantidad_minima">
+                                {{ errors.cantidad_minima[0] }}
+                              </div>
                             </div>
-                            <div class="invalid-feedback" v-else>
-                              La cantidad máxima es obligatoria
-                            </div>
+                            <small class="text-muted">Cantidad mínima para precio de preventa especial</small>
                           </div>
-                          <small class="text-muted">Cantidad máxima que se puede comprar</small>
-                        </div>
-                        <div class="col-md-6">
-                          <label for="cantidad_minima_preventa" class="form-label fw-bold">Cantidad Mínima
-                            Preventa</label>
-                          <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-arrow-down"></i></span>
-                            <input type="number" class="form-control"
-                              :class="{ 'is-invalid': errors.cantidad_minima_preventa }" id="cantidad_minima_preventa"
-                              v-model="formulario.cantidad_minima_preventa" min="1" placeholder="Ej: 5">
-                            <div class="invalid-feedback" v-if="errors.cantidad_minima_preventa">
-                              {{ errors.cantidad_minima_preventa[0] }}
+                          <div class="col-md-6">
+                            <label for="cantidad_maxima" class="form-label fw-bold">Cantidad Máxima Preventa Especial</label>
+                            <div class="input-group">
+                              <span class="input-group-text"><i class="fas fa-arrow-up"></i></span>
+                              <input type="number" class="form-control"
+                                :class="{ 'is-invalid': errors.cantidad_maxima }" id="cantidad_maxima"
+                                v-model="formulario.cantidad_maxima" min="1" placeholder="Ej: 100">
+                              <div class="invalid-feedback" v-if="errors.cantidad_maxima">
+                                {{ errors.cantidad_maxima[0] }}
+                              </div>
                             </div>
+                            <small class="text-muted">Cantidad máxima para precio de preventa especial</small>
                           </div>
-                          <small class="text-muted">Cantidad mínima para precio de preventa</small>
-                        </div>
-                        <div class="col-md-6">
-                          <label for="cantidad_maxima_preventa" class="form-label fw-bold">Cantidad Máxima
-                            Preventa</label>
-                          <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-arrow-up"></i></span>
-                            <input type="number" class="form-control"
-                              :class="{ 'is-invalid': errors.cantidad_maxima_preventa }" id="cantidad_maxima_preventa"
-                              v-model="formulario.cantidad_maxima_preventa" min="1" placeholder="Ej: 50">
-                            <div class="invalid-feedback" v-if="errors.cantidad_maxima_preventa">
-                              {{ errors.cantidad_maxima_preventa[0] }}
-                            </div>
-                          </div>
-                          <small class="text-muted">Cantidad máxima para precio de preventa</small>
                         </div>
                       </div>
                     </div>
@@ -448,7 +513,6 @@
                       </button>
                     </div>
                     <div class="card-body">
-                      <!--  <div :class="{ 'is-invalid': errors.modelos && formulario.modelos.length === 0 }"> -->
                       <div v-if="formulario.modelos.length === 0" class="text-center py-3 border rounded mb-3 bg-white">
                         <i class="fas fa-info-circle text-muted me-2"></i>
                         <span class="text-muted">No hay modelos agregados. Haga clic en "Agregar" para añadir
@@ -469,7 +533,7 @@
                                 placeholder="Ej: Exclusive" required>
                             </div>
                             <div class="col-md-6">
-                              <label class="form-label">Precio <span class="text-danger">*</span></label>
+                              <label class="form-label">Precio Regular <span class="text-danger">*</span></label>
                               <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-dollar-sign"></i></span>
                                 <input type="number" class="form-control" v-model="modelo.precio"
@@ -477,11 +541,19 @@
                               </div>
                             </div>
                             <div class="col-md-6">
-                              <label class="form-label">Precio Preventa</label>
+                              <label class="form-label">Precio Preventa Estándar</label>
                               <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-dollar-sign"></i></span>
-                                <input type="number" class="form-control" v-model="modelo.precio_preventa"
+                                <span class="input-group-text"><i class="fas fa-bolt"></i></span>
+                                <input type="number" class="form-control" v-model="modelo.precio_preventa_estandar"
                                   placeholder="Ej: 2500.00" min="0.01" step="0.01">
+                              </div>
+                            </div>
+                            <div class="col-md-6">
+                              <label class="form-label">Precio Preventa Especial</label>
+                              <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-star"></i></span>
+                                <input type="number" class="form-control" v-model="modelo.precio_preventa_especial"
+                                  placeholder="Ej: 2200.00" min="0.01" step="0.01">
                               </div>
                             </div>
                             <div class="col-md-6">
@@ -495,22 +567,28 @@
                                 placeholder="Ej: 200" min="1" required>
                             </div>
                             <div class="col-md-6">
-                              <label class="form-label">Cantidad mínima preventa</label>
-                              <input type="number" class="form-control" v-model="modelo.cantidad_minima_preventa"
+                              <label class="form-label">Cantidad mínima preventa estándar</label>
+                              <input type="number" class="form-control" v-model="modelo.cantidad_minima_preventa_estandar"
                                 placeholder="Ej: 10" min="1">
                             </div>
                             <div class="col-md-6">
-                              <label class="form-label">Cantidad máxima preventa</label>
-                              <input type="number" class="form-control" v-model="modelo.cantidad_maxima_preventa"
+                              <label class="form-label">Cantidad máxima preventa estándar</label>
+                              <input type="number" class="form-control" v-model="modelo.cantidad_maxima_preventa_estandar"
                                 placeholder="Ej: 100" min="1">
+                            </div>
+                            <div class="col-md-6">
+                              <label class="form-label">Cantidad mínima preventa especial</label>
+                              <input type="number" class="form-control" v-model="modelo.cantidad_minima_preventa_especial"
+                                placeholder="Ej: 20" min="1">
+                            </div>
+                            <div class="col-md-6">
+                              <label class="form-label">Cantidad máxima preventa especial</label>
+                              <input type="number" class="form-control" v-model="modelo.cantidad_maxima_preventa_especial"
+                                placeholder="Ej: 150" min="1">
                             </div>
                           </div>
                         </div>
                       </div>
-                      <!-- </div> -->
-                      <!--   <div class="invalid-feedback d-block" v-if="errors.modelos">
-                        {{ errors.modelos[0] }}
-                      </div> -->
                       <small class="text-muted">Agregue los diferentes modelos o variantes del producto</small>
                     </div>
                   </div>
@@ -632,17 +710,46 @@
               </div>
               <div class="col-md-6">
                 <h4 class="product-title">{{ productoSeleccionado.nombre }}</h4>
-                <p><strong>Precio:</strong> {{ formatearPrecio(productoSeleccionado.precio) }}</p>
-                <p v-if="productoSeleccionado.precio_preventa"><strong>Precio Preventa:</strong> {{
-                  formatearPrecio(productoSeleccionado.precio_preventa) }}</p>
+                <p><strong>Precio Regular:</strong> {{ formatearPrecio(productoSeleccionado.precio) }}</p>
+                <p v-if="productoSeleccionado.precio_preventa_estandar"><strong>Precio Preventa Estándar:</strong> {{
+                  formatearPrecio(productoSeleccionado.precio_preventa_estandar) }}</p>
+                <p v-if="productoSeleccionado.precio_preventa_especial"><strong>Precio Preventa Especial:</strong> {{
+                  formatearPrecio(productoSeleccionado.precio_preventa_especial) }}</p>
                 <p><strong>Categoría:</strong> {{ productoSeleccionado.categoria?.nombre || 'N/A' }}</p>
                 <p><strong>Descripción:</strong> {{ productoSeleccionado.descripcion || 'N/A' }}</p>
-                <p><strong>Cantidad Mínima:</strong> {{ productoSeleccionado.cantidad_minima }}</p>
-                <p><strong>Cantidad Máxima:</strong> {{ productoSeleccionado.cantidad_maxima }}</p>
-                <p v-if="productoSeleccionado.cantidad_minima_preventa"><strong>Cantidad Mínima Preventa:</strong> {{
-                  productoSeleccionado.cantidad_minima_preventa }}</p>
-                <p v-if="productoSeleccionado.cantidad_maxima_preventa"><strong>Cantidad Máxima Preventa:</strong> {{
-                  productoSeleccionado.cantidad_maxima_preventa }}</p>
+                
+                <div class="mt-4">
+                  <h5 class="mb-2">Rangos de Cantidad:</h5>
+                  <div class="table-responsive">
+                    <table class="table table-sm table-bordered">
+                      <thead class="table-light">
+                        <tr>
+                          <th>Tipo de Precio</th>
+                          <th>Mínimo</th>
+                          <th>Máximo</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td><i class="fas fa-tag text-success me-1"></i> Regular</td>
+                          <td>{{ productoSeleccionado.cantidad_minima }}</td>
+                          <td>{{ productoSeleccionado.cantidad_maxima }}</td>
+                        </tr>
+                        <tr v-if="productoSeleccionado.cantidad_minima_preventa_estandar">
+                          <td><i class="fas fa-bolt text-primary me-1"></i> Preventa Estándar</td>
+                          <td>{{ productoSeleccionado.cantidad_minima_preventa_estandar }}</td>
+                          <td>{{ productoSeleccionado.cantidad_maxima_preventa_estandar }}</td>
+                        </tr>
+                        <tr v-if="productoSeleccionado.cantidad_minima_preventa_especial">
+                          <td><i class="fas fa-star text-warning me-1"></i> Preventa Especial</td>
+                          <td>{{ productoSeleccionado.cantidad_minima_preventa_especial }}</td>
+                          <td>{{ productoSeleccionado.cantidad_maxima_preventa_especial }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                
                 <p><strong>Estado:</strong>
                   <span class="badge" :class="productoSeleccionado.estado ? 'bg-success' : 'bg-danger'">
                     {{ productoSeleccionado.estado ? 'Activo' : 'Inactivo' }}
@@ -673,23 +780,23 @@
                 <thead class="table-light">
                   <tr>
                     <th>Nombre</th>
-                    <th>Precio</th>
-                    <th>Precio Preventa</th>
-                    <th>Cantidad Mínima</th>
-                    <th>Cantidad Máxima</th>
-                    <th>Mín. Preventa</th>
-                    <th>Máx. Preventa</th>
+                    <th>Precio Regular</th>
+                    <th>Preventa Estándar</th>
+                    <th>Preventa Especial</th>
+                    <th>Rango Regular</th>
+                    <th>Rango Preventa Estándar</th>
+                    <th>Rango Preventa Especial</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="modelo in productoSeleccionado.modelos" :key="modelo.id">
                     <td>{{ modelo.nombre }}</td>
                     <td>{{ formatearPrecio(modelo.precio) }}</td>
-                    <td>{{ modelo.precio_preventa ? formatearPrecio(modelo.precio_preventa) : 'N/A' }}</td>
-                    <td>{{ modelo.cantidad_minima }}</td>
-                    <td>{{ modelo.cantidad_maxima }}</td>
-                    <td>{{ modelo.cantidad_minima_preventa || 'N/A' }}</td>
-                    <td>{{ modelo.cantidad_maxima_preventa || 'N/A' }}</td>
+                    <td>{{ modelo.precio_preventa_estandar ? formatearPrecio(modelo.precio_preventa_estandar) : 'N/A' }}</td>
+                    <td>{{ modelo.precio_preventa_especial ? formatearPrecio(modelo.precio_preventa_especial) : 'N/A' }}</td>
+                    <td>{{ modelo.cantidad_minima }}-{{ modelo.cantidad_maxima }}</td>
+                    <td>{{ modelo.cantidad_minima_preventa_estandar ? `${modelo.cantidad_minima_preventa_estandar}-${modelo.cantidad_maxima_preventa_estandar}` : 'N/A' }}</td>
+                    <td>{{ modelo.cantidad_minima_preventa_especial ? `${modelo.cantidad_minima_preventa_especial}-${modelo.cantidad_maxima_preventa_especial}` : 'N/A' }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -740,14 +847,17 @@ const posicion = ref('');
 const formulario = ref({
   nombre: '',
   precio: '',
-  precio_preventa: '',
+  precio_preventa_estandar: '',
+  precio_preventa_especial: '',
   categoria_id: '',
   descripcion: '',
   cantidad: '',
   cantidad_minima: '',
   cantidad_maxima: '',
-  cantidad_minima_preventa: '',
-  cantidad_maxima_preventa: '',
+  cantidad_minima_preventa_estandar: '',
+  cantidad_maxima_preventa_estandar: '',
+  cantidad_minima_preventa_especial: '',
+  cantidad_maxima_preventa_especial: '',
   imagen_principal: '',
   caracteristicas: [],
   modelos: [],
@@ -833,14 +943,17 @@ const abrirModal = () => {
   formulario.value = {
     nombre: '',
     precio: '',
-    precio_preventa: '',
+    precio_preventa_estandar: '',
+    precio_preventa_especial: '',
     categoria_id: '',
     descripcion: '',
     cantidad: '',
     cantidad_minima: '',
     cantidad_maxima: '',
-    cantidad_minima_preventa: '',
-    cantidad_maxima_preventa: '',
+    cantidad_minima_preventa_estandar: '',
+    cantidad_maxima_preventa_estandar: '',
+    cantidad_minima_preventa_especial: '',
+    cantidad_maxima_preventa_especial: '',
     imagen_principal: '',
     caracteristicas: [],
     modelos: [],
@@ -971,11 +1084,6 @@ const validarFormulario = () => {
     esValido = false;
   }
 
-  /*   if (formulario.value.modelos.length === 0) {
-      errors.value.modelos = ['El campo modelos es obligatorio.'];
-      esValido = false;
-    }  */
-
   if (formulario.value.images.length === 0 && !posicion.value) {
     errors.value.images = ['El campo images es obligatorio.'];
     esValido = false;
@@ -1008,26 +1116,28 @@ const guardarProducto = async () => {
   try {
     const formData = new FormData();
 
-    // Agregar campos básicos (mantener igual)
+    // Agregar campos básicos
     Object.keys(formulario.value).forEach(key => {
       if (formulario.value[key] !== '' && key !== 'images' && key !== 'caracteristicas' && key !== 'modelos') {
         formData.append(key, formulario.value[key]);
       }
     });
 
-    // Agregar características (mantener igual)
+    // Agregar características
     formulario.value.caracteristicas.forEach((caracteristica, index) => {
       formData.append(`caracteristicas[${index}]`, caracteristica);
     });
 
-    // Agregar modelos (mantener igual)
+    // Agregar modelos
     formulario.value.modelos.forEach((modelo, index) => {
       Object.keys(modelo).forEach(key => {
-        formData.append(`modelos[${index}][${key}]`, modelo[key]);
+        if (modelo[key] !== '') {
+          formData.append(`modelos[${index}][${key}]`, modelo[key]);
+        }
       });
     });
 
-    // PARTE MODIFICADA: Manejo de imágenes existentes y nuevas
+    // Manejo de imágenes existentes y nuevas
     let hasNewImages = false;
 
     // Primero procesar imágenes existentes
@@ -1058,14 +1168,14 @@ const guardarProducto = async () => {
       formData.append('has_existing_images', 'true');
     }
 
-    // Manejar imagen principal (mantener igual)
+    // Manejar imagen principal
     if (posicion.value && typeof formulario.value.imagen_principal === 'string' && formulario.value.imagen_principal.startsWith('http')) {
       formData.append('mantener_imagen_principal', 'true');
       const nombreArchivo = formulario.value.imagen_principal.split('/').pop();
       formData.append('imagen_principal_actual', nombreArchivo);
     }
 
-    // Resto del código igual...
+    // Enviar los datos al servidor
     if (posicion.value) {
       formData.append('_method', 'PUT');
       await updateProducto(posicion.value, formData);
@@ -1077,7 +1187,7 @@ const guardarProducto = async () => {
     productoModal.hide();
     alert(posicion.value ? 'Producto actualizado correctamente' : 'Producto creado correctamente');
   } catch (error) {
-    // Manejo de errores (mantener igual)
+    // Manejo de errores
     if (error.response && error.response.status === 422) {
       errors.value = error.response.data.errors;
       setTimeout(() => {
@@ -1101,21 +1211,27 @@ const mostrarProducto = async (id) => {
     formulario.value = {
       nombre: data.dato.nombre,
       precio: data.dato.precio,
-      precio_preventa: data.dato.precio_preventa,
+      precio_preventa_estandar: data.dato.precio_preventa_estandar,
+      precio_preventa_especial: data.dato.precio_preventa_especial,
       categoria_id: data.dato.categoria_id,
       descripcion: data.dato.descripcion,
       cantidad: data.dato.cantidad,
       cantidad_minima: data.dato.cantidad_minima,
       cantidad_maxima: data.dato.cantidad_maxima,
-      cantidad_minima_preventa: data.dato.cantidad_minima_preventa,
-      cantidad_maxima_preventa: data.dato.cantidad_maxima_preventa,
+      cantidad_minima_preventa_estandar: data.dato.cantidad_minima_preventa_estandar,
+      cantidad_maxima_preventa_estandar: data.dato.cantidad_maxima_preventa_estandar,
+      cantidad_minima_preventa_especial: data.dato.cantidad_minima_preventa_especial,
+      cantidad_maxima_preventa_especial: data.dato.cantidad_maxima_preventa_especial,
       imagen_principal: data.dato.imagen_principal, // Guardar la URL completa
       caracteristicas: data.dato.caracteristicas.map(c => c.caracteristica),
       modelos: data.dato.modelos.map(m => ({
         ...m,
-        precio_preventa: m.precio_preventa || '',
-        cantidad_minima_preventa: m.cantidad_minima_preventa || '',
-        cantidad_maxima_preventa: m.cantidad_maxima_preventa || ''
+        precio_preventa_estandar: m.precio_preventa_estandar || '',
+        precio_preventa_especial: m.precio_preventa_especial || '',
+        cantidad_minima_preventa_estandar: m.cantidad_minima_preventa_estandar || '',
+        cantidad_maxima_preventa_estandar: m.cantidad_maxima_preventa_estandar || '',
+        cantidad_minima_preventa_especial: m.cantidad_minima_preventa_especial || '',
+        cantidad_maxima_preventa_especial: m.cantidad_maxima_preventa_especial || ''
       })),
       images: data.dato.images.map(img => ({
         id: img.id,
@@ -1165,11 +1281,14 @@ const agregarModelo = () => {
   formulario.value.modelos.push({
     nombre: '',
     precio: '',
-    precio_preventa: '',
+    precio_preventa_estandar: '',
+    precio_preventa_especial: '',
     cantidad_minima: '',
     cantidad_maxima: '',
-    cantidad_minima_preventa: '',
-    cantidad_maxima_preventa: ''
+    cantidad_minima_preventa_estandar: '',
+    cantidad_maxima_preventa_estandar: '',
+    cantidad_minima_preventa_especial: '',
+    cantidad_maxima_preventa_especial: ''
   });
 };
 
@@ -1220,14 +1339,17 @@ const mostrarDatosPrueba = () => {
       nombre: 'Motocicleta electrica',
       descripcion: null,
       precio: '2500.00',
-      precio_preventa: '2000.00',
+      precio_preventa_estandar: '2200.00',
+      precio_preventa_especial: '2000.00',
       estado: 1,
       cantidad: 0,
       imagen_principal: 'http://neotechbol.test/images/imagenes_principales/01a0cb6696e17c86fb70b669472b61f9.jpeg',
       cantidad_minima: 10,
       cantidad_maxima: 100,
-      cantidad_minima_preventa: 5,
-      cantidad_maxima_preventa: 50,
+      cantidad_minima_preventa_estandar: 5,
+      cantidad_maxima_preventa_estandar: 50,
+      cantidad_minima_preventa_especial: 20,
+      cantidad_maxima_preventa_especial: 150,
       created_at: '2025-02-28T06:40:55.000000Z',
       updated_at: '2025-02-28T06:40:55.000000Z',
       images: [
@@ -1326,11 +1448,14 @@ const mostrarDatosPrueba = () => {
           producto_id: 1,
           nombre: 'exclusive',
           precio: '3000.00',
-          precio_preventa: '2500.00',
+          precio_preventa_estandar: '2700.00',
+          precio_preventa_especial: '2500.00',
           cantidad_minima: 20,
           cantidad_maxima: 200,
-          cantidad_minima_preventa: 10,
-          cantidad_maxima_preventa: 100,
+          cantidad_minima_preventa_estandar: 10,
+          cantidad_maxima_preventa_estandar: 100,
+          cantidad_minima_preventa_especial: 30,
+          cantidad_maxima_preventa_especial: 150,
           created_at: '2025-02-28T06:40:55.000000Z',
           updated_at: '2025-02-28T06:40:55.000000Z'
         }
@@ -1342,6 +1467,7 @@ const mostrarDatosPrueba = () => {
   mostrarTodasCaracteristicas.value = false; // Resetear el estado de "Ver más"
   detallesModal.show();
 };
+
 const cambiarEstado = async (id) => {
   try {
     const { data } = await changeStatus(id);
@@ -1640,3 +1766,4 @@ const cambiarEstado = async (id) => {
   animation: fadeIn 0.5s ease-out;
 }
 </style>
+

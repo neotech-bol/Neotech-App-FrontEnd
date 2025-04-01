@@ -3,6 +3,7 @@ import { ref, computed, watchEffect, onMounted, nextTick } from 'vue'
 import { useThemeStore } from '../stores/themeStore'
 import { store } from '@/Services/ContactoService'
 import Swal from 'sweetalert2'
+import { storeCitaUser } from '@/Services/CitasService'
 
 const themeStore = useThemeStore()
 
@@ -70,13 +71,12 @@ const formData = ref({
 })
 
 const appointmentData = ref({
-  nombre: '',
+  nombre_completo: '',
   correo: '',
   telefono: '',
-  fecha: '',
-  hora: '',
-  motivo: '',
-  otroMotivo: ''
+  fecha_de_cita: '',
+  hora_de_cita: '',
+  servicio_solicitado: '',
 })
 
 // FAQ data
@@ -181,23 +181,52 @@ const visibleCardIndex = computed(() => {
 const handleSubmit = () => {
   enviarMensaje()
 }
-
-const handleAppointment = () => {
-  // Show success modal instead of Swal
-  successMessage.value = {
-    title: '¡Cita Agendada!',
-    message: `Tu cita ha sido agendada para el ${formatDate(appointmentData.value.fecha)} a las ${appointmentData.value.hora}. Te hemos enviado un correo de confirmación.`
-  }
-  showSuccessModal.value = true
-
-  appointmentData.value = {
-    nombre: '',
-    correo: '',
-    telefono: '',
-    fecha: '',
-    hora: '',
-    motivo: '',
-    otroMotivo: ''
+// Fixed handleAppointment function to include department
+const handleAppointment = async() => {
+  try {
+    // Add the selected department to the appointment data before sending
+    const appointmentDataWithDepartment = {
+      ...appointmentData.value,
+      departamento: selectedDepartment.value
+    }
+    
+    const {data} = await storeCitaUser(appointmentDataWithDepartment);
+    console.log(data);
+    
+    // Reset form after successful submission
+    appointmentData.value = {
+      nombre_completo: '',
+      correo: '',
+      telefono: '',
+      fecha_de_cita: '',
+      hora_de_cita: '',
+      servicio_solicitado: '',
+    }
+    
+    // Mostrar mensaje de éxito con SweetAlert
+    Swal.fire({
+      icon: 'success',
+      title: '¡Cita Agendada!',
+      text: `Tu cita ha sido agendada para el ${formatDate(data.fecha_de_cita || '')} a las ${data.hora_de_cita || ''}. Te hemos enviado un correo de confirmación.`,
+      confirmButtonText: 'Entendido',
+      confirmButtonColor: getDepartmentColor(selectedDepartment.value)
+    })
+  } catch (error) {
+    console.error('Error al agendar cita:', error);
+    
+    // Show error message
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'No se pudo agendar la cita. Por favor, intenta nuevamente.',
+      confirmButtonText: 'Intentar de nuevo',
+      confirmButtonColor: getDepartmentColor(selectedDepartment.value)
+    })
+    
+    // If there are validation errors, set them
+    if (error.response?.status === 422) {
+      errors.value = error.response.data.errors
+    }
   }
 }
 
@@ -595,7 +624,7 @@ onMounted(() => {
               <div class="form-group">
                 <div class="input-wrapper">
                   <i class="fas fa-user input-icon"></i>
-                  <input type="text" v-model="appointmentData.nombre" placeholder="Nombre Completo" required
+                  <input type="text" v-model="appointmentData.nombre_completo" placeholder="Nombre Completo" required
                     aria-label="Nombre Completo">
                 </div>
               </div>
@@ -621,7 +650,7 @@ onMounted(() => {
                   <label for="appointment-date">Fecha de la cita</label>
                   <div class="input-wrapper">
                     <i class="fas fa-calendar input-icon"></i>
-                    <input id="appointment-date" type="date" v-model="appointmentData.fecha" required min="2023-01-01"
+                    <input id="appointment-date" type="date" v-model="appointmentData.fecha_de_cita" required min="2023-01-01"
                       aria-label="Fecha de la cita">
                   </div>
                 </div>
@@ -630,7 +659,7 @@ onMounted(() => {
                   <label for="appointment-time">Hora de la cita</label>
                   <div class="input-wrapper">
                     <i class="fas fa-clock input-icon"></i>
-                    <input id="appointment-time" type="time" v-model="appointmentData.hora" required min="09:00"
+                    <input id="appointment-time" type="time" v-model="appointmentData.hora_de_cita" required min="09:00"
                       max="18:00" aria-label="Hora de la cita">
                   </div>
                   <small class="time-hint">Horario de atención: 9:00 - 18:00</small>
@@ -641,7 +670,7 @@ onMounted(() => {
                 <label for="appointment-reason">Motivo de la cita</label>
                 <div class="input-wrapper">
                   <i class="fas fa-clipboard-list input-icon"></i>
-                  <select id="appointment-reason" v-model="appointmentData.motivo" required
+                  <select id="appointment-reason" v-model="appointmentData.servicio_solicitado" required
                     aria-label="Motivo de la cita">
                     <option value="" disabled selected>Selecciona un motivo</option>
                     <option value="consulta">Consulta general</option>
@@ -654,10 +683,10 @@ onMounted(() => {
                 </div>
               </div>
 
-              <div class="form-group" v-if="appointmentData.motivo === 'otro'">
+              <div class="form-group" v-if="appointmentData.servicio_solicitado === 'otro'">
                 <div class="input-wrapper">
                   <i class="fas fa-comment-alt input-icon"></i>
-                  <input type="text" v-model="appointmentData.otroMotivo" placeholder="Especifica el motivo" required
+                  <input type="text" v-model="appointmentData.servicio_solicitado" placeholder="Especifica el motivo" required
                     aria-label="Especifica el motivo">
                 </div>
               </div>

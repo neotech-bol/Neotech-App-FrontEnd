@@ -32,6 +32,7 @@ import CatalogoActivoView from '@/views/CatalogoActivoView.vue'
 import ContactanosPanelView from '@/Admin/ContactanosPanelView.vue'
 import CategoriaIdView from '@/views/CategoriaIdView.vue'
 import TestimoniosView from '@/Admin/TestimoniosView.vue'
+import CitasView from '@/Admin/CitasView.vue'
 // Crear el router
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -293,6 +294,11 @@ const router = createRouter({
           path: '/testimonios-admin',
           name:'testimonios',
           component: TestimoniosView
+        },
+        {
+          path: '/citas-admin',
+          name: 'citas-admin',
+          component: CitasView
         }
       ]
     },

@@ -198,7 +198,7 @@
                       <div class="price-type-badge"
                         :class="{ 'preventa': product.es_preventa, 'regular': !product.es_preventa }">
                         <i class="fas" :class="product.es_preventa ? 'fa-bolt' : 'fa-tag'" aria-hidden="true"></i>
-                        {{ product.es_preventa ? 'Preventa' : 'Regular' }}
+                        {{ product.es_preventa ? 'Preventa Estándar' : 'Regular' }}
                       </div>
                     </div>
 
@@ -223,7 +223,7 @@
                           role="tab"
                           :aria-selected="product.es_preventa"
                           :aria-controls="`preventa-price-${product.uniqueId}`">
-                          <i class="fas fa-bolt" aria-hidden="true"></i> Precio Preventa
+                          <i class="fas fa-bolt" aria-hidden="true"></i> Precio Preventa Estándar
                         </button>
                       </div>
                       
@@ -232,17 +232,13 @@
                         <div class="current-price-card" :id="product.es_preventa ? `preventa-price-${product.uniqueId}` : `regular-price-${product.uniqueId}`" role="tabpanel">
                           <div class="price-card-header">
                             <i :class="product.es_preventa ? 'fas fa-bolt' : 'fas fa-tag'" aria-hidden="true"></i>
-                            <span>{{ product.es_preventa ? 'Precio de Preventa' : 'Precio Regular' }}</span>
+                            <span>{{ product.es_preventa ? 'Precio de Preventa Estándar' : 'Precio Regular' }}</span>
                           </div>
                           <div class="price-card-body">
                             <div class="price-row">
                               <span class="price-label">Precio unitario:</span>
                               <span class="price-value">{{ formatPrice(product.es_preventa ? product.precio_preventa : product.precio) }}</span>
                             </div>
-<!--                             <div class="price-row">
-                              <span class="price-label">Total:</span>
-                              <span class="price-value total">{{ formatPrice((product.es_preventa ? product.precio_preventa : product.precio) * product.cantidad) }}</span>
-                            </div> -->
                             <div class="price-row">
                               <span class="price-label">Rango de cantidad:</span>
                               <span class="price-value">{{ product.es_preventa ? 
@@ -251,33 +247,6 @@
                             </div>
                           </div>
                         </div>
-                        
-                        <!-- Price Comparison Info -->
-                   <!--      <div class="price-comparison" v-if="canSwitchToPreventa(product) && canSwitchToRegular(product)">
-                          <div class="comparison-header">
-                            <i class="fas fa-info-circle" aria-hidden="true"></i> Comparación de precios
-                          </div>
-                          <div class="comparison-body">
-                            <div class="comparison-row">
-                              <div class="comparison-item">
-                                <div class="comparison-label">Regular</div>
-                                <div class="comparison-value">{{ formatPrice(product.precio) }}</div>
-                                <div class="comparison-range">{{ product.cantidad_minima }}-{{ product.cantidad_maxima }} und.</div>
-                              </div>
-                              <div class="comparison-divider" aria-hidden="true">vs</div>
-                              <div class="comparison-item">
-                                <div class="comparison-label">Preventa</div>
-                                <div class="comparison-value">{{ formatPrice(product.precio_preventa) }}</div>
-                                <div class="comparison-range">{{ product.cantidad_minima_preventa }}-{{ product.cantidad_maxima_preventa }} und.</div>
-                              </div>
-                            </div>
-                            <div class="savings-info" v-if="product.precio > product.precio_preventa">
-                              <i class="fas fa-piggy-bank" aria-hidden="true"></i> Ahorro por unidad: 
-                              <span>{{ formatPrice(product.precio - product.precio_preventa) }}</span>
-                              ({{ Math.round((1 - product.precio_preventa/product.precio) * 100) }}%)
-                            </div>
-                          </div>
-                        </div> -->
                       </div>
                     </div>
 
@@ -394,135 +363,136 @@
 
           <!-- Step 4: Payment Method -->
           <div class="step" :class="{ 'active-step': activeStep === 3, 'completed-step': activeStep > 3 }" :aria-expanded="activeStep === 3 || (stepsVisible[3] && checkoutSteps[3].completed)">
-    <div class="step-header" @click="toggleStepVisibility(3)">
-      <div class="step-header-left">
-        <div class="step-number-wrapper">
-          <span class="step-number">4</span>
-          <i v-if="activeStep > 3" class="fas fa-check check-icon" aria-hidden="true"></i>
-        </div>
-        <h2>Método de Pago</h2>
-      </div>
-      <div class="step-header-right">
-        <i v-if="activeStep !== 3" class="fas"
-          :class="stepsVisible[3] ? 'fa-chevron-up' : 'fa-chevron-down'" aria-hidden="true"></i>
-      </div>
-    </div>
-    <div class="step-content" v-show="activeStep === 3 || (stepsVisible[3] && checkoutSteps[3].completed)">
-      <div class="payment-options">
-        <!-- Opción de pago por QR -->
-        <div class="payment-option" :class="{ 'selected': paymentMethod === 'qr' }"
-          @click="paymentMethod = 'qr'">
-          <div class="payment-option-header">
-            <div class="custom-radio">
-              <input type="radio" id="qr-payment" name="payment-method" value="qr" v-model="paymentMethod" class="radio-input">
-              <span class="radio-checkmark"></span>
-            </div>
-            <label for="qr-payment" class="payment-label">
-              <i class="fas fa-qrcode" aria-hidden="true"></i> Pago por QR
-            </label>
-          </div>
-          <div v-if="paymentMethod === 'qr'" class="payment-details">
-            <p>Escanea el siguiente código QR para realizar el pago:</p>
-            <div class="qr-payment-image">
-              <img src="https://placehold.co/300x300/png?text=QR+Code" alt="QR Code para pago">
-            </div>
-            <div class="voucher-upload">
-              <label for="voucher-file">Subir comprobante de pago (requerido)</label>
-              <div class="file-upload-container">
-                <input type="file" id="voucher-file" @change="handleFileUpload" accept="image/*"
-                  class="file-input" capture="environment" aria-describedby="file-name">
-                <div class="file-upload-button">
-                  <i class="fas fa-upload" aria-hidden="true"></i> Seleccionar archivo
+            <div class="step-header" @click="toggleStepVisibility(3)">
+              <div class="step-header-left">
+                <div class="step-number-wrapper">
+                  <span class="step-number">4</span>
+                  <i v-if="activeStep > 3" class="fas fa-check check-icon" aria-hidden="true"></i>
                 </div>
-                <span v-if="voucherFile" class="file-name" id="file-name">{{ voucherFile.name }}</span>
+                <h2>Método de Pago</h2>
               </div>
-              <div v-if="voucherPreview" class="voucher-preview">
-                <img :src="voucherPreview" alt="Vista previa del comprobante">
-                <button @click="removeVoucher" class="remove-voucher-btn" aria-label="Eliminar comprobante">
-                  <i class="fas fa-times" aria-hidden="true"></i>
+              <div class="step-header-right">
+                <i v-if="activeStep !== 3" class="fas"
+                  :class="stepsVisible[3] ? 'fa-chevron-up' : 'fa-chevron-down'" aria-hidden="true"></i>
+              </div>
+            </div>
+            <div class="step-content" v-show="activeStep === 3 || (stepsVisible[3] && checkoutSteps[3].completed)">
+              <div class="payment-options">
+                <!-- Opción de pago por QR -->
+                <div class="payment-option" :class="{ 'selected': paymentMethod === 'qr' }"
+                  @click="paymentMethod = 'qr'">
+                  <div class="payment-option-header">
+                    <div class="custom-radio">
+                      <input type="radio" id="qr-payment" name="payment-method" value="qr" v-model="paymentMethod" class="radio-input">
+                      <span class="radio-checkmark"></span>
+                    </div>
+                    <label for="qr-payment" class="payment-label">
+                      <i class="fas fa-qrcode" aria-hidden="true"></i> Pago por QR
+                    </label>
+                  </div>
+                  <div v-if="paymentMethod === 'qr'" class="payment-details">
+                    <p>Escanea el siguiente código QR para realizar el pago:</p>
+                    <div class="qr-payment-image">
+                      <img src="https://placehold.co/300x300/png?text=QR+Code" alt="QR Code para pago">
+                    </div>
+                    <div class="voucher-upload">
+                      <label for="voucher-file">Subir comprobante de pago (requerido)</label>
+                      <div class="file-upload-container">
+                        <input type="file" id="voucher-file" @change="handleFileUpload" accept="image/*"
+                          class="file-input" capture="environment" aria-describedby="file-name">
+                        <div class="file-upload-button">
+                          <i class="fas fa-upload" aria-hidden="true"></i> Seleccionar archivo
+                        </div>
+                        <span v-if="voucherFile" class="file-name" id="file-name">{{ voucherFile.name }}</span>
+                      </div>
+                      <div v-if="voucherPreview" class="voucher-preview">
+                        <img :src="voucherPreview" alt="Vista previa del comprobante">
+                        <button @click="removeVoucher" class="remove-voucher-btn" aria-label="Eliminar comprobante">
+                          <i class="fas fa-times" aria-hidden="true"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Opción de pago en instalaciones -->
+                <div class="payment-option" :class="{ 'selected': paymentMethod === 'in-person' }"
+                  @click="paymentMethod = 'in-person'">
+                  <div class="payment-option-header">
+                    <div class="custom-radio">
+                      <input type="radio" id="in-person" name="payment-method" value="in-person" v-model="paymentMethod" class="radio-input">
+                      <span class="radio-checkmark"></span>
+                    </div>
+                    <label for="in-person" class="payment-label">
+                      <i class="fas fa-store" aria-hidden="true"></i> Pago en Instalaciones
+                    </label>
+                  </div>
+                  <div v-if="paymentMethod === 'in-person'" class="payment-details">
+                    <p>Puedes realizar el pago directamente en nuestras instalaciones. Por favor selecciona una ubicación:</p>
+                    <div class="location-selector" role="radiogroup" aria-labelledby="location-heading">
+                      <h3 id="location-heading" class="sr-only">Selecciona una ubicación</h3>
+                      <div v-for="(location, key) in locationOptions" :key="key"
+                        :class="['location-option', { 'selected': selectedLocation === key }]"
+                        @click.stop="selectedLocation = key">
+                        <div class="custom-radio location-radio">
+                          <input type="radio" :id="`location-${key}`" name="location" :value="key"
+                            v-model="selectedLocation" class="radio-input">
+                          <span class="radio-checkmark"></span>
+                        </div>
+                        <label :for="`location-${key}`" class="location-label">{{ location.name }}</label>
+                      </div>
+                    </div>
+                    <div v-if="selectedLocation" class="store-info">
+                      <div class="store-info-item">
+                        <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+                        <div>
+                          <h4>Dirección:</h4>
+                          <p>{{ locationOptions[selectedLocation].address }}</p>
+                        </div>
+                      </div>
+                      <div class="store-info-item">
+                        <i class="fas fa-clock" aria-hidden="true"></i>
+                        <div>
+                          <h4>Horario:</h4>
+                          <p>{{ locationOptions[selectedLocation].hours }}</p>
+                        </div>
+                      </div>
+                      <div class="store-info-item">
+                        <i class="fas fa-phone" aria-hidden="true"></i>
+                        <div>
+                          <h4>Teléfono:</h4>
+                          <p>{{ locationOptions[selectedLocation].phone }}</p>
+                        </div>
+                      </div>
+                      <div class="store-info-item">
+                        <i class="fas fa-envelope" aria-hidden="true"></i>
+                        <div>
+                          <h4>Email:</h4>
+                          <p>{{ locationOptions[selectedLocation].email }}</p>
+                        </div>
+                      </div>
+                      <div class="store-info-item">
+                        <i class="fas fa-info-circle" aria-hidden="true"></i>
+                        <div>
+                          <h4>Información adicional:</h4>
+                          <p>{{ locationOptions[selectedLocation].additionalInfo }}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="step-actions" v-if="activeStep === 3">
+                <button @click="prevStep" class="prev-button" aria-label="Volver al paso anterior">
+                  <i class="fas fa-arrow-left" aria-hidden="true"></i> Anterior
+                </button>
+                <button @click="finalizeOrder" class="checkout-button" :disabled="!isPaymentValid" aria-label="Finalizar pedido">
+                    :disabled="!isPaymentValid" aria-label="Finalizar pedido">
+                  <i class="fas fa-check-circle" aria-hidden="true"></i> FINALIZAR PEDIDO
                 </button>
               </div>
             </div>
           </div>
-        </div>
-        
-        <!-- Opción de pago en instalaciones -->
-        <div class="payment-option" :class="{ 'selected': paymentMethod === 'in-person' }"
-          @click="paymentMethod = 'in-person'">
-          <div class="payment-option-header">
-            <div class="custom-radio">
-              <input type="radio" id="in-person" name="payment-method" value="in-person" v-model="paymentMethod" class="radio-input">
-              <span class="radio-checkmark"></span>
-            </div>
-            <label for="in-person" class="payment-label">
-              <i class="fas fa-store" aria-hidden="true"></i> Pago en Instalaciones
-            </label>
-          </div>
-          <div v-if="paymentMethod === 'in-person'" class="payment-details">
-            <p>Puedes realizar el pago directamente en nuestras instalaciones. Por favor selecciona una ubicación:</p>
-            <div class="location-selector" role="radiogroup" aria-labelledby="location-heading">
-              <h3 id="location-heading" class="sr-only">Selecciona una ubicación</h3>
-              <div v-for="(location, key) in locationOptions" :key="key"
-                :class="['location-option', { 'selected': selectedLocation === key }]"
-                @click.stop="selectedLocation = key">
-                <div class="custom-radio location-radio">
-                  <input type="radio" :id="`location-${key}`" name="location" :value="key"
-                    v-model="selectedLocation" class="radio-input">
-                  <span class="radio-checkmark"></span>
-                </div>
-                <label :for="`location-${key}`" class="location-label">{{ location.name }}</label>
-              </div>
-            </div>
-            <div v-if="selectedLocation" class="store-info">
-              <div class="store-info-item">
-                <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
-                <div>
-                  <h4>Dirección:</h4>
-                  <p>{{ locationOptions[selectedLocation].address }}</p>
-                </div>
-              </div>
-              <div class="store-info-item">
-                <i class="fas fa-clock" aria-hidden="true"></i>
-                <div>
-                  <h4>Horario:</h4>
-                  <p>{{ locationOptions[selectedLocation].hours }}</p>
-                </div>
-              </div>
-              <div class="store-info-item">
-                <i class="fas fa-phone" aria-hidden="true"></i>
-                <div>
-                  <h4>Teléfono:</h4>
-                  <p>{{ locationOptions[selectedLocation].phone }}</p>
-                </div>
-              </div>
-              <div class="store-info-item">
-                <i class="fas fa-envelope" aria-hidden="true"></i>
-                <div>
-                  <h4>Email:</h4>
-                  <p>{{ locationOptions[selectedLocation].email }}</p>
-                </div>
-              </div>
-              <div class="store-info-item">
-                <i class="fas fa-info-circle" aria-hidden="true"></i>
-                <div>
-                  <h4>Información adicional:</h4>
-                  <p>{{ locationOptions[selectedLocation].additionalInfo }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="step-actions" v-if="activeStep === 3">
-        <button @click="prevStep" class="prev-button" aria-label="Volver al paso anterior">
-          <i class="fas fa-arrow-left" aria-hidden="true"></i> Anterior
-        </button>
-        <button @click="finalizeOrder" class="checkout-button" :disabled="!isPaymentValid" aria-label="Finalizar pedido">
-          <i class="fas fa-check-circle" aria-hidden="true"></i> FINALIZAR PEDIDO
-        </button>
-      </div>
-    </div>
-  </div>
         </div>
       </div>
 
@@ -752,14 +722,6 @@ const voucherPreview = ref('');
 
 const selectedLocation = ref('');
 const locationOptions = ref({
-/*   'la-paz': {
-    name: 'La Paz',
-    address: 'Av. 16 de Julio #1490, Zona Central, La Paz',
-    hours: 'Lunes a Viernes de 8:30 a 18:00, Sábados de 9:00 a 13:00',
-    phone: '+591 2 2334455',
-    email: 'tienda.lapaz@empresa.com',
-    additionalInfo: 'Referencia: Frente al Banco Nacional, edificio Torre Azul, planta baja.'
-  }, */
   'cochabamba': {
     name: 'Cochabamba',
     address: 'Av. América #1234, Zona Norte, Cochabamba',
@@ -821,7 +783,7 @@ onMounted(() => {
   if (themeStore.currentDepartment === 'la-paz' || themeStore.currentDepartment === 'cochabamba') {
     selectedLocation.value = themeStore.currentDepartment;
   } else {
-    selectedLocation.value = 'la-paz';
+    selectedLocation.value = 'cochabamba';
   }
 
   const storedData = localStorage.getItem('datosUser');
@@ -1018,36 +980,17 @@ function validateAndUpdateQuantity(product) {
     let message, options;
 
     if (product.es_preventa) {
-      if (cantidad < min) {
-        message = `La cantidad (${cantidad}) es menor que el mínimo de preventa (${min}).`;
-        options = [
-          { text: `Ajustar a mínimo (${min})`, action: 'adjust-min' },
-          { text: 'Cambiar a precio regular', action: 'switch-regular' }
-        ];
-      } else {
-        message = `La cantidad (${cantidad}) es mayor que el máximo de preventa (${max}).`;
-        options = [
-          { text: `Ajustar a máximo (${max})`, action: 'adjust-max' },
-          { text: 'Cambiar a precio regular', action: 'switch-regular' }
-        ];
-      }
+      message = `La cantidad (${cantidad}) es menor que el mínimo de preventa estándar (${min}).`;
+      options = [
+        { text: `Ajustar a mínimo (${min})`, action: 'adjust-min' },
+        { text: 'Cambiar a precio regular', action: 'switch-regular' }
+      ];
     } else {
-      if (cantidad < min) {
-        message = `La cantidad (${cantidad}) es menor que el mínimo regular (${min}).`;
-        options = [
-          { text: `Ajustar a mínimo (${min})`, action: 'adjust-min' }
-        ];
-        if (canSwitchToPreventa(product) && 
-            cantidad >= product.cantidad_minima_preventa && 
-            cantidad <= product.cantidad_maxima_preventa) {
-          options.push({ text: 'Cambiar a precio de preventa', action: 'switch-preventa' });
-        }
-      } else {
-        message = `La cantidad (${cantidad}) es mayor que el máximo regular (${max}).`;
-        options = [
-          { text: `Ajustar a máximo (${max})`, action: 'adjust-max' }
-        ];
-      }
+      message = `La cantidad (${cantidad}) es mayor que el máximo de preventa estándar (${max}).`;
+      options = [
+        { text: `Ajustar a máximo (${max})`, action: 'adjust-max' },
+        { text: 'Cambiar a precio regular', action: 'switch-regular' }
+      ];
     }
 
     Swal.fire({
@@ -1570,12 +1513,12 @@ function increaseQuantity(product) {
 
     if (product.es_preventa && nuevaCantidad > product.cantidad_maxima_preventa) {
       Swal.fire({
-        title: "Límite de preventa alcanzado",
-        text: `Has alcanzado el máximo para preventa (${product.cantidad_maxima_preventa}). ¿Deseas cambiar a precio regular?`,
+        title: "Límite de preventa estándar alcanzado",
+        text: `Has alcanzado el máximo para preventa estándar (${product.cantidad_maxima_preventa}). ¿Deseas cambiar a precio regular?`,
         icon: "question",
         showCancelButton: true,
         confirmButtonText: "Cambiar a precio regular",
-        cancelButtonText: "Mantener en preventa"
+        cancelButtonText: "Mantener en preventa estándar"
       }).then((result) => {
         if (result.isConfirmed) {
           switchToPriceType(product, false);
@@ -1609,7 +1552,7 @@ function decreaseQuantity(product) {
         nuevaCantidad <= product.cantidad_maxima_preventa) {
       Swal.fire({
         title: "Cambio de precio",
-        text: `Al disminuir a ${nuevaCantidad}, entra en el rango de preventa (${product.cantidad_minima_preventa}-${product.cantidad_maxima_preventa}). ¿Desea cambiar a precio de preventa?`,
+        text: `Al disminuir a ${nuevaCantidad}, entra en el rango de preventa estándar (${product.cantidad_minima_preventa}-${product.cantidad_maxima_preventa}). ¿Desea cambiar a precio de preventa estándar?`,
         icon: "question",
         showCancelButton: true,
         confirmButtonText: "Sí, cambiar",
@@ -1698,7 +1641,7 @@ function switchToPriceType(product, isPreventa) {
 
     Swal.fire({
       title: "Precio actualizado",
-      text: `Se ha cambiado al precio de ${isPreventa ? "preventa" : "regular"}${nuevaCantidad !== product.cantidad ? ` y la cantidad se ajustó a ${nuevaCantidad}` : ""}`,
+      text: `Se ha cambiado al precio de ${isPreventa ? "preventa estándar" : "regular"}${nuevaCantidad !== product.cantidad ? ` y la cantidad se ajustó a ${nuevaCantidad}` : ""}`,
       icon: "success",
       toast: true,
       position: "top-end",
@@ -1729,9 +1672,6 @@ function updateQuantityWithoutPriceChange(product, newQuantity) {
     cartStore.recalcularDescuento()
   }
 }
-
-
-
 
 // Función finalizeOrder que llama a processOrder
 const finalizeOrder = async () => {
@@ -1765,6 +1705,7 @@ const finalizeOrder = async () => {
   // Llamar a processOrder que ya tiene la lógica para enviar el total con descuento
   await processOrder();
 };
+
 function showToast(message, type = 'info') {
   Swal.fire({
     toast: true,
@@ -2331,9 +2272,9 @@ h2 {
   background-color: #f8f9fa;
   border-radius: 8px;
   padding: 15px;
-/*   border-left: 4px solid var(--primary-color); */
   transition: all 0.3s ease;
 }
+
 .delivery-info-display p {
   margin: 10px 0;
   color: #000000;
@@ -2347,234 +2288,6 @@ h2 {
   color: var(--primary-color);
   width: 20px;
   min-width: 20px;
-}
-
-/* Empty Cart Message */
-.empty-cart-message,
-.empty-summary {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 30px;
-  text-align: center;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  margin: 20px 0;
-}
-
-.empty-cart-message i,
-.empty-summary i {
-  font-size: 48px;
-  color: #adb5bd;
-  margin-bottom: 15px;
-  animation: bounce 2s infinite;
-}
-
-@keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {
-    transform: translateY(0);
-  }
-  40% {
-    transform: translateY(-20px);
-  }
-  60% {
-    transform: translateY(-10px);
-  }
-}
-
-.empty-cart-message p,
-.empty-summary p {
-  color: #6c757d;
-  font-size: 18px;
-  margin-bottom: 20px;
-}
-
-.go-shopping-btn {
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 20px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.go-shopping-btn:hover {
-  background-color: var(--primary-hover-color);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
-}
-
-.go-shopping-btn:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
-}
-
-/* Form Styles */
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-  margin-bottom: 20px;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group.full-width {
-  grid-column: span 2;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #343a40;
-  font-size: clamp(14px, 2.5vw, 16px);
-}
-
-.input-wrapper {
-  position: relative;
-  width: 100%;
-}
-
-.input-icon {
-  position: absolute;
-  left: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #6b7280;
-  font-size: 20px;
-  transition: color 0.3s ease;
-}
-
-input {
-  width: 100%;
-  padding: 14px 15px 14px 45px;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: clamp(16px, 2.5vw, 18px);
-  transition: all 0.3s ease;
-  box-sizing: border-box;
-  background-color: #fff;
-  min-height: 56px;
-}
-
-.responsive-input {
-  font-size: 16px;
-  min-height: 56px;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-input:focus {
-  border-color: var(--primary-color);
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
-}
-
-input:focus+.input-icon {
-  color: var(--primary-color);
-}
-
-.input-focus-indicator {
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  height: 2px;
-  width: 0;
-  background-color: var(--primary-color);
-  transition: width 0.3s ease;
-}
-
-input:focus~.input-focus-indicator {
-  width: 100%;
-}
-
-.input-error {
-  border-color: var(--danger-color);
-  background-color: #fef2f2;
-}
-
-.input-error:focus {
-  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.25);
-}
-
-.error-message {
-  color: var(--danger-color);
-  font-size: 0.8rem;
-  margin-top: 5px;
-  display: block;
-  position: absolute;
-}
-
-/* Button Styles */
-.step-actions {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 25px;
-  flex-wrap: wrap;
-  gap: 15px;
-}
-
-.next-button,
-.prev-button {
-  padding: clamp(10px, 2.5vw, 12px) clamp(20px, 3.5vw, 25px);
-  border-radius: 8px;
-  font-size: clamp(15px, 2.5vw, 17px);
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.next-button {
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-}
-
-.next-button:hover:not(:disabled) {
-  background-color: var(--primary-hover-color);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
-}
-
-.next-button:active:not(:disabled) {
-  transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
-}
-
-.prev-button {
-  background-color: #f8f9fa;
-  color: #000000;
-  border: 1px solid #dee2e6;
-}
-
-.prev-button:hover:not(:disabled) {
-  background-color: #e9ecef;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.prev-button:active:not(:disabled) {
-  transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.next-button:disabled,
-.prev-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
 }
 
 /* Product List Styles */
@@ -2671,7 +2384,27 @@ input:focus~.input-focus-indicator {
   font-size: clamp(12px, 2vw, 14px);
 }
 
-/* New styles for the enhanced price type selector */
+/* Price Type Badge */
+.price-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+}
+
+.price-type-badge.preventa {
+  background-color: #0288d1;
+}
+
+.price-type-badge.regular {
+  background-color: #689f38;
+}
+
+/* Price Type Container */
 .price-type-container {
   margin-bottom: 20px;
   border-radius: 10px;
@@ -2745,25 +2478,6 @@ input:focus~.input-focus-indicator {
 
 .price-card-header i {
   font-size: 16px;
-}
-
-.price-type-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 600;
-  color: white;
-}
-
-.price-type-badge.preventa {
-  background-color: #0288d1;
-}
-
-.price-type-badge.regular {
-  background-color: #689f38;
 }
 
 .price-card-body {
@@ -3006,6 +2720,229 @@ input:focus~.input-focus-indicator {
   background-color: #d32f2f;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(244, 67, 54, 0.3);
+}
+
+/* Empty Cart Message */
+.empty-cart-message,
+.empty-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  text-align: center;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.empty-cart-message i,
+.empty-summary i {
+  font-size: 48px;
+  color: #adb5bd;
+  margin-bottom: 15px;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-20px);
+  }
+  60% {
+    transform: translateY(-10px);
+  }
+}
+
+.empty-cart-message p,
+.empty-summary p {
+  color: #6c757d;
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+.go-shopping-btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.go-shopping-btn:hover {
+  background-color: var(--primary-hover-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+/* Form Styles */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group.full-width {
+  grid-column: span 2;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #343a40;
+  font-size: clamp(14px, 2.5vw, 16px);
+}
+
+.input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.input-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  font-size: 20px;
+  transition: color 0.3s ease;
+}
+
+input {
+  width: 100%;
+  padding: 14px 15px 14px 45px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: clamp(16px, 2.5vw, 18px);
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+  background-color: #fff;
+  min-height: 56px;
+}
+
+.responsive-input {
+  font-size: 16px;
+  min-height: 56px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+input:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+input:focus+.input-icon {
+  color: var(--primary-color);
+}
+
+.input-focus-indicator {
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  height: 2px;
+  width: 0;
+  background-color: var(--primary-color);
+  transition: width 0.3s ease;
+}
+
+input:focus~.input-focus-indicator {
+  width: 100%;
+}
+
+.input-error {
+  border-color: var(--danger-color);
+  background-color: #fef2f2;
+}
+
+.input-error:focus {
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.25);
+}
+
+.error-message {
+  color: var(--danger-color);
+  font-size: 0.8rem;
+  margin-top: 5px;
+  display: block;
+  position: absolute;
+}
+
+/* Button Styles */
+.step-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 25px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.next-button,
+.prev-button {
+  padding: clamp(10px, 2.5vw, 12px) clamp(20px, 3.5vw, 25px);
+  border-radius: 8px;
+  font-size: clamp(15px, 2.5vw, 17px);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.next-button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+}
+
+.next-button:hover:not(:disabled) {
+  background-color: var(--primary-hover-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.next-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+}
+
+.prev-button {
+  background-color: #f8f9fa;
+  color: #000000;
+  border: 1px solid #dee2e6;
+}
+
+.prev-button:hover:not(:disabled) {
+  background-color: #e9ecef;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.prev-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.next-button:disabled,
+.prev-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 /* Coupon Section */
@@ -4121,6 +4058,43 @@ input:focus~.input-focus-indicator {
   .comparison-divider {
     padding: 10px 0;
   }
+  
+  .coupon-input-group {
+    flex-direction: column;
+  }
+
+  .apply-coupon-btn {
+    width: 100%;
+  }
+
+  /* Improved touch targets for mobile */
+  .quantity-btn,
+  .remove-btn,
+  .apply-coupon-btn,
+  .toggle-summary-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Responsive input fields */
+  .responsive-input {
+    font-size: clamp(16px, 4vw, 18px);
+    height: clamp(44px, 8vw, 56px);
+  }
+
+  /* Smaller payment option buttons */
+  .payment-option {
+    padding: 10px;
+  }
+
+  .payment-option-header label {
+    font-size: 14px;
+  }
+
+  .payment-details {
+    padding-left: 15px;
+    font-size: 13px;
+  }
 }
 
 @media (min-width: 769px) {
@@ -4165,42 +4139,57 @@ input:focus~.input-focus-indicator {
     font-size: 16px;
     padding: 12px 12px 12px 40px;
   }
-
-  .coupon-input-group {
-    flex-direction: column;
+  
+  .checkout-container {
+    padding-bottom: 80px;
   }
-
-  .apply-coupon-btn {
-    width: 100%;
+  
+  .step-header {
+    padding: 12px 8px;
   }
-
-  /* Improved touch targets for mobile */
+  
+  .step-header-left {
+    gap: 10px;
+  }
+  
+  .step-number-wrapper {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+  }
+  
+  .toggle-summary-btn, 
+  .mobile-nav-btn,
   .quantity-btn,
-  .remove-btn,
-  .apply-coupon-btn,
-  .toggle-summary-btn {
-    min-height: 44px;
-    min-width: 44px;
+  .remove-btn {
+    min-height: 48px;
+    min-width: 48px;
   }
-
-  /* Responsive input fields */
+  
+  .mobile-nav-controls {
+    padding: 12px;
+  }
+  
+  .nav-buttons-container {
+    gap: 12px;
+  }
+  
+  /* Improve form inputs for mobile */
   .responsive-input {
-    font-size: clamp(16px, 4vw, 18px);
-    height: clamp(44px, 8vw, 56px);
+    font-size: 16px;
+    padding: 14px 14px 14px 45px;
   }
-
-  /* Smaller payment option buttons */
-  .payment-option {
-    padding: 10px;
+  
+  /* Improve scrolling experience */
+  .mini-cart-scroll {
+    -webkit-overflow-scrolling: touch;
+    scroll-padding: 10px;
   }
-
-  .payment-option-header label {
-    font-size: 14px;
-  }
-
-  .payment-details {
-    padding-left: 15px;
-    font-size: 13px;
+  
+  /* Better tap targets */
+  .payment-option-header,
+  .location-option {
+    padding: 12px;
   }
 }
 
@@ -4286,61 +4275,6 @@ input:focus~.input-focus-indicator {
   
   .back-button {
     font-size: 18px;
-  }
-}
-
-/* Improved mobile UX */
-@media (max-width: 480px) {
-  .checkout-container {
-    padding-bottom: 80px;
-  }
-  
-  .step-header {
-    padding: 12px 8px;
-  }
-  
-  .step-header-left {
-    gap: 10px;
-  }
-  
-  .step-number-wrapper {
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
-  }
-  
-  .toggle-summary-btn, 
-  .mobile-nav-btn,
-  .quantity-btn,
-  .remove-btn {
-    min-height: 48px;
-    min-width: 48px;
-  }
-  
-  .mobile-nav-controls {
-    padding: 12px;
-  }
-  
-  .nav-buttons-container {
-    gap: 12px;
-  }
-  
-  /* Improve form inputs for mobile */
-  .responsive-input {
-    font-size: 16px;
-    padding: 14px 14px 14px 45px;
-  }
-  
-  /* Improve scrolling experience */
-  .mini-cart-scroll {
-    -webkit-overflow-scrolling: touch;
-    scroll-padding: 10px;
-  }
-  
-  /* Better tap targets */
-  .payment-option-header,
-  .location-option {
-    padding: 12px;
   }
 }
 </style>
@@ -4527,7 +4461,7 @@ input:focus~.input-focus-indicator {
     width: 18px;
     height: 18px;
   }
-  
+
   .radio-checkmark {
     width: 18px;
     height: 18px;
