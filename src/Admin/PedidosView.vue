@@ -12,7 +12,8 @@
             <button class="btn btn-primary dropdown-toggle" type="button" @click="toggleExportDropdown">
               <i class="fas fa-file-export me-2"></i>Exportar
             </button>
-            <ul class="dropdown-menu dropdown-menu-end" :class="{ 'show': showExportDropdown }" style="position: absolute;">
+            <ul class="dropdown-menu dropdown-menu-end" :class="{ 'show': showExportDropdown }"
+              style="position: absolute;">
               <li>
                 <button class="dropdown-item" @click="fetchOrders">
                   <i class="fas fa-file-excel me-2 text-success"></i>Excel (Todos)
@@ -29,10 +30,10 @@
                 </button>
               </li>
               <li>
-  <button class="dropdown-item" @click="descargarPdfPedidosPorCatalogo">
-    <i class="fas fa-file-pdf me-2 text-primary"></i>PDF (Por Catálogo)
-  </button>
-</li>
+                <button class="dropdown-item" @click="descargarPdfPedidosPorCatalogo">
+                  <i class="fas fa-file-pdf me-2 text-primary"></i>PDF (Por Catálogo)
+                </button>
+              </li>
             </ul>
           </div>
           <button class="btn btn-outline-primary" @click="listOrders">
@@ -72,7 +73,7 @@
               </div>
             </div>
           </div>
-          
+
           <!-- Contador de resultados -->
           <div class="d-flex justify-content-between align-items-center mb-3">
             <p class="text-muted mb-0">
@@ -80,10 +81,12 @@
               Mostrando {{ datos.length }} de {{ pagination.total }} pedidos
             </p>
             <div class="btn-group">
-              <button class="btn btn-sm" :class="viewMode === 'table' ? 'btn-primary' : 'btn-outline-primary'" @click="viewMode = 'table'">
+              <button class="btn btn-sm" :class="viewMode === 'table' ? 'btn-primary' : 'btn-outline-primary'"
+                @click="viewMode = 'table'">
                 <i class="fas fa-table me-1"></i>Tabla
               </button>
-              <button class="btn btn-sm" :class="viewMode === 'cards' ? 'btn-primary' : 'btn-outline-primary'" @click="viewMode = 'cards'">
+              <button class="btn btn-sm" :class="viewMode === 'cards' ? 'btn-primary' : 'btn-outline-primary'"
+                @click="viewMode = 'cards'">
                 <i class="fas fa-th-large me-1"></i>Tarjetas
               </button>
             </div>
@@ -198,7 +201,8 @@
                       :disabled="item.estado === true" title="Marcar como completado">
                       <i class="fas fa-check"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-danger" @click="fetchOrdersPDFId(item.id)" title="Generar PDF">
+                    <button class="btn btn-sm btn-outline-danger" @click="fetchOrdersPDFId(item.id)"
+                      title="Generar PDF">
                       <i class="fas fa-file-pdf"></i>
                     </button>
                   </div>
@@ -287,12 +291,12 @@
                   <i class="fas fa-angle-left"></i>
                 </a>
               </li>
-              
-              <li class="page-item" v-for="page in paginationRange" :key="page" 
-                  :class="{ active: pagination.current_page === page }">
+
+              <li class="page-item" v-for="page in paginationRange" :key="page"
+                :class="{ active: pagination.current_page === page }">
                 <a class="page-link" href="#" @click.prevent="changePage(page)">{{ page }}</a>
               </li>
-              
+
               <li class="page-item" :class="{ disabled: pagination.current_page === pagination.last_page }">
                 <a class="page-link" href="#" @click.prevent="changePage(pagination.current_page + 1)">
                   <i class="fas fa-angle-right"></i>
@@ -327,8 +331,9 @@
             <!-- Barra de estado del pedido permanece igual -->
             <div class="order-status-bar mb-4">
               <div class="progress" style="height: 5px;">
-                <div class="progress-bar bg-success" role="progressbar" :style="{ width: detailOrder.estado ? '100%' : '50%' }" 
-                     aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                <div class="progress-bar bg-success" role="progressbar"
+                  :style="{ width: detailOrder.estado ? '100%' : '50%' }" aria-valuenow="50" aria-valuemin="0"
+                  aria-valuemax="100"></div>
               </div>
               <div class="d-flex justify-content-between mt-2">
                 <div class="text-center">
@@ -360,7 +365,8 @@
                   </div>
                   <div class="card-body">
                     <div class="text-center mb-3">
-                      <div class="avatar-circle-lg mx-auto mb-2" :style="{ backgroundColor: getAvatarColor(detailOrder.user?.nombre) }">
+                      <div class="avatar-circle-lg mx-auto mb-2"
+                        :style="{ backgroundColor: getAvatarColor(detailOrder.user?.nombre) }">
                         {{ getInitials(detailOrder.user?.nombre, detailOrder.user?.apellido) }}
                       </div>
                       <h5 class="mb-0">{{ detailOrder.user?.nombre }} {{ detailOrder.user?.apellido }}</h5>
@@ -381,7 +387,8 @@
                       </li>
                       <li class="list-group-item d-flex justify-content-between px-0">
                         <span class="text-muted"><i class="fas fa-map me-2"></i>Departamento:</span>
-                        <span class="fw-medium text-capitalize">{{ detailOrder.user?.departamento || 'No especificado' }}</span>
+                        <span class="fw-medium text-capitalize">{{ detailOrder.user?.departamento || 'No especificado'
+                          }}</span>
                       </li>
                       <li class="list-group-item px-0">
                         <span class="text-muted"><i class="fas fa-map-marker-alt me-2"></i>Dirección:</span>
@@ -415,7 +422,7 @@
                           <tr v-for="(producto, index) in detailOrder.productos" :key="index">
                             <td>
                               <div class="d-flex align-items-center">
-                              <!--   <div class="product-img-small me-2">
+                                <!--   <div class="product-img-small me-2">
                                   <img :src="producto.imagen_principal" 
                                        alt="Imagen del producto" class="img-fluid rounded">
                                 </div> -->
@@ -435,10 +442,12 @@
                             </td>
                             <td class="text-center">{{ producto.pivot?.cantidad }}</td>
                             <td class="text-end">
-                              {{ formatCurrency(producto.pivot?.es_preventa ? producto.pivot?.precio_preventa : producto.pivot?.precio) }}
+                              {{ formatCurrency(producto.pivot?.es_preventa ? producto.pivot?.precio_preventa :
+                              producto.pivot?.precio) }}
                             </td>
                             <td class="text-end fw-medium">
-                              {{ formatCurrency((producto.pivot?.es_preventa ? producto.pivot?.precio_preventa : producto.pivot?.precio) * producto.pivot?.cantidad) }}
+                              {{ formatCurrency((producto.pivot?.es_preventa ? producto.pivot?.precio_preventa :
+                                producto.pivot?.precio) * producto.pivot?.cantidad) }}
                             </td>
                           </tr>
                         </tbody>
@@ -458,18 +467,22 @@
                   </div>
                   <div class="card-body">
                     <!-- Alerta de estado de pago -->
-                    <div class="alert" :class="detailOrder.pending > 0 ? 'alert-warning' : 'alert-success'" role="alert">
+                    <div class="alert" :class="detailOrder.pending > 0 ? 'alert-warning' : 'alert-success'"
+                      role="alert">
                       <div class="d-flex">
                         <div class="me-3">
-                          <i :class="detailOrder.pending > 0 ? 'fas fa-exclamation-triangle fa-2x' : 'fas fa-check-circle fa-2x'"></i>
+                          <i
+                            :class="detailOrder.pending > 0 ? 'fas fa-exclamation-triangle fa-2x' : 'fas fa-check-circle fa-2x'"></i>
                         </div>
                         <div>
-                          <h5 class="alert-heading">{{ detailOrder.pending > 0 ? 'Pago pendiente' : 'Pago completado' }}</h5>
-                          <p class="mb-0">{{ detailOrder.pending > 0 ? 'Este pedido tiene un saldo pendiente de pago.' : 'Este pedido ha sido pagado completamente.' }}</p>
+                          <h5 class="alert-heading">{{ detailOrder.pending > 0 ? 'Pago pendiente' : 'Pago completado' }}
+                          </h5>
+                          <p class="mb-0">{{ detailOrder.pending > 0 ? 'Este pedido tiene un saldo pendiente de pago.' :
+                            'Este pedido ha sido pagado completamente.' }}</p>
                         </div>
                       </div>
                     </div>
-                    
+
                     <!-- Resumen financiero mejorado -->
                     <ul class="list-group list-group-flush">
                       <!-- Subtotal (antes de descuentos) -->
@@ -477,7 +490,7 @@
                         <span class="text-muted">Subtotal:</span>
                         <span class="fw-medium">{{ formatCurrency(detailOrder.total_amount) }}</span>
                       </li>
-                      
+
                       <!-- Información del cupón mejorada -->
                       <li class="list-group-item px-0" v-if="detailOrder.cupon">
                         <div class="d-flex justify-content-between align-items-start mb-2">
@@ -485,25 +498,27 @@
                           <div class="text-end">
                             <div class="d-flex align-items-center">
                               <span class="badge bg-info me-2">{{ detailOrder.cupon.codigo }}</span>
-                              <span class="badge" :class="detailOrder.cupon.tipo === 'porcentaje' ? 'bg-primary' : 'bg-success'">
-                                {{ detailOrder.cupon.tipo === 'porcentaje' ? 
-                                   detailOrder.cupon.descuento + '%' : 
-                                   'Bs. ' + detailOrder.cupon.descuento }}
+                              <span class="badge"
+                                :class="detailOrder.cupon.tipo === 'porcentaje' ? 'bg-primary' : 'bg-success'">
+                                {{ detailOrder.cupon.tipo === 'porcentaje' ?
+                                  detailOrder.cupon.descuento + '%' :
+                                  'Bs. ' + detailOrder.cupon.descuento }}
                               </span>
                             </div>
                           </div>
                         </div>
-                        
+
                         <!-- Detalles del descuento -->
-                        <div class="discount-details p-2 mb-2 rounded" :class="detailOrder.cupon.tipo === 'porcentaje' ? 'bg-primary bg-opacity-10' : 'bg-success bg-opacity-10'">
+                        <div class="discount-details p-2 mb-2 rounded"
+                          :class="detailOrder.cupon.tipo === 'porcentaje' ? 'bg-primary bg-opacity-10' : 'bg-success bg-opacity-10'">
                           <div class="d-flex justify-content-between mb-1">
                             <span class="text-muted">Tipo:</span>
                             <span class="fw-medium">{{ detailOrder.cupon.tipo === 'porcentaje' ? 'Porcentaje' : 'Monto Fijo' }}</span>
                           </div>
                           <div class="d-flex justify-content-between mb-1">
                             <span class="text-muted">Valor:</span>
-                            <span class="fw-medium">{{ detailOrder.cupon.tipo === 'porcentaje' ? 
-                              detailOrder.cupon.descuento + '%' : 
+                            <span class="fw-medium">{{ detailOrder.cupon.tipo === 'porcentaje' ?
+                              detailOrder.cupon.descuento + '%' :
                               formatCurrency(detailOrder.cupon.descuento) }}</span>
                           </div>
                           <div class="d-flex justify-content-between">
@@ -512,13 +527,14 @@
                           </div>
                         </div>
                       </li>
-                      
+
                       <!-- Total después del descuento -->
                       <li class="list-group-item d-flex justify-content-between px-0 fw-bold">
                         <span class="text-muted">Total con descuento:</span>
-                        <span class="text-primary">{{ formatCurrency(detailOrder.total_amount - calcularMontoDescuento()) }}</span>
+                        <span class="text-primary">{{ formatCurrency(detailOrder.total_amount -
+                          calcularMontoDescuento()) }}</span>
                       </li>
-                      
+
                       <!-- Desglose de pagos -->
                       <li class="list-group-item d-flex justify-content-between px-0">
                         <span class="text-muted">Monto Pagado:</span>
@@ -528,7 +544,7 @@
                         <span class="text-muted">Saldo Pendiente:</span>
                         <span class="fw-medium text-danger">{{ formatCurrency(detailOrder.pending) }}</span>
                       </li>
-                      
+
                       <!-- Método de pago y estado -->
                       <li class="list-group-item d-flex justify-content-between px-0">
                         <span class="text-muted">Método de Pago:</span>
@@ -547,7 +563,7 @@
                   </div>
                 </div>
               </div>
-              
+
               <!-- Sección de Comprobante/Voucher permanece igual -->
               <div class="col-12" v-if="detailOrder.payment_method === 'qr' && detailOrder.voucher">
                 <div class="card border-0 shadow-sm">
@@ -561,7 +577,8 @@
                       <div class="col-md-8">
                         <div class="alert alert-info mb-3">
                           <i class="fas fa-info-circle me-2"></i>
-                          El cliente ha proporcionado un comprobante de pago. Haga clic en la imagen para verla en tamaño completo.
+                          El cliente ha proporcionado un comprobante de pago. Haga clic en la imagen para verla en
+                          tamaño completo.
                         </div>
                         <p class="mb-0">
                           <strong>Fecha de carga:</strong> {{ formatDate(detailOrder.updated_at) }}<br>
@@ -570,8 +587,8 @@
                       </div>
                       <div class="col-md-4 text-center">
                         <div class="voucher-container">
-                          <img :src="getVoucherUrl(detailOrder.voucher)" alt="Comprobante de pago" 
-                               class="img-fluid voucher-image" @click="openVoucherModal(detailOrder.voucher)">
+                          <img :src="getVoucherUrl(detailOrder.voucher)" alt="Comprobante de pago"
+                            class="img-fluid voucher-image" @click="openVoucherModal(detailOrder.voucher)">
                         </div>
                       </div>
                     </div>
@@ -604,8 +621,8 @@
         </div>
       </div>
     </div>
-    
-    
+
+
     <!-- Modal para ver el voucher en tamaño completo -->
     <div class="modal fade" id="voucherModal" tabindex="-1" aria-labelledby="voucherModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -628,7 +645,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Toast de notificación -->
     <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
       <div id="liveToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
@@ -719,16 +736,16 @@ onMounted(() => {
   orderDetailModal = new Modal(document.getElementById('orderDetailModal'));
   voucherModal = new Modal(document.getElementById('voucherModal'));
   liveToast = new Toast(document.getElementById('liveToast'));
-  
+
   // Agregar event listener para cerrar el dropdown al hacer clic fuera
   document.addEventListener('click', closeDropdownOnClickOutside);
-  
+
   listOrders();
   loadModels();
-  
+
   // Agregar event listener para el cambio de tamaño de ventana
   window.addEventListener('resize', actualizarAnchoPantalla);
-  
+
   // Configurar ordenamiento inicial basado en sortBy
   updateSortFieldAndDirection();
 });
@@ -771,16 +788,16 @@ const listOrders = async () => {
       sortDirection.value,
       currentPage.value
     );
-    
+
     datos.value = data.datos;
-    
+
     // Actualizar información de paginación
     if (data.pagination) {
       pagination.value = data.pagination;
     } else {
       console.warn('Datos de paginación no encontrados en la respuesta de la API');
     }
-    
+
     showToast('success', 'Datos cargados', 'Los pedidos se han cargado correctamente');
   } catch (error) {
     console.error('Error al cargar pedidos:', error);
@@ -790,7 +807,7 @@ const listOrders = async () => {
 
 const changePage = async (page) => {
   if (page < 1 || page > pagination.value.last_page) return;
-  
+
   currentPage.value = page;
   await listOrders();
 };
@@ -862,7 +879,7 @@ const completeOrderPending = async (id) => {
     if (detailOrder.value.id === id) {
       detailOrder.value.estado = true;
     }
-    
+
     showToast('success', 'Pedido completado', 'El pedido ha sido marcado como completado');
   } catch (error) {
     console.error('Error al completar pedido:', error);
@@ -882,7 +899,7 @@ const fetchOrders = async () => {
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
-    
+
     showToast('success', 'Excel generado', 'El archivo Excel se ha descargado correctamente');
   } catch (error) {
     console.error('Error al generar Excel:', error);
@@ -924,10 +941,10 @@ const descargarPdfPedidosEnProceso = async () => {
 const descargarPdfPedidosPorCatalogo = async () => {
   try {
     showExportDropdown.value = false; // Cerrar el dropdown después de hacer clic
-    
+
     // Solicitar el ID del catálogo al usuario
     const catalogoId = prompt("Ingrese el ID del catálogo:");
-    
+
     if (catalogoId && !isNaN(catalogoId)) {
       const response = await pdfPedidosCatalogo(catalogoId);
       handlePdfResponse(response, `pedidos_catalogo_${catalogoId}.pdf`);
@@ -942,7 +959,7 @@ const descargarPdfPedidosPorCatalogo = async () => {
 const handlePdfResponse = (response, defaultFilename) => {
   // Verificar el tipo de contenido de la respuesta
   const contentType = response.headers['content-type'];
-  
+
   if (contentType === 'application/pdf') {
     // Si es un PDF, manejarlo como descarga directa
     const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -957,7 +974,7 @@ const handlePdfResponse = (response, defaultFilename) => {
   } else if (contentType.includes('application/json')) {
     // Si es JSON, probablemente estamos recibiendo base64 o URL
     const data = response.data;
-    
+
     if (data.success) {
       if (data.data.base64) {
         // Manejar datos PDF en base64
@@ -1010,7 +1027,7 @@ const getModelName = (modeloId, producto) => {
     const modeloEnProducto = producto.modelos.find(m => m.id === modeloId);
     if (modeloEnProducto) return modeloEnProducto.nombre;
   }
-  
+
   // Si no se encuentra en el producto, buscar en los modelos globales
   const model = models.value.find(m => m.id === modeloId);
   return model ? model.nombre : 'Desconocido';
@@ -1026,20 +1043,20 @@ const getInitials = (nombre, apellido) => {
 // Función para generar un color basado en el nombre
 const getAvatarColor = (nombre) => {
   if (!nombre) return '#6c757d';
-  
+
   // Generar un color basado en el nombre
   let hash = 0;
   for (let i = 0; i < nombre.length; i++) {
     hash = nombre.charCodeAt(i) + ((hash << 5) - hash);
   }
-  
+
   // Convertir a un color hexadecimal
   let color = '#';
   for (let i = 0; i < 3; i++) {
     const value = (hash >> (i * 8)) & 0xFF;
     color += ('00' + value.toString(16)).substr(-2);
   }
-  
+
   return color;
 };
 
@@ -1073,21 +1090,21 @@ const toggleSort = (field) => {
     sortField.value = field;
     sortDirection.value = 'asc';
   }
-  
+
   // Actualizar el valor de sortBy para mantener sincronizado
   if (field === 'created_at' || field === 'date') {
     sortBy.value = sortDirection.value === 'asc' ? 'date_asc' : 'date_desc';
   } else if (field === 'amount') {
     sortBy.value = sortDirection.value === 'asc' ? 'amount_asc' : 'amount_desc';
   }
-  
+
   // Aplicar el nuevo ordenamiento
   listOrders();
 };
 
 const getSortIcon = (field) => {
   const mappedField = field === 'date' ? 'created_at' : field;
-  
+
   if (sortField.value !== mappedField) {
     return 'fa-sort';
   }
@@ -1105,10 +1122,10 @@ const showToast = (type, title, message) => {
 // Función mejorada para calcular el monto de descuento basada en la estructura de datos proporcionada
 const calcularMontoDescuento = () => {
   if (!detailOrder.value.cupon) return 0;
-  
+
   const subtotal = parseFloat(detailOrder.value.total_amount);
   let discountAmount = 0;
-  
+
   if (detailOrder.value.cupon.tipo === 'porcentaje') {
     // Calcular descuento porcentual
     discountAmount = (subtotal * parseFloat(detailOrder.value.cupon.descuento)) / 100;
@@ -1116,7 +1133,7 @@ const calcularMontoDescuento = () => {
     // Descuento de monto fijo
     discountAmount = parseFloat(detailOrder.value.cupon.descuento);
   }
-  
+
   // Asegurar que el descuento no exceda el monto total
   return Math.min(discountAmount, subtotal);
 };
@@ -1132,6 +1149,7 @@ const calcularMontoDescuento = () => {
   font-size: 0.9rem;
   font-weight: 500;
 }
+
 .card {
   transition: box-shadow 0.3s ease-in-out;
 }
@@ -1349,11 +1367,13 @@ const calcularMontoDescuento = () => {
   cursor: pointer;
 }
 
-.dropdown-item:hover, .dropdown-item:focus {
+.dropdown-item:hover,
+.dropdown-item:focus {
   color: #16181b;
   text-decoration: none;
   background-color: #f8f9fa;
 }
+
 /* Estilos adicionales para la información de preventa */
 .preventa-info {
   background-color: rgba(255, 193, 7, 0.1);
@@ -1362,6 +1382,7 @@ const calcularMontoDescuento = () => {
   margin: 5px 0;
   border-radius: 0 4px 4px 0;
 }
+
 .badge {
   font-size: 0.85rem;
   padding: 0.35rem 0.65rem;
@@ -1371,6 +1392,7 @@ const calcularMontoDescuento = () => {
   font-size: 0.9rem;
   font-weight: 500;
 }
+
 .card {
   transition: box-shadow 0.3s ease-in-out;
 }
@@ -1588,7 +1610,8 @@ const calcularMontoDescuento = () => {
   cursor: pointer;
 }
 
-.dropdown-item:hover, .dropdown-item:focus {
+.dropdown-item:hover,
+.dropdown-item:focus {
   color: #16181b;
   text-decoration: none;
   background-color: #f8f9fa;
@@ -1635,4 +1658,3 @@ const calcularMontoDescuento = () => {
   object-fit: contain;
 }
 </style>
-
