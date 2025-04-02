@@ -2,7 +2,8 @@
   <div class="container-fluid py-4">
     <div class="card shadow-sm border-0">
       <!-- Header -->
-      <div class="card-header bg-primary bg-opacity-10 d-flex justify-content-between align-items-center flex-wrap gap-3 p-3">
+      <div
+        class="card-header bg-primary bg-opacity-10 d-flex justify-content-between align-items-center flex-wrap gap-3 p-3">
         <h2 class="card-title h4 m-0">
           <i class="fas fa-user-tag me-2"></i>Gestión de Roles
         </h2>
@@ -25,21 +26,10 @@
               <span class="input-group-text bg-light border-end-0">
                 <i class="fas fa-search text-muted"></i>
               </span>
-              <input 
-                type="text" 
-                class="form-control border-start-0" 
-                placeholder="Buscar por nombre de rol..." 
-                v-model="search" 
-                @input="filtrarRoles"
-                aria-label="Buscar roles"
-              >
-              <button 
-                v-if="search" 
-                class="btn btn-outline-secondary border-start-0" 
-                type="button" 
-                @click="search = ''; filtrarRoles()"
-                aria-label="Limpiar búsqueda"
-              >
+              <input type="text" class="form-control border-start-0" placeholder="Buscar por nombre de rol..."
+                v-model="search" @input="filtrarRoles" aria-label="Buscar roles">
+              <button v-if="search" class="btn btn-outline-secondary border-start-0" type="button"
+                @click="search = ''; filtrarRoles()" aria-label="Limpiar búsqueda">
                 <i class="fas fa-times"></i>
               </button>
             </div>
@@ -51,22 +41,14 @@
               <span class="badge bg-primary rounded-pill me-2">{{ rolesFiltrados.length }}</span>
               <span class="text-muted">{{ rolesFiltrados.length === 1 ? 'rol encontrado' : 'roles encontrados' }}</span>
             </div>
-            
+
             <div class="btn-group">
-              <button 
-                class="btn btn-sm" 
-                :class="viewMode === 'table' ? 'btn-primary' : 'btn-outline-primary'" 
-                @click="viewMode = 'table'"
-                aria-label="Ver como tabla"
-              >
+              <button class="btn btn-sm" :class="viewMode === 'table' ? 'btn-primary' : 'btn-outline-primary'"
+                @click="viewMode = 'table'" aria-label="Ver como tabla">
                 <i class="fas fa-table me-1"></i><span class="d-none d-sm-inline">Tabla</span>
               </button>
-              <button 
-                class="btn btn-sm" 
-                :class="viewMode === 'cards' ? 'btn-primary' : 'btn-outline-primary'" 
-                @click="viewMode = 'cards'"
-                aria-label="Ver como tarjetas"
-              >
+              <button class="btn btn-sm" :class="viewMode === 'cards' ? 'btn-primary' : 'btn-outline-primary'"
+                @click="viewMode = 'cards'" aria-label="Ver como tarjetas">
                 <i class="fas fa-th-large me-1"></i><span class="d-none d-sm-inline">Tarjetas</span>
               </button>
             </div>
@@ -103,11 +85,8 @@
                 <th class="px-3" style="width: 80px;">
                   <div class="d-flex align-items-center">
                     <span>ID</span>
-                    <button 
-                      class="btn btn-sm text-primary border-0 p-0 ms-1" 
-                      @click="toggleSort('id')"
-                      aria-label="Ordenar por ID"
-                    >
+                    <button class="btn btn-sm text-primary border-0 p-0 ms-1" @click="toggleSort('id')"
+                      aria-label="Ordenar por ID">
                       <i class="fas" :class="getSortIcon('id')"></i>
                     </button>
                   </div>
@@ -115,11 +94,8 @@
                 <th class="px-3">
                   <div class="d-flex align-items-center">
                     <span>Rol</span>
-                    <button 
-                      class="btn btn-sm text-primary border-0 p-0 ms-1" 
-                      @click="toggleSort('name')"
-                      aria-label="Ordenar por nombre"
-                    >
+                    <button class="btn btn-sm text-primary border-0 p-0 ms-1" @click="toggleSort('name')"
+                      aria-label="Ordenar por nombre">
                       <i class="fas" :class="getSortIcon('name')"></i>
                     </button>
                   </div>
@@ -127,11 +103,8 @@
                 <th class="px-3">
                   <div class="d-flex align-items-center">
                     <span>Permisos</span>
-                    <button 
-                      class="btn btn-sm text-primary border-0 p-0 ms-1" 
-                      @click="toggleSort('permissions')"
-                      aria-label="Ordenar por cantidad de permisos"
-                    >
+                    <button class="btn btn-sm text-primary border-0 p-0 ms-1" @click="toggleSort('permissions')"
+                      aria-label="Ordenar por cantidad de permisos">
                       <i class="fas" :class="getSortIcon('permissions')"></i>
                     </button>
                   </div>
@@ -140,7 +113,8 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="item in rolesFiltrados" :key="item.id" :class="{'table-primary bg-opacity-10': isSystemRole(item.name)}">
+              <tr v-for="item in rolesFiltrados" :key="item.id"
+                :class="{ 'table-primary bg-opacity-10': isSystemRole(item.name) }">
                 <td class="px-3">{{ item.id }}</td>
                 <td class="px-3">
                   <div class="d-flex align-items-center">
@@ -158,32 +132,20 @@
                 <td class="px-3">
                   <div class="d-flex align-items-center">
                     <span class="badge bg-info rounded-pill me-2">{{ item.permissions.length }}</span>
-                    <button 
-                      class="btn btn-sm btn-outline-info py-0 px-2" 
-                      @click="mostrarPermisos(item)"
-                      aria-label="Ver permisos"
-                    >
+                    <button class="btn btn-sm btn-outline-info py-0 px-2" @click="mostrarPermisos(item)"
+                      aria-label="Ver permisos">
                       <i class="fas fa-eye me-1"></i>Ver permisos
                     </button>
                   </div>
                 </td>
                 <td class="px-3 text-end">
                   <div class="btn-group">
-                    <button 
-                      class="btn btn-sm btn-outline-primary" 
-                      @click="mostrar(item.id)"
-                      aria-label="Editar rol"
-                      :title="`Editar ${item.name}`"
-                    >
+                    <button class="btn btn-sm btn-outline-primary" @click="mostrar(item.id)" aria-label="Editar rol"
+                      :title="`Editar ${item.name}`">
                       <i class="fas fa-edit"></i>
                     </button>
-                    <button 
-                      class="btn btn-sm btn-outline-danger" 
-                      @click="confirmarEliminar(item)"
-                      aria-label="Eliminar rol"
-                      :title="`Eliminar ${item.name}`"
-                      :disabled="isSystemRole(item.name)"
-                    >
+                    <button class="btn btn-sm btn-outline-danger" @click="confirmarEliminar(item)"
+                      aria-label="Eliminar rol" :title="`Eliminar ${item.name}`" :disabled="isSystemRole(item.name)">
                       <i class="fas fa-trash"></i>
                     </button>
                   </div>
@@ -197,12 +159,10 @@
         <div v-else class="p-3">
           <div class="row g-3">
             <div class="col-md-6 col-lg-4" v-for="item in rolesFiltrados" :key="item.id">
-              <div 
-                class="card h-100 border-0 shadow-sm hover-card" 
-                :class="{'border-primary border-opacity-25': isSystemRole(item.name)}"
-              >
-                <div class="card-header d-flex justify-content-between align-items-center" 
-                     :class="isSystemRole(item.name) ? 'bg-primary bg-opacity-10' : 'bg-light'">
+              <div class="card h-100 border-0 shadow-sm hover-card"
+                :class="{ 'border-primary border-opacity-25': isSystemRole(item.name) }">
+                <div class="card-header d-flex justify-content-between align-items-center"
+                  :class="isSystemRole(item.name) ? 'bg-primary bg-opacity-10' : 'bg-light'">
                   <div class="d-flex align-items-center">
                     <div class="role-icon me-2" :class="isSystemRole(item.name) ? 'role-icon-system' : ''">
                       <i class="fas" :class="getRoleIcon(item.name)"></i>
@@ -215,17 +175,15 @@
                 </div>
                 <div class="card-body">
                   <div v-if="isSystemRole(item.name)" class="alert alert-info bg-opacity-25 py-2 mb-3">
-                    <small><i class="fas fa-shield-alt me-1"></i>Este es un rol del sistema con privilegios especiales</small>
+                    <small><i class="fas fa-shield-alt me-1"></i>Este es un rol del sistema con privilegios
+                      especiales</small>
                   </div>
-                  
+
                   <div class="mb-3">
                     <h6 class="text-muted mb-2">Permisos principales:</h6>
                     <div class="permission-tags">
-                      <span 
-                        v-for="(permiso, index) in item.permissions.slice(0, 5)" 
-                        :key="index" 
-                        class="badge bg-light text-dark me-1 mb-1"
-                      >
+                      <span v-for="(permiso, index) in item.permissions.slice(0, 5)" :key="index"
+                        class="badge bg-light text-dark me-1 mb-1">
                         {{ permiso.name }}
                       </span>
                       <span v-if="item.permissions.length > 5" class="badge bg-secondary me-1 mb-1">
@@ -233,7 +191,7 @@
                       </span>
                     </div>
                   </div>
-                  
+
                   <div class="text-muted small">
                     <div><i class="fas fa-hashtag me-1"></i>ID: {{ item.id }}</div>
                     <div><i class="fas fa-key me-1"></i>Total de permisos: {{ item.permissions.length }}</div>
@@ -241,26 +199,15 @@
                 </div>
                 <div class="card-footer bg-white border-top-0">
                   <div class="d-flex justify-content-between">
-                    <button 
-                      class="btn btn-sm btn-outline-primary" 
-                      @click="mostrar(item.id)"
-                      aria-label="Editar rol"
-                    >
+                    <button class="btn btn-sm btn-outline-primary" @click="mostrar(item.id)" aria-label="Editar rol">
                       <i class="fas fa-edit me-1"></i>Editar
                     </button>
-                    <button 
-                      class="btn btn-sm btn-outline-info" 
-                      @click="mostrarPermisos(item)"
-                      aria-label="Ver permisos"
-                    >
+                    <button class="btn btn-sm btn-outline-info" @click="mostrarPermisos(item)"
+                      aria-label="Ver permisos">
                       <i class="fas fa-eye me-1"></i>Ver permisos
                     </button>
-                    <button 
-                      class="btn btn-sm btn-outline-danger" 
-                      @click="confirmarEliminar(item)"
-                      aria-label="Eliminar rol"
-                      :disabled="isSystemRole(item.name)"
-                    >
+                    <button class="btn btn-sm btn-outline-danger" @click="confirmarEliminar(item)"
+                      aria-label="Eliminar rol" :disabled="isSystemRole(item.name)">
                       <i class="fas fa-trash me-1"></i>Eliminar
                     </button>
                   </div>
@@ -290,17 +237,9 @@
                 <label for="nombre" class="form-label fw-bold">Nombre del Rol <span class="text-danger">*</span></label>
                 <div class="input-group has-validation">
                   <span class="input-group-text"><i class="fas fa-user-tag"></i></span>
-                  <input 
-                    type="text" 
-                    class="form-control" 
-                    :class="{ 'is-invalid': errors.name }" 
-                    id="nombre"
-                    v-model="formulario.name" 
-                    placeholder="Ej: Editor, Vendedor, Supervisor..."
-                    required
-                    :disabled="isSystemRole(formulario.name)"
-                    autocomplete="off"
-                  >
+                  <input type="text" class="form-control" :class="{ 'is-invalid': errors.name }" id="nombre"
+                    v-model="formulario.name" placeholder="Ej: Editor, Vendedor, Supervisor..." required
+                    :disabled="isSystemRole(formulario.name)" autocomplete="off">
                   <div class="invalid-feedback" v-if="errors.name">
                     {{ errors.name[0] }}
                   </div>
@@ -312,7 +251,7 @@
                   <i class="fas fa-info-circle me-1"></i>
                   El nombre debe ser único y descriptivo de las funciones del rol
                 </div>
-                
+
                 <div v-if="isSystemRole(formulario.name)" class="alert alert-warning mt-3">
                   <div class="d-flex">
                     <div class="me-3">
@@ -320,12 +259,13 @@
                     </div>
                     <div>
                       <h6 class="alert-heading">Rol del sistema</h6>
-                      <p class="mb-0">Este es un rol del sistema y su nombre no puede ser modificado. Sin embargo, puedes ajustar sus permisos.</p>
+                      <p class="mb-0">Este es un rol del sistema y su nombre no puede ser modificado. Sin embargo,
+                        puedes ajustar sus permisos.</p>
                     </div>
                   </div>
                 </div>
               </div>
-              
+
               <!-- Sección de permisos -->
               <div class="mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -339,36 +279,22 @@
                     </button>
                   </div>
                 </div>
-                
+
                 <!-- Búsqueda y filtros de permisos -->
                 <div class="row g-2 mb-3">
                   <div class="col-md-8">
                     <div class="input-group">
                       <span class="input-group-text"><i class="fas fa-search"></i></span>
-                      <input 
-                        type="text" 
-                        class="form-control" 
-                        placeholder="Buscar permisos..." 
-                        v-model="permisosSearch"
-                        aria-label="Buscar permisos"
-                      >
-                      <button 
-                        v-if="permisosSearch" 
-                        class="btn btn-outline-secondary" 
-                        type="button" 
-                        @click="permisosSearch = ''"
-                        aria-label="Limpiar búsqueda de permisos"
-                      >
+                      <input type="text" class="form-control" placeholder="Buscar permisos..." v-model="permisosSearch"
+                        aria-label="Buscar permisos">
+                      <button v-if="permisosSearch" class="btn btn-outline-secondary" type="button"
+                        @click="permisosSearch = ''" aria-label="Limpiar búsqueda de permisos">
                         <i class="fas fa-times"></i>
                       </button>
                     </div>
                   </div>
                   <div class="col-md-4">
-                    <select 
-                      class="form-select" 
-                      v-model="categoriaSeleccionada"
-                      aria-label="Filtrar por categoría"
-                    >
+                    <select class="form-select" v-model="categoriaSeleccionada" aria-label="Filtrar por categoría">
                       <option value="">Todas las categorías</option>
                       <option v-for="categoria in categorias" :key="categoria" :value="categoria">
                         {{ categoria }}
@@ -376,7 +302,7 @@
                     </select>
                   </div>
                 </div>
-                
+
                 <!-- Contador de permisos seleccionados -->
                 <div class="d-flex justify-content-between align-items-center mb-2">
                   <span class="text-muted small">
@@ -387,17 +313,18 @@
                     {{ formulario.permissions.length }} seleccionados
                   </span>
                 </div>
-                
+
                 <!-- Lista de permisos -->
                 <div class="permissions-container border rounded p-3" style="max-height: 300px; overflow-y: auto;">
                   <div v-if="permisosFiltrados.length === 0" class="text-center py-3 text-muted">
                     <i class="fas fa-search fa-2x mb-2"></i>
                     <p class="mb-0">No se encontraron permisos con ese criterio</p>
-                    <button type="button" class="btn btn-sm btn-link" @click="permisosSearch = ''; categoriaSeleccionada = ''">
+                    <button type="button" class="btn btn-sm btn-link"
+                      @click="permisosSearch = ''; categoriaSeleccionada = ''">
                       Limpiar filtros
                     </button>
                   </div>
-                  
+
                   <div v-else>
                     <!-- Agrupar por categoría -->
                     <div v-for="categoria in permisosAgrupados" :key="categoria.nombre" class="mb-3">
@@ -407,13 +334,8 @@
                       <div class="row g-2">
                         <div class="col-md-6" v-for="permiso in categoria.permisos" :key="permiso.id">
                           <div class="form-check permission-item p-2 rounded">
-                            <input 
-                              type="checkbox" 
-                              class="form-check-input" 
-                              :id="'permiso-' + permiso.id"
-                              :value="permiso.name" 
-                              v-model="formulario.permissions"
-                            >
+                            <input type="checkbox" class="form-check-input" :id="'permiso-' + permiso.id"
+                              :value="permiso.name" v-model="formulario.permissions">
                             <label class="form-check-label" :for="'permiso-' + permiso.id">
                               {{ permiso.name }}
                             </label>
@@ -438,13 +360,8 @@
                 <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">
                   <i class="fas fa-times me-1"></i>Cancelar
                 </button>
-                <button 
-                  type="button" 
-                  class="btn" 
-                  :class="posicion ? 'btn-warning' : 'btn-primary'"
-                  @click="validarYGuardar"
-                  :disabled="!formularioValido"
-                >
+                <button type="button" class="btn" :class="posicion ? 'btn-warning' : 'btn-primary'"
+                  @click="validarYGuardar" :disabled="!formularioValido">
                   <i class="fas" :class="posicion ? 'fa-save me-1' : 'fa-plus me-1'"></i>
                   {{ posicion ? 'Actualizar' : 'Guardar' }}
                 </button>
@@ -454,7 +371,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Modal para ver permisos -->
     <div class="modal fade" id="permisosModal" tabindex="-1" aria-labelledby="permisosModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
@@ -469,24 +386,14 @@
             <!-- Búsqueda de permisos -->
             <div class="input-group mb-3">
               <span class="input-group-text"><i class="fas fa-search"></i></span>
-              <input 
-                type="text" 
-                class="form-control" 
-                placeholder="Buscar permisos..." 
-                v-model="permisosModalSearch"
-                aria-label="Buscar permisos en el modal"
-              >
-              <button 
-                v-if="permisosModalSearch" 
-                class="btn btn-outline-secondary" 
-                type="button" 
-                @click="permisosModalSearch = ''"
-                aria-label="Limpiar búsqueda de permisos en el modal"
-              >
+              <input type="text" class="form-control" placeholder="Buscar permisos..." v-model="permisosModalSearch"
+                aria-label="Buscar permisos en el modal">
+              <button v-if="permisosModalSearch" class="btn btn-outline-secondary" type="button"
+                @click="permisosModalSearch = ''" aria-label="Limpiar búsqueda de permisos en el modal">
                 <i class="fas fa-times"></i>
               </button>
             </div>
-            
+
             <!-- Contador de permisos -->
             <div class="d-flex justify-content-between align-items-center mb-3">
               <span class="text-muted">
@@ -494,17 +401,13 @@
                 Mostrando {{ permisosModalFiltrados.length }} de {{ rolSeleccionado.permissions?.length || 0 }} permisos
               </span>
               <div>
-                <button 
-                  type="button" 
-                  class="btn btn-sm btn-outline-primary" 
-                  @click="exportarPermisos"
-                  aria-label="Exportar permisos"
-                >
+                <button type="button" class="btn btn-sm btn-outline-primary" @click="exportarPermisos"
+                  aria-label="Exportar permisos">
                   <i class="fas fa-download me-1"></i>Exportar
                 </button>
               </div>
             </div>
-            
+
             <!-- Lista de permisos -->
             <div v-if="rolSeleccionado.permissions && rolSeleccionado.permissions.length > 0">
               <!-- Agrupar por categoría -->
@@ -514,7 +417,7 @@
                   <span>{{ categoria.nombre }}</span>
                   <span class="badge bg-info ms-2">{{ categoria.permisos.length }}</span>
                 </h6>
-                
+
                 <div class="row g-3">
                   <div class="col-md-6" v-for="permiso in categoria.permisos" :key="permiso.id">
                     <div class="card border h-100 permission-card">
@@ -533,7 +436,7 @@
                   </div>
                 </div>
               </div>
-              
+
               <!-- Si no hay resultados en la búsqueda -->
               <div v-if="permisosModalFiltrados.length === 0" class="text-center py-4">
                 <i class="fas fa-search fa-2x text-muted mb-3"></i>
@@ -544,14 +447,15 @@
                 </button>
               </div>
             </div>
-            
+
             <!-- Si el rol no tiene permisos -->
             <div v-else class="text-center py-4">
               <div class="empty-state-icon mb-3">
                 <i class="fas fa-exclamation-circle fa-3x text-warning"></i>
               </div>
               <h5 class="text-muted">Este rol no tiene permisos asignados</h5>
-              <p class="text-muted mb-3">Los usuarios con este rol no tendrán acceso a ninguna funcionalidad restringida.</p>
+              <p class="text-muted mb-3">Los usuarios con este rol no tendrán acceso a ninguna funcionalidad
+                restringida.</p>
               <button type="button" class="btn btn-primary" @click="mostrar(rolSeleccionado.id)">
                 <i class="fas fa-edit me-1"></i>Editar Rol
               </button>
@@ -568,9 +472,10 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Modal de confirmación para eliminar -->
-    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel"
+      aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header bg-danger text-white">
@@ -588,7 +493,7 @@
               <p class="mb-0">Está a punto de eliminar el rol <strong>{{ rolAEliminar.name }}</strong>.</p>
               <p class="text-danger">Esta acción no se puede deshacer.</p>
             </div>
-            
+
             <div class="alert alert-warning">
               <div class="d-flex">
                 <div class="me-3">
@@ -596,7 +501,8 @@
                 </div>
                 <div>
                   <h6 class="alert-heading">Importante</h6>
-                  <p class="mb-0">Si hay usuarios asignados a este rol, perderán los permisos asociados y podrían perder acceso a ciertas funcionalidades del sistema.</p>
+                  <p class="mb-0">Si hay usuarios asignados a este rol, perderán los permisos asociados y podrían perder
+                    acceso a ciertas funcionalidades del sistema.</p>
                 </div>
               </div>
             </div>
@@ -612,7 +518,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Toast de notificación -->
     <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
       <div id="liveToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
@@ -633,6 +539,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Modal, Toast } from 'bootstrap/dist/js/bootstrap.bundle.min';
 import { destroyRol, indexPermisos, indexRoles, showRolesAndPermisos, storeRol, updateRolAndPermisos } from '@/Services/RolesPermisosService';
+import Swal from 'sweetalert2';
 
 // Estado
 const roles = ref([]);
@@ -671,19 +578,19 @@ const actualizarAnchoPantalla = () => {
 // Computed properties
 const rolesFiltrados = computed(() => {
   let result = roles.value;
-  
+
   // Filtrar por búsqueda
   if (search.value) {
     const searchLower = search.value.toLowerCase();
-    result = result.filter(rol => 
+    result = result.filter(rol =>
       rol.name.toLowerCase().includes(searchLower)
     );
   }
-  
+
   // Ordenar
   return result.sort((a, b) => {
     let valueA, valueB;
-    
+
     switch (sortField.value) {
       case 'name':
         valueA = a.name.toLowerCase();
@@ -698,7 +605,7 @@ const rolesFiltrados = computed(() => {
         valueA = a.id;
         valueB = b.id;
     }
-    
+
     if (sortDirection.value === 'asc') {
       return valueA > valueB ? 1 : -1;
     } else {
@@ -710,40 +617,40 @@ const rolesFiltrados = computed(() => {
 const categorias = computed(() => {
   // Extraer categorías únicas de los permisos
   const categoriasSet = new Set();
-  
+
   permisos.value.forEach(permiso => {
     const categoria = getCategoriaPermiso(permiso.name);
     categoriasSet.add(categoria);
   });
-  
+
   return Array.from(categoriasSet);
 });
 
 const permisosFiltrados = computed(() => {
   let result = permisos.value;
-  
+
   // Filtrar por búsqueda
   if (permisosSearch.value) {
     const searchLower = permisosSearch.value.toLowerCase();
-    result = result.filter(permiso => 
+    result = result.filter(permiso =>
       permiso.name.toLowerCase().includes(searchLower)
     );
   }
-  
+
   // Filtrar por categoría
   if (categoriaSeleccionada.value) {
-    result = result.filter(permiso => 
+    result = result.filter(permiso =>
       getCategoriaPermiso(permiso.name) === categoriaSeleccionada.value
     );
   }
-  
+
   return result;
 });
 
 const permisosAgrupados = computed(() => {
   // Agrupar permisos filtrados por categoría
   const grupos = {};
-  
+
   permisosFiltrados.value.forEach(permiso => {
     const categoria = getCategoriaPermiso(permiso.name);
     if (!grupos[categoria]) {
@@ -751,7 +658,7 @@ const permisosAgrupados = computed(() => {
     }
     grupos[categoria].push(permiso);
   });
-  
+
   // Convertir a array para v-for
   return Object.keys(grupos).map(nombre => ({
     nombre,
@@ -761,11 +668,11 @@ const permisosAgrupados = computed(() => {
 
 const permisosModalFiltrados = computed(() => {
   if (!rolSeleccionado.value.permissions) return [];
-  
+
   if (!permisosModalSearch.value) return rolSeleccionado.value.permissions;
-  
+
   const searchLower = permisosModalSearch.value.toLowerCase();
-  return rolSeleccionado.value.permissions.filter(permiso => 
+  return rolSeleccionado.value.permissions.filter(permiso =>
     permiso.name.toLowerCase().includes(searchLower)
   );
 });
@@ -773,7 +680,7 @@ const permisosModalFiltrados = computed(() => {
 const permisosModalAgrupados = computed(() => {
   // Agrupar permisos del modal por categoría
   const grupos = {};
-  
+
   permisosModalFiltrados.value.forEach(permiso => {
     const categoria = getCategoriaPermiso(permiso.name);
     if (!grupos[categoria]) {
@@ -781,7 +688,7 @@ const permisosModalAgrupados = computed(() => {
     }
     grupos[categoria].push(permiso);
   });
-  
+
   // Convertir a array para v-for
   return Object.keys(grupos).map(nombre => ({
     nombre,
@@ -799,10 +706,10 @@ onMounted(() => {
   permisosModal = new Modal(document.getElementById('permisosModal'));
   confirmDeleteModal = new Modal(document.getElementById('confirmDeleteModal'));
   liveToast = new Toast(document.getElementById('liveToast'));
-  
+
   listarRoles();
   listarPermisos();
-  
+
   // Agregar event listener para el cambio de tamaño de ventana
   window.addEventListener('resize', actualizarAnchoPantalla);
 });
@@ -849,21 +756,21 @@ const abrirModal = () => {
 const validarFormulario = () => {
   // Validar campos requeridos
   const form = document.getElementById('rolForm');
-  
+
   if (!form.checkValidity()) {
     form.classList.add('was-validated');
     return false;
   }
-  
+
   // Validaciones adicionales
   let esValido = true;
   errors.value = {};
-  
+
   if (!formulario.value.name) {
     errors.value.name = ['El campo nombre es obligatorio.'];
     esValido = false;
   }
-  
+
   return esValido;
 };
 
@@ -887,17 +794,31 @@ const guardarRol = async () => {
   try {
     if (posicion.value) {
       await updateRolAndPermisos(posicion.value, formulario.value);
-      showToast('success', 'Rol actualizado', 'El rol se ha actualizado correctamente');
+      
+      // Mostrar mensaje de éxito con SweetAlert
+      await Swal.fire({
+        title: 'Éxito',
+        text: 'El rol se ha actualizado correctamente',
+        icon: 'success',
+        confirmButtonText: 'Aceptar'
+      });
     } else {
       await storeRol(formulario.value);
-      showToast('success', 'Rol creado', 'El rol se ha creado correctamente');
+      
+      // Mostrar mensaje de éxito con SweetAlert
+      await Swal.fire({
+        title: 'Éxito',
+        text: 'El rol se ha creado correctamente',
+        icon: 'success',
+        confirmButtonText: 'Aceptar'
+      });
     }
     await listarRoles();
     rolModal.hide();
   } catch (error) {
     if (error.response && error.response.status === 422) {
       errors.value = error.response.data.errors;
-      
+
       // Scroll al primer error
       setTimeout(() => {
         const primerError = document.querySelector('.is-invalid');
@@ -908,7 +829,14 @@ const guardarRol = async () => {
       }, 100);
     } else {
       console.error('Error al guardar rol:', error);
-      showToast('error', 'Error', 'No se pudo guardar el rol');
+      
+      // Mostrar mensaje de error con SweetAlert
+      await Swal.fire({
+        title: 'Error',
+        text: 'No se pudo guardar el rol',
+        icon: 'error',
+        confirmButtonText: 'Aceptar'
+      });
     }
   }
 };
@@ -919,14 +847,41 @@ const confirmarEliminar = (rol) => {
 };
 
 const eliminarRol = async (id) => {
-  try {
-    await destroyRol(id);
-    await listarRoles();
-    confirmDeleteModal.hide();
-    showToast('success', 'Rol eliminado', 'El rol ha sido eliminado correctamente');
-  } catch (error) {
-    console.error('Error al eliminar rol:', error);
-    showToast('error', 'Error', 'No se pudo eliminar el rol');
+  // Mostrar confirmación antes de eliminar
+  const result = await Swal.fire({
+    title: '¿Estás seguro?',
+    text: 'Una vez eliminado, no podrás recuperar este rol.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, eliminar',
+    cancelButtonText: 'Cancelar'
+  });
+
+  // Si el usuario confirma la eliminación
+  if (result.isConfirmed) {
+    try {
+      await destroyRol(id);
+      await listarRoles();
+      confirmDeleteModal.hide();
+      
+      // Mostrar mensaje de éxito con SweetAlert
+      await Swal.fire({
+        title: 'Éxito',
+        text: 'Rol eliminado correctamente',
+        icon: 'success',
+        confirmButtonText: 'Aceptar'
+      });
+    } catch (error) {
+      console.error('Error al eliminar rol:', error);
+      
+      // Mostrar mensaje de error con SweetAlert
+      await Swal.fire({
+        title: 'Error',
+        text: 'No se pudo eliminar el rol',
+        icon: 'error',
+        confirmButtonText: 'Aceptar'
+      });
+    }
   }
 };
 
@@ -941,12 +896,12 @@ const mostrar = async (id) => {
     errors.value = {};
     permisosSearch.value = '';
     categoriaSeleccionada.value = '';
-    
+
     // Si el modal de permisos está abierto, cerrarlo
     if (permisosModal._isShown) {
       permisosModal.hide();
     }
-    
+
     rolModal.show();
   } catch (error) {
     console.error('Error al obtener rol:', error);
@@ -982,10 +937,10 @@ const getPermissionDescription = (nombrePermiso) => {
   // Generar una descripción legible del permiso
   const parts = nombrePermiso.split(/[.-]/);
   if (parts.length < 2) return 'Permiso general';
-  
+
   const action = parts[parts.length - 1];
   const resource = parts.slice(1, -1).join(' ');
-  
+
   const actionMap = {
     'index': 'Ver listado de',
     'show': 'Ver detalles de',
@@ -999,7 +954,7 @@ const getPermissionDescription = (nombrePermiso) => {
     'view': 'Ver',
     'manage': 'Gestionar'
   };
-  
+
   return `${actionMap[action] || action} ${resource || parts[0]}`;
 };
 
@@ -1030,13 +985,13 @@ const isSystemRole = (roleName) => {
 const getRoleIcon = (roleName) => {
   // Devolver un icono apropiado según el nombre del rol
   const roleLower = roleName?.toLowerCase() || '';
-  
+
   if (roleLower.includes('admin')) return 'fa-user-shield text-primary';
   if (roleLower.includes('editor')) return 'fa-edit text-info';
   if (roleLower.includes('user')) return 'fa-user text-success';
   if (roleLower.includes('guest')) return 'fa-user-clock text-warning';
   if (roleLower.includes('manager')) return 'fa-user-tie text-dark';
-  
+
   return 'fa-user-tag text-primary';
 };
 
@@ -1045,12 +1000,12 @@ const exportarPermisos = () => {
     showToast('error', 'Error', 'No hay permisos para exportar');
     return;
   }
-  
+
   // Crear un texto con los permisos
   const permisosList = rolSeleccionado.value.permissions.map(p => p.name).join('\n');
   const blob = new Blob([permisosList], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
-  
+
   // Crear un enlace para descargar
   const a = document.createElement('a');
   a.href = url;
@@ -1059,7 +1014,7 @@ const exportarPermisos = () => {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  
+
   showToast('success', 'Exportación completada', 'Los permisos se han exportado correctamente');
 };
 
@@ -1109,7 +1064,8 @@ const showToast = (type, title, message) => {
 }
 
 /* Estilos para los iconos de roles y permisos */
-.role-icon, .permission-icon {
+.role-icon,
+.permission-icon {
   width: 32px;
   height: 32px;
   display: flex;
@@ -1140,7 +1096,7 @@ const showToast = (type, title, message) => {
   background-color: rgba(13, 110, 253, 0.05);
 }
 
-.permission-item .form-check-input:checked ~ .form-check-label {
+.permission-item .form-check-input:checked~.form-check-label {
   font-weight: 500;
   color: var(--bs-primary);
 }
@@ -1162,7 +1118,8 @@ const showToast = (type, title, message) => {
 }
 
 /* Estilos para los iconos de estado vacío */
-.empty-state-icon, .delete-icon {
+.empty-state-icon,
+.delete-icon {
   width: 80px;
   height: 80px;
   margin: 0 auto;
@@ -1213,7 +1170,8 @@ const showToast = (type, title, message) => {
 }
 
 /* Estilos para la tabla */
-.table th, .table td {
+.table th,
+.table td {
   vertical-align: middle;
 }
 

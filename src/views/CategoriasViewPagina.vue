@@ -143,9 +143,9 @@
               </div>
               <h3 class="product-name">{{ product.nombre }}</h3>
               <!-- Descripción truncada -->
-              <p v-if="product.descripcion" class="product-description">
+          <!--     <p v-if="product.descripcion" class="product-description">
                 {{ truncateDescription(product.descripcion, 60) }}
-              </p>
+              </p> -->
               
               <!-- Contenedor de precios mejorado -->
               <div class="prices-container">

@@ -51,7 +51,7 @@
                 <th>Preventa Especial</th>
                 <th>Preventa Estándar</th>
                 <th>Categoría</th>
-                <th>Stock</th>
+             <!--    <th>Stock</th> -->
                 <th>Estado</th>
                 <th>Acciones</th>
               </tr>
@@ -63,7 +63,7 @@
                 <td>{{ formatearPrecio(item.precio) }}</td>
                 <td>{{ item.precio_preventa ? formatearPrecio(item.precio_preventa) : 'N/A' }}</td>
                 <td>{{ item.categoria?.nombre || 'N/A' }}</td>
-                <td>{{ item.cantidad || 'N/A' }}</td>
+               <!--  <td>{{ item.cantidad || 'N/A' }}</td> -->
                 <td>
                   <span class="badge" :class="item.estado ? 'bg-success' : 'bg-danger'">
                     {{ item.estado ? 'Activo' : 'Inactivo' }}
@@ -99,11 +99,13 @@
                   <strong>Precio:</strong> {{ formatearPrecio(item.precio) }}
                 </div>
                 <div class="product-detail">
-                  <strong>Preventa Estándar:</strong> {{ item.precio_preventa_estandar ? formatearPrecio(item.precio_preventa_estandar) :
+                  <strong>Preventa Estándar:</strong> {{ item.precio_preventa_estandar ?
+                    formatearPrecio(item.precio_preventa_estandar) :
                   'N/A' }}
                 </div>
                 <div class="product-detail">
-                  <strong>Preventa Especial:</strong> {{ item.precio_preventa_especial ? formatearPrecio(item.precio_preventa_especial) :
+                  <strong>Preventa Especial:</strong> {{ item.precio_preventa_especial ?
+                    formatearPrecio(item.precio_preventa_especial) :
                   'N/A' }}
                 </div>
                 <div class="product-detail">
@@ -232,7 +234,7 @@
                             </select>
                           </div>
                         </div>
-<!--                         <div class="col-md-6">
+                        <!--                         <div class="col-md-6">
                           <label for="precio" class="form-label fw-bold">Precio Regular <span
                               class="text-danger">*</span></label>
                           <div class="input-group">
@@ -250,7 +252,8 @@
                           <small class="text-muted">Ingrese el precio en bolivianos (BOB)</small>
                         </div> -->
                         <div class="col-md-6">
-                          <label for="precio_preventa_estandar" class="form-label fw-bold">Precio Preventa Estándar</label>
+                          <label for="precio_preventa_estandar" class="form-label fw-bold">Precio Preventa
+                            Estándar</label>
                           <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-bolt"></i></span>
                             <input type="number" class="form-control" :class="{ 'is-invalid': errors.precio_preventa }"
@@ -263,19 +266,19 @@
                           <small class="text-muted">Precio para preventa estándar en bolivianos (BOB)</small>
                         </div>
                         <div class="col-md-6">
-                          <label for="precio_preventa_especial" class="form-label fw-bold">Precio Preventa Especial</label>
+                          <label for="precio_preventa_especial" class="form-label fw-bold">Precio Preventa
+                            Especial</label>
                           <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-star"></i></span>
                             <input type="number" class="form-control" :class="{ 'is-invalid': errors.precio }"
-                              id="precio" v-model="formulario.precio" placeholder="Ej: 2000.00"
-                              min="0.01" step="0.01">
+                              id="precio" v-model="formulario.precio" placeholder="Ej: 2000.00" min="0.01" step="0.01">
                             <div class="invalid-feedback" v-if="errors.precio">
                               {{ errors.precio[0] }}
                             </div>
                           </div>
                           <small class="text-muted">Precio para preventa especial en bolivianos (BOB)</small>
                         </div>
-<!--                         <div class="col-md-6">
+                        <!--                         <div class="col-md-6">
                           <label for="cantidad" class="form-label fw-bold">Cantidad</label>
                           <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-boxes"></i></span>
@@ -302,48 +305,6 @@
                       </h5>
                     </div>
                     <div class="card-body">
-                      <!-- Precio Regular -->
-                      <div class="mb-4">
-                        <h6 class="border-bottom pb-2 mb-3">
-                          <i class="fas fa-tag me-2"></i>Precio Regular
-                        </h6>
-                  <!--       <div class="row g-3">
-                          <div class="col-md-6">
-                            <label for="cantidad_minima" class="form-label fw-bold">Cantidad Mínima <span
-                                class="text-danger">*</span></label>
-                            <div class="input-group">
-                              <span class="input-group-text"><i class="fas fa-arrow-down"></i></span>
-                              <input type="number" class="form-control" :class="{ 'is-invalid': errors.cantidad_minima }"
-                                id="cantidad_minima" v-model="formulario.cantidad_minima" min="1" placeholder="Ej: 10"
-                                required>
-                              <div class="invalid-feedback" v-if="errors.cantidad_minima">
-                                {{ errors.cantidad_minima[0] }}
-                              </div>
-                              <div class="invalid-feedback" v-else>
-                                La cantidad mínima es obligatoria
-                              </div>
-                            </div>
-                            <small class="text-muted">Cantidad mínima para precio regular</small>
-                          </div>
-                          <div class="col-md-6">
-                            <label for="cantidad_maxima" class="form-label fw-bold">Cantidad Máxima <span
-                                class="text-danger">*</span></label>
-                            <div class="input-group">
-                              <span class="input-group-text"><i class="fas fa-arrow-up"></i></span>
-                              <input type="number" class="form-control" :class="{ 'is-invalid': errors.cantidad_maxima }"
-                                id="cantidad_maxima" v-model="formulario.cantidad_maxima" min="1" placeholder="Ej: 100"
-                                required>
-                              <div class="invalid-feedback" v-if="errors.cantidad_maxima">
-                                {{ errors.cantidad_maxima[0] }}
-                              </div>
-                              <div class="invalid-feedback" v-else>
-                                La cantidad máxima es obligatoria
-                              </div>
-                            </div>
-                            <small class="text-muted">Cantidad máxima para precio regular</small>
-                          </div>
-                        </div> -->
-                      </div>
 
                       <!-- Preventa Estándar -->
                       <div class="mb-4">
@@ -352,7 +313,8 @@
                         </h6>
                         <div class="row g-3">
                           <div class="col-md-6">
-                            <label for="cantidad_minima_preventa" class="form-label fw-bold">Cantidad Mínima Preventa Estándar</label>
+                            <label for="cantidad_minima_preventa" class="form-label fw-bold">Cantidad Mínima Preventa
+                              Estándar</label>
                             <div class="input-group">
                               <span class="input-group-text"><i class="fas fa-arrow-down"></i></span>
                               <input type="number" class="form-control"
@@ -365,7 +327,8 @@
                             <small class="text-muted">Cantidad mínima para precio de preventa estándar</small>
                           </div>
                           <div class="col-md-6">
-                            <label for="cantidad_maxima_preventa" class="form-label fw-bold">Cantidad Máxima Preventa Estándar</label>
+                            <label for="cantidad_maxima_preventa" class="form-label fw-bold">Cantidad Máxima Preventa
+                              Estándar</label>
                             <div class="input-group">
                               <span class="input-group-text"><i class="fas fa-arrow-up"></i></span>
                               <input type="number" class="form-control"
@@ -387,7 +350,8 @@
                         </h6>
                         <div class="row g-3">
                           <div class="col-md-6">
-                            <label for="cantidad_minima" class="form-label fw-bold">Cantidad Mínima Preventa Especial</label>
+                            <label for="cantidad_minima" class="form-label fw-bold">Cantidad Mínima Preventa
+                              Especial</label>
                             <div class="input-group">
                               <span class="input-group-text"><i class="fas fa-arrow-down"></i></span>
                               <input type="number" class="form-control"
@@ -400,7 +364,8 @@
                             <small class="text-muted">Cantidad mínima para precio de preventa especial</small>
                           </div>
                           <div class="col-md-6">
-                            <label for="cantidad_maxima" class="form-label fw-bold">Cantidad Máxima Preventa Especial</label>
+                            <label for="cantidad_maxima" class="form-label fw-bold">Cantidad Máxima Preventa
+                              Especial</label>
                             <div class="input-group">
                               <span class="input-group-text"><i class="fas fa-arrow-up"></i></span>
                               <input type="number" class="form-control"
@@ -568,23 +533,23 @@
                             </div>
                             <div class="col-md-6">
                               <label class="form-label">Cantidad mínima preventa estándar</label>
-                              <input type="number" class="form-control" v-model="modelo.cantidad_minima_preventa_estandar"
-                                placeholder="Ej: 10" min="1">
+                              <input type="number" class="form-control"
+                                v-model="modelo.cantidad_minima_preventa_estandar" placeholder="Ej: 10" min="1">
                             </div>
                             <div class="col-md-6">
                               <label class="form-label">Cantidad máxima preventa estándar</label>
-                              <input type="number" class="form-control" v-model="modelo.cantidad_maxima_preventa_estandar"
-                                placeholder="Ej: 100" min="1">
+                              <input type="number" class="form-control"
+                                v-model="modelo.cantidad_maxima_preventa_estandar" placeholder="Ej: 100" min="1">
                             </div>
                             <div class="col-md-6">
                               <label class="form-label">Cantidad mínima preventa especial</label>
-                              <input type="number" class="form-control" v-model="modelo.cantidad_minima_preventa_especial"
-                                placeholder="Ej: 20" min="1">
+                              <input type="number" class="form-control"
+                                v-model="modelo.cantidad_minima_preventa_especial" placeholder="Ej: 20" min="1">
                             </div>
                             <div class="col-md-6">
                               <label class="form-label">Cantidad máxima preventa especial</label>
-                              <input type="number" class="form-control" v-model="modelo.cantidad_maxima_preventa_especial"
-                                placeholder="Ej: 150" min="1">
+                              <input type="number" class="form-control"
+                                v-model="modelo.cantidad_maxima_preventa_especial" placeholder="Ej: 150" min="1">
                             </div>
                           </div>
                         </div>
@@ -683,9 +648,14 @@
                   <i class="fas fa-times me-1"></i>Cancelar
                 </button>
                 <button type="button" class="btn" :class="posicion ? 'btn-warning' : 'btn-primary'"
-                  @click="validarYGuardar">
+                  @click="validarYGuardar" :disabled="isLoading">
                   <i class="fas" :class="posicion ? 'fa-save me-1' : 'fa-plus me-1'"></i>
-                  {{ posicion ? 'Actualizar' : 'Guardar' }}
+                  <span v-if="isLoading">
+                    <i class="fas fa-spinner fa-spin me-1"></i> Cargando...
+                  </span>
+                  <span v-else>
+                    {{ posicion ? 'Actualizar' : 'Guardar' }}
+                  </span>
                 </button>
               </div>
             </div>
@@ -710,14 +680,12 @@
               </div>
               <div class="col-md-6">
                 <h4 class="product-title">{{ productoSeleccionado.nombre }}</h4>
-                <p><strong>Precio Regular:</strong> {{ formatearPrecio(productoSeleccionado.precio) }}</p>
-                <p v-if="productoSeleccionado.precio_preventa_estandar"><strong>Precio Preventa Estándar:</strong> {{
-                  formatearPrecio(productoSeleccionado.precio_preventa_estandar) }}</p>
-                <p v-if="productoSeleccionado.precio_preventa_especial"><strong>Precio Preventa Especial:</strong> {{
-                  formatearPrecio(productoSeleccionado.precio_preventa_especial) }}</p>
+                <p><strong>Precio Preventa Especial:</strong> {{ formatearPrecio(productoSeleccionado.precio) }}</p>
+                <p v-if="productoSeleccionado.precio_preventa"><strong>Precio Preventa Estándar:</strong> {{
+                  formatearPrecio(productoSeleccionado.precio_preventa) }}</p>
                 <p><strong>Categoría:</strong> {{ productoSeleccionado.categoria?.nombre || 'N/A' }}</p>
                 <p><strong>Descripción:</strong> {{ productoSeleccionado.descripcion || 'N/A' }}</p>
-                
+
                 <div class="mt-4">
                   <h5 class="mb-2">Rangos de Cantidad:</h5>
                   <div class="table-responsive">
@@ -731,25 +699,20 @@
                       </thead>
                       <tbody>
                         <tr>
-                          <td><i class="fas fa-tag text-success me-1"></i> Regular</td>
+                          <td><i class="fas fa-tag text-success me-1"></i> Preventa Especial</td>
                           <td>{{ productoSeleccionado.cantidad_minima }}</td>
                           <td>{{ productoSeleccionado.cantidad_maxima }}</td>
                         </tr>
-                        <tr v-if="productoSeleccionado.cantidad_minima_preventa_estandar">
-                          <td><i class="fas fa-bolt text-primary me-1"></i> Preventa Estándar</td>
-                          <td>{{ productoSeleccionado.cantidad_minima_preventa_estandar }}</td>
-                          <td>{{ productoSeleccionado.cantidad_maxima_preventa_estandar }}</td>
-                        </tr>
-                        <tr v-if="productoSeleccionado.cantidad_minima_preventa_especial">
-                          <td><i class="fas fa-star text-warning me-1"></i> Preventa Especial</td>
-                          <td>{{ productoSeleccionado.cantidad_minima_preventa_especial }}</td>
-                          <td>{{ productoSeleccionado.cantidad_maxima_preventa_especial }}</td>
+                        <tr v-if="productoSeleccionado.cantidad_minima_preventa">
+                          <td><i class="fas fa-star text-warning me-1"></i> Preventa Estándar</td>
+                          <td>{{ productoSeleccionado.cantidad_minima_preventa }}</td>
+                          <td>{{ productoSeleccionado.cantidad_maxima_preventa }}</td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
                 </div>
-                
+
                 <p><strong>Estado:</strong>
                   <span class="badge" :class="productoSeleccionado.estado ? 'bg-success' : 'bg-danger'">
                     {{ productoSeleccionado.estado ? 'Activo' : 'Inactivo' }}
@@ -792,11 +755,17 @@
                   <tr v-for="modelo in productoSeleccionado.modelos" :key="modelo.id">
                     <td>{{ modelo.nombre }}</td>
                     <td>{{ formatearPrecio(modelo.precio) }}</td>
-                    <td>{{ modelo.precio_preventa_estandar ? formatearPrecio(modelo.precio_preventa_estandar) : 'N/A' }}</td>
-                    <td>{{ modelo.precio_preventa_especial ? formatearPrecio(modelo.precio_preventa_especial) : 'N/A' }}</td>
+                    <td>{{ modelo.precio_preventa_estandar ? formatearPrecio(modelo.precio_preventa_estandar) : 'N/A' }}
+                    </td>
+                    <td>{{ modelo.precio_preventa_especial ? formatearPrecio(modelo.precio_preventa_especial) : 'N/A' }}
+                    </td>
                     <td>{{ modelo.cantidad_minima }}-{{ modelo.cantidad_maxima }}</td>
-                    <td>{{ modelo.cantidad_minima_preventa_estandar ? `${modelo.cantidad_minima_preventa_estandar}-${modelo.cantidad_maxima_preventa_estandar}` : 'N/A' }}</td>
-                    <td>{{ modelo.cantidad_minima_preventa_especial ? `${modelo.cantidad_minima_preventa_especial}-${modelo.cantidad_maxima_preventa_especial}` : 'N/A' }}</td>
+                    <td>{{ modelo.cantidad_minima_preventa_estandar ?
+                      `${modelo.cantidad_minima_preventa_estandar}-${modelo.cantidad_maxima_preventa_estandar}` : 'N/A'
+                      }}</td>
+                    <td>{{ modelo.cantidad_minima_preventa_especial ?
+                      `${modelo.cantidad_minima_preventa_especial}-${modelo.cantidad_maxima_preventa_especial}` : 'N/A'
+                      }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -838,6 +807,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { Modal } from 'bootstrap/dist/js/bootstrap.bundle.min';
 import { indexProductos, indexProductosFiltrados, showProducto, storeProducto, updateProducto, deleteImage, changeStatus } from '@/Services/ProductoService';
 import { indexActivosCategorias } from '@/Services/CategoriaService';
+import Swal from 'sweetalert2';
 
 const productos = ref([]);
 const categorias = ref([]);
@@ -847,17 +817,14 @@ const posicion = ref('');
 const formulario = ref({
   nombre: '',
   precio: '',
-  precio_preventa_estandar: '',
-  precio_preventa_especial: '',
+  precio_preventa: '',
   categoria_id: '',
   descripcion: '',
   cantidad: '',
   cantidad_minima: '',
   cantidad_maxima: '',
-  cantidad_minima_preventa_estandar: '',
-  cantidad_maxima_preventa_estandar: '',
-  cantidad_minima_preventa_especial: '',
-  cantidad_maxima_preventa_especial: '',
+  cantidad_minima_preventa: '',
+  cantidad_maxima_preventa: '',
   imagen_principal: '',
   caracteristicas: [],
   modelos: [],
@@ -882,7 +849,7 @@ const mostrarTodasCaracteristicas = ref(false);
 
 let productoModal = null;
 let detallesModal = null;
-
+const isLoading = ref(false);
 onMounted(() => {
   productoModal = new Modal(document.getElementById('productoModal'));
   detallesModal = new Modal(document.getElementById('detallesModal'));
@@ -943,17 +910,14 @@ const abrirModal = () => {
   formulario.value = {
     nombre: '',
     precio: '',
-    precio_preventa_estandar: '',
-    precio_preventa_especial: '',
+    precio_preventa: '',
     categoria_id: '',
     descripcion: '',
     cantidad: '',
     cantidad_minima: '',
     cantidad_maxima: '',
-    cantidad_minima_preventa_estandar: '',
-    cantidad_maxima_preventa_estandar: '',
-    cantidad_minima_preventa_especial: '',
-    cantidad_maxima_preventa_especial: '',
+    cantidad_minima_preventa: '',
+    cantidad_maxima_preventa: '',
     imagen_principal: '',
     caracteristicas: [],
     modelos: [],
@@ -1111,8 +1075,8 @@ const validarYGuardar = () => {
     }, 100);
   }
 };
-
 const guardarProducto = async () => {
+  isLoading.value = true; // Set loading state to true
   try {
     const formData = new FormData();
 
@@ -1122,6 +1086,11 @@ const guardarProducto = async () => {
         formData.append(key, formulario.value[key]);
       }
     });
+
+    // Validar y agregar la descripción solo si no es null
+    if (formulario.value.descripcion !== null && formulario.value.descripcion.trim() !== '') {
+      formData.append('descripcion', formulario.value.descripcion);
+    }
 
     // Agregar características
     formulario.value.caracteristicas.forEach((caracteristica, index) => {
@@ -1178,14 +1147,22 @@ const guardarProducto = async () => {
     // Enviar los datos al servidor
     if (posicion.value) {
       formData.append('_method', 'PUT');
-      await updateProducto(posicion.value, formData);
+      const {data} = await updateProducto(posicion.value, formData);
+      console.log(data);
     } else {
       await storeProducto(formData);
     }
 
     await listarProductos();
     productoModal.hide();
-    alert(posicion.value ? 'Producto actualizado correctamente' : 'Producto creado correctamente');
+    
+    // Mostrar mensaje de éxito con SweetAlert
+    await Swal.fire({
+      title: 'Éxito',
+      text: posicion.value ? 'Producto actualizado correctamente' : 'Producto creado correctamente',
+      icon: 'success',
+      confirmButtonText: 'Aceptar'
+    });
   } catch (error) {
     // Manejo de errores
     if (error.response && error.response.status === 422) {
@@ -1198,8 +1175,16 @@ const guardarProducto = async () => {
       }, 100);
     } else {
       console.error('Error al guardar producto:', error);
-      alert('Error al guardar el producto. Intente nuevamente.');
+      // Mostrar mensaje de error con SweetAlert
+      await Swal.fire({
+        title: 'Error',
+        text: 'Error al guardar el producto. Intente nuevamente.',
+        icon: 'error',
+        confirmButtonText: 'Aceptar'
+      });
     }
+  } finally {
+    isLoading.value = false; // Reset loading state to false
   }
 };
 
@@ -1211,27 +1196,24 @@ const mostrarProducto = async (id) => {
     formulario.value = {
       nombre: data.dato.nombre,
       precio: data.dato.precio,
-      precio_preventa_estandar: data.dato.precio_preventa_estandar,
-      precio_preventa_especial: data.dato.precio_preventa_especial,
+      precio_preventa: data.dato.precio_preventa,
       categoria_id: data.dato.categoria_id,
-      descripcion: data.dato.descripcion,
+      descripcion: (data.dato.descripcion === 'null' || data.dato.descripcion === null) ? '' : data.dato.descripcion, // Manejo de descripción
       cantidad: data.dato.cantidad,
       cantidad_minima: data.dato.cantidad_minima,
       cantidad_maxima: data.dato.cantidad_maxima,
-      cantidad_minima_preventa_estandar: data.dato.cantidad_minima_preventa_estandar,
-      cantidad_maxima_preventa_estandar: data.dato.cantidad_maxima_preventa_estandar,
-      cantidad_minima_preventa_especial: data.dato.cantidad_minima_preventa_especial,
-      cantidad_maxima_preventa_especial: data.dato.cantidad_maxima_preventa_especial,
+      cantidad_minima_preventa: data.dato.cantidad_minima_preventa,
+      cantidad_maxima_preventa: data.dato.cantidad_maxima_preventa,
       imagen_principal: data.dato.imagen_principal, // Guardar la URL completa
       caracteristicas: data.dato.caracteristicas.map(c => c.caracteristica),
       modelos: data.dato.modelos.map(m => ({
         ...m,
-        precio_preventa_estandar: m.precio_preventa_estandar || '',
-        precio_preventa_especial: m.precio_preventa_especial || '',
-        cantidad_minima_preventa_estandar: m.cantidad_minima_preventa_estandar || '',
-        cantidad_maxima_preventa_estandar: m.cantidad_maxima_preventa_estandar || '',
-        cantidad_minima_preventa_especial: m.cantidad_minima_preventa_especial || '',
-        cantidad_maxima_preventa_especial: m.cantidad_maxima_preventa_especial || ''
+        precio: m.precio || '',
+        precio_preventa: m.precio_preventa || '',
+        cantidad_minima: m.cantidad_minima || '',
+        cantidad_maxima: m.cantidad_maxima || '',
+        cantidad_minima_preventa: m.cantidad_minima_preventa || '',
+        cantidad_maxima_preventa: m.cantidad_maxima_preventa || ''
       })),
       images: data.dato.images.map(img => ({
         id: img.id,
@@ -1256,8 +1238,8 @@ const verDetalles = async (id) => {
   try {
     const { data } = await showProducto(id);
     productoSeleccionado.value = data.dato;
+    console.log(productoSeleccionado.value);
     mostrarTodasCaracteristicas.value = false; // Resetear el estado de "Ver más"
-    console.log('Detalles del producto:', productoSeleccionado.value);
     detallesModal.show();
   } catch (error) {
     console.log(error);
@@ -1471,12 +1453,28 @@ const mostrarDatosPrueba = () => {
 const cambiarEstado = async (id) => {
   try {
     const { data } = await changeStatus(id);
-    console.log(data);
-    listarProductos();
+    // Listar productos después de cambiar el estado
+    await listarProductos();
+
+    // Mostrar mensaje de éxito con SweetAlert
+    await Swal.fire({
+      title: 'Éxito',
+      text: 'Estado de la categoría actualizado correctamente',
+      icon: 'success',
+      confirmButtonText: 'Aceptar'
+    });
   } catch (error) {
-    console.log(error);
+    console.error('Error al cambiar estado de la categoría:', error);
+    
+    // Mostrar mensaje de error con SweetAlert
+    await Swal.fire({
+      title: 'Error',
+      text: 'Error al cambiar el estado de la categoría. Intente nuevamente.',
+      icon: 'error',
+      confirmButtonText: 'Aceptar'
+    });
   }
-}
+};
 </script>
 
 <style scoped>
@@ -1766,4 +1764,3 @@ const cambiarEstado = async (id) => {
   animation: fadeIn 0.5s ease-out;
 }
 </style>
-
