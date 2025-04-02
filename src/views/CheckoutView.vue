@@ -487,7 +487,6 @@
                   <i class="fas fa-arrow-left" aria-hidden="true"></i> Anterior
                 </button>
                 <button @click="finalizeOrder" class="checkout-button" :disabled="!isPaymentValid" aria-label="Finalizar pedido">
-                    :disabled="!isPaymentValid" aria-label="Finalizar pedido">
                   <i class="fas fa-check-circle" aria-hidden="true"></i> FINALIZAR PEDIDO
                 </button>
               </div>
