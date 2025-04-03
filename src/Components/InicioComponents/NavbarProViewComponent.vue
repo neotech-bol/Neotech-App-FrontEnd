@@ -81,7 +81,7 @@
         </div>
 
         <!-- Barra de búsqueda móvil -->
-        <div class="mobile-search" v-if="isMobileMenuOpen">
+      <!--   <div class="mobile-search" v-if="isMobileMenuOpen">
           <div class="search-bar">
             <input v-model="searchQuery" type="text" placeholder="Buscar productos, categorías y más..."
               @keyup.enter="performSearch" />
@@ -89,7 +89,7 @@
               <i class="fas fa-search"></i>
             </button>
           </div>
-        </div>
+        </div> -->
 
         <button class="catalog-button" @click="toggleSidebar">
           <i class="fas fa-th-large"></i>
@@ -739,7 +739,7 @@ hr {
   color: var(--text-color);
 }
 
-/* Contenedor de búsqueda mejorado y centrado */
+/* Modificación para solucionar el problema del buscador */
 .search-container {
   grid-column: 1 / -1;
   grid-row: 2;
@@ -747,8 +747,9 @@ hr {
   margin-top: 12px;
   display: flex;
   justify-content: center;
+  position: relative; /* Añadido para establecer un contexto de apilamiento */
+  z-index: 1010; /* Valor mayor que la navegación principal (1000) */
 }
-
 .search-bar {
   position: relative;
   width: 100%;
@@ -1584,12 +1585,15 @@ hr {
     gap: 16px;
   }
 
+/* Asegurar que en tablets y escritorio mantenga su posición correcta */
+@media (min-width: 640px) {
   .search-container {
     grid-column: 2;
     grid-row: 1;
     margin-top: 0;
     justify-self: center;
   }
+}
 
   .logo img {
     height: 42px;

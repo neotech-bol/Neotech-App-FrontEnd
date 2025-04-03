@@ -34,6 +34,12 @@
                   <i class="fas fa-file-pdf me-2 text-primary"></i>PDF (Por Catálogo)
                 </button>
               </li>
+              <!-- Agregar este elemento dentro del dropdown de exportación -->
+              <li>
+                <button class="dropdown-item" @click="descargarExcelPedidosPorCatalogo">
+                  <i class="fas fa-file-excel me-2 text-primary"></i>Excel (Por Catálogo)
+                </button>
+              </li>
             </ul>
           </div>
           <button class="btn btn-outline-primary" @click="listOrders">
@@ -388,7 +394,7 @@
                       <li class="list-group-item d-flex justify-content-between px-0">
                         <span class="text-muted"><i class="fas fa-map me-2"></i>Departamento:</span>
                         <span class="fw-medium text-capitalize">{{ detailOrder.user?.departamento || 'No especificado'
-                          }}</span>
+                        }}</span>
                       </li>
                       <li class="list-group-item px-0">
                         <span class="text-muted"><i class="fas fa-map-marker-alt me-2"></i>Dirección:</span>
@@ -443,7 +449,7 @@
                             <td class="text-center">{{ producto.pivot?.cantidad }}</td>
                             <td class="text-end">
                               {{ formatCurrency(producto.pivot?.es_preventa ? producto.pivot?.precio_preventa :
-                              producto.pivot?.precio) }}
+                                producto.pivot?.precio) }}
                             </td>
                             <td class="text-end fw-medium">
                               {{ formatCurrency((producto.pivot?.es_preventa ? producto.pivot?.precio_preventa :
@@ -668,7 +674,8 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Modal, Toast } from 'bootstrap/dist/js/bootstrap.bundle.min';
 import { format, formatDistance } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { completeOrder, generaPDFPedidoID, generateExcel, indexPedidos, modelsAll, pdfPedidosCatalogo, pdfPedidosCompletados, pdfPedidosPendientes, showPedido } from '@/Services/PedidoService';
+import { completeOrder, excelPedidosCatalogo, generaPDFPedidoID, generateExcel, indexPedidos, modelsAll, pdfPedidosCatalogo, pdfPedidosCompletados, pdfPedidosPendientes, showPedido } from '@/Services/PedidoService';
+import Swal from 'sweetalert2';
 
 // Estado
 const datos = ref([]);
@@ -790,7 +797,7 @@ const listOrders = async () => {
     );
 
     datos.value = data.datos;
-
+    console.log(datos.value);
     // Actualizar información de paginación
     if (data.pagination) {
       pagination.value = data.pagination;
@@ -871,19 +878,34 @@ const downloadVoucher = () => {
 };
 
 const completeOrderPending = async (id) => {
-  try {
-    await completeOrder(id);
-    listOrders();
+  // Mostrar un cuadro de confirmación
+  const result = await Swal.fire({
+    title: 'Confirmar acción',
+    text: 'Una vez completado, no podrás revertir este cambio. ¿Estás seguro de que deseas continuar?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, completar pedido',
+    cancelButtonText: 'Cancelar'
+  });
 
-    // Si el pedido actual está abierto en el modal, actualizar su estado también
-    if (detailOrder.value.id === id) {
-      detailOrder.value.estado = true;
+  // Si el usuario confirma, proceder a completar el pedido
+  if (result.isConfirmed) {
+    try {
+      await completeOrder(id);
+      listOrders();
+
+      // Si el pedido actual está abierto en el modal, actualizar su estado también
+      if (detailOrder.value.id === id) {
+        detailOrder.value.estado = true;
+      }
+
+      showToast('success', 'Pedido completado', 'El pedido ha sido marcado como completado');
+    } catch (error) {
+      console.error('Error al completar pedido:', error);
     }
-
-    showToast('success', 'Pedido completado', 'El pedido ha sido marcado como completado');
-  } catch (error) {
-    console.error('Error al completar pedido:', error);
-    showToast('error', 'Error', 'No se pudo completar el pedido');
+  } else {
+    // Si el usuario cancela, puedes mostrar un mensaje opcional
+    showToast('info', 'Acción cancelada', 'El pedido no ha sido completado');
   }
 };
 
@@ -906,7 +928,36 @@ const fetchOrders = async () => {
     showToast('error', 'Error', 'No se pudo generar el archivo Excel');
   }
 };
+// Función simplificada para descargar Excel por catálogo
+const descargarExcelPedidosPorCatalogo = async () => {
+  try {
+    showExportDropdown.value = false; // Cerrar el dropdown después de hacer clic
 
+    // Solicitar el ID del catálogo al usuario
+    const catalogoId = prompt("Ingrese el ID del catálogo:");
+
+    if (catalogoId && !isNaN(catalogoId)) {
+      const response = await excelPedidosCatalogo(catalogoId);
+      
+      // Crear un blob y descargar directamente, igual que en fetchOrders
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `pedidos_catalogo_${catalogoId}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      showToast('success', 'Excel generado', 'El archivo Excel se ha descargado correctamente');
+    } else if (catalogoId !== null) {
+      showToast('error', 'Error', 'ID de catálogo inválido');
+    }
+  } catch (error) {
+    console.error('Error al descargar el Excel de pedidos por catálogo:', error);
+    showToast('error', 'Error', 'No se pudo generar el Excel de pedidos por catálogo');
+  }
+};
 const fetchOrdersPDFId = async (id) => {
   try {
     const response = await generaPDFPedidoID(id);

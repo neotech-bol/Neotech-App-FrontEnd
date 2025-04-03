@@ -73,64 +73,70 @@
             </button>
           </div>
         </div>
-        <div class="paginacion-superior">
-          <button @click="cambiarPagina(paginaActual - 1)" :disabled="paginaActual === 1" class="boton-pagina">
-            <i class="fas fa-chevron-left"></i>
-          </button>
-          <div class="paginas-info">
-            <span class="pagina-actual">{{ paginaActual }}</span>
-            <span class="separador">/</span>
-            <span class="total-paginas">{{ totalPaginas }}</span>
-          </div>
-          <button @click="cambiarPagina(paginaActual + 1)" :disabled="paginaActual === totalPaginas"
-            class="boton-pagina">
-            <i class="fas fa-chevron-right"></i>
-          </button>
+        <div v-if="cargando" class="cargando-pedidos">
+          <i class="fas fa-spinner fa-spin"></i>
+          <p>Cargando pedidos...</p>
         </div>
-        <div class="lista-pedidos">
-          <div v-for="pedido in pedidosPaginados" :key="pedido.id" class="item-pedido"
-            :class="{ 'item-hover': hoveredPedido === pedido.id }" @mouseover="hoveredPedido = pedido.id"
-            @mouseleave="hoveredPedido = null">
-            <div class="encabezado-pedido">
-              <span class="id-pedido">
-                <i class="fas fa-shopping-bag"></i>
-                Pedido #{{ pedido.id }}
-              </span>
-              <span class="fecha-pedido">
-                <i class="fas fa-calendar-alt"></i>
-                {{ formatearFecha(pedido.created_at) }}
-              </span>
+        <template v-else>
+          <div class="paginacion-superior">
+            <button @click="cambiarPagina(paginaActual - 1)" :disabled="paginaActual === 1" class="boton-pagina">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="paginas-info">
+              <span class="pagina-actual">{{ paginaActual }}</span>
+              <span class="separador">/</span>
+              <span class="total-paginas">{{ totalPaginas }}</span>
             </div>
-            <div class="detalles-pedido">
-              <span class="total-pedido">{{ formatearPrecio(pedido.total_amount) }}</span>
-              <span class="estado-pedido" :class="pedido.estado === 1 ? 'entregado' : 'proceso'">
-                <i class="fas" :class="pedido.estado === 1 ? 'fa-check-circle' : 'fa-clock'"></i>
-                {{ pedido.estado === 1 ? 'Entregado' : 'En Proceso' }}
-              </span>
-            </div>
-            <div class="progreso-pedido">
-              <div class="barra-progreso" :style="{ width: obtenerProgresoPedido(pedido.estado) }">
-                <div class="progreso-animation"></div>
+            <button @click="cambiarPagina(paginaActual + 1)" :disabled="paginaActual === totalPaginas"
+              class="boton-pagina">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+          <div class="lista-pedidos">
+            <div v-for="pedido in pedidosPaginados" :key="pedido.id" class="item-pedido"
+              :class="{ 'item-hover': hoveredPedido === pedido.id }" @mouseover="hoveredPedido = pedido.id"
+              @mouseleave="hoveredPedido = null">
+              <div class="encabezado-pedido">
+                <span class="id-pedido">
+                  <i class="fas fa-shopping-bag"></i>
+                  Pedido #{{ pedido.id }}
+                </span>
+                <span class="fecha-pedido">
+                  <i class="fas fa-calendar-alt"></i>
+                  {{ formatearFecha(pedido.created_at) }}
+                </span>
+              </div>
+              <div class="detalles-pedido">
+                <span class="total-pedido">{{ formatearPrecio(pedido.total_amount) }}</span>
+                <span class="estado-pedido" :class="pedido.estado == 1 ? 'entregado' : 'proceso'">
+                  <i class="fas" :class="pedido.estado == 1 ? 'fa-check-circle' : 'fa-clock'"></i>
+                  {{ pedido.estado == 1 ? 'Entregado' : 'En Proceso' }}
+                </span>
+              </div>
+              <div class="progreso-pedido">
+                <div class="barra-progreso" :style="{ width: obtenerProgresoPedido(pedido.estado) }">
+                  <div class="progreso-animation"></div>
+                </div>
+              </div>
+              <div class="acciones-pedido">
+                <button @click="descargarDetallePedido(pedido.id)" class="boton-accion descargar"
+                  v-if="pedido.estado == 1">
+                  <i class="fas fa-download"></i>
+                  <span>Descargar Detalle</span>
+                </button>
+                <button @click="repetirPedido(pedido.id)" class="boton-accion repetir">
+                  <i class="fas fa-redo"></i>
+                  <span>Pedir de Nuevo</span>
+                </button>
               </div>
             </div>
-            <div class="acciones-pedido">
-              <button @click="descargarDetallePedido(pedido.id)" class="boton-accion descargar"
-                v-if="pedido.estado == 1">
-                <i class="fas fa-download"></i>
-                <span>Descargar Detalle</span>
-              </button>
-              <button @click="repetirPedido(pedido.id)" class="boton-accion repetir">
-                <i class="fas fa-redo"></i>
-                <span>Pedir de Nuevo</span>
-              </button>
+            <div v-if="pedidosPaginados.length === 0" class="no-pedidos">
+              <i class="fas fa-shopping-cart"></i>
+              <p>No hay pedidos que mostrar</p>
+              <button class="boton-principal" @click="irAProductos()">Ir a comprar</button>
             </div>
           </div>
-          <div v-if="pedidosPaginados.length === 0" class="no-pedidos">
-            <i class="fas fa-shopping-cart"></i>
-            <p>No hay pedidos que mostrar</p>
-            <button class="boton-principal" @click="irAProductos()">Ir a comprar</button>
-          </div>
-        </div>
+        </template>
       </section>
     </main>
   </div>
@@ -154,42 +160,56 @@ const guardando = ref(false);
 const hoveredPedido = ref(null);
 const avatarHover = ref(false);
 const filtroActual = ref('todos');
-const validationErrors = ref({})
+const validationErrors = ref({});
 const router = useRouter();
+const cargando = ref(false);
+
 // Mounted hook
 onMounted(() => {
   userAuth();
 });
 
 // Funciones
-const userAuth = async () => {
+const userAuth = async (filtro = null) => {
+  cargando.value = true;
   try {
-    const { data } = await userAutenticado();
+    // Usar el filtro pasado como parámetro o el filtro actual
+    const filtroAplicar = filtro || filtroActual.value;
+    
+    // Llamar a userAutenticado con el filtro correspondiente
+    let { data } = await userAutenticado(filtroAplicar !== 'todos' ? filtroAplicar : null);
+    
     user.value = data.datos;
+    console.log('Usuario con pedidos:', user.value);
   } catch (error) {
-    console.error(error);
+    console.error('Error al obtener usuario:', error);
+    Swal.fire({
+      title: 'Error',
+      text: 'No se pudieron cargar los datos del usuario',
+      icon: 'error'
+    });
+  } finally {
+    cargando.value = false;
   }
 };
 
 const filtrarPedidos = (filtro) => {
+  console.log('Filtrando por:', filtro);
   filtroActual.value = filtro;
   paginaActual.value = 1;
+  
+  // Llamar a userAuth con el filtro seleccionado
+  userAuth(filtro);
 };
 
+// Computed properties
 const pedidosFiltrados = computed(() => {
-  if (!user.value.pedidos) return [];
-
-  switch (filtroActual.value) {
-    case 'entregados':
-      return user.value.pedidos.filter(p => p.estado === 1);
-    case 'proceso':
-      return user.value.pedidos.filter(p => p.estado === 0);
-    default:
-      return user.value.pedidos;
+  if (!user.value || !user.value.pedidos || !Array.isArray(user.value.pedidos)) {
+    return [];
   }
+  return user.value.pedidos;
 });
 
-// Computed properties
 const pedidosPaginados = computed(() => {
   const inicio = (paginaActual.value - 1) * pedidosPorPagina;
   const fin = inicio + pedidosPorPagina;
@@ -219,24 +239,36 @@ const iniciarEdicion = () => {
 };
 
 const guardarCambios = async () => {
-  guardando.value = true
-  validationErrors.value = {}
+  guardando.value = true;
+  validationErrors.value = {};
   try {
-    const { data } = await updateUserWeb(usuarioEditado.value)
-    console.log(data)
-    userAuth()
-    editando.value = false
+    const { data } = await updateUserWeb(usuarioEditado.value);
+    console.log('Usuario actualizado:', data);
+    userAuth(filtroActual.value); // Mantener el filtro actual al recargar
+    editando.value = false;
+    
+    Swal.fire({
+      title: '¡Éxito!',
+      text: 'Perfil actualizado correctamente',
+      icon: 'success',
+      timer: 2000,
+      timerProgressBar: true
+    });
   } catch (error) {
     if (error.response && error.response.data && error.response.data.errors) {
-      validationErrors.value = error.response.data.errors
+      validationErrors.value = error.response.data.errors;
     } else {
-      console.error(error)
+      console.error('Error al guardar cambios:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudo actualizar el perfil',
+        icon: 'error'
+      });
     }
   } finally {
-    guardando.value = false
+    guardando.value = false;
   }
-}
-
+};
 
 const cancelarEdicion = () => {
   validationErrors.value = {};
@@ -248,8 +280,10 @@ const cambiarPagina = (nuevaPagina) => {
     paginaActual.value = nuevaPagina;
   }
 };
+
 const descargarDetallePedido = async (id) => {
   try {
+    console.log('Descargando detalle del pedido:', id);
     const response = await generaPDFPedidoID(id);
     // Crea un objeto URL a partir de la respuesta
     const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -260,27 +294,60 @@ const descargarDetallePedido = async (id) => {
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url); // Liberar el objeto URL
+    
+    Swal.fire({
+      title: '¡Éxito!',
+      text: 'Detalle descargado correctamente',
+      icon: 'success',
+      timer: 2000,
+      timerProgressBar: true,
+      showConfirmButton: false
+    });
   } catch (error) {
-    console.log(error);
-  }
-}
-const repetirPedido = async (pedido) => {
-  try {
-    console.log('Repitiendo pedido:', pedido.id);
-    const { data } = await repitOrder(pedido);
-    console.log('Pedido repetido:', data);
-  } catch (error) {
-    console.error('Error al repetir el pedido:', error);
+    console.error('Error al descargar detalle:', error);
+    Swal.fire({
+      title: 'Error',
+      text: 'No se pudo descargar el detalle del pedido',
+      icon: 'error'
+    });
   }
 };
+
+const repetirPedido = async (id) => {
+  try {
+    console.log('Repitiendo pedido:', id);
+    const { data } = await repitOrder(id);
+    console.log('Pedido repetido:', data);
+    
+    // Recargar los pedidos después de repetir uno
+    userAuth(filtroActual.value);
+    
+    Swal.fire({
+      title: '¡Éxito!',
+      text: 'Pedido repetido correctamente',
+      icon: 'success',
+      timer: 2000,
+      timerProgressBar: true
+    });
+  } catch (error) {
+    console.error('Error al repetir el pedido:', error);
+    Swal.fire({
+      title: 'Error',
+      text: 'No se pudo repetir el pedido',
+      icon: 'error'
+    });
+  }
+};
+
 const formatearGenero = (genero) => {
   const generos = {
     'M': 'Masculino',
     'F': 'Femenino',
     'Otro': 'Otro'
-  }
-  return generos[genero] || 'No especificado'
-}
+  };
+  return generos[genero] || 'No especificado';
+};
+
 const formatearEtiqueta = (clave) => {
   const etiquetas = {
     nombre: 'Nombre',
@@ -310,8 +377,9 @@ const formatearPrecio = (precio) => {
 };
 
 const obtenerProgresoPedido = (estado) => {
-  return estado === 1 ? '100%' : '60%';
+  return estado == 1 ? '100%' : '60%';
 };
+
 // Función para hacer scroll al inicio de la página
 const scrollToTop = () => {
   window.scrollTo({
@@ -343,7 +411,7 @@ const cerrarSesion = async () => {
       if (token) {
         try {
           const { data } = await logout();
-          console.log(data);
+          console.log('Logout exitoso:', data);
         } catch (apiError) {
           console.warn('Error al llamar al endpoint de logout:', apiError);
           // Continuamos con el proceso aunque falle la API
@@ -383,14 +451,20 @@ const cerrarSesion = async () => {
     }
   }
 };
+
 const irAProductos = () => {
   router.push({path:'/productos'});
-}
+};
 
 // Watchers
-watch(filtroActual, () => {
-  paginaActual.value = 1;
+watch(filtroActual, (nuevoFiltro) => {
+  console.log('Filtro cambiado a:', nuevoFiltro);
 });
+
+// Definir variable CSS para colores primarios
+const style = document.createElement('style');
+style.innerHTML = ':root { --primary-color: linear-gradient(135deg, #3B82F6, #2563EB); }';
+document.head.appendChild(style);
 </script>
 
 <style scoped>
@@ -1039,6 +1113,27 @@ h2::after {
   font-size: 1.125rem;
   color: #4b5563;
   margin-bottom: 1.5rem;
+}
+
+/* Loading state */
+.cargando-pedidos {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  gap: 1rem;
+  text-align: center;
+}
+
+.cargando-pedidos i {
+  font-size: 2rem;
+  color: #3B82F6;
+}
+
+.cargando-pedidos p {
+  font-size: 1.125rem;
+  color: #4b5563;
 }
 
 /* Animations */

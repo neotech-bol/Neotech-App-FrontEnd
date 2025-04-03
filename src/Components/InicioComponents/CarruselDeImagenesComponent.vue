@@ -28,8 +28,11 @@
 
       <!-- Indicators -->
       <div class="carousel-indicators">
-        <button v-for="(image, index) in images" :key="index" :class="['indicator', { active: currentIndex === index }]"
-          @click="goToSlide(index)" :aria-label="`Go to slide ${index + 1}`" :aria-current="currentIndex === index">
+        <button v-for="(image, index) in images" :key="index" 
+          :class="['indicator', { active: currentIndex === index }]"
+          @click="goToSlide(index)" 
+          :aria-label="`Go to slide ${index + 1}`" 
+          :aria-current="currentIndex === index">
         </button>
       </div>
     </div>
@@ -202,7 +205,6 @@ onUnmounted(() => {
   .carousel-container {
     max-width: 1440px;
     padding: 0 1rem;
-    /* Less padding on small screens */
   }
 }
 
@@ -233,7 +235,6 @@ onUnmounted(() => {
 }
 
 .carousel-image {
- /*  margin-top: 40px; */
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -334,6 +335,7 @@ onUnmounted(() => {
   right: 1.5rem;
 }
 
+/* Enhanced carousel indicators for better mobile experience */
 .carousel-indicators {
   position: absolute;
   bottom: 1.5rem;
@@ -343,14 +345,13 @@ onUnmounted(() => {
   justify-content: center;
   gap: clamp(0.5rem, 1vw, 1rem);
   z-index: 20;
-  /* Increased z-index to ensure indicators are above overlay */
-  padding: 0.5rem 0;
-  /* Add padding to increase hit area */
+  padding: 0.75rem 0;
+  /* Increased padding for better touch targets */
 }
 
 .indicator {
-  width: clamp(8px, 1.5vw, 12px);
-  height: clamp(8px, 1.5vw, 12px);
+  width: clamp(10px, 2vw, 14px);
+  height: clamp(10px, 2vw, 14px);
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.6);
   border: 2px solid white;
@@ -358,28 +359,31 @@ onUnmounted(() => {
   transition: all 0.3s ease;
   position: relative;
   /* For the pseudo-element */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  /* Add shadow for better visibility */
 }
 
 .indicator::before {
   content: '';
   position: absolute;
-  top: -5px;
-  left: -5px;
-  right: -5px;
-  bottom: -5px;
+  top: -8px;
+  left: -8px;
+  right: -8px;
+  bottom: -8px;
   border-radius: 50%;
   /* Invisible but increases hit area for better touch targets */
 }
 
 .indicator.active {
   background: white;
-  transform: scale(1.2);
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
-  /* Add glow effect to active indicator */
+  transform: scale(1.3);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.9);
+  /* Enhanced glow effect */
 }
 
 .indicator:hover {
   background: rgba(255, 255, 255, 0.9);
+  transform: scale(1.1);
 }
 
 .slide-enter-active,
@@ -411,16 +415,13 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .carousel {
     height: clamp(180px, 50vw, 350px);
-    /* Smaller radius for mobile */
   }
 
   .carousel-overlay {
     background: linear-gradient(90deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.2) 100%);
     justify-content: center;
     bottom: 0;
-    /* More space for indicators */
     max-width: 100%;
-    /* Full width on mobile */
   }
 
   .carousel-control {
@@ -429,14 +430,21 @@ onUnmounted(() => {
     height: 36px;
   }
 
+  /* Enhanced mobile indicators */
   .carousel-indicators {
-    bottom: 1rem;
-    background: rgba(0, 0, 0, 0.3);
-    /* Semi-transparent background for better visibility */
+    bottom: 0.75rem;
+    background: rgba(0, 0, 0, 0.4);
     border-radius: 20px;
-    padding: 0.5rem;
+    padding: 0.5rem 0.75rem;
     width: fit-content;
     margin: 0 auto;
+    gap: 0.75rem;
+  }
+  
+  .indicator {
+    width: 12px;
+    height: 12px;
+    border-width: 1.5px;
   }
 }
 
@@ -447,7 +455,6 @@ onUnmounted(() => {
 
   .carousel-container {
     padding: 0 0.4rem;
-    /* Less padding on small screens */
   }
 
   .carousel-overlay {
@@ -467,7 +474,6 @@ onUnmounted(() => {
     padding: 0.4rem 0.8rem;
     font-size: 0.875rem;
     align-self: flex-start;
-    /* Align to left on mobile */
   }
 
   .carousel-control {
@@ -483,15 +489,17 @@ onUnmounted(() => {
     right: 0.5rem;
   }
 
-  .indicator {
-    width: 8px;
-    height: 8px;
-  }
-
+  /* Further enhanced indicators for small screens */
   .carousel-indicators {
     bottom: 0.5rem;
-    gap: 0.4rem;
-    padding: 0.4rem 0.8rem;
+    gap: 0.6rem;
+    padding: 0.5rem 1rem;
+    background: rgba(0, 0, 0, 0.5);
+  }
+  
+  .indicator {
+    width: 10px;
+    height: 10px;
   }
 }
 
@@ -522,10 +530,16 @@ onUnmounted(() => {
     height: 28px;
   }
 
+  /* Optimized indicators for very small screens */
   .indicator {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
     border-width: 1px;
+  }
+  
+  .carousel-indicators {
+    gap: 0.5rem;
+    padding: 0.4rem 0.8rem;
   }
 }
 
@@ -546,6 +560,12 @@ onUnmounted(() => {
 
   .carousel-indicators {
     bottom: 0.3rem;
+    padding: 0.3rem 0.6rem;
+  }
+  
+  .indicator {
+    width: 7px;
+    height: 7px;
   }
 }
 
@@ -567,6 +587,14 @@ onUnmounted(() => {
     margin-bottom: 0;
     margin-right: 1rem;
     font-size: clamp(0.875rem, 3vh, 1.5rem);
+  }
+  
+  /* Adjusted indicators for landscape mode */
+  .carousel-indicators {
+    bottom: 0.4rem;
+    right: 1rem;
+    left: auto;
+    justify-content: flex-end;
   }
 }
 </style>

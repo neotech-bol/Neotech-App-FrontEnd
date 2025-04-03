@@ -29,7 +29,8 @@
             'active': activeStep === index,
             'completed': activeStep > index,
             'clickable': index <= activeStep || (index === activeStep + 1 && checkoutSteps[activeStep].completed)
-          }]" @click="handleStepClick(index)" :aria-label="`Paso ${index + 1}: ${step.title}`" :tabindex="index <= activeStep || (index === activeStep + 1 && checkoutSteps[activeStep].completed) ? 0 : -1">
+          }]" @click="handleStepClick(index)" :aria-label="`Paso ${index + 1}: ${step.title}`"
+            :tabindex="index <= activeStep || (index === activeStep + 1 && checkoutSteps[activeStep].completed) ? 0 : -1">
             <div class="step-number-container">
               <span class="step-number">{{ index + 1 }}</span>
               <i v-if="activeStep > index" class="fas fa-check check-icon" aria-hidden="true"></i>
@@ -41,7 +42,8 @@
             </div>
           </div>
         </div>
-        <div class="progress-bar" role="progressbar" :aria-valuenow="progressPercentage" aria-valuemin="0" aria-valuemax="100">
+        <div class="progress-bar" role="progressbar" :aria-valuenow="progressPercentage" aria-valuemin="0"
+          aria-valuemax="100">
           <div class="progress" :style="{ width: progressPercentage + '%' }"></div>
         </div>
       </div>
@@ -51,7 +53,8 @@
       <div class="main-content">
         <div class="checkout-steps">
           <!-- Step 1: Delivery Information -->
-          <div class="step" :class="{ 'active-step': activeStep === 0, 'completed-step': activeStep > 0 }" :aria-expanded="activeStep === 0 || (stepsVisible[0] && checkoutSteps[0].completed)">
+          <div class="step" :class="{ 'active-step': activeStep === 0, 'completed-step': activeStep > 0 }"
+            :aria-expanded="activeStep === 0 || (stepsVisible[0] && checkoutSteps[0].completed)">
             <div class="step-header" @click="toggleStepVisibility(0)">
               <div class="step-header-left">
                 <div class="step-number-wrapper">
@@ -62,23 +65,28 @@
               </div>
               <div class="step-header-right">
                 <button v-if="activeStep >= 0 && checkoutSteps[0].completed" @click.stop="toggleEdit(0)"
-                  class="edit-button" :aria-label="checkoutSteps[0].editing ? 'Guardar información' : 'Editar información'">
+                  class="edit-button"
+                  :aria-label="checkoutSteps[0].editing ? 'Guardar información' : 'Editar información'">
                   <i class="fas" :class="checkoutSteps[0].editing ? 'fa-save' : 'fa-edit'" aria-hidden="true"></i>
                   <span class="btn-text">{{ checkoutSteps[0].editing ? 'Guardar' : 'Editar' }}</span>
                 </button>
-                <i v-if="activeStep !== 0" class="fas"
-                  :class="stepsVisible[0] ? 'fa-chevron-up' : 'fa-chevron-down'" aria-hidden="true"></i>
+                <i v-if="activeStep !== 0" class="fas" :class="stepsVisible[0] ? 'fa-chevron-up' : 'fa-chevron-down'"
+                  aria-hidden="true"></i>
               </div>
             </div>
             <div class="step-content" v-show="activeStep === 0 || (stepsVisible[0] && checkoutSteps[0].completed)">
               <div v-if="!checkoutSteps[0].editing && isDeliveryInfoComplete" class="delivery-info-display">
                 <div class="info-card">
-                  <p v-if="deliveryInfo.nombre"><i class="fas fa-user" aria-hidden="true"></i> {{ deliveryInfo.nombre }} {{
-                    deliveryInfo.apellido }}</p>
-                  <p v-if="deliveryInfo.direccion"><i class="fas fa-map-marker-alt" aria-hidden="true"></i> {{ deliveryInfo.direccion }}
+                  <p v-if="deliveryInfo.nombre"><i class="fas fa-user" aria-hidden="true"></i> {{ deliveryInfo.nombre }}
+                    {{
+                      deliveryInfo.apellido }}</p>
+                  <p v-if="deliveryInfo.direccion"><i class="fas fa-map-marker-alt" aria-hidden="true"></i> {{
+                    deliveryInfo.direccion }}
                   </p>
-                  <p v-if="deliveryInfo.telefono"><i class="fas fa-phone" aria-hidden="true"></i> {{ deliveryInfo.telefono }}</p>
-                  <p v-if="deliveryInfo.email"><i class="fas fa-envelope" aria-hidden="true"></i> {{ deliveryInfo.email }}</p>
+                  <p v-if="deliveryInfo.telefono"><i class="fas fa-phone" aria-hidden="true"></i> {{
+                    deliveryInfo.telefono }}</p>
+                  <p v-if="deliveryInfo.email"><i class="fas fa-envelope" aria-hidden="true"></i> {{ deliveryInfo.email
+                    }}</p>
                 </div>
               </div>
               <div v-else class="form-grid">
@@ -159,7 +167,8 @@
           </div>
 
           <!-- Step 2: Review Items -->
-          <div class="step" :class="{ 'active-step': activeStep === 1, 'completed-step': activeStep > 1 }" :aria-expanded="activeStep === 1 || (stepsVisible[1] && checkoutSteps[1].completed)">
+          <div class="step" :class="{ 'active-step': activeStep === 1, 'completed-step': activeStep > 1 }"
+            :aria-expanded="activeStep === 1 || (stepsVisible[1] && checkoutSteps[1].completed)">
             <div class="step-header" @click="toggleStepVisibility(1)">
               <div class="step-header-left">
                 <div class="step-number-wrapper">
@@ -169,8 +178,8 @@
                 <h2>Revise los Items y Envío</h2>
               </div>
               <div class="step-header-right">
-                <i v-if="activeStep !== 1" class="fas"
-                  :class="stepsVisible[1] ? 'fa-chevron-up' : 'fa-chevron-down'" aria-hidden="true"></i>
+                <i v-if="activeStep !== 1" class="fas" :class="stepsVisible[1] ? 'fa-chevron-up' : 'fa-chevron-down'"
+                  aria-hidden="true"></i>
               </div>
             </div>
             <div class="step-content" v-show="activeStep === 1 || (stepsVisible[1] && checkoutSteps[1].completed)">
@@ -198,7 +207,7 @@
                       <div class="price-type-badge"
                         :class="{ 'preventa': product.es_preventa, 'regular': !product.es_preventa }">
                         <i class="fas" :class="product.es_preventa ? 'fa-bolt' : 'fa-tag'" aria-hidden="true"></i>
-                        {{ product.es_preventa ? 'Preventa Estándar' : 'Regular' }}
+                        {{ product.es_preventa ? 'Preventa Estándar' : 'Preventa Especial' }}
                       </div>
                     </div>
 
@@ -207,29 +216,25 @@
                     <!-- Enhanced Price Type Selector with Better UX -->
                     <div class="price-type-container">
                       <div class="price-type-tabs" role="tablist">
-                        <button 
-                          @click="switchToPriceType(product, false)" 
+                        <button @click="switchToPriceType(product, false)"
                           :class="['tab-btn', { 'active': !product.es_preventa }]"
-                          :disabled="!canSwitchToRegular(product)"
-                          role="tab"
-                          :aria-selected="!product.es_preventa"
+                          :disabled="!canSwitchToRegular(product)" role="tab" :aria-selected="!product.es_preventa"
                           :aria-controls="`regular-price-${product.uniqueId}`">
-                          <i class="fas fa-tag" aria-hidden="true"></i> Precio Regular
+                          <i class="fas fa-tag" aria-hidden="true"></i> Precio Preventa Especial
                         </button>
-                        <button 
-                          @click="switchToPriceType(product, true)" 
+                        <button @click="switchToPriceType(product, true)"
                           :class="['tab-btn', { 'active': product.es_preventa }]"
-                          :disabled="!canSwitchToPreventa(product)"
-                          role="tab"
-                          :aria-selected="product.es_preventa"
+                          :disabled="!canSwitchToPreventa(product)" role="tab" :aria-selected="product.es_preventa"
                           :aria-controls="`preventa-price-${product.uniqueId}`">
                           <i class="fas fa-bolt" aria-hidden="true"></i> Precio Preventa Estándar
                         </button>
                       </div>
-                      
+
                       <div class="price-type-content">
                         <!-- Current Price Card -->
-                        <div class="current-price-card" :id="product.es_preventa ? `preventa-price-${product.uniqueId}` : `regular-price-${product.uniqueId}`" role="tabpanel">
+                        <div class="current-price-card"
+                          :id="product.es_preventa ? `preventa-price-${product.uniqueId}` : `regular-price-${product.uniqueId}`"
+                          role="tabpanel">
                           <div class="price-card-header">
                             <i :class="product.es_preventa ? 'fas fa-bolt' : 'fas fa-tag'" aria-hidden="true"></i>
                             <span>{{ product.es_preventa ? 'Precio de Preventa Estándar' : 'Precio Regular' }}</span>
@@ -237,12 +242,13 @@
                           <div class="price-card-body">
                             <div class="price-row">
                               <span class="price-label">Precio unitario:</span>
-                              <span class="price-value">{{ formatPrice(product.es_preventa ? product.precio_preventa : product.precio) }}</span>
+                              <span class="price-value">{{ formatPrice(product.es_preventa ? product.precio_preventa :
+                                product.precio) }}</span>
                             </div>
                             <div class="price-row">
                               <span class="price-label">Rango de cantidad:</span>
-                              <span class="price-value">{{ product.es_preventa ? 
-                                `${product.cantidad_minima_preventa} - ${product.cantidad_maxima_preventa}` : 
+                              <span class="price-value">{{ product.es_preventa ?
+                                `${product.cantidad_minima_preventa} - ${product.cantidad_maxima_preventa}` :
                                 `${product.cantidad_minima} - ${product.cantidad_maxima}` }} unidades</span>
                             </div>
                           </div>
@@ -279,7 +285,7 @@
                           <div class="quantity-input-container">
                             <input type="number" v-model.number="product.cantidad"
                               @change="validateAndUpdateQuantity(product)" class="quantity-input"
-                              :min="getMinQuantity(product)" :max="getMaxQuantity(product)" 
+                              :min="getMinQuantity(product)" :max="getMaxQuantity(product)"
                               :aria-label="`Cantidad de ${product.nombre}`" />
                           </div>
                           <button @click="increaseQuantity(product)" :disabled="isAtMaxQuantity(product)"
@@ -287,7 +293,8 @@
                             <i class="fas fa-plus" aria-hidden="true"></i>
                           </button>
                         </div>
-                        <button @click="removeProduct(product)" class="remove-btn" :aria-label="`Eliminar ${product.nombre} del carrito`">
+                        <button @click="removeProduct(product)" class="remove-btn"
+                          :aria-label="`Eliminar ${product.nombre} del carrito`">
                           <i class="fas fa-trash" aria-hidden="true"></i> <span class="btn-text">Eliminar</span>
                         </button>
                       </div>
@@ -299,7 +306,8 @@
                 <button @click="prevStep" class="prev-button" aria-label="Volver al paso anterior">
                   <i class="fas fa-arrow-left" aria-hidden="true"></i> Anterior
                 </button>
-                <button @click="nextStep" class="next-button" :disabled="items.length === 0" aria-label="Continuar al siguiente paso">
+                <button @click="nextStep" class="next-button" :disabled="items.length === 0"
+                  aria-label="Continuar al siguiente paso">
                   Continuar <i class="fas fa-arrow-right" aria-hidden="true"></i>
                 </button>
               </div>
@@ -307,7 +315,8 @@
           </div>
 
           <!-- Step 3: Coupon -->
-          <div class="step" :class="{ 'active-step': activeStep === 2, 'completed-step': activeStep > 2 }" :aria-expanded="activeStep === 2 || (stepsVisible[2] && checkoutSteps[2].completed)">
+          <div class="step" :class="{ 'active-step': activeStep === 2, 'completed-step': activeStep > 2 }"
+            :aria-expanded="activeStep === 2 || (stepsVisible[2] && checkoutSteps[2].completed)">
             <div class="step-header" @click="toggleStepVisibility(2)">
               <div class="step-header-left">
                 <div class="step-number-wrapper">
@@ -317,8 +326,8 @@
                 <h2>Cupón de Descuento</h2>
               </div>
               <div class="step-header-right">
-                <i v-if="activeStep !== 2" class="fas"
-                  :class="stepsVisible[2] ? 'fa-chevron-up' : 'fa-chevron-down'" aria-hidden="true"></i>
+                <i v-if="activeStep !== 2" class="fas" :class="stepsVisible[2] ? 'fa-chevron-up' : 'fa-chevron-down'"
+                  aria-hidden="true"></i>
               </div>
             </div>
             <div class="step-content" v-show="activeStep === 2 || (stepsVisible[2] && checkoutSteps[2].completed)">
@@ -332,18 +341,22 @@
                         class="coupon-input responsive-input" aria-describedby="coupon-message" />
                       <span class="input-focus-indicator"></span>
                     </div>
-                    <button @click="applyCoupon" class="apply-coupon-btn" :disabled="!cuponForm.codigo" aria-label="Aplicar cupón">
+                    <button @click="applyCoupon" class="apply-coupon-btn" :disabled="!cuponForm.codigo"
+                      aria-label="Aplicar cupón">
                       <i class="fas fa-check" aria-hidden="true"></i> <span class="btn-text">Aplicar</span>
                     </button>
                   </div>
                 </div>
-                <p v-if="couponMessage" class="coupon-message" :class="{ 'error-message': couponError }" id="coupon-message" role="status">
+                <p v-if="couponMessage" class="coupon-message" :class="{ 'error-message': couponError }"
+                  id="coupon-message" role="status">
                   <i :class="couponError ? 'fas fa-exclamation-circle' : 'fas fa-check-circle'" aria-hidden="true"></i>
                   {{ couponMessage }}
                 </p>
                 <div v-if="cartStore.descuento > 0" class="discount-info">
-                  <p><i class="fas fa-money-bill-wave" aria-hidden="true"></i> Descuento aplicado: {{ formatPrice(cartStore.montoDescuento) }}</p>
-                  <p v-if="cartStore.tipoDescuento === 'porcentaje'"><i class="fas fa-percentage" aria-hidden="true"></i> Porcentaje de
+                  <p><i class="fas fa-money-bill-wave" aria-hidden="true"></i> Descuento aplicado: {{
+                    formatPrice(cartStore.montoDescuento) }}</p>
+                  <p v-if="cartStore.tipoDescuento === 'porcentaje'"><i class="fas fa-percentage"
+                      aria-hidden="true"></i> Porcentaje de
                     descuento: {{ cartStore.descuento }}%</p>
                   <button @click="removeCoupon" class="remove-coupon-btn" aria-label="Eliminar cupón">
                     <i class="fas fa-times" aria-hidden="true"></i> <span class="btn-text">Eliminar Cupón</span>
@@ -362,7 +375,8 @@
           </div>
 
           <!-- Step 4: Payment Method -->
-          <div class="step" :class="{ 'active-step': activeStep === 3, 'completed-step': activeStep > 3 }" :aria-expanded="activeStep === 3 || (stepsVisible[3] && checkoutSteps[3].completed)">
+          <div class="step" :class="{ 'active-step': activeStep === 3, 'completed-step': activeStep > 3 }"
+            :aria-expanded="activeStep === 3 || (stepsVisible[3] && checkoutSteps[3].completed)">
             <div class="step-header" @click="toggleStepVisibility(3)">
               <div class="step-header-left">
                 <div class="step-number-wrapper">
@@ -372,8 +386,8 @@
                 <h2>Método de Pago</h2>
               </div>
               <div class="step-header-right">
-                <i v-if="activeStep !== 3" class="fas"
-                  :class="stepsVisible[3] ? 'fa-chevron-up' : 'fa-chevron-down'" aria-hidden="true"></i>
+                <i v-if="activeStep !== 3" class="fas" :class="stepsVisible[3] ? 'fa-chevron-up' : 'fa-chevron-down'"
+                  aria-hidden="true"></i>
               </div>
             </div>
             <div class="step-content" v-show="activeStep === 3 || (stepsVisible[3] && checkoutSteps[3].completed)">
@@ -383,7 +397,8 @@
                   @click="paymentMethod = 'qr'">
                   <div class="payment-option-header">
                     <div class="custom-radio">
-                      <input type="radio" id="qr-payment" name="payment-method" value="qr" v-model="paymentMethod" class="radio-input">
+                      <input type="radio" id="qr-payment" name="payment-method" value="qr" v-model="paymentMethod"
+                        class="radio-input">
                       <span class="radio-checkmark"></span>
                     </div>
                     <label for="qr-payment" class="payment-label">
@@ -414,13 +429,14 @@
                     </div>
                   </div>
                 </div>
-                
+
                 <!-- Opción de pago en instalaciones -->
                 <div class="payment-option" :class="{ 'selected': paymentMethod === 'in-person' }"
                   @click="paymentMethod = 'in-person'">
                   <div class="payment-option-header">
                     <div class="custom-radio">
-                      <input type="radio" id="in-person" name="payment-method" value="in-person" v-model="paymentMethod" class="radio-input">
+                      <input type="radio" id="in-person" name="payment-method" value="in-person" v-model="paymentMethod"
+                        class="radio-input">
                       <span class="radio-checkmark"></span>
                     </div>
                     <label for="in-person" class="payment-label">
@@ -428,7 +444,8 @@
                     </label>
                   </div>
                   <div v-if="paymentMethod === 'in-person'" class="payment-details">
-                    <p>Puedes realizar el pago directamente en nuestras instalaciones. Por favor selecciona una ubicación:</p>
+                    <p>Puedes realizar el pago directamente en nuestras instalaciones. Por favor selecciona una
+                      ubicación:</p>
                     <div class="location-selector" role="radiogroup" aria-labelledby="location-heading">
                       <h3 id="location-heading" class="sr-only">Selecciona una ubicación</h3>
                       <div v-for="(location, key) in locationOptions" :key="key"
@@ -486,7 +503,8 @@
                 <button @click="prevStep" class="prev-button" aria-label="Volver al paso anterior">
                   <i class="fas fa-arrow-left" aria-hidden="true"></i> Anterior
                 </button>
-                <button @click="finalizeOrder" class="checkout-button" :disabled="!isPaymentValid" aria-label="Finalizar pedido">
+                <button @click="finalizeOrder" class="checkout-button" :disabled="!isPaymentValid"
+                  aria-label="Finalizar pedido">
                   <i class="fas fa-check-circle" aria-hidden="true"></i> FINALIZAR PEDIDO
                 </button>
               </div>
@@ -555,7 +573,8 @@
               </div>
             </div>
             <div class="checkout-progress desktop-only">
-              <div class="progress-bar" role="progressbar" :aria-valuenow="progressPercentage" aria-valuemin="0" aria-valuemax="100">
+              <div class="progress-bar" role="progressbar" :aria-valuenow="progressPercentage" aria-valuemin="0"
+                aria-valuemax="100">
                 <div class="progress" :style="{ width: progressPercentage + '%' }"></div>
               </div>
               <p class="progress-text">Paso {{ activeStep + 1 }} de {{ checkoutSteps.length }}</p>
@@ -565,7 +584,8 @@
               <a href="/terminos-condiciones">términos y condiciones</a> del servicio.
             </p>
             <div class="mobile-finalize-container" v-if="activeStep === 3 && !orderFinalized">
-              <button @click="finalizeOrder" class="mobile-finalize-button" :disabled="!isPaymentValid" aria-label="Finalizar pedido">
+              <button @click="finalizeOrder" class="mobile-finalize-button" :disabled="!isPaymentValid"
+                aria-label="Finalizar pedido">
                 <i class="fas fa-check-circle" aria-hidden="true"></i> FINALIZAR PEDIDO
               </button>
             </div>
@@ -604,7 +624,8 @@
           :disabled="(activeStep === 1 && items.length === 0)" aria-label="Siguiente paso">
           <i class="fas fa-arrow-right" aria-hidden="true"></i>
         </button>
-        <button v-else @click="finalizeOrder" class="mobile-nav-btn checkout-btn" :disabled="!isPaymentValid" aria-label="Finalizar pedido">
+        <button v-else @click="finalizeOrder" class="mobile-nav-btn checkout-btn" :disabled="!isPaymentValid"
+          aria-label="Finalizar pedido">
           <i class="fas fa-check" aria-hidden="true"></i>
         </button>
       </div>
@@ -1154,7 +1175,7 @@ function canSwitchToRegular(product) {
 const formatPrice = (price) => {
   // Convertir price a número
   const numericPrice = parseFloat(price);
-  
+
   return !isNaN(numericPrice) ? `${numericPrice.toFixed(2).toLocaleString()} Bs` : '0.00 Bs';
 };
 
@@ -1167,9 +1188,9 @@ const formatPrice = (price) => {
  */
 function calculateDiscountAmount(totalAmount, discountType, discountValue) {
   if (!totalAmount || !discountValue) return 0;
-  
+
   let discountAmount = 0;
-  
+
   if (discountType === 'porcentaje') {
     // Calcular descuento porcentual
     discountAmount = (totalAmount * discountValue) / 100;
@@ -1177,7 +1198,7 @@ function calculateDiscountAmount(totalAmount, discountType, discountValue) {
     // Descuento de monto fijo
     discountAmount = discountValue;
   }
-  
+
   // Asegurar que el descuento no exceda el monto total
   return Math.min(discountAmount, totalAmount);
 }
@@ -1197,23 +1218,23 @@ const applyCoupon = async () => {
     if (response.data.success) {
       // Aplicar el cupón usando la función mejorada de cálculo de descuento
       const cupon = response.data.cupon;
-      
+
       // Calcular el monto de descuento usando la nueva función
       const discountAmount = calculateDiscountAmount(
         totalAmount.value,
         cupon.tipo,
         cupon.descuento
       );
-      
+
       // Actualizar el objeto del cupón con el monto calculado
       const cuponConMontoCalculado = {
         ...cupon,
         montoCalculado: discountAmount
       };
-      
+
       // Aplicar el cupón al carrito
       cartStore.applyCoupon(cuponConMontoCalculado);
-      
+
       couponMessage.value = `Cupón aplicado: ${cupon.codigo}`;
       couponError.value = false;
       Swal.fire({
@@ -1312,19 +1333,19 @@ const processOrder = async () => {
     if (producto.precio_preventa) formData.append(`productos[${index}][precio_preventa]`, producto.precio_preventa);
     if (producto.modeloId) formData.append(`productos[${index}][modelo_id]`, producto.modeloId);
     if (producto.color) formData.append(`productos[${index}][color]`, producto.color);
-    
+
     // Add the quantity range fields
     if (producto.cantidad_minima) formData.append(`productos[${index}][cantidad_minima]`, producto.cantidad_minima);
     if (producto.cantidad_maxima) formData.append(`productos[${index}][cantidad_maxima]`, producto.cantidad_maxima);
     if (producto.cantidad_minima_preventa) formData.append(`productos[${index}][cantidad_minima_preventa]`, producto.cantidad_minima_preventa);
     if (producto.cantidad_maxima_preventa) formData.append(`productos[${index}][cantidad_maxima_preventa]`, producto.cantidad_maxima_preventa);
   });
-  
+
   // Usar el monto después del descuento como total_amount
   formData.append('total_amount', cartStore.totalAfterDiscount);
   formData.append('total_to_pay', cartStore.totalToPay);
   formData.append('pending', cartStore.pending);
-  
+
   // Información del descuento aplicado
   if (cartStore.cupon_id) {
     formData.append('cupon_id', cartStore.cupon_id);
@@ -1332,7 +1353,7 @@ const processOrder = async () => {
     formData.append('tipo_descuento', cartStore.tipoDescuento);
     formData.append('valor_descuento', cartStore.descuento);
   }
-  
+
   formData.append('payment_method', paymentMethod.value);
   formData.append('is_guest', !isAuthenticated.value);
   if (paymentMethod.value === 'in-person' && selectedLocation.value) {
@@ -1362,7 +1383,7 @@ const processOrder = async () => {
             Swal.showLoading();
           }
         });
-        
+
         // Mostrar en consola los valores que se están enviando (para depuración)
         console.log('Enviando pedido con los siguientes valores:');
         console.log('Total original:', cartStore.totalAmount);
@@ -1370,10 +1391,10 @@ const processOrder = async () => {
         console.log('Total después del descuento:', cartStore.totalAfterDiscount);
         console.log('Total a pagar (70%):', cartStore.totalToPay);
         console.log('Pendiente (30%):', cartStore.pending);
-        
+
         const { data } = await storePedido(formData);
         console.log('Respuesta del servidor:', data);
-        
+
         Swal.fire({
           title: "¡Pedido Finalizado!",
           text: "Tu pedido ha sido realizado con éxito.",
@@ -1547,8 +1568,8 @@ function decreaseQuantity(product) {
     const nuevaCantidad = parseInt(product.cantidad) - 1;
 
     if (!product.es_preventa && canSwitchToPreventa(product) &&
-        nuevaCantidad >= product.cantidad_minima_preventa &&
-        nuevaCantidad <= product.cantidad_maxima_preventa) {
+      nuevaCantidad >= product.cantidad_minima_preventa &&
+      nuevaCantidad <= product.cantidad_maxima_preventa) {
       Swal.fire({
         title: "Cambio de precio",
         text: `Al disminuir a ${nuevaCantidad}, entra en el rango de preventa estándar (${product.cantidad_minima_preventa}-${product.cantidad_maxima_preventa}). ¿Desea cambiar a precio de preventa estándar?`,
@@ -1684,7 +1705,7 @@ const finalizeOrder = async () => {
     });
     return;
   }
-  
+
   if (!isPaymentValid.value) {
     let warningMessage = "Por favor, selecciona un método de pago.";
     if (paymentMethod.value === 'qr') {
@@ -1700,7 +1721,7 @@ const finalizeOrder = async () => {
     });
     return;
   }
-  
+
   // Llamar a processOrder que ya tiene la lógica para enviar el total con descuento
   await processOrder();
 };
@@ -1726,7 +1747,7 @@ export default {
     selectPaymentMethod(method) {
       this.paymentMethod = method;
     },
-    
+
     // Método para seleccionar la ubicación
     selectLocation(key) {
       this.selectedLocation = key;
@@ -2744,12 +2765,19 @@ h2 {
 }
 
 @keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {
+
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
     transform: translateY(0);
   }
+
   40% {
     transform: translateY(-20px);
   }
+
   60% {
     transform: translateY(-10px);
   }
@@ -4057,7 +4085,7 @@ input:focus~.input-focus-indicator {
   .comparison-divider {
     padding: 10px 0;
   }
-  
+
   .coupon-input-group {
     flex-direction: column;
   }
@@ -4138,53 +4166,53 @@ input:focus~.input-focus-indicator {
     font-size: 16px;
     padding: 12px 12px 12px 40px;
   }
-  
+
   .checkout-container {
     padding-bottom: 80px;
   }
-  
+
   .step-header {
     padding: 12px 8px;
   }
-  
+
   .step-header-left {
     gap: 10px;
   }
-  
+
   .step-number-wrapper {
     width: 32px;
     height: 32px;
     min-width: 32px;
   }
-  
-  .toggle-summary-btn, 
+
+  .toggle-summary-btn,
   .mobile-nav-btn,
   .quantity-btn,
   .remove-btn {
     min-height: 48px;
     min-width: 48px;
   }
-  
+
   .mobile-nav-controls {
     padding: 12px;
   }
-  
+
   .nav-buttons-container {
     gap: 12px;
   }
-  
+
   /* Improve form inputs for mobile */
   .responsive-input {
     font-size: 16px;
     padding: 14px 14px 14px 45px;
   }
-  
+
   /* Improve scrolling experience */
   .mini-cart-scroll {
     -webkit-overflow-scrolling: touch;
     scroll-padding: 10px;
   }
-  
+
   /* Better tap targets */
   .payment-option-header,
   .location-option {
@@ -4194,6 +4222,7 @@ input:focus~.input-focus-indicator {
 
 /* Touch-friendly improvements */
 @media (hover: none) {
+
   .next-button,
   .prev-button,
   .apply-coupon-btn,
@@ -4267,11 +4296,11 @@ input:focus~.input-focus-indicator {
     width: 100%;
     justify-content: flex-start;
   }
-  
+
   .company-logo {
     height: 30px;
   }
-  
+
   .back-button {
     font-size: 18px;
   }
@@ -4308,7 +4337,7 @@ input:focus~.input-focus-indicator {
   transition: all 0.2s ease;
 }
 
-.radio-input:checked ~ .radio-checkmark {
+.radio-input:checked~.radio-checkmark {
   border-color: var(--primary-color);
 }
 
@@ -4325,7 +4354,7 @@ input:focus~.input-focus-indicator {
   transform: translate(-50%, -50%);
 }
 
-.radio-input:checked ~ .radio-checkmark:after {
+.radio-input:checked~.radio-checkmark:after {
   display: block;
 }
 
@@ -4375,6 +4404,7 @@ input:focus~.input-focus-indicator {
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -4434,6 +4464,7 @@ input:focus~.input-focus-indicator {
     opacity: 0;
     transform: translateX(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -4445,11 +4476,11 @@ input:focus~.input-focus-indicator {
   .payment-details {
     padding-left: 15px;
   }
-  
+
   .payment-label {
     font-size: 15px;
   }
-  
+
   .location-option {
     padding: 8px;
   }
@@ -4465,19 +4496,18 @@ input:focus~.input-focus-indicator {
     width: 18px;
     height: 18px;
   }
-  
+
   .radio-checkmark:after {
     width: 8px;
     height: 8px;
   }
-  
+
   .payment-label {
     font-size: 14px;
   }
-  
+
   .location-label {
     font-size: 13px;
   }
 }
 </style>
-

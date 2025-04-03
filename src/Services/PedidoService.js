@@ -74,3 +74,6 @@ export const pdfPedidosPendientes = () => {
 export const pdfPedidosCatalogo = (catalogoId) => {
     return httpDownload().get(`${urlBase}pedidos/catalogo/${catalogoId}/pdf`); // Realizar una solicitud GET para generar un PDF de pedidos de un catálogo específico
 }
+export const excelPedidosCatalogo = (catalogoId) => {
+    return httpDownload().get(`${urlBase}pedidos/catalogo/${catalogoId}/excel`); // Realizar una solicitud GET para generar un PDF de pedidos de un catálogo específico
+}

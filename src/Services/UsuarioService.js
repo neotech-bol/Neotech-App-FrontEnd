@@ -16,11 +16,18 @@ export const updateUser = (id, formulario) => {
 export const changeStatus = (id) => {
     return http().delete(`${urlBase}usuario/${id}`)
 }
-//user autenticado
- export const userAutenticado = () => {
-    return httpNotToken().get(`${urlBase}usuario-autenticado`)
-}
- 
+// Función para obtener el usuario autenticado con filtro opcional
+export const userAutenticado = (filtro = null) => {
+    let params = '';
+    
+    // Agregar parámetro de filtro si existe
+    if (filtro && filtro !== 'todos') {
+        const estadoValue = filtro === 'entregados' ? '1' : '0';
+        params = `?estado=${estadoValue}`;
+    }
+    
+    return httpNotToken().get(`${urlBase}usuario-autenticado${params}`);
+};
 export const updateDeparatamento = (form) => {
     return httpNotToken().post(`${urlBase}usuario/departamento`, form)
 }
