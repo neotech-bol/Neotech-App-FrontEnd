@@ -56,6 +56,20 @@ export const useCartStore = defineStore('cart', () => {
   }
 
   /**
+   * Actualiza un producto específico en el carrito
+   * @param {Object} updatedProduct - Producto actualizado
+   * @param {string} uniqueId - ID único del producto a actualizar
+   */
+  function updateCart(updatedProduct, uniqueId) {
+    const index = productos.value.findIndex(item => item.uniqueId === uniqueId);
+    if (index !== -1) {
+      productos.value[index] = updatedProduct;
+      saveCartToStorage();
+      recalcularDescuento();
+    }
+  }
+
+  /**
    * Determina si un producto debe usar precio de preventa
    * @param {Object} product - Producto a evaluar
    * @returns {boolean} - true si debe usar precio de preventa
@@ -352,6 +366,8 @@ export const useCartStore = defineStore('cart', () => {
     applyCoupon,
     removeCoupon,
     calculateDiscountAmount,
+    updateCart, // Añadido el nuevo método
+    saveCartToStorage, // Exponemos este método también
     
     // Propiedades de descuento
     descuento,

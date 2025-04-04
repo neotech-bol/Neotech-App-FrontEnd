@@ -6,19 +6,22 @@
         <div class="header-left">
           <button @click="goBack" class="back-button" aria-label="Volver atrás">
             <i class="fas fa-arrow-left"></i>
-          </button>
-          <div class="logo-container" @click="goToHome" role="button" tabindex="0">
+          </button> 
+<!--          <div class="logo-container" @click="goToHome" role="button" tabindex="0">
             <img src="../../public/logo/Logo Neofetch PNG.png" alt="Logo de la empresa" class="company-logo" />
-          </div>
-        </div>
-        <h1>Finalizar Pedido <span class="items-badge">{{ totalItems }}</span></h1>
-        <div class="actions-container">
-          <button @click="emptyCart" class="empty-cart-btn" :disabled="items.length === 0" aria-label="Vaciar carrito">
-            <i class="fas fa-trash-alt"></i> <span class="btn-text">Vaciar Carrito</span>
-          </button>
-          <div class="lock-icon" aria-hidden="true">
+          </div>  -->
+          <h1>Finalizar Pedido <span class="items-badge">{{ totalProducts }}</span></h1>
+<!--           <div class="lock-icon" aria-hidden="true">
             <i class="fas fa-lock"></i>
-          </div>
+          </div> -->
+          <button @click="emptyCart" class="empty-cart-btn" :disabled="items.length === 0" aria-label="Vaciar carrito">
+            <i class="fas fa-trash-alt"></i> <span class="btn-text">Vaciar</span>
+          </button> 
+        </div>
+        <div class="actions-container">
+<!--          <button @click="emptyCart" class="empty-cart-btn" :disabled="items.length === 0" aria-label="Vaciar carrito">
+            <i class="fas fa-trash-alt"></i> <span class="btn-text">Vaciar</span>
+          </button>  -->
         </div>
       </div>
 
@@ -689,7 +692,6 @@
     </transition>
   </div>
 </template>
-
 <script setup>
 import { validateCuponBE } from '@/Services/CuponService';
 import { storePedido } from '@/Services/PedidoService';
@@ -969,7 +971,9 @@ const removeVoucher = () => {
 };
 
 const totalItems = computed(() => cartStore.totalItems);
+
 const totalAmount = computed(() => cartStore.totalAmount);
+const totalProducts = computed(() => cartStore.uniqueItemCount);
 const totalToPay = computed(() => cartStore.totalToPay);
 const pending = computed(() => cartStore.pending);
 const items = computed(() => cartStore.productos);
@@ -1651,13 +1655,8 @@ function switchToPriceType(product, isPreventa) {
       image: product.image || currentImageUrl,
     }
 
-    // Update the product directly in the cart array instead of removing and adding
-    const index = cartStore.productos.findIndex((item) => item.uniqueId === originalUniqueId)
-    if (index !== -1) {
-      cartStore.productos[index] = productoActualizado
-      cartStore.saveCartToStorage()
-      cartStore.recalcularDescuento()
-    }
+    // Update the product using the updateCart method
+    cartStore.updateCart(productoActualizado, originalUniqueId);
 
     Swal.fire({
       title: "Precio actualizado",
@@ -1671,6 +1670,7 @@ function switchToPriceType(product, isPreventa) {
   }
 }
 
+// También actualizar la función updateQuantityWithoutPriceChange
 function updateQuantityWithoutPriceChange(product, newQuantity) {
   // Important: Store the original uniqueId before any modifications
   const originalUniqueId = product.uniqueId
@@ -1683,16 +1683,9 @@ function updateQuantityWithoutPriceChange(product, newQuantity) {
     uniqueId: originalUniqueId,
   }
 
-  // Use the cart store's direct update method instead of remove/add
-  // This prevents the product from being replaced with a different one
-  const index = cartStore.productos.findIndex((item) => item.uniqueId === originalUniqueId)
-  if (index !== -1) {
-    cartStore.productos[index] = updatedProduct
-    cartStore.saveCartToStorage()
-    cartStore.recalcularDescuento()
-  }
+  // Use the cart store's updateCart method
+  cartStore.updateCart(updatedProduct, originalUniqueId);
 }
-
 // Función finalizeOrder que llama a processOrder
 const finalizeOrder = async () => {
   // Validaciones básicas antes de procesar el pedido
@@ -1768,6 +1761,7 @@ export default {
   --secondary-color: #6c757d;
   --success-color: #28a745;
   --danger-color: #dc3545;
+  --warning-color: #ffc107;
   --light-color: #f8f9fa;
   --dark-color: #343a40;
   --border-radius: 8px;
@@ -1797,7 +1791,13 @@ body {
 .logo-container {
   display: flex;
   align-items: center;
-  margin-right: 15px;
+/*   margin-right: 15px; */
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.logo-container:hover {
+  transform: scale(1.05);
 }
 
 .company-logo {
@@ -1818,6 +1818,7 @@ body {
   padding: clamp(10px, 3vw, 15px);
   transition: all 0.3s ease;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .header-scrolled {
@@ -1836,8 +1837,7 @@ body {
 .header-left {
   display: flex;
   align-items: center;
-  width: 100%;
-  justify-content: flex-start;
+  flex: 1;
 }
 
 .actions-container {
@@ -1854,6 +1854,8 @@ h1 {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: 1;
+  justify-content: center;
 }
 
 .items-badge {
@@ -1880,12 +1882,10 @@ h1 {
     opacity: 0.7;
     transform: scale(1);
   }
-
   50% {
     opacity: 1;
     transform: scale(1.1);
   }
-
   100% {
     opacity: 0.7;
     transform: scale(1);
@@ -1905,6 +1905,7 @@ h1 {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-height: 44px;
 }
 
 .empty-cart-btn:hover:not(:disabled) {
@@ -1922,6 +1923,33 @@ h1 {
   background-color: #e9ecef;
   color: #6c757d;
   cursor: not-allowed;
+}
+
+/* Back Button Styles */
+.back-button {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  margin-right: 10px;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.back-button:hover {
+  background-color: rgba(0, 123, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.back-button:active {
+  transform: translateY(0);
 }
 
 /* Improved Mobile Progress Indicator */
@@ -2011,6 +2039,10 @@ h1 {
   color: #6c757d;
   text-align: center;
   transition: all 0.3s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .step-indicator.active .step-number-container {
@@ -2075,11 +2107,9 @@ h1 {
   0% {
     transform: scale(1);
   }
-
   50% {
     transform: scale(1.2);
   }
-
   100% {
     transform: scale(1);
   }
@@ -2107,7 +2137,6 @@ h1 {
   from {
     background-position: 1rem 0;
   }
-
   to {
     background-position: 0 0;
   }
@@ -2140,7 +2169,6 @@ h1 {
     opacity: 0;
     transform: translateY(20px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -2178,7 +2206,6 @@ h1 {
     opacity: 0;
     transform: translateX(-10px);
   }
-
   to {
     opacity: 1;
     transform: translateX(0);
@@ -2271,6 +2298,8 @@ h2 {
   gap: 5px;
   padding: 8px 12px;
   border-radius: 8px;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .edit-button:hover {
@@ -2322,6 +2351,8 @@ h2 {
   border-bottom: 2px solid #f8f9fa;
   transition: all 0.3s ease;
   border-radius: 8px;
+  position: relative;
+  overflow: hidden;
 }
 
 .product-item:hover {
@@ -2430,6 +2461,12 @@ h2 {
   border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.price-type-container:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
 }
 
 .price-type-tabs {
@@ -2452,6 +2489,9 @@ h2 {
   justify-content: center;
   gap: 8px;
   color: #666;
+  position: relative;
+  overflow: hidden;
+  min-height: 48px;
 }
 
 .tab-btn.active {
@@ -2472,6 +2512,36 @@ h2 {
 .tab-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Ripple effect for buttons */
+.tab-btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1, 1) translate(-50%, -50%);
+  transform-origin: 50% 50%;
+}
+
+.tab-btn:focus:not(:active)::after {
+  animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0, 0) translate(-50%, -50%);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(100, 100) translate(-50%, -50%);
+    opacity: 0;
+  }
 }
 
 .price-type-content {
@@ -2522,85 +2592,14 @@ h2 {
 .price-value {
   font-weight: 600;
   color: #333;
+  white-space: nowrap;
+  text-align: right;
+  min-width: 100px;
 }
 
 .price-value.total {
   font-size: 18px;
   color: #0288d1;
-}
-
-.price-comparison {
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  margin-top: 15px;
-}
-
-.comparison-header {
-  padding: 10px 15px;
-  background-color: #f5f5f5;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #333;
-}
-
-.comparison-body {
-  padding: 15px;
-}
-
-.comparison-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.comparison-item {
-  flex: 1;
-  text-align: center;
-  padding: 10px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-}
-
-.comparison-divider {
-  padding: 0 15px;
-  font-weight: bold;
-  color: #666;
-}
-
-.comparison-label {
-  font-weight: 600;
-  margin-bottom: 5px;
-  color: #666;
-}
-
-.comparison-value {
-  font-size: 18px;
-  font-weight: 700;
-  margin-bottom: 5px;
-}
-
-.comparison-range {
-  font-size: 13px;
-  color: #666;
-}
-
-.savings-info {
-  margin-top: 15px;
-  padding: 10px;
-  background-color: #e8f5e9;
-  border-radius: 8px;
-  color: #2e7d32;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.savings-info span {
-  font-weight: 700;
 }
 
 .model-info {
@@ -2619,6 +2618,7 @@ h2 {
   font-size: 14px;
 }
 
+/* Quantity Control Section - Enhanced for isNearRangeLimit */
 .quantity-control-section {
   margin-top: 20px;
 }
@@ -2628,11 +2628,49 @@ h2 {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+  position: relative;
 }
 
-.quantity-label>span:first-child {
+.quantity-label > span:first-child {
   font-weight: 600;
   color: #333;
+}
+
+.quantity-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 10;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  width: max-content;
+  max-width: 250px;
+  transform: translateY(10px);
+  pointer-events: none;
+}
+
+.quantity-label:hover .quantity-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.quantity-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 15px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
 }
 
 .quantity-status {
@@ -2644,22 +2682,36 @@ h2 {
   gap: 6px;
   background-color: #e8f5e9;
   color: #388e3c;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .quantity-status.warning {
   background-color: #fff8e1;
   color: #ff8f00;
+  animation: pulse 2s infinite;
 }
 
 .quantity-status.error {
   background-color: #ffebee;
   color: #d32f2f;
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
 }
 
 .quantity-controls {
   display: flex;
   align-items: center;
   gap: 15px;
+  flex-wrap: wrap;
 }
 
 .quantity-selector {
@@ -2668,11 +2720,17 @@ h2 {
   background-color: #f5f5f5;
   border-radius: 8px;
   padding: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.quantity-selector:focus-within {
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
 .quantity-btn {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 8px;
   border: none;
   background-color: white;
@@ -2684,6 +2742,8 @@ h2 {
   justify-content: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
 }
 
 .quantity-btn:hover:not(:disabled) {
@@ -2691,9 +2751,30 @@ h2 {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
+.quantity-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 .quantity-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.quantity-btn.pulse {
+  animation: btnPulse 1.5s infinite;
+}
+
+@keyframes btnPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(0, 123, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+  }
 }
 
 .quantity-input-container {
@@ -2710,6 +2791,7 @@ h2 {
   font-weight: 600;
   color: #333;
   padding: 8px 0;
+  -moz-appearance: textfield;
 }
 
 .quantity-input::-webkit-inner-spin-button,
@@ -2734,6 +2816,7 @@ h2 {
   align-items: center;
   gap: 8px;
   transition: all 0.2s ease;
+  min-height: 44px;
 }
 
 .remove-btn:hover {
@@ -2765,19 +2848,12 @@ h2 {
 }
 
 @keyframes bounce {
-
-  0%,
-  20%,
-  50%,
-  80%,
-  100% {
+  0%, 20%, 50%, 80%, 100% {
     transform: translateY(0);
   }
-
   40% {
     transform: translateY(-20px);
   }
-
   60% {
     transform: translateY(-10px);
   }
@@ -2802,6 +2878,7 @@ h2 {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-height: 44px;
 }
 
 .go-shopping-btn:hover {
@@ -2928,6 +3005,7 @@ input:focus~.input-focus-indicator {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-height: 44px;
 }
 
 .next-button {
@@ -3003,6 +3081,7 @@ input:focus~.input-focus-indicator {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-height: 44px;
 }
 
 .apply-coupon-btn:hover:not(:disabled) {
@@ -3061,6 +3140,7 @@ input:focus~.input-focus-indicator {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-height: 44px;
 }
 
 .remove-coupon-btn:hover {
@@ -3161,6 +3241,7 @@ input:focus~.input-focus-indicator {
   align-items: center;
   gap: 8px;
   transition: all 0.3s ease;
+  min-height: 44px;
 }
 
 .file-upload-button:hover {
@@ -3207,25 +3288,28 @@ input:focus~.input-focus-indicator {
   transform: scale(1.1);
 }
 
-/* Location selector - REDUCED SIZE */
+/* Location selector */
 .location-selector {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   margin-top: 15px;
 }
 
 .location-option {
-  padding: 8px;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 13px;
+  transition: all 0.2s ease;
+  min-height: 44px;
 }
 
 .location-option:hover {
   border-color: var(--primary-color);
+  background-color: rgba(0, 123, 255, 0.05);
 }
 
 .location-option.selected {
@@ -3233,23 +3317,23 @@ input:focus~.input-focus-indicator {
   background-color: #f0f8ff;
 }
 
-.location-option input[type="radio"] {
+.location-radio {
   margin-right: 8px;
 }
 
-.location-option label {
-  cursor: pointer;
+.location-label {
   font-weight: 500;
-  font-size: 13px;
+  font-size: 14px;
+  cursor: pointer;
 }
 
 .store-info {
   margin-top: 15px;
-  padding: 12px;
+  padding: 15px;
   background-color: #f8f9fa;
   border-radius: 8px;
   border-left: 4px solid var(--primary-color);
-  font-size: 13px;
+  animation: slideIn 0.3s ease;
 }
 
 .store-info-item {
@@ -3293,6 +3377,7 @@ input:focus~.input-focus-indicator {
   gap: 10px;
   width: 100%;
   margin-top: 20px;
+  min-height: 44px;
 }
 
 .checkout-button:hover:not(:disabled) {
@@ -3306,7 +3391,7 @@ input:focus~.input-focus-indicator {
   cursor: not-allowed;
 }
 
-/* Order Summary - FIXED STICKY POSITION */
+/* Order Summary */
 .order-summary {
   position: sticky;
   top: calc(var(--header-height) + 20px);
@@ -3399,13 +3484,6 @@ input:focus~.input-focus-indicator {
 
 .summary-item:last-child {
   border-bottom: none;
-}
-
-/* Fixed price alignment - ensuring "Bs" stays on the same line */
-.price-value {
-  white-space: nowrap;
-  text-align: right;
-  min-width: 100px;
 }
 
 .discount-item {
@@ -3524,6 +3602,7 @@ input:focus~.input-focus-indicator {
   align-items: center;
   justify-content: center;
   gap: 10px;
+  min-height: 44px;
 }
 
 .mobile-finalize-button:hover:not(:disabled) {
@@ -3552,11 +3631,9 @@ input:focus~.input-focus-indicator {
   0% {
     transform: scale(0);
   }
-
   50% {
     transform: scale(1.2);
   }
-
   100% {
     transform: scale(1);
   }
@@ -3584,6 +3661,7 @@ input:focus~.input-focus-indicator {
   border-radius: 8px;
   text-decoration: none;
   transition: all 0.3s ease;
+  min-height: 44px;
 }
 
 .whatsapp-button:hover {
@@ -3607,7 +3685,7 @@ input:focus~.input-focus-indicator {
   font-size: 14px;
 }
 
-/* New Mobile Navigation Controls */
+/* Mobile Navigation Controls */
 .mobile-nav-controls {
   position: fixed;
   bottom: 0;
@@ -3678,6 +3756,7 @@ input:focus~.input-focus-indicator {
   flex: 1;
   justify-content: center;
   position: relative;
+  min-height: 44px;
 }
 
 .mobile-cart-btn:hover {
@@ -3743,7 +3822,6 @@ input:focus~.input-focus-indicator {
     opacity: 0;
     transform: scale(0.9);
   }
-
   to {
     opacity: 1;
     transform: scale(1);
@@ -3772,6 +3850,8 @@ input:focus~.input-focus-indicator {
   cursor: pointer;
   color: #6c757d;
   transition: all 0.3s ease;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .close-modal:hover {
@@ -3804,6 +3884,7 @@ input:focus~.input-focus-indicator {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-height: 44px;
 }
 
 .cancel-btn {
@@ -3845,6 +3926,7 @@ input:focus~.input-focus-indicator {
   gap: 8px;
   flex: 1;
   justify-content: center;
+  min-height: 44px;
 }
 
 .guest-btn {
@@ -3924,6 +4006,19 @@ input:focus~.input-focus-indicator {
 }
 
 /* Media Queries */
+@media (max-width: 1024px) {
+  .checkout-content {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .order-summary {
+    position: relative;
+    top: 0;
+    margin-top: 20px;
+  }
+}
+
 @media (max-width: 768px) {
   .checkout-container {
     padding: 10px;
@@ -4011,7 +4106,25 @@ input:focus~.input-focus-indicator {
   }
 
   .quantity-controls {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+  }
+  
+  .quantity-selector {
+    width: 100%;
     justify-content: space-between;
+  }
+  
+  .quantity-input-container {
+    flex: 1;
+    width: auto;
+  }
+  
+  .remove-btn {
+    width: 100%;
+    margin-top: 10px;
+    justify-content: center;
   }
 
   .desktop-only {
@@ -4037,15 +4150,6 @@ input:focus~.input-focus-indicator {
     width: 100%;
   }
 
-  /* Fix for toggle summary button on mobile */
-  .toggle-summary-btn {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    min-height: 44px;
-    font-size: 20px;
-  }
-
   /* Improve mini cart scrolling */
   .mini-cart-scroll {
     padding-bottom: 15px;
@@ -4053,6 +4157,7 @@ input:focus~.input-focus-indicator {
     gap: 10px;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
   }
 
   .mini-cart-item {
@@ -4064,16 +4169,6 @@ input:focus~.input-focus-indicator {
   /* Adjust bottom padding when summary is expanded */
   .summary-open {
     padding-bottom: 0;
-  }
-
-  /* Ensure prices always stay in a single line on mobile */
-  .summary-item {
-    display: flex;
-    align-items: center;
-  }
-
-  .price-value {
-    flex-shrink: 0;
   }
 
   /* Responsive comparison row */
@@ -4094,15 +4189,6 @@ input:focus~.input-focus-indicator {
     width: 100%;
   }
 
-  /* Improved touch targets for mobile */
-  .quantity-btn,
-  .remove-btn,
-  .apply-coupon-btn,
-  .toggle-summary-btn {
-    min-height: 44px;
-    min-width: 44px;
-  }
-
   /* Responsive input fields */
   .responsive-input {
     font-size: clamp(16px, 4vw, 18px);
@@ -4121,6 +4207,60 @@ input:focus~.input-focus-indicator {
   .payment-details {
     padding-left: 15px;
     font-size: 13px;
+  }
+  
+  /* Price type tabs for mobile */
+  .price-type-tabs {
+    flex-direction: column;
+  }
+  
+  .tab-btn {
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .tab-btn:last-child {
+    border-bottom: none;
+  }
+  
+  .tab-btn.active {
+    box-shadow: inset 3px 0 0 #0288d1;
+  }
+  
+  .tab-btn:first-child.active {
+    box-shadow: inset 3px 0 0 #689f38;
+  }
+  
+  /* Quantity status for mobile */
+  .quantity-label {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .quantity-status {
+    align-self: flex-start;
+    margin-top: 5px;
+    max-width: 100%;
+  }
+  
+  /* Improved header layout for mobile */
+  .header-left {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  
+  h1 {
+    text-align: center;
+    margin: 10px 0;
+  }
+  
+  /* Better step indicators for small screens */
+  .step-label {
+    font-size: 10px;
+  }
+  
+  .step-number-container {
+    width: 32px;
+    height: 32px;
   }
 }
 
@@ -4185,14 +4325,6 @@ input:focus~.input-focus-indicator {
     min-width: 32px;
   }
 
-  .toggle-summary-btn,
-  .mobile-nav-btn,
-  .quantity-btn,
-  .remove-btn {
-    min-height: 48px;
-    min-width: 48px;
-  }
-
   .mobile-nav-controls {
     padding: 12px;
   }
@@ -4201,34 +4333,86 @@ input:focus~.input-focus-indicator {
     gap: 12px;
   }
 
-  /* Improve form inputs for mobile */
-  .responsive-input {
+  /* Ensure text doesn't overflow */
+  .quantity-status {
+    max-width: 100%;
+    white-space: normal;
+    text-align: left;
+    line-height: 1.3;
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+  
+  .quantity-btn {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .quantity-input {
     font-size: 16px;
-    padding: 14px 14px 14px 45px;
   }
-
-  /* Improve scrolling experience */
-  .mini-cart-scroll {
-    -webkit-overflow-scrolling: touch;
-    scroll-padding: 10px;
+  
+  /* Better modal layout for small screens */
+  .modal-content {
+    width: 95%;
+    padding: 15px;
   }
-
-  /* Better tap targets */
-  .payment-option-header,
-  .location-option {
-    padding: 12px;
+  
+  .login-options {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  /* Optimize QR code display */
+  .qr-payment-image img {
+    width: 150px;
+    height: 150px;
   }
 }
 
 /* Touch-friendly improvements */
 @media (hover: none) {
-
+  .quantity-btn:hover:not(:disabled),
+  .tab-btn:hover:not(:disabled),
+  .product-item:hover,
+  .price-type-container:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  
+  .quantity-btn:active:not(:disabled),
+  .tab-btn:active:not(:disabled) {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Larger touch targets */
+  .quantity-btn, 
+  .tab-btn {
+    padding: 12px;
+  }
+  
+  /* Disable tooltips on touch devices */
+  .quantity-tooltip {
+    display: none;
+  }
+  
+  /* Show quantity status more prominently */
+  .quantity-status {
+    padding: 6px 10px;
+    margin: 5px 0;
+  }
+  
+  /* Improve feedback for quantity near limits */
+  .quantity-status.warning,
+  .quantity-status.error {
+    padding: 8px 12px;
+    font-weight: 500;
+  }
+  
   .next-button,
   .prev-button,
   .apply-coupon-btn,
   .remove-coupon-btn,
-  .quantity-btn,
-  .remove-btn,
   .checkout-button {
     padding: 12px 20px;
   }
@@ -4245,6 +4429,16 @@ input:focus~.input-focus-indicator {
 
 /* Reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
+  .quantity-status.warning,
+  .quantity-status.error,
+  .quantity-btn.pulse {
+    animation: none !important;
+  }
+  
+  .tab-btn::after {
+    display: none;
+  }
+  
   * {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
@@ -4253,56 +4447,20 @@ input:focus~.input-focus-indicator {
   }
 }
 
-/* Back Button Styles */
-.back-button {
-  background: none;
-  border: none;
-  color: var(--primary-color);
-  font-size: 20px;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  margin-right: 10px;
-}
-
-.back-button:hover {
-  background-color: rgba(0, 123, 255, 0.1);
-  transform: translateY(-2px);
-}
-
-.back-button:active {
-  transform: translateY(0);
-}
-
-/* Make logo clickable */
-.logo-container {
-  cursor: pointer;
-  transition: transform 0.3s ease;
-}
-
-.logo-container:hover {
-  transform: scale(1.05);
-}
-
-/* Improve mobile header layout */
-@media (max-width: 768px) {
-  .header-left {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    justify-content: flex-start;
+/* High contrast mode improvements */
+@media (forced-colors: active) {
+  .quantity-status.warning,
+  .quantity-status.error {
+    border: 2px solid;
   }
-
-  .company-logo {
-    height: 30px;
+  
+  .tab-btn.active {
+    border-bottom: 3px solid;
   }
-
-  .back-button {
-    font-size: 18px;
+  
+  .step-indicator.active .step-number-container,
+  .step-indicator.completed .step-number-container {
+    border: 2px solid;
   }
 }
 </style>
@@ -4404,7 +4562,6 @@ input:focus~.input-focus-indicator {
     opacity: 0;
     transform: translateY(-10px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -4464,7 +4621,6 @@ input:focus~.input-focus-indicator {
     opacity: 0;
     transform: translateX(-10px);
   }
-
   to {
     opacity: 1;
     transform: translateX(0);
@@ -4508,6 +4664,37 @@ input:focus~.input-focus-indicator {
 
   .location-label {
     font-size: 13px;
+  }
+}
+
+/* Mejoras para accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  .payment-details,
+  .store-info {
+    animation: none !important;
+  }
+}
+
+/* Mejoras para pantallas táctiles */
+@media (hover: none) {
+  .payment-option,
+  .location-option {
+    padding: 12px;
+  }
+  
+  .payment-label,
+  .location-label {
+    padding: 4px 0;
+  }
+  
+  .radio-checkmark {
+    width: 22px;
+    height: 22px;
+  }
+  
+  .radio-checkmark:after {
+    width: 12px;
+    height: 12px;
   }
 }
 </style>

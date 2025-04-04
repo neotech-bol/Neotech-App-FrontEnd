@@ -490,7 +490,7 @@ body {
 .contenedor-perfil {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: clamp(1rem, 5vw, 2rem);
   color: #1f2937;
   font-family: 'Inter', sans-serif;
   animation: fadeIn 0.5s ease-out;
@@ -503,12 +503,14 @@ body {
   justify-content: flex-start;
   margin-bottom: 2rem;
   background-color: #fff;
-  padding: 2rem;
+  padding: clamp(1.25rem, 4vw, 2rem);
   border-radius: 1rem;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  flex-wrap: wrap;
+  gap: 1.5rem;
 }
 
 .encabezado-perfil::before {
@@ -527,21 +529,22 @@ body {
 }
 
 .avatar-perfil {
-  width: 110px;
-  height: 110px;
+  width: clamp(80px, 15vw, 110px);
+  height: clamp(80px, 15vw, 110px);
   background: var(--primary-color);
   color: white;
-  font-size: 2.5rem;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
   font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  margin-right: 2rem;
+  margin-right: clamp(1rem, 3vw, 2rem);
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   cursor: pointer;
   position: relative;
   box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+  flex-shrink: 0;
 }
 
 .avatar-perfil::after {
@@ -567,11 +570,19 @@ body {
   opacity: 0.3;
 }
 
+.titulo-perfil {
+  flex: 1;
+  min-width: 0; /* Importante para que el texto se ajuste */
+}
+
 .titulo-perfil h1 {
-  font-size: 2.5rem;
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
   margin-bottom: 0.5rem;
   font-weight: 700;
   letter-spacing: -0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .gradient-text {
@@ -583,16 +594,19 @@ body {
 }
 
 .titulo-perfil p {
-  font-size: 1.25rem;
+  font-size: clamp(0.875rem, 2vw, 1.25rem);
   color: #4b5563;
   font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Main Content */
 .contenido-perfil {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 500px), 1fr));
+  gap: clamp(1.25rem, 3vw, 2rem);
 }
 
 .section-header {
@@ -608,11 +622,12 @@ body {
 .historial-pedidos {
   background-color: #fff;
   border-radius: 1rem;
-  padding: 2rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  height: fit-content;
 }
 
 .info-perfil::before,
@@ -640,7 +655,7 @@ body {
 }
 
 h2 {
-  font-size: 1.75rem;
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
   color: #1f2937;
   margin: 0;
   font-weight: 700;
@@ -661,7 +676,7 @@ h2::after {
 
 .grid-info {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
   gap: 1.5rem;
   margin-top: 2rem;
 }
@@ -693,6 +708,7 @@ h2::after {
   color: #1f2937;
   padding: 0.5rem 0;
   font-weight: 500;
+  word-break: break-word;
 }
 
 .input-container {
@@ -762,6 +778,9 @@ h2::after {
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   font-family: 'Inter', sans-serif;
   font-size: 0.875rem;
+  flex: 1;
+  justify-content: center;
+  min-width: 140px;
 }
 
 .boton-principal {
@@ -807,6 +826,7 @@ h2::after {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  width: 100%;
 }
 
 .filtro-btn {
@@ -820,6 +840,10 @@ h2::after {
   font-weight: 500;
   font-size: 0.875rem;
   font-family: 'Inter', sans-serif;
+  flex: 1;
+  text-align: center;
+  white-space: nowrap;
+  min-width: 80px;
 }
 
 .filtro-btn.active {
@@ -905,7 +929,7 @@ h2::after {
 .item-pedido {
   background: white;
   border-radius: 1rem;
-  padding: 1.5rem;
+  padding: clamp(1rem, 3vw, 1.5rem);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
   position: relative;
@@ -1148,17 +1172,48 @@ h2::after {
   }
 }
 
-/* Responsive Styles */
+/* Estilo para el botón de cerrar sesión */
+.boton-cerrar-sesion {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+  margin-left: auto;
+}
+
+.boton-cerrar-sesion:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 6px 15px rgba(239, 68, 68, 0.4);
+}
+
+.boton-cerrar-sesion:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Responsive Styles - Mejorados */
 @media (max-width: 1200px) {
   .contenedor-perfil {
     padding: 1.5rem;
+  }
+  
+  .grid-info {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   }
 }
 
 @media (max-width: 1024px) {
   .contenido-perfil {
     grid-template-columns: 1fr;
-    gap: 2rem;
   }
   
   .info-perfil, 
@@ -1171,13 +1226,39 @@ h2::after {
   }
   
   .titulo-perfil h1 {
-    font-size: 2rem;
+    font-size: clamp(1.5rem, 5vw, 2rem);
+  }
+  
+  .grid-info {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   }
 }
 
 @media (max-width: 768px) {
   .contenedor-perfil {
     padding: 1rem;
+  }
+  
+  .encabezado-perfil {
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .avatar-perfil {
+    margin-right: 1rem;
+  }
+  
+  .boton-cerrar-sesion {
+    margin-left: 0;
+    margin-top: 0;
+    order: 3;
+    width: 100%;
+  }
+  
+  .titulo-perfil {
+    order: 2;
+    flex: 1;
   }
   
   .grid-info {
@@ -1207,34 +1288,11 @@ h2::after {
     flex: 1;
     text-align: center;
     padding: 0.5rem 0.75rem;
-  }
-}
-
-@media (max-width: 640px) {
-  .encabezado-perfil {
-    flex-direction: column;
-    text-align: center;
-    padding: 1.5rem 1rem;
+    font-size: 0.75rem;
   }
   
-  .avatar-perfil {
-    margin: 0 0 1.5rem 0;
-  }
-  
-  .titulo-perfil h1 {
-    font-size: 1.75rem;
-  }
-  
-  .titulo-perfil p {
-    font-size: 1rem;
-  }
-  
-  .botones-edicion {
-    justify-content: center;
-  }
-  
-  .item-pedido {
-    padding: 1.25rem 1rem;
+  .paginacion-superior {
+    width: 100%;
   }
   
   .encabezado-pedido,
@@ -1249,82 +1307,274 @@ h2::after {
   }
 }
 
+@media (max-width: 640px) {
+  .encabezado-perfil {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.5rem 1rem;
+  }
+  
+  .avatar-perfil {
+    margin: 0 0 1.5rem 0;
+  }
+  
+  .titulo-perfil {
+    text-align: center;
+    width: 100%;
+  }
+  
+  .titulo-perfil h1 {
+    font-size: 1.75rem;
+    white-space: normal;
+  }
+  
+  .titulo-perfil p {
+    font-size: 1rem;
+    white-space: normal;
+  }
+  
+  .boton-cerrar-sesion {
+    margin-top: 1.5rem;
+    width: 100%;
+  }
+  
+  .botones-edicion {
+    justify-content: center;
+    flex-direction: column;
+  }
+  
+  .item-pedido {
+    padding: 1.25rem 1rem;
+  }
+  
+  .info-perfil,
+  .historial-pedidos {
+    padding: 1.25rem 1rem;
+  }
+  
+  .filtro-btn {
+    font-size: 0.7rem;
+    padding: 0.5rem;
+  }
+}
+
 @media (max-width: 480px) {
   .contenedor-perfil {
     padding: 0.75rem;
   }
   
-  .paginacion-superior {
-    width: 100%;
+  .encabezado-perfil {
+    margin-bottom: 1.25rem;
+    padding: 1.25rem 0.75rem;
   }
   
-  .filtro-btn {
+  .avatar-perfil {
+    width: 70px;
+    height: 70px;
+    font-size: 1.5rem;
+  }
+  
+  .titulo-perfil h1 {
+    font-size: 1.5rem;
+  }
+  
+  .titulo-perfil p {
+    font-size: 0.875rem;
+  }
+  
+  .section-header h2 {
+    font-size: 1.25rem;
+  }
+  
+  .item-info {
+    padding: 0.75rem;
+  }
+  
+  .item-info strong {
     font-size: 0.75rem;
-    padding: 0.5rem;
+  }
+  
+  .info-value {
+    font-size: 0.875rem;
   }
   
   .boton-principal,
   .boton-secundario,
   .boton-accion {
-    width: 100%;
-    justify-content: center;
+    padding: 0.625rem 1rem;
+    font-size: 0.8125rem;
   }
   
-  .botones-edicion {
-    flex-direction: column;
-    width: 100%;
-  }
-}
-/* Estilo para el botón de cerrar sesión */
-.boton-cerrar-sesion {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 0.5rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  font-family: 'Inter', sans-serif;
-  font-size: 0.875rem;
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-  color: white;
-  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
-  margin-left: auto;
-}
-
-.boton-cerrar-sesion:hover {
-  transform: translateY(-3px) scale(1.03);
-  box-shadow: 0 6px 15px rgba(239, 68, 68, 0.4);
-}
-
-.boton-cerrar-sesion:active {
-  transform: translateY(0) scale(0.98);
-}
-
-/* Ajuste responsive para el encabezado */
-@media (max-width: 768px) {
-  .encabezado-perfil {
-    flex-wrap: wrap;
+  .paginacion-superior {
+    gap: 0.5rem;
   }
   
-  .boton-cerrar-sesion {
-    margin-top: 1rem;
-    margin-left: 0;
-    width: 100%;
-    justify-content: center;
+  .boton-pagina {
+    width: 2rem;
+    height: 2rem;
+  }
+  
+  .pagina-actual {
+    font-size: 1rem;
+  }
+  
+  .id-pedido {
+    font-size: 0.875rem;
+  }
+  
+  .fecha-pedido {
+    font-size: 0.75rem;
+  }
+  
+  .total-pedido {
+    font-size: 1.125rem;
+  }
+  
+  .estado-pedido {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+  }
+  
+  .no-pedidos {
+    padding: 2rem 1rem;
+  }
+  
+  .no-pedidos i {
+    font-size: 2.5rem;
+  }
+  
+  .no-pedidos p {
+    font-size: 1rem;
+  }
+  
+  /* Mejorar la experiencia táctil en dispositivos pequeños */
+  .boton-principal,
+  .boton-secundario,
+  .boton-accion,
+  .filtro-btn,
+  .boton-pagina {
+    min-height: 44px; /* Altura mínima para objetivos táctiles */
   }
 }
 
-@media (max-width: 640px) {
-  .encabezado-perfil {
-    flex-direction: column;
-    text-align: center;
+/* Mejoras para dispositivos táctiles */
+@media (hover: none) {
+  .boton-principal:hover,
+  .boton-secundario:hover,
+  .boton-accion:hover,
+  .filtro-btn:hover:not(.active),
+  .boton-pagina:not(:disabled):hover,
+  .item-pedido:hover,
+  .info-perfil:hover,
+  .historial-pedidos:hover,
+  .encabezado-perfil:hover,
+  .item-info:hover {
+    transform: none;
+    box-shadow: none;
   }
   
-  .boton-cerrar-sesion {
-    margin-top: 1.5rem;
+  .boton-principal:active,
+  .boton-secundario:active,
+  .boton-accion:active,
+  .filtro-btn:active {
+    transform: scale(0.98);
+  }
+  
+  /* Asegurar que los elementos táctiles tengan suficiente espacio */
+  .filtro-btn,
+  .boton-pagina,
+  .boton-accion,
+  .boton-principal,
+  .boton-secundario {
+    padding: 0.75rem 1rem;
   }
 }
+
+/* Mejoras para accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  .contenedor-perfil,
+  .avatar-hover,
+  .boton-principal:hover,
+  .boton-secundario:hover,
+  .boton-accion:hover,
+  .item-pedido:hover,
+  .progreso-animation,
+  .info-perfil:hover,
+  .historial-pedidos:hover {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* Soporte para modo oscuro */
+/* @media (prefers-color-scheme: dark) {
+  body {
+    background-color: #111827;
+    color: #f9fafb;
+  }
+  
+  .encabezado-perfil,
+  .info-perfil,
+  .historial-pedidos,
+  .item-pedido {
+    background-color: #1f2937;
+    border-color: #374151;
+  }
+  
+  .titulo-perfil p,
+  .fecha-pedido {
+    color: #9ca3af;
+  }
+  
+  .info-value {
+    color: #e5e7eb;
+  }
+  
+  .item-info:hover {
+    background-color: #111827;
+  }
+  
+  .input-animated {
+    background: #111827;
+    border-color: #374151;
+    color: #e5e7eb;
+  }
+  
+  .input-animated:focus {
+    background: #111827;
+    border-color: #3B82F6;
+  }
+  
+  .boton-secundario {
+    background: #374151;
+    color: #e5e7eb;
+    border-color: #4b5563;
+  }
+  
+  .filtro-btn {
+    background: #1f2937;
+    border-color: #374151;
+    color: #e5e7eb;
+  }
+  
+  .paginacion-superior {
+    background-color: #111827;
+  }
+  
+  .boton-pagina {
+    background: #1f2937;
+    border-color: #374151;
+    color: #e5e7eb;
+  }
+  
+  .no-pedidos {
+    background-color: #111827;
+    border-color: #374151;
+  }
+  
+  .no-pedidos p {
+    color: #9ca3af;
+  }
+} */
 </style>

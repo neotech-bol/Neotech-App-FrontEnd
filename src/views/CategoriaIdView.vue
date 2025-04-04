@@ -146,6 +146,26 @@
               <div class="price-details" :class="{ 'expanded': isPriceExpanded(product.id) }">
                 <!-- Precio Estándar (Preventa por Volumen) -->
                 <div class="price-card">
+                  <div class="price-card-header" v-if="product.precio_preventa">
+                    <span class="price-type">Preventa Estándar</span>
+                    <span class="price-value">{{ formatPrice(product.precio_preventa) }}</span>
+                  </div>
+                  <div class="price-card-body">
+                    <div class="quantity-range">
+                      <div class="quantity-item">
+                        <span class="quantity-label">Mínimo:</span>
+                        <span class="quantity-value">{{ product.cantidad_minima_preventa || 1 }} unidades</span>
+                      </div>
+                      <div class="quantity-item">
+                        <span class="quantity-label">Máximo:</span>
+                        <span class="quantity-value">{{ product.cantidad_maxima_preventa || 'Sin límite' }} unidades</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Precio Preventa Especial -->
+                <div class="price-card special" v-if="product.precio">
                   <div class="price-card-header">
                     <span class="price-type">Preventa Especial</span>
                     <span class="price-value">{{ formatPrice(product.precio) }}</span>
@@ -154,41 +174,13 @@
                     <div class="quantity-range">
                       <div class="quantity-item">
                         <span class="quantity-label">Mínimo:</span>
-                        <span class="quantity-value">{{ product.cantidad_minima || 1 }} unidades</span>
+                        <span class="quantity-value">{{ product.cantidad_minima }} unidades</span>
                       </div>
                       <div class="quantity-item">
                         <span class="quantity-label">Máximo:</span>
-                        <span class="quantity-value">{{ product.cantidad_maxima || 'Sin límite' }} unidades</span>
+                        <span class="quantity-value">{{ product.cantidad_maxima }} unidades</span>
                       </div>
                     </div>
-                  </div>
-                </div>
-                
-                <!-- Precio Preventa Especial -->
-                <div class="price-card special" v-if="product.precio_preventa">
-                  <div class="price-card-header">
-                    <span class="price-type">Preventa Estándar</span>
-                    <span class="price-value">{{ formatPrice(product.precio_preventa) }}</span>
-                  </div>
-                  <div class="price-card-body">
-                    <div class="quantity-range">
-                      <div class="quantity-item">
-                        <span class="quantity-label">Mínimo:</span>
-                        <span class="quantity-value">{{ product.cantidad_minima_preventa || product.cantidad_minima || 1 }} unidades</span>
-                      </div>
-                      <div class="quantity-item">
-                        <span class="quantity-label">Máximo:</span>
-                        <span class="quantity-value">{{ product.cantidad_maxima_preventa || product.cantidad_maxima || 'Sin límite' }} unidades</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Precio de Venta (si existe) -->
-                <div class="price-card sale" v-if="product.precio_venta">
-                  <div class="price-card-header">
-                    <span class="price-type">Precio de Venta</span>
-                    <span class="price-value">{{ formatPrice(product.precio_venta) }}</span>
                   </div>
                 </div>
               </div>
@@ -196,23 +188,17 @@
               <!-- Vista resumida de precios (siempre visible) -->
               <div class="prices-summary">
                 <div class="summary-item">
-                  <span class="summary-label">Especial:</span>
-                  <div class="summary-content">
-                    <span class="summary-price">{{ formatPrice(product.precio) }}</span>
-                    <span class="summary-quantity">{{ product.cantidad_minima || 1 }}+ uds</span>
-                  </div>
-                </div>
-                <div class="summary-item special" v-if="product.precio_preventa">
                   <span class="summary-label">Estándar:</span>
                   <div class="summary-content">
                     <span class="summary-price">{{ formatPrice(product.precio_preventa) }}</span>
-                    <span class="summary-quantity">{{ product.cantidad_minima_preventa || product.cantidad_minima || 1 }}+ uds</span>
+                    <!-- <span class="summary-quantity">{{ product.cantidad_minima || 1 }}+ uds</span> -->
                   </div>
                 </div>
-                <div class="summary-item sale" v-if="product.precio_venta">
-                  <span class="summary-label">Venta:</span>
+                <div class="summary-item special" v-if="product.precio">
+                  <span class="summary-label">Especial:</span>
                   <div class="summary-content">
-                    <span class="summary-price">{{ formatPrice(product.precio_venta) }}</span>
+                    <span class="summary-price">{{ formatPrice(product.precio) }}</span>
+                   <!--  <span class="summary-quantity">{{ product.cantidad_minima_preventa || product.cantidad_minima || 1 }}+ uds</span> -->
                   </div>
                 </div>
               </div>
@@ -1283,9 +1269,6 @@ onMounted(() => {
   border-left: 3px solid #ed8936;
 }
 
-.price-card.sale {
-  border-left: 3px solid #e53e3e;
-}
 
 .price-card-header {
   display: flex;
@@ -1310,10 +1293,6 @@ onMounted(() => {
 
 .price-card.special .price-value {
   color: #dd6b20;
-}
-
-.price-card.sale .price-value {
-  color: #e53e3e;
 }
 
 .price-card-body {
@@ -1362,9 +1341,6 @@ onMounted(() => {
   font-weight: 700;
 }
 
-.summary-item.sale {
-  font-weight: 700;
-}
 
 .summary-label {
   color: #4a5568;
@@ -1384,10 +1360,6 @@ onMounted(() => {
 
 .summary-item.special .summary-price {
   color: #dd6b20;
-}
-
-.summary-item.sale .summary-price {
-  color: #e53e3e;
 }
 
 .summary-quantity {

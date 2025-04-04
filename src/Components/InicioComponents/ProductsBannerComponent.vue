@@ -141,27 +141,7 @@
                   
                   <div class="price-details" :class="{ 'expanded': isPriceExpanded(product.id) }">
                     <!-- Precio Estándar (Preventa por Volumen) -->
-                    <div class="price-card">
-                      <div class="price-card-header">
-                        <span class="price-type">Preventa Especial</span>
-                        <span class="price-value">{{ formatPrice(product.precio) }}</span>
-                      </div>
-                      <div class="price-card-body">
-                        <div class="quantity-range">
-                          <div class="quantity-item">
-                            <span class="quantity-label">Mínimo:</span>
-                            <span class="quantity-value">{{ product.cantidad_minima }} unidades</span>
-                          </div>
-                          <div class="quantity-item">
-                            <span class="quantity-label">Máximo:</span>
-                            <span class="quantity-value">{{ product.cantidad_maxima }} unidades</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <!-- Precio Preventa Especial -->
-                    <div class="price-card special" v-if="product.precio_preventa">
+                    <div class="price-card" v-if="product.precio_preventa">
                       <div class="price-card-header">
                         <span class="price-type">Preventa Estándar</span>
                         <span class="price-value">{{ formatPrice(product.precio_preventa) }}</span>
@@ -179,22 +159,42 @@
                         </div>
                       </div>
                     </div>
+                    
+                    <!-- Precio Preventa Especial -->
+                    <div class="price-card special" v-if="product.precio">
+                      <div class="price-card-header">
+                        <span class="price-type">Preventa Especial</span>
+                        <span class="price-value">{{ formatPrice(product.precio) }}</span>
+                      </div>
+                      <div class="price-card-body">
+                        <div class="quantity-range">
+                          <div class="quantity-item">
+                            <span class="quantity-label">Mínimo:</span>
+                            <span class="quantity-value">{{ product.cantidad_minima }} unidades</span>
+                          </div>
+                          <div class="quantity-item">
+                            <span class="quantity-label">Máximo:</span>
+                            <span class="quantity-value">{{ product.cantidad_maxima }} unidades</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   
                   <!-- Vista resumida de precios (siempre visible) -->
                   <div class="prices-summary">
                     <div class="summary-item">
-                      <span class="summary-label">Especial:</span>
-                      <div class="summary-content">
-                        <span class="summary-price">{{ formatPrice(product.precio) }}</span>
-                        <span class="summary-quantity">{{ product.cantidad_minima }}+ uds</span>
-                      </div>
-                    </div>
-                    <div class="summary-item special" v-if="product.precio_preventa">
                       <span class="summary-label">Estándar:</span>
                       <div class="summary-content">
                         <span class="summary-price">{{ formatPrice(product.precio_preventa) }}</span>
-                        <span class="summary-quantity">{{ product.cantidad_minima_preventa }}-{{ product.cantidad_maxima_preventa }} uds</span>
+                        <!-- <span class="summary-quantity">{{ product.cantidad_minima }}+ uds</span> -->
+                      </div>
+                    </div>
+                    <div class="summary-item special" v-if="product.precio_preventa">
+                      <span class="summary-label">Especial:</span>
+                      <div class="summary-content">
+                        <span class="summary-price">{{ formatPrice(product.precio) }}</span>
+                     <!--    <span class="summary-quantity">{{ product.cantidad_minima_preventa }}-{{ product.cantidad_maxima_preventa }} uds</span> -->
                       </div>
                     </div>
                   </div>

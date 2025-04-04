@@ -149,12 +149,12 @@
               </template>
 
               <!-- Footer de resultados -->
-              <div v-if="searchResults.length > 0" class="results-footer">
+            <!--   <div v-if="searchResults.length > 0" class="results-footer">
                 <span class="results-count">{{ totalResults }} resultados encontrados</span>
                 <button @click="showAllResults" class="show-all-button" type="button">
                   Ver todos los resultados <i class="fas fa-arrow-right"></i>
                 </button>
-              </div>
+              </div> -->
             </div>
             
             <!-- Overlay para cerrar los resultados al hacer clic fuera -->

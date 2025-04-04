@@ -10,7 +10,7 @@
           <i class="fas fa-share-alt"></i>
         </button>
       </div>
-      
+
       <h1 class="product-title">{{ dato.nombre }}</h1>
     </div>
 
@@ -22,12 +22,12 @@
           <div class="main-image-container" @mousemove="handleImageZoom" @mouseleave="resetZoom"
             @touchstart="handleTouchStart" @touchmove="handleTouchMove" @touchend="resetZoom">
             <img :src="currentImage" :alt="dato.nombre" class="main-image-img" ref="mainImage">
-            
+
             <!-- Cursor de lupa al pasar el mouse -->
             <div class="magnifier-cursor" v-if="showMagnifier" :style="magnifierStyle">
               <i class="fas fa-search-plus"></i>
             </div>
-            
+
             <!-- Flechas de Navegación de Imágenes -->
             <button class="image-nav prev" @click="prevImage" v-if="allImages.length > 1" aria-label="Imagen anterior">
               <i class="fas fa-chevron-left"></i>
@@ -48,11 +48,11 @@
         <!-- Galería de Miniaturas - Con Paginación -->
         <div class="thumbnail-list" ref="thumbnailScroll">
           <!-- Botones de Navegación de Miniaturas -->
-          <button class="thumbnail-nav prev" @click="prevThumbnailPage" :disabled="currentThumbnailPage === 0" 
+          <button class="thumbnail-nav prev" @click="prevThumbnailPage" :disabled="currentThumbnailPage === 0"
             aria-label="Miniaturas anteriores">
             <i class="fas fa-chevron-left"></i>
           </button>
-          
+
           <div class="thumbnail-container" ref="thumbnailContainer">
             <div class="thumbnail-wrapper" :style="thumbnailWrapperStyle">
               <div v-for="(image, index) in allImages" :key="index"
@@ -61,15 +61,15 @@
               </div>
             </div>
           </div>
-          
-          <button class="thumbnail-nav next" @click="nextThumbnailPage" :disabled="currentThumbnailPage >= maxThumbnailPage" 
-            aria-label="Miniaturas siguientes">
+
+          <button class="thumbnail-nav next" @click="nextThumbnailPage"
+            :disabled="currentThumbnailPage >= maxThumbnailPage" aria-label="Miniaturas siguientes">
             <i class="fas fa-chevron-right"></i>
           </button>
-          
+
           <!-- Indicador de Página -->
           <div class="thumbnail-pagination" v-if="totalThumbnailPages > 1">
-            <span v-for="page in totalThumbnailPages" :key="page" 
+            <span v-for="page in totalThumbnailPages" :key="page"
               :class="['thumbnail-page-dot', { active: currentThumbnailPage === page - 1 }]"
               @click="goToThumbnailPage(page - 1)"></span>
           </div>
@@ -91,48 +91,44 @@
           <div class="price-section">
             <!-- Indicador de Tipo de Precio Actual -->
             <div class="price-type-indicator">
-              <div class="price-badge" :class="{ 'preventa-especial': isPreventaEspecialActive, 'preventa-estandar': isPreventaEstandarActive, 'regular': !isPreventaEspecialActive && !isPreventaEstandarActive }">
+              <div class="price-badge"
+                :class="{ 'preventa-especial': isPreventaEspecialActive, 'preventa-estandar': isPreventaEstandarActive, 'regular': !isPreventaEspecialActive && !isPreventaEstandarActive }">
                 <i class="fas" :class="getPriceBadgeIcon"></i>
                 <span>{{ getPriceTypeName }}</span>
               </div>
             </div>
-            
+
             <!-- Precio Principal con Descuento -->
             <div class="main-price-display">
               <div class="price-value-display">
                 <span class="price-value">{{ formatPrice(selectedPrice) }}</span>
-                <span v-if="originalPrice > selectedPrice" class="original-price">{{ formatPrice(originalPrice) }}</span>
+                <span v-if="originalPrice > selectedPrice" class="original-price">{{ formatPrice(originalPrice)
+                  }}</span>
                 <span v-if="originalPrice > selectedPrice" class="discount-percentage">
-                  -{{ Math.round((1 - selectedPrice/originalPrice) * 100) }}%
+                  -{{ Math.round((1 - selectedPrice / originalPrice) * 100) }}%
                 </span>
               </div>
-              
+
               <div class="quantity-range">
                 <span class="range-label">Rango: </span>
                 <span class="range-value">{{ minQuantity }} - {{ maxQuantity }} unidades</span>
               </div>
             </div>
-            
+
             <!-- Selector de Tipo de Precio Mejorado -->
             <div class="price-type-selector" v-if="hasMultiplePriceTypes">
               <div class="price-tabs">
-                <button 
-                  @click="applyPreventaEstandar" 
-                  :class="['price-tab', { 'active': isPreventaEstandarActive }]"
-                  :disabled="!canSwitchToPreventaEstandar"
-                  aria-pressed="isPreventaEstandarActive">
+                <button @click="applyPreventaEstandar" :class="['price-tab', { 'active': isPreventaEstandarActive }]"
+                  :disabled="!canSwitchToPreventaEstandar" aria-pressed="isPreventaEstandarActive">
                   <i class="fas fa-tag"></i> Preventa Especial
                 </button>
-                <button 
-                  @click="applyPreventaEspecial" 
-                  :class="['price-tab', { 'active': isPreventaEspecialActive }]"
-                  :disabled="!canSwitchToPreventaEspecial"
-                  aria-pressed="isPreventaEspecialActive">
+                <button @click="applyPreventaEspecial" :class="['price-tab', { 'active': isPreventaEspecialActive }]"
+                  :disabled="!canSwitchToPreventaEspecial" aria-pressed="isPreventaEspecialActive">
                   <i class="fas fa-bolt"></i> Preventa Estándar
                 </button>
               </div>
             </div>
-            
+
             <!-- Comparación de Precios -->
             <div class="price-comparison" v-if="hasMultiplePriceTypes">
               <div class="comparison-header">
@@ -146,20 +142,21 @@
                     <div class="comparison-value">{{ formatPrice(regularPrice) }}</div>
                     <div class="comparison-range">{{ cantidadMinima }}-{{ cantidadMaxima }} und.</div>
                   </div>
-                  
+
                   <!-- Preventa Especial -->
                   <div class="comparison-item" v-if="hasPreventaEspecialPrice">
                     <div class="comparison-label">Preventa Estándar</div>
                     <div class="comparison-value">{{ formatPrice(preventaEspecialPrice) }}</div>
-                    <div class="comparison-range">{{ cantidadMinimaPreventaEspecial }}-{{ cantidadMaximaPreventaEspecial }} und.</div>
+                    <div class="comparison-range">{{ cantidadMinimaPreventaEspecial }}-{{ cantidadMaximaPreventaEspecial
+                      }} und.</div>
                   </div>
                 </div>
-                
+
                 <!-- Información de Ahorro -->
                 <div class="savings-info" v-if="regularPrice > preventaEspecialPrice && hasPreventaEspecialPrice">
-                  <i class="fas fa-piggy-bank"></i> Ahorro por unidad: 
+                  <i class="fas fa-piggy-bank"></i> Ahorro por unidad:
                   <span>{{ formatPrice(regularPrice - preventaEspecialPrice) }}</span>
-                  ({{ Math.round((1 - preventaEspecialPrice/regularPrice) * 100) }}%)
+                  ({{ Math.round((1 - preventaEspecialPrice / regularPrice) * 100) }}%)
                 </div>
               </div>
             </div>
@@ -256,8 +253,7 @@
             <div class="color-options">
               <button v-for="(image, index) in imagesWithColors" :key="index" class="color-swatch"
                 :style="{ backgroundColor: image.color }" @click="selectColor(getOriginalIndex(index))"
-                :class="{ active: selectedImage === getOriginalIndex(index) + 1 }"
-                :aria-label="`Color ${index + 1}`">
+                :class="{ active: selectedImage === getOriginalIndex(index) + 1 }" :aria-label="`Color ${index + 1}`">
                 <div class="color-checkmark" v-if="selectedImage === getOriginalIndex(index) + 1">
                   <i class="fas fa-check"></i>
                 </div>
@@ -312,7 +308,7 @@
             <!-- Indicador de precio de preventa activo -->
             <div class="price-type-active-indicator" v-if="isPreventaEspecialActive || isPreventaEstandarActive">
               <i class="fas fa-check-circle"></i>
-              <span>{{ isPreventaEspecialActive ? 'Precio de Preventa Especial aplicado' : 'Precio de Preventa Estándar aplicado' }}</span>
+              <span>{{ isPreventaEspecialActive ? 'Precio de Preventa Especial aplicado' : 'Precio de Preventa Estándar plicado' }}</span>
             </div>
           </div>
 
@@ -453,7 +449,7 @@
               </div>
             </div>
           </div>
-          
+
           <!-- Información del Producto -->
           <div class="product-info">
             <div class="category">
@@ -464,7 +460,7 @@
             <p v-if="product.descripcion" class="product-description">
               {{ truncateDescription(product.descripcion, 60) }}
             </p>
-            
+
             <!-- Contenedor de precios mejorado -->
             <div class="prices-container">
               <div class="prices-header">
@@ -473,12 +469,32 @@
                   <i class="fas" :class="isPriceExpanded(product.id) ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
                 </button>
               </div>
-              
+
               <div class="price-details" :class="{ 'expanded': isPriceExpanded(product.id) }">
                 <!-- Precio Estándar (Preventa Estándar) -->
                 <div class="price-card">
-                  <div class="price-card-header">
+                  <div class="price-card-header" v-if="product.precio_preventa">
                     <span class="price-type">Preventa Estándar</span>
+                    <span class="price-value">{{ formatPrice(product.precio_preventa) }}</span>
+                  </div>
+                  <div class="price-card-body">
+                    <div class="quantity-range">
+                      <div class="quantity-item">
+                        <span class="quantity-label">Mínimo:</span>
+                        <span class="quantity-value">{{ product.cantidad_minima_preventa || 1 }} unidades</span>
+                      </div>
+                      <div class="quantity-item">
+                        <span class="quantity-label">Máximo:</span>
+                        <span class="quantity-value">{{ product.cantidad_maxima_preventa || 'Sin límite' }} unidades</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Precio Preventa Especial -->
+                <div class="price-card special" v-if="product.precio">
+                  <div class="price-card-header">
+                    <span class="price-type">Preventa Especial</span>
                     <span class="price-value">{{ formatPrice(product.precio) }}</span>
                   </div>
                   <div class="price-card-body">
@@ -489,47 +505,28 @@
                       </div>
                       <div class="quantity-item">
                         <span class="quantity-label">Máximo:</span>
-                        <span class="quantity-value">{{ product.cantidad_maxima || 'Sin límite' }}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Precio Preventa Especial -->
-                <div class="price-card special" v-if="product.precio_preventa">
-                  <div class="price-card-header">
-                    <span class="price-type">Preventa Especial</span>
-                    <span class="price-value">{{ formatPrice(product.precio_preventa) }}</span>
-                  </div>
-                  <div class="price-card-body">
-                    <div class="quantity-range">
-                      <div class="quantity-item">
-                        <span class="quantity-label">Mínimo:</span>
-                        <span class="quantity-value">{{ product.cantidad_minima_preventa || product.cantidad_minima || 1 }} unidades</span>
-                      </div>
-                      <div class="quantity-item">
-                        <span class="quantity-label">Máximo:</span>
-                        <span class="quantity-value">{{ product.cantidad_maxima_preventa || product.cantidad_maxima || 'Sin límite' }}</span>
+                        <span class="quantity-value">{{ product.cantidad_maxima || 'Sin límite' }} unidades</span>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-              
+
               <!-- Vista resumida de precios (siempre visible) -->
               <div class="prices-summary">
                 <div class="summary-item">
                   <span class="summary-label">Estándar:</span>
                   <div class="summary-content">
-                    <span class="summary-price">{{ formatPrice(product.precio) }}</span>
-                    <span class="summary-quantity">{{ product.cantidad_minima || 1 }}+ uds</span>
+                    <span class="summary-price">{{ formatPrice(product.precio_preventa) }}</span>
+          <!--           <span class="summary-quantity">{{ product.cantidad_minima || 1 }}+ uds</span> -->
                   </div>
                 </div>
-                <div class="summary-item special" v-if="product.precio_preventa">
+                <div class="summary-item special" v-if="product.precio">
                   <span class="summary-label">Especial:</span>
                   <div class="summary-content">
-                    <span class="summary-price">{{ formatPrice(product.precio_preventa) }}</span>
-                    <span class="summary-quantity">{{ product.cantidad_minima_preventa || product.cantidad_minima || 1 }}+ uds</span>
+                    <span class="summary-price">{{ formatPrice(product.precio) }}</span>
+<!--                     <span class="summary-quantity">{{ product.cantidad_minima_preventa || product.cantidad_minima || 1
+                      }}+ uds</span> -->
                   </div>
                 </div>
               </div>
@@ -581,7 +578,6 @@
     </div>
   </div>
 </template>
-
 <script setup>
 import { ref, computed, onMounted, watch, nextTick, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -754,8 +750,8 @@ const canSwitchToPreventaEspecial = computed(() => {
 
 // Obtener el nombre del tipo de precio actual
 const getPriceTypeName = computed(() => {
-  if (isPreventaEspecialActive.value) return 'Preventa Especial';
-  if (isPreventaEstandarActive.value) return 'Preventa Estándar';
+  if (isPreventaEspecialActive.value) return 'Preventa Estándar';
+  if (isPreventaEstandarActive.value) return 'Preventa Especial';
   return 'Precio Regular';
 });
 
@@ -877,31 +873,34 @@ const rateProduct = (rating) => {
   }
 };
 
-// Enviar la calificación
+// Enviar la calificación - CORREGIDO PARA QUE GUARDE CORRECTAMENTE
 const submitRating = async () => {
   if (isRatingSubmitting.value || !userRating.value || !dato.value.id) return;
 
   isRatingSubmitting.value = true;
 
   try {
+    // Asegurarse de que el ID del producto sea un número
+    const productoId = parseInt(dato.value.id);
+
+    // Llamar al servicio para guardar la calificación
     await storeRating({
-      producto_id: dato.value.id,
+      producto_id: productoId,
       rating: userRating.value
     });
 
     // Recargar las estadísticas de calificación
-    await loadProductRatingStats(dato.value.id);
+    await loadProductRatingStats(productoId);
 
     // Actualizar las calificaciones de usuario
     await indexRatingUser();
 
     // Mostrar notificación de éxito
     showToast('Calificación guardada correctamente', 'success');
-
-    isRatingSubmitting.value = false;
   } catch (error) {
     console.error('Error al enviar calificación:', error);
     showToast('Error al guardar la calificación', 'error');
+  } finally {
     isRatingSubmitting.value = false;
   }
 };
@@ -985,7 +984,7 @@ const validateQuantity = () => {
   if (isNaN(numQuantity)) {
     numQuantity = minQuantity.value;
   }
-  
+
   // Verificar si estamos en modo preventa especial y la cantidad excede el máximo
   if (hasPreventaEspecialPrice.value && isPreventaEspecialActive.value && numQuantity > cantidadMaximaPreventaEspecial.value) {
     // Mostrar alerta para cambiar al precio de preventa estándar
@@ -999,17 +998,17 @@ const validateQuantity = () => {
       return;
     }
   }
-  
+
   // Verificar si la cantidad está en el rango de preventa especial
   if (hasPreventaEspecialPrice.value && numQuantity >= cantidadMinimaPreventaEspecial.value && numQuantity <= cantidadMaximaPreventaEspecial.value) {
     // Estamos en rango de preventa especial
     quantity.value = numQuantity;
-  } 
+  }
   // Si no está en rango de preventa especial, verificar rango de preventa estándar
   else if (numQuantity >= cantidadMinima.value && numQuantity <= cantidadMaxima.value) {
     // Estamos en rango de preventa estándar
     quantity.value = numQuantity;
-  } 
+  }
   // Si está fuera de ambos rangos, ajustar al límite más cercano
   else if (numQuantity < cantidadMinima.value) {
     quantity.value = cantidadMinima.value;
@@ -1022,7 +1021,7 @@ const validateQuantity = () => {
 const increaseQuantity = () => {
   if (quantity.value < maxQuantity.value) {
     const newQuantity = quantity.value + 1;
-    
+
     // Verificar si estamos en modo preventa especial y vamos a exceder el máximo
     if (hasPreventaEspecialPrice.value && isPreventaEspecialActive.value && newQuantity > cantidadMaximaPreventaEspecial.value) {
       // Mostrar alerta para cambiar al precio de preventa estándar
@@ -1034,7 +1033,7 @@ const increaseQuantity = () => {
       // Si no acepta, se mantiene en el máximo de preventa especial
       return;
     }
-    
+
     quantity.value = newQuantity;
     validateQuantity(); // Validar después de cambiar la cantidad
   }
@@ -1051,18 +1050,18 @@ const decreaseQuantity = () => {
 // Mejorar el manejo del zoom de imagen con cursor de lupa
 const handleImageZoom = (event) => {
   if (!mainImage.value) return;
-  
+
   // Mostrar el cursor de lupa
   showMagnifier.value = true;
-  
+
   // Calcular la posición del cursor
   const { left, top, width, height } = mainImage.value.getBoundingClientRect();
   const x = event.clientX - left;
   const y = event.clientY - top;
-  
+
   // Actualizar la posición del cursor de lupa
   magnifierPosition.value = { x, y };
-  
+
   // Aplicar el zoom
   const xPercent = x / width;
   const yPercent = y / height;
@@ -1073,7 +1072,7 @@ const handleImageZoom = (event) => {
 // Manejar inicio de toque
 const handleTouchStart = (event) => {
   touchStartX.value = event.touches[0].clientX;
-  
+
   // Ocultar indicador de deslizamiento después de la primera interacción
   if (showSwipeIndicator.value && !hasScrolled.value) {
     hasScrolled.value = true;
@@ -1166,7 +1165,7 @@ const toggleWishlist = () => {
   } else {
     isInWishlist.value = !isInWishlist.value;
   }
-  
+
   showToast(isInWishlist.value ? 'Agregado a favoritos' : 'Eliminado de favoritos', 'info');
 };
 
@@ -1268,9 +1267,9 @@ const isNewProductSimilar = (product) => {
 
 // Verificar si un producto tiene precios de preventa
 const hasPreventaPricesSimilar = (product) => {
-  return product.precio_preventa || 
-         product.precio_preventa_mayorista || 
-         product.precio_preventa_distribuidor;
+  return product.precio_preventa ||
+    product.precio_preventa_mayorista ||
+    product.precio_preventa_distribuidor;
 };
 
 // Funciones para manejar los detalles de precios
@@ -1361,7 +1360,7 @@ const navegarAProducto = async (productId) => {
     } else {
       quantity.value = cantidadMinima.value;
     }
-    
+
     // Validar la cantidad inicial
     validateQuantity();
 
@@ -1418,15 +1417,15 @@ const showToast = (message, type = 'info') => {
     visible: true,
     id: Date.now()
   };
-  
+
   toasts.value.push(toast);
-  
+
   // Auto ocultar después de 3 segundos
   setTimeout(() => {
     const index = toasts.value.findIndex(t => t.id === toast.id);
     if (index !== -1) {
       toasts.value[index].visible = false;
-      
+
       // Eliminar del array después de completar la animación
       setTimeout(() => {
         toasts.value = toasts.value.filter(t => t.id !== toast.id);
@@ -1440,7 +1439,7 @@ const getToastIcon = (type) => {
     case 'success': return 'fa-check-circle';
     case 'error': return 'fa-exclamation-circle';
     case 'warning': return 'fa-exclamation-triangle';
-    case 'info': 
+    case 'info':
     default: return 'fa-info-circle';
   }
 };
@@ -1469,7 +1468,7 @@ const verProducto = async () => {
   try {
     const { data } = await detalleProducto(route.params.idProducto);
     dato.value = data.dato;
-    
+
     // Inicializar precio original con el precio del producto principal
     originalPrice.value = dato.value.precio;
 
@@ -1487,7 +1486,7 @@ const verProducto = async () => {
     } else {
       quantity.value = cantidadMinima.value;
     }
-    
+
     // Validar la cantidad inicial
     validateQuantity();
 
@@ -1527,7 +1526,7 @@ onMounted(() => {
   if (route.params.idProducto) {
     loadProductRatingStats(route.params.idProducto);
   }
-  
+
   setTimeout(() => {
     if (!hasScrolled.value) {
       showSwipeIndicator.value = false;
@@ -1538,11 +1537,11 @@ onMounted(() => {
 // Actualizar la función checkThumbnailScroll para manejar la paginación
 const checkThumbnailScroll = () => {
   if (!thumbnailContainer.value) return;
-  
+
   // Calcular el número de miniaturas visibles basado en el ancho del contenedor
   const containerWidth = thumbnailContainer.value.clientWidth;
   thumbnailsPerPage.value = Math.floor(containerWidth / (thumbnailWidth.value + thumbnailGap.value));
-  
+
   // Asegurar que la miniatura seleccionada esté visible
   ensureSelectedThumbnailVisible();
 };
@@ -1668,7 +1667,8 @@ const ensureSelectedThumbnailVisible = () => {
   opacity: 0;
   animation: fadeIn 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
   animation-delay: 0.2s;
-  padding-bottom: 80px; /* Espacio para la barra fija móvil */
+  padding-bottom: 80px;
+  /* Espacio para la barra fija móvil */
 }
 
 .product-detail.loaded {
@@ -2054,11 +2054,13 @@ const ensureSelectedThumbnailVisible = () => {
   padding: 0.5rem 0;
   margin: 0 -1.5rem;
   padding: 0 1.5rem;
-  scrollbar-width: none; /* Firefox */
+  scrollbar-width: none;
+  /* Firefox */
 }
 
 .thumbnail-container::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Edge */
+  display: none;
+  /* Chrome, Safari, Edge */
 }
 
 .thumbnail {
@@ -2722,9 +2724,11 @@ const ensureSelectedThumbnailVisible = () => {
   0% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.3);
   }
+
   100% {
     transform: scale(1);
   }
@@ -2780,12 +2784,14 @@ const ensureSelectedThumbnailVisible = () => {
   cursor: not-allowed;
 }
 
-/* Productos Similares */
+/* Productos Similares - Grid Mejorado */
 .similar-products-section {
   max-width: 1440px;
   margin: 2.5rem auto;
   padding: 1.5rem 1rem;
   border-radius: 1rem;
+  background: #ffffff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
 .similar-products-section .section-title {
@@ -2797,19 +2803,38 @@ const ensureSelectedThumbnailVisible = () => {
   position: relative;
 }
 
+.similar-products-section .section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(45deg, #007bff, #00bcd4);
+  border-radius: 3px;
+}
+
+.text-accent {
+  color: #3498db;
+  position: relative;
+  display: inline-block;
+}
+
+/* Products Grid - Mejorado para responsividad */
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin: 0 0.5rem 2rem;
 }
 
 /* Product Card */
 .product-card {
-  background: var(--background-color, white);
+  background: white;
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 3px 6px var(--shadow-color, rgba(0, 0, 0, 0.1));
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
   opacity: 0;
@@ -2819,6 +2844,7 @@ const ensureSelectedThumbnailVisible = () => {
   height: 100%;
   display: flex;
   flex-direction: column;
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 @keyframes fadeInUp {
@@ -2835,7 +2861,7 @@ const ensureSelectedThumbnailVisible = () => {
 
 .product-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 20px var(--shadow-color, rgba(0, 0, 0, 0.15));
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
 /* Product Image */
@@ -2844,6 +2870,7 @@ const ensureSelectedThumbnailVisible = () => {
   width: 100%;
   padding-bottom: 100%;
   overflow: hidden;
+  background: #f8f9fa;
 }
 
 .product-image {
@@ -2874,8 +2901,8 @@ const ensureSelectedThumbnailVisible = () => {
   top: 50%;
   transform: translateY(-50%);
   background: rgba(255, 255, 255, 0.9);
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -2919,8 +2946,8 @@ const ensureSelectedThumbnailVisible = () => {
 }
 
 .badge {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.65rem;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.6rem;
   font-weight: 700;
   border-radius: 9999px;
   text-transform: uppercase;
@@ -2956,7 +2983,7 @@ const ensureSelectedThumbnailVisible = () => {
   }
 }
 
-/* Product Actions */
+/* Product Actions - Mejorado para móviles */
 .product-actions-bottom {
   position: absolute;
   bottom: 0;
@@ -2964,8 +2991,8 @@ const ensureSelectedThumbnailVisible = () => {
   right: 0;
   display: flex;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.5rem;
+  gap: 0.4rem;
+  padding: 0.4rem;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -2980,8 +3007,8 @@ const ensureSelectedThumbnailVisible = () => {
 .action-button {
   background-color: rgba(255, 255, 255, 0.9);
   border: none;
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -2991,7 +3018,7 @@ const ensureSelectedThumbnailVisible = () => {
   backdrop-filter: blur(4px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   color: #2d3748;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
 }
 
 .action-button:hover {
@@ -3024,17 +3051,17 @@ const ensureSelectedThumbnailVisible = () => {
 
 /* Product Info */
 .product-info {
-  padding: 0.75rem;
+  padding: 0.6rem;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  background-color: var(--background-color, white);
+  background-color: white;
 }
 
 .category {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   color: #718096;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
   display: flex;
   align-items: center;
   gap: 0.25rem;
@@ -3044,9 +3071,9 @@ const ensureSelectedThumbnailVisible = () => {
 }
 
 .product-name {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   font-weight: 700;
-  color: var(--text-color, #333);
+  color: #333;
   line-height: 1.4;
   transition: color 0.3s ease;
   display: -webkit-box;
@@ -3054,8 +3081,8 @@ const ensureSelectedThumbnailVisible = () => {
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  height: 2.5rem;
-  margin-bottom: 0.5rem;
+  height: 2.2rem;
+  margin-bottom: 0.4rem;
 }
 
 .product-card:hover .product-name {
@@ -3064,10 +3091,10 @@ const ensureSelectedThumbnailVisible = () => {
 
 /* Descripción del producto */
 .product-description {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: #718096;
   line-height: 1.4;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -3075,16 +3102,9 @@ const ensureSelectedThumbnailVisible = () => {
   text-overflow: ellipsis;
 }
 
-@media (min-width: 768px) {
-  .product-description {
-    font-size: 0.8rem;
-    margin-bottom: 0.75rem;
-  }
-}
-
-/* Contenedor de precios mejorado */
+/* NUEVO DISEÑO DE PRECIOS - Optimizado para móviles */
 .prices-container {
-  margin-top: 0.5rem;
+  margin-top: 0.4rem;
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid #e2e8f0;
@@ -3096,13 +3116,13 @@ const ensureSelectedThumbnailVisible = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5rem;
+  padding: 0.4rem;
   background: linear-gradient(to right, #f8fafc, #edf2f7);
   border-bottom: 1px solid #e2e8f0;
 }
 
 .prices-title {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
   color: #4a5568;
 }
@@ -3115,8 +3135,8 @@ const ensureSelectedThumbnailVisible = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   transition: all 0.2s ease;
 }
@@ -3134,14 +3154,14 @@ const ensureSelectedThumbnailVisible = () => {
   opacity: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 0 0.5rem;
+  gap: 0.4rem;
+  padding: 0 0.4rem;
 }
 
 .price-details.expanded {
-  max-height: 300px;
+  max-height: 500px;
   opacity: 1;
-  padding: 0.5rem;
+  padding: 0.4rem;
 }
 
 /* Tarjetas de precio */
@@ -3161,19 +3181,19 @@ const ensureSelectedThumbnailVisible = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5rem;
+  padding: 0.4rem;
   background-color: #f7fafc;
   border-bottom: 1px solid #edf2f7;
 }
 
 .price-type {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 700;
   color: #4a5568;
 }
 
 .price-value {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #2d3748;
 }
@@ -3183,20 +3203,20 @@ const ensureSelectedThumbnailVisible = () => {
 }
 
 .price-card-body {
-  padding: 0.5rem;
+  padding: 0.4rem;
 }
 
 .quantity-range {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.2rem;
 }
 
 .quantity-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   color: #718096;
 }
 
@@ -3210,10 +3230,10 @@ const ensureSelectedThumbnailVisible = () => {
 
 /* Vista resumida de precios */
 .prices-summary {
-  padding: 0.5rem;
+  padding: 0.4rem;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.2rem;
   border-top: 1px dashed #e2e8f0;
 }
 
@@ -3221,7 +3241,7 @@ const ensureSelectedThumbnailVisible = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
 }
 
 .summary-item.special {
@@ -3236,7 +3256,7 @@ const ensureSelectedThumbnailVisible = () => {
 .summary-content {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .summary-price {
@@ -3249,358 +3269,246 @@ const ensureSelectedThumbnailVisible = () => {
 }
 
 .summary-quantity {
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   color: #718096;
   background-color: #edf2f7;
   padding: 0.1rem 0.3rem;
   border-radius: 4px;
 }
 
-/* Barra Fija para Móvil */
-.mobile-sticky-bar {
-  display: none;
-  position: fixed;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(100% - 32px);
-  max-width: 480px;
-  background: white;
-  padding: 0.6rem 0.8rem;
-  border-radius: 0.8rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  z-index: 100;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.mobile-price {
-  display: flex;
-  flex-direction: column;
-}
-
-.price-container {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.mobile-price .current-price {
-  font-size: 1rem;
-  font-weight: 700;
-}
-
-.mobile-price .original-price {
-  font-size: 0.8rem;
-  color: #999;
-  text-decoration: line-through;
-}
-
-.price-type-label {
-  font-size: 0.7rem;
-  color: #666;
-  margin-top: 0.2rem;
-}
-
-.mobile-add-to-cart {
-  height: 2.25rem;
-  padding: 0 1rem;
-  border: none;
-  border-radius: 0.5rem;
-  background: linear-gradient(45deg, #007bff, #0056b3);
-  color: white;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.8rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
-}
-
-/* Botón de Compartir para Móvil */
-.mobile-share-button {
-  display: none;
-  position: fixed;
-  bottom: 70px;
-  right: 16px;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: #007bff;
-  color: white;
-  border: none;
-  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
-  z-index: 90;
-  cursor: pointer;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-}
-
-/* Indicador de Deslizamiento */
-.swipe-indicator {
-  display: none;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 0.6rem 0.8rem;
-  border-radius: 0.8rem;
-  z-index: 10;
-  text-align: center;
-  animation: fadeInOut 3s ease-in-out;
-}
-
-.swipe-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  margin-bottom: 0.4rem;
-  font-size: 1.1rem;
-}
-
-@keyframes fadeInOut {
-  0%, 100% {
-    opacity: 0;
+/* Media Queries Mejorados */
+@media (min-width: 400px) {
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 0.75rem;
   }
 
-  20%, 80% {
-    opacity: 1;
+  .product-name {
+    font-size: 0.85rem;
+  }
+
+  .action-button {
+    width: 28px;
+    height: 28px;
   }
 }
 
-/* Notificaciones Toast */
-.toast-container {
-  position: fixed;
-  bottom: 70px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  width: 90%;
-  max-width: 280px;
+@media (min-width: 576px) {
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 1rem;
+    margin: 0 0 2rem;
+  }
+
+  .product-info {
+    padding: 0.75rem;
+  }
+
+  .product-name {
+    font-size: 0.9rem;
+    height: 2.5rem;
+  }
+
+  .product-description {
+    font-size: 0.75rem;
+  }
+
+  .action-button {
+    width: 30px;
+    height: 30px;
+    font-size: 0.75rem;
+  }
+
+  .badge {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.65rem;
+  }
+
+  /* Mostrar botones de navegación y acciones en tablets */
+  .product-actions-bottom {
+    opacity: 0.9;
+  }
+
+  .nav-button {
+    opacity: 0.7;
+  }
 }
 
-.toast {
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  padding: 0.6rem 0.8rem;
-  border-radius: 0.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  opacity: 0;
-  transform: translateY(20px);
-  transition: all 0.3s ease;
-  font-size: 0.85rem;
-}
-
-.toast.toast-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.toast.success {
-  background: rgba(40, 167, 69, 0.9);
-}
-
-.toast.error {
-  background: rgba(220, 53, 69, 0.9);
-}
-
-.toast.warning {
-  background: rgba(255, 193, 7, 0.9);
-}
-
-.toast.info {
-  background: rgba(23, 162, 184, 0.9);
-}
-
-/* Diseño Responsivo */
-@media (max-width: 1024px) {
-  .product-container {
+@media (min-width: 768px) {
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 1.25rem;
   }
 
-  .product-images {
-    position: relative;
-    top: 0;
+  .product-info {
+    padding: 0.85rem;
   }
 
-  .product-title {
-    font-size: 1.5rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .product-detail {
-    padding: 0.5rem 1rem 70px 1rem;
+  .product-name {
+    font-size: 0.95rem;
+    height: 2.6rem;
+    margin-bottom: 0.5rem;
   }
 
-  .desktop-only {
-    display: none !important;
+  .product-description {
+    font-size: 0.8rem;
+    margin-bottom: 0.75rem;
   }
 
-  .mobile-only {
-    display: block !important;
-  }
-
-  .mobile-header {
-    display: block;
-  }
-
-  .mobile-sticky-bar {
-    display: flex;
-  }
-
-  .mobile-share-button {
-    display: flex;
-  }
-
-  .swipe-indicator {
-    display: block;
-  }
-
-  .accordion-sections {
-    display: block;
-    margin-top: 1.25rem;
-  }
-
-  /* Mejorar objetivos táctiles para móvil */
-  .quantity-btn {
-    width: 36px;
-    height: 36px;
-  }
-
-  .quantity-input {
-    width: 45px;
-    height: 36px;
-    font-size: 16px; /* Evitar zoom en iOS */
-  }
-}
-
-@media (max-width: 480px) {
-  .product-title {
-    font-size: 1.25rem;
-  }
-
-  .add-to-cart {
-    height: 42px;
-  }
-
-  .thumbnail {
-    flex: 0 0 60px;
-    height: 60px;
-  }
-
-  .quantity-section {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .quantity-controls {
-    width: 100%;
-    justify-content: center;
-  }
-
-  /* Ajustar barra fija para pantallas más pequeñas */
-  .mobile-sticky-bar {
-    padding: 0.4rem 0.8rem;
-  }
-
-  .mobile-add-to-cart {
-    padding: 0 0.8rem;
-  }
-
-  /* Mejorar notificaciones toast */
-  .toast-container {
-    max-width: 260px;
-  }
-
-  .toast {
-    padding: 0.5rem 0.7rem;
+  .prices-title {
     font-size: 0.8rem;
   }
+
+  .price-type {
+    font-size: 0.75rem;
+  }
+
+  .price-value {
+    font-size: 0.85rem;
+  }
+
+  .quantity-item {
+    font-size: 0.7rem;
+  }
+
+  .summary-item {
+    font-size: 0.75rem;
+  }
+
+  .summary-quantity {
+    font-size: 0.65rem;
+  }
+
+  .action-button {
+    width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
+  }
+
+  .nav-button {
+    width: 32px;
+    height: 32px;
+  }
+
+  .badge {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.7rem;
+  }
 }
 
-/* Animaciones */
-@keyframes fadeIn {
-  from {
+@media (min-width: 992px) {
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .product-name {
+    font-size: 1rem;
+    height: 2.8rem;
+  }
+
+  .product-info {
+    padding: 1rem;
+  }
+
+  .price-value {
+    font-size: 0.9rem;
+  }
+
+  /* Restaurar comportamiento hover en desktop */
+  .product-actions-bottom {
     opacity: 0;
-    transform: translateY(20px);
   }
 
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  .nav-button {
+    opacity: 0;
   }
 }
 
-/* Optimizaciones para Dispositivos Táctiles */
+@media (min-width: 1200px) {
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.75rem;
+  }
+
+  .product-info {
+    padding: 1.25rem;
+  }
+
+  .product-name {
+    font-size: 1.1rem;
+    height: 3rem;
+  }
+
+  .action-button {
+    width: 35px;
+    height: 35px;
+    font-size: 0.9rem;
+  }
+
+  .nav-button {
+    width: 35px;
+    height: 35px;
+  }
+
+  .price-value {
+    font-size: 1rem;
+  }
+
+  .summary-price {
+    font-size: 0.9rem;
+  }
+}
+
+/* Touch Device Optimizations - Mejorado */
 @media (hover: none) {
-  .add-to-cart:hover:not(:disabled),
-  .model-card:hover,
-  .quantity-btn:hover:not(:disabled) {
+  .product-card:hover {
     transform: none;
-    box-shadow: none;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
   }
 
-  .add-to-wishlist:hover i {
+  .product-card:hover .product-image img {
     transform: none;
   }
 
-  .image-nav {
+  .product-actions-bottom {
     opacity: 1;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.3) 50%, transparent 100%);
+    padding-bottom: 0.6rem;
+    /* Aumentado para facilitar el toque */
   }
 
-  .add-to-cart:active:not(:disabled) {
-    transform: scale(0.98);
+  .nav-button {
+    opacity: 0.8;
+    width: 32px;
+    /* Aumentado para facilitar el toque */
+    height: 32px;
+    /* Aumentado para facilitar el toque */
   }
 
-  .add-to-wishlist:active {
+  .action-button {
+    width: 32px;
+    /* Aumentado para facilitar el toque */
+    height: 32px;
+    /* Aumentado para facilitar el toque */
+  }
+
+  .action-button:active {
     transform: scale(0.95);
   }
 
-  .model-card:active {
-    background: rgba(0, 123, 255, 0.05);
-  }
-
-  /* Mejorar retroalimentación táctil */
-  .color-swatch:active {
-    transform: scale(1.1);
-  }
-
-  .quantity-btn:active:not(:disabled) {
-    background: rgba(0, 123, 255, 0.2);
-  }
-
-  .mobile-add-to-cart:active {
+  .product-card:active {
     transform: scale(0.98);
   }
 
-  /* Asegurar objetivos táctiles lo suficientemente grandes */
-  .pagination-dot {
-    width: 10px;
-    height: 10px;
-    margin: 0 3px;
-  }
-
-  .image-nav {
-    width: 36px;
-    height: 36px;
+  /* Asegurar que los botones de toggle sean fáciles de tocar */
+  .toggle-prices-btn {
+    width: 28px;
+    height: 28px;
   }
 }
 
-/* Mejoras de Accesibilidad */
+/* Accessibility Improvements */
 @media (prefers-reduced-motion: reduce) {
   .product-detail {
     animation: none;
@@ -3655,7 +3563,8 @@ const ensureSelectedThumbnailVisible = () => {
   flex: 1;
   overflow: hidden;
   position: relative;
-  height: 90px; /* Altura para acomodar miniaturas y paginación */
+  height: 90px;
+  /* Altura para acomodar miniaturas y paginación */
 }
 
 .thumbnail-wrapper {
@@ -3773,18 +3682,410 @@ const ensureSelectedThumbnailVisible = () => {
     height: 24px;
     font-size: 12px;
   }
-  
+
   .thumbnail {
     flex: 0 0 60px;
     height: 60px;
   }
-  
+
   .thumbnail-container {
     height: 70px;
   }
-  
+
   .thumbnail-wrapper {
     height: 60px;
+  }
+}
+
+/* Barra Fija para Móvil */
+.mobile-sticky-bar {
+  display: none;
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 480px;
+  background: white;
+  padding: 0.6rem 0.8rem;
+  border-radius: 0.8rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mobile-price {
+  display: flex;
+  flex-direction: column;
+}
+
+.price-container {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.mobile-price .current-price {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.mobile-price .original-price {
+  font-size: 0.8rem;
+  color: #999;
+  text-decoration: line-through;
+}
+
+.price-type-label {
+  font-size: 0.7rem;
+  color: #666;
+  margin-top: 0.2rem;
+}
+
+.mobile-add-to-cart {
+  height: 2.25rem;
+  padding: 0 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: linear-gradient(45deg, #007bff, #0056b3);
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+/* Botón de Compartir para Móvil */
+.mobile-share-button {
+  display: none;
+  position: fixed;
+  bottom: 70px;
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #007bff;
+  color: white;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+  z-index: 90;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+/* Indicador de Deslizamiento */
+.swipe-indicator {
+  display: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 0.6rem 0.8rem;
+  border-radius: 0.8rem;
+  z-index: 10;
+  text-align: center;
+  animation: fadeInOut 3s ease-in-out;
+}
+
+.swipe-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+  font-size: 1.1rem;
+}
+
+@keyframes fadeInOut {
+
+  0%,
+  100% {
+    opacity: 0;
+  }
+
+  20%,
+  80% {
+    opacity: 1;
+  }
+}
+
+/* Notificaciones Toast */
+.toast-container {
+  position: fixed;
+  bottom: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 90%;
+  max-width: 280px;
+}
+
+.toast {
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 0.6rem 0.8rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.3s ease;
+  font-size: 0.85rem;
+}
+
+.toast.toast-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast.success {
+  background: rgba(40, 167, 69, 0.9);
+}
+
+.toast.error {
+  background: rgba(220, 53, 69, 0.9);
+}
+
+.toast.warning {
+  background: rgba(255, 193, 7, 0.9);
+}
+
+.toast.info {
+  background: rgba(23, 162, 184, 0.9);
+}
+
+/* Diseño Responsivo */
+@media (max-width: 1024px) {
+  .product-container {
+    gap: 1.25rem;
+  }
+
+  .product-images {
+    position: relative;
+    top: 0;
+  }
+
+  .product-title {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .product-detail {
+    padding: 0.5rem 1rem 70px 1rem;
+  }
+
+  .desktop-only {
+    display: none !important;
+  }
+
+  .mobile-only {
+    display: block !important;
+  }
+
+  .mobile-header {
+    display: block;
+  }
+
+  .mobile-sticky-bar {
+    display: flex;
+  }
+
+  .mobile-share-button {
+    display: flex;
+  }
+
+  .swipe-indicator {
+    display: block;
+  }
+
+  .accordion-sections {
+    display: block;
+    margin-top: 1.25rem;
+  }
+
+  /* Mejorar objetivos táctiles para móvil */
+  .quantity-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .quantity-input {
+    width: 45px;
+    height: 36px;
+    font-size: 16px;
+    /* Evitar zoom en iOS */
+  }
+}
+
+@media (max-width: 480px) {
+  .product-title {
+    font-size: 1.25rem;
+  }
+
+  .add-to-cart {
+    height: 42px;
+  }
+
+  .thumbnail {
+    flex: 0 0 60px;
+    height: 60px;
+  }
+
+  .quantity-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .quantity-controls {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Ajustar barra fija para pantallas más pequeñas */
+  .mobile-sticky-bar {
+    padding: 0.4rem 0.8rem;
+  }
+
+  .mobile-add-to-cart {
+    padding: 0 0.8rem;
+  }
+
+  /* Mejorar notificaciones toast */
+  .toast-container {
+    max-width: 260px;
+  }
+
+  .toast {
+    padding: 0.5rem 0.7rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Optimizaciones para Dispositivos Táctiles */
+@media (hover: none) {
+
+  .add-to-cart:hover:not(:disabled),
+  .model-card:hover,
+  .quantity-btn:hover:not(:disabled) {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .add-to-wishlist:hover i {
+    transform: none;
+  }
+
+  .image-nav {
+    opacity: 1;
+  }
+
+  .add-to-cart:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  .add-to-wishlist:active {
+    transform: scale(0.95);
+  }
+
+  .model-card:active {
+    background: rgba(0, 123, 255, 0.05);
+  }
+
+  /* Mejorar retroalimentación táctil */
+  .color-swatch:active {
+    transform: scale(1.1);
+  }
+
+  .quantity-btn:active:not(:disabled) {
+    background: rgba(0, 123, 255, 0.2);
+  }
+
+  .mobile-add-to-cart:active {
+    transform: scale(0.98);
+  }
+
+  /* Asegurar objetivos táctiles lo suficientemente grandes */
+  .pagination-dot {
+    width: 10px;
+    height: 10px;
+    margin: 0 3px;
+  }
+
+  .image-nav {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* Mejoras de Accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  .product-detail {
+    animation: none;
+    opacity: 1;
+  }
+
+  .product-card {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .product-card:hover {
+    transform: none;
+  }
+
+  .product-card:hover .product-image img {
+    transform: none;
+  }
+
+  .badge-new {
+    animation: none;
+  }
+
+  .action-button:hover {
+    transform: none;
+  }
+
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: none;
+  }
+
+  .swipe-indicator {
+    animation: none;
+  }
+
+  .toast {
+    transition: none;
   }
 }
 </style>
