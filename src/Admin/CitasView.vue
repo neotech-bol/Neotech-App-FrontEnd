@@ -535,7 +535,6 @@ const paginationRange = computed(() => {
 const listarCitas = async () => {
     try {
         const response = await index(currentPage.value, search.value, estadoSeleccionado.value);
-        console.log(response);
         if (response && response.data) {
             // Acceder a los datos correctamente según la estructura de la respuesta
             citas.value = response.data.datos.data || [];
@@ -563,13 +562,11 @@ const cambiarPagina = async (page) => {
 };
 
 const filtrarCitas = async () => {
-    console.log('Filtrando por:', search.value);
     currentPage.value = 1; // Reiniciar a la primera página
     await listarCitas();
 };
 
 const filtrarPorEstado = async () => {
-    console.log('Filtrando por estado:', estadoSeleccionado.value);
     currentPage.value = 1; // Reiniciar a la primera página
     await listarCitas();
 };
@@ -734,16 +731,12 @@ const guardarCita = async () => {
             delete datosParaEnviar.otro_servicio;
         }
 
-        console.log('Datos a guardar:', datosParaEnviar);
-
         if (posicion.value) {
             // Actualizar cita existente
             await update(posicion.value, datosParaEnviar);
-            console.log('Actualizando cita:', posicion.value);
         } else {
             // Crear nueva cita
             await store(datosParaEnviar);
-            console.log('Creando nueva cita');
         }
 
         // Recargar lista de citas
@@ -769,8 +762,6 @@ const guardarCita = async () => {
 const mostrarCita = async (id) => {
     try {
         const { data } = await show(id);
-        console.log(data);
-        
         formulario.value = {
             nombre_completo: data.datos.nombre_completo,
             correo: data.datos.correo,
@@ -802,7 +793,6 @@ const cambiarEstado = async (id) => {
 
             // Actualizar el estado localmente
             citas.value[index].estado = nuevoEstado;
-            console.log(`Estado de la cita ${id} cambiado a: ${nuevoEstado}`);
 
             // Enviar la solicitud a la API para cambiar el estado
             await cambiarEstadoCita(id, { estado: nuevoEstado });

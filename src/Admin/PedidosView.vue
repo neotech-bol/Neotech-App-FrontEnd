@@ -6,7 +6,7 @@
         <h2 class="card-title h4 m-0">
           <i class="fas fa-shopping-cart me-2"></i>Gestión de Pedidos
         </h2>
-        <div class="d-flex flex-wrap gap-2">
+        <div class="d-flex flex-wrap gap-2">\
           <!-- Dropdown para exportar - Implementación manual -->
           <div class="dropdown">
             <button class="btn btn-primary dropdown-toggle" type="button" @click="toggleExportDropdown">
@@ -441,7 +441,7 @@
                                     Color: {{ producto.pivot.color }}
                                   </div>
                                   <div class="badge" :class="producto.pivot?.es_preventa ? 'bg-warning' : 'bg-info'">
-                                    {{ producto.pivot?.es_preventa ? 'Preventa' : 'Regular' }}
+                                    {{ producto.pivot?.es_preventa ? 'Estandar' : 'Especial' }}
                                   </div>
                                 </div>
                               </div>
@@ -676,6 +676,7 @@ import { format, formatDistance } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { completeOrder, excelPedidosCatalogo, generaPDFPedidoID, generateExcel, indexPedidos, modelsAll, pdfPedidosCatalogo, pdfPedidosCompletados, pdfPedidosPendientes, showPedido } from '@/Services/PedidoService';
 import Swal from 'sweetalert2';
+import { indexCatalogosactives } from '@/Services/CatalogoService';
 
 // Estado
 const datos = ref([]);
@@ -702,7 +703,7 @@ const pagination = ref({
   from: 0,
   to: 0
 });
-
+const catalogos = ref([]);
 let orderDetailModal = null;
 let voucherModal = null;
 let liveToast = null;
@@ -749,7 +750,7 @@ onMounted(() => {
 
   listOrders();
   loadModels();
-
+  catalogosActivos();
   // Agregar event listener para el cambio de tamaño de ventana
   window.addEventListener('resize', actualizarAnchoPantalla);
 
@@ -797,7 +798,6 @@ const listOrders = async () => {
     );
 
     datos.value = data.datos;
-    console.log(datos.value);
     // Actualizar información de paginación
     if (data.pagination) {
       pagination.value = data.pagination;
@@ -844,7 +844,6 @@ const showOrder = async (id) => {
   try {
     const { data } = await showPedido(id);
     detailOrder.value = data;
-    console.log(detailOrder.value);
     orderDetailModal.show();
   } catch (error) {
     console.error('Error al obtener detalles del pedido:', error);
@@ -932,27 +931,48 @@ const fetchOrders = async () => {
 const descargarExcelPedidosPorCatalogo = async () => {
   try {
     showExportDropdown.value = false; // Cerrar el dropdown después de hacer clic
-
-    // Solicitar el ID del catálogo al usuario
-    const catalogoId = prompt("Ingrese el ID del catálogo:");
-
-    if (catalogoId && !isNaN(catalogoId)) {
-      const response = await excelPedidosCatalogo(catalogoId);
-      
-      // Crear un blob y descargar directamente, igual que en fetchOrders
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `pedidos_catalogo_${catalogoId}.xlsx`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      showToast('success', 'Excel generado', 'El archivo Excel se ha descargado correctamente');
-    } else if (catalogoId !== null) {
-      showToast('error', 'Error', 'ID de catálogo inválido');
-    }
+    
+    // Mostrar modal de selección de catálogo
+    Swal.fire({
+      title: 'Exportar Excel por Catálogo',
+      html: `
+        <div class="form-group">
+          <label for="catalogo-select" class="form-label">Seleccione un catálogo:</label>
+          <select id="catalogo-select" class="form-select">
+            <option value="">Seleccione un catálogo</option>
+            ${catalogos.value.map(cat => `<option value="${cat.id}">${cat.nombre}</option>`).join('')}
+          </select>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Exportar',
+      cancelButtonText: 'Cancelar',
+      preConfirm: () => {
+        const catalogoId = document.getElementById('catalogo-select').value;
+        if (!catalogoId) {
+          Swal.showValidationMessage('Por favor seleccione un catálogo');
+          return false;
+        }
+        return catalogoId;
+      }
+    }).then(async (result) => {
+      if (result.isConfirmed && result.value) {
+        const catalogoId = result.value;
+        const response = await excelPedidosCatalogo(catalogoId);
+        
+        // Crear un blob y descargar directamente
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `pedidos_catalogo_${catalogoId}.xlsx`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        
+        showToast('success', 'Excel generado', 'El archivo Excel se ha descargado correctamente');
+      }
+    });
   } catch (error) {
     console.error('Error al descargar el Excel de pedidos por catálogo:', error);
     showToast('error', 'Error', 'No se pudo generar el Excel de pedidos por catálogo');
@@ -992,16 +1012,38 @@ const descargarPdfPedidosEnProceso = async () => {
 const descargarPdfPedidosPorCatalogo = async () => {
   try {
     showExportDropdown.value = false; // Cerrar el dropdown después de hacer clic
-
-    // Solicitar el ID del catálogo al usuario
-    const catalogoId = prompt("Ingrese el ID del catálogo:");
-
-    if (catalogoId && !isNaN(catalogoId)) {
-      const response = await pdfPedidosCatalogo(catalogoId);
-      handlePdfResponse(response, `pedidos_catalogo_${catalogoId}.pdf`);
-    } else if (catalogoId !== null) {
-      showToast('error', 'Error', 'ID de catálogo inválido');
-    }
+    
+    // Mostrar modal de selección de catálogo
+    Swal.fire({
+      title: 'Exportar PDF por Catálogo',
+      html: `
+        <div class="form-group">
+          <label for="catalogo-select" class="form-label">Seleccione un catálogo:</label>
+          <select id="catalogo-select" class="form-select">
+            <option value="">Seleccione un catálogo</option>
+            ${catalogos.value.map(cat => `<option value="${cat.id}">${cat.nombre}</option>`).join('')}
+          </select>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Exportar',
+      cancelButtonText: 'Cancelar',
+      preConfirm: () => {
+        const catalogoId = document.getElementById('catalogo-select').value;
+        if (!catalogoId) {
+          Swal.showValidationMessage('Por favor seleccione un catálogo');
+          return false;
+        }
+        return catalogoId;
+      }
+    }).then(async (result) => {
+      if (result.isConfirmed && result.value) {
+        const catalogoId = result.value;
+        const response = await pdfPedidosCatalogo(catalogoId);
+        handlePdfResponse(response, `pedidos_catalogo_${catalogoId}.pdf`);
+        showToast('success', 'PDF generado', 'El archivo PDF se ha descargado correctamente');
+      }
+    });
   } catch (error) {
     console.error('Error al descargar el PDF de pedidos por catálogo:', error);
     showToast('error', 'Error', 'No se pudo generar el PDF de pedidos por catálogo');
@@ -1179,15 +1221,25 @@ const calcularMontoDescuento = () => {
 
   if (detailOrder.value.cupon.tipo === 'porcentaje') {
     // Calcular descuento porcentual
-    discountAmount = (subtotal * parseFloat(detailOrder.value.cupon.descuento)) / 100;
+    discountAmount = (subtotal * Number.parseFloat(detailOrder.value.cupon.descuento)) / 100;
   } else {
     // Descuento de monto fijo
-    discountAmount = parseFloat(detailOrder.value.cupon.descuento);
+    discountAmount = Number.parseFloat(detailOrder.value.cupon.descuento);
   }
 
   // Asegurar que el descuento no exceda el monto total
   return Math.min(discountAmount, subtotal);
 };
+
+//catalogos activos
+const catalogosActivos = async () => {
+  try {
+    const {data} = await indexCatalogosactives();
+    catalogos.value = data.datos;
+  } catch (error) {
+    console.log(error);
+  }
+}
 </script>
 
 <style scoped>
@@ -1709,3 +1761,4 @@ const calcularMontoDescuento = () => {
   object-fit: contain;
 }
 </style>
+

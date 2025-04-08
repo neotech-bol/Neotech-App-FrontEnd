@@ -816,7 +816,6 @@ const mostrarCatalogos = async () => {
   try {
     const { data } = await indexCatalogosactives();
     catalogos.value = data.datos;
-    console.log(catalogos.value);
   } catch (error) {
     console.error('Error al cargar catálogos:', error);
   }

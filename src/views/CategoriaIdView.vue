@@ -277,8 +277,6 @@ const verCategoria = async () => {
         currentImageIndex.value[product.id] = 0;
       });
     }
-    
-    console.log('Categoría cargada:', categoria.value);
   } catch (err) {
     console.error('Error al cargar la categoría:', err);
     error.value = 'Hubo un error al cargar la categoría. Por favor, intenta de nuevo.';

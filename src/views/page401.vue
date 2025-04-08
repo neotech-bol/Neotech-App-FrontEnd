@@ -52,8 +52,7 @@
   };
   
   const contactSupport = () => {
-    // Implement your contact support logic here
-    console.log('Contacting support...');
+    router.push({path: '/contacto'});
   };
   
   setTimeout(() => {

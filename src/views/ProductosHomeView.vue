@@ -338,7 +338,6 @@ const listarProductos = async (page = 1) => {
   error.value = null;
   try {
     const { data } = await filtrosProductos(filtroCategoria.value, filtroCatalogo.value, searchQuery.value, page);
-    console.log(data);
     productos.value = data.datos.data || data.datos; // Manejar ambos formatos de respuesta
     
     // Manejar paginación si está disponible
@@ -378,7 +377,6 @@ const listarCatalogosActive = async () => {
   try {
     const {data} = await indexCatalogosactives();
     catalogos.value = data.datos
-    console.log(catalogos.value);
   } catch (error) {
     console.log(error);
   }

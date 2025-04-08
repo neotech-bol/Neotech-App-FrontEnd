@@ -477,14 +477,8 @@ const performSearch = async () => {
     try {
       // Mostrar estado de carga
       isSearchLoading.value = true;
-
-      console.log('Realizando búsqueda con query:', searchQuery.value.trim());
-
       // Llamar a la API de búsqueda
       const response = await searchProductoCategoriaCatalogo(searchQuery.value.trim());
-
-      console.log('Respuesta de búsqueda:', response);
-
       // Verificar si la respuesta tiene la estructura esperada
       if (response && response.data) {
         // Guardar los resultados

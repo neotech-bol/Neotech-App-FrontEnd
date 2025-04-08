@@ -359,9 +359,7 @@ const listarCatalogo = async () => {
     const { data } = idCatalogoActivo.value
       ? await showCatalogoActive(idCatalogoActivo.value)
       : await indexCatalogoItems('');
-    console.log(data);
     datos.value = idCatalogoActivo.value ? [data.datos] : data.datos;
-    console.log(datos.value);
     datos.value.forEach(catalog => {
       catalog.categorias.forEach(categoria => {
         categoria.productos.forEach(product => {

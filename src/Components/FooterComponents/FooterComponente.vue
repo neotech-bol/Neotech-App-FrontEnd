@@ -202,7 +202,6 @@ const cerrarSesion = async () => {
     if (token) {
       try {
         const { data } = await logout();
-        console.log(data);
       } catch (apiError) {
         console.warn('Error al llamar al endpoint de logout:', apiError);
         // Continuamos con el proceso aunque falle la API
@@ -236,9 +235,6 @@ const cerrarSesion = async () => {
 
 // Función para mostrar notificaciones
 const showNotification = (message, type) => {
-  // Si tienes un sistema de notificaciones, úsalo aquí
-  console.log(`${type}: ${message}`);
-  
   // Ejemplo básico de notificación
   const notificationElement = document.createElement('div');
   notificationElement.className = `notification notification-${type}`;

@@ -191,7 +191,6 @@ const handleAppointment = async() => {
     }
     
     const {data} = await storeCitaUser(appointmentDataWithDepartment);
-    console.log(data);
     
     // Reset form after successful submission
     appointmentData.value = {

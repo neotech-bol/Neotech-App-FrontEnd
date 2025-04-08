@@ -351,8 +351,6 @@ const listarCatalogo = async () => {
     if (idCatalogoHistorial.value) {
       // Fetch historical catalog
       response = await showCatalogosHistoriales(idCatalogoHistorial.value);
-      console.log('Historical Catalog Response:', response.data);
-
       const catalogData = response.data?.datos?.catalogo;
       if (!catalogData) {
         throw new Error('No catalog data found in response');
@@ -363,7 +361,6 @@ const listarCatalogo = async () => {
     } else {
       // Fetch current catalog
       response = await indexCatalogoItems('');
-      console.log('Current Catalog Response:', response.data);
       datos.value = response.data.datos || response.data || [];
     }
 

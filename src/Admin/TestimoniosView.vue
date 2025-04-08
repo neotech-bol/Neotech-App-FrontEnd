@@ -439,7 +439,6 @@ const paginationRange = computed(() => {
 const listarTestimonios = async () => {
     try {
         const response = await indexTestimonios(currentPage.value, search.value, estadoSeleccionado.value);
-        console.log(response);
         if (response && response.data) {
             testimonios.value = response.data.datos.data || [];
             // Asignar datos de paginación si existen
@@ -469,12 +468,10 @@ const cambiarPagina = async (page) => {
 };
 
 const filtrarTestimonios = async () => {
-    console.log('Filtrando por:', search.value);
     currentPage.value = 1; // Reiniciar a la primera página
     await listarTestimonios();
 };
 const filtrarPorEstado = async () => {
-  console.log('Filtrando por estado:', estadoSeleccionado.value);
   currentPage.value = 1; // Reiniciar a la primera página
   await listarTestimonios();
 };
@@ -585,18 +582,12 @@ const guardarTestimonio = async () => {
         if (formulario.value.imagen_file) {
             formData.append('imagen', formulario.value.imagen_file);
         }
-
-        // Simulación de guardado
-        console.log('Datos a guardar:', Object.fromEntries(formData));
-
         if (posicion.value) {
             // Actualizar testimonio existente
             await updateTestimonio(posicion.value, formData);
-            console.log('Actualizando testimonio:', posicion.value);
         } else {
             // Crear nuevo testimonio
             await storeTestimonio(formData);
-            console.log('Creando nuevo testimonio');
         }
 
         // Simulación de éxito
@@ -623,7 +614,6 @@ const mostrarTestimonio = async (id) => {
     try {
 
         const { data } = await showTestimonio(id);
-        console.log(data);
         formulario.value = {
             nombre_completo: data.datos.nombre_completo,
             ocupacion: data.datos.ocupacion,
@@ -643,14 +633,12 @@ const mostrarTestimonio = async (id) => {
 
 const cambiarEstado = async (id) => {
     try {
-        console.log(id); // Simulación de cambio de estado
         const index = testimonios.value.findIndex(t => t.id === id);
         if (index !== -1) {
             const nuevoEstado = testimonios.value[index].estado === 'pendiente' ? 'aprobado' : 'pendiente';
 
             // Actualizar el estado localmente
             testimonios.value[index].estado = nuevoEstado;
-            console.log(`Estado del testimonio ${id} cambiado a: ${nuevoEstado}`);
 
             // Enviar la solicitud a la API para cambiar el estado
             await cambiarEstadoTestimonio(id, { estado: nuevoEstado }); // Enviar el nuevo estado como un objeto
@@ -683,9 +671,6 @@ const verDetalles = async (id) => {
 
 const aprobarTestimonio = async (id) => {
     try {
-        // Implementar lógica para aprobar un testimonio
-        console.log('Aprobando testimonio:', id);
-
         // Por ahora, simulamos la aprobación
         const index = testimonios.value.findIndex(t => t.id === id);
         if (index !== -1) {
@@ -703,9 +688,6 @@ const aprobarTestimonio = async (id) => {
 
 const rechazarTestimonio = async (id) => {
     try {
-        // Implementar lógica para rechazar un testimonio
-        console.log('Rechazando testimonio:', id);
-
         // Por ahora, simulamos el rechazo
         const index = testimonios.value.findIndex(t => t.id === id);
         if (index !== -1) {

@@ -180,7 +180,6 @@ const userAuth = async (filtro = null) => {
     let { data } = await userAutenticado(filtroAplicar !== 'todos' ? filtroAplicar : null);
     
     user.value = data.datos;
-    console.log('Usuario con pedidos:', user.value);
   } catch (error) {
     console.error('Error al obtener usuario:', error);
     Swal.fire({
@@ -194,7 +193,6 @@ const userAuth = async (filtro = null) => {
 };
 
 const filtrarPedidos = (filtro) => {
-  console.log('Filtrando por:', filtro);
   filtroActual.value = filtro;
   paginaActual.value = 1;
   
@@ -243,7 +241,6 @@ const guardarCambios = async () => {
   validationErrors.value = {};
   try {
     const { data } = await updateUserWeb(usuarioEditado.value);
-    console.log('Usuario actualizado:', data);
     userAuth(filtroActual.value); // Mantener el filtro actual al recargar
     editando.value = false;
     
@@ -283,7 +280,6 @@ const cambiarPagina = (nuevaPagina) => {
 
 const descargarDetallePedido = async (id) => {
   try {
-    console.log('Descargando detalle del pedido:', id);
     const response = await generaPDFPedidoID(id);
     // Crea un objeto URL a partir de la respuesta
     const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -315,9 +311,7 @@ const descargarDetallePedido = async (id) => {
 
 const repetirPedido = async (id) => {
   try {
-    console.log('Repitiendo pedido:', id);
     const { data } = await repitOrder(id);
-    console.log('Pedido repetido:', data);
     
     // Recargar los pedidos después de repetir uno
     userAuth(filtroActual.value);
@@ -411,7 +405,6 @@ const cerrarSesion = async () => {
       if (token) {
         try {
           const { data } = await logout();
-          console.log('Logout exitoso:', data);
         } catch (apiError) {
           console.warn('Error al llamar al endpoint de logout:', apiError);
           // Continuamos con el proceso aunque falle la API

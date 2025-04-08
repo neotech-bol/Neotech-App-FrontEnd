@@ -1387,18 +1387,7 @@ const processOrder = async () => {
             Swal.showLoading();
           }
         });
-
-        // Mostrar en consola los valores que se están enviando (para depuración)
-        console.log('Enviando pedido con los siguientes valores:');
-        console.log('Total original:', cartStore.totalAmount);
-        console.log('Descuento aplicado:', cartStore.montoDescuento);
-        console.log('Total después del descuento:', cartStore.totalAfterDiscount);
-        console.log('Total a pagar (70%):', cartStore.totalToPay);
-        console.log('Pendiente (30%):', cartStore.pending);
-
         const { data } = await storePedido(formData);
-        console.log('Respuesta del servidor:', data);
-
         Swal.fire({
           title: "¡Pedido Finalizado!",
           text: "Tu pedido ha sido realizado con éxito.",

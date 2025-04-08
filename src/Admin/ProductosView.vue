@@ -1148,7 +1148,6 @@ const guardarProducto = async () => {
     if (posicion.value) {
       formData.append('_method', 'PUT');
       const {data} = await updateProducto(posicion.value, formData);
-      console.log(data);
     } else {
       await storeProducto(formData);
     }
@@ -1191,8 +1190,6 @@ const guardarProducto = async () => {
 const mostrarProducto = async (id) => {
   try {
     const { data } = await showProducto(id);
-    console.log('Datos del producto:', data);
-
     formulario.value = {
       nombre: data.dato.nombre,
       precio: data.dato.precio,
@@ -1238,7 +1235,6 @@ const verDetalles = async (id) => {
   try {
     const { data } = await showProducto(id);
     productoSeleccionado.value = data.dato;
-    console.log(productoSeleccionado.value);
     mostrarTodasCaracteristicas.value = false; // Resetear el estado de "Ver más"
     detallesModal.show();
   } catch (error) {
@@ -1291,7 +1287,6 @@ const eliminarImagen = async (index) => {
   if (imagen.id && posicion.value) {
     try {
       await deleteImage(posicion.value, imagen.id);
-      console.log(`Imagen ${imagen.id} eliminada correctamente`);
     } catch (error) {
       console.error('Error al eliminar imagen:', error);
     }

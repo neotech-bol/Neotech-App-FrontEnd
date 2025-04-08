@@ -323,7 +323,6 @@ const listarCatalogo = async () => {
     // Actualizar el estado de caché
     fromCache.value = response.fromCache || false;
     datos.value = response.data.datos;
-    console.log(datos.value);
     // Inicializar los índices de imágenes para cada producto
     response.data.datos.forEach(catalog => {
       catalog.categorias.forEach(categoria => {
@@ -442,9 +441,6 @@ const showNotification = (message, type) => {
   });
 
   bsToast.show();
-
-  // También mantener el log en consola para debugging
-  console.log(`${type}: ${message}`);
 };
 
 const addToCart = (product) => {
