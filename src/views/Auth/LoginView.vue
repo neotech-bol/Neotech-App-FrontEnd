@@ -136,6 +136,7 @@ onMounted(() => {
 
 });
 
+// Funcion para iniciar sesión
 const iniciarSesion = async () => {
   if (!credenciales.value.email || !credenciales.value.password) {
     return;
