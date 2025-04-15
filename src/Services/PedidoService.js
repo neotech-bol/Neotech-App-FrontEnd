@@ -7,6 +7,7 @@ export const indexPedidos = (
     sortField = "created_at", // Campo por el cual se ordenan los resultados
     sortDirection = "desc", // Dirección del ordenamiento (ascendente o descendente)
     page = 1, // Número de página para la paginación
+    catalogoId = null, // ID del catálogo para filtrar pedidos (opcional)
 ) => {
     let url = `${urlBase}pedidos?page=${page}`; // Base de la URL para obtener pedidos
 
@@ -20,12 +21,16 @@ export const indexPedidos = (
         url += `&status=${status}`; // Añadir el estado si no es "todos"
     }
 
+    // Añadir parámetro de filtro por catálogo
+    if (catalogoId) {
+        url += `&catalogo_id=${catalogoId}`; // Añadir el ID del catálogo si se proporciona
+    }
+
     // Añadir parámetros de ordenamiento
     url += `&sort_field=${sortField}&sort_direction=${sortDirection}`; // Añadir el campo y dirección de ordenamiento
 
     return http().get(url); // Realizar la solicitud GET a la URL construida
 }
-
 // Almacenar un nuevo pedido
 export const storePedido = (pedido) => {
     return httpAsset().post(`${urlBase}pedido-nuevo`, pedido); // Realizar una solicitud POST para crear un nuevo pedido
@@ -76,4 +81,23 @@ export const pdfPedidosCatalogo = (catalogoId) => {
 }
 export const excelPedidosCatalogo = (catalogoId) => {
     return httpDownload().get(`${urlBase}pedidos/catalogo/${catalogoId}/excel`); // Realizar una solicitud GET para generar un PDF de pedidos de un catálogo específico
+}
+/**
+ * Genera un PDF con los pedidos en proceso de un catálogo específico
+ * @param {number} catalogoId - ID del catálogo
+ * @param {string} format - Formato de respuesta (binary, base64, url)
+ * @returns {Promise}
+ */
+export const pdfPedidosEnProcesoPorCatalogo = (catalogoId, format = 'binary') => {
+    return httpDownload().get(`${urlBase}pedidos/catalogo/${catalogoId}/en-proceso?format=${format}`);
+}
+
+/**
+ * Genera un PDF con los pedidos completados de un catálogo específico
+ * @param {number} catalogoId - ID del catálogo
+ * @param {string} format - Formato de respuesta (binary, base64, url)
+ * @returns {Promise}
+ */
+export const pdfPedidosCompletadosPorCatalogo = (catalogoId, format = 'binary') => {
+    return httpDownload().get(`${urlBase}pedidos/catalogo/${catalogoId}/completados?format=${format}`);
 }

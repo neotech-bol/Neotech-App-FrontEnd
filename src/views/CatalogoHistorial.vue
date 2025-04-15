@@ -355,7 +355,6 @@ const listarCatalogo = async () => {
       if (!catalogData) {
         throw new Error('No catalog data found in response');
       }
-
       // Assign the catalogo object directly, wrapped in an array to maintain consistency
       datos.value = [catalogData];
     } else {

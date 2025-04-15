@@ -1,6 +1,6 @@
 {
   "name": "neotech-app-frontend",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -27,5 +27,8 @@
     "@vitejs/plugin-vue": "^4.3.4",
     "vite": "^4.3.9",
     "vite-plugin-vue-devtools": "^7.6.8"
+  },
+  "engines": {
+    "node": "18.8.0"
   }
 }
