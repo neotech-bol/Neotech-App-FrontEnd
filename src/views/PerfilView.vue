@@ -187,6 +187,9 @@ const userAuth = async (filtro = null) => {
       text: 'No se pudieron cargar los datos del usuario',
       icon: 'error'
     });
+
+    // Redirigir al usuario a la página de inicio de sesión usando Vue Router
+    router.push('/login');
   } finally {
     cargando.value = false;
   }

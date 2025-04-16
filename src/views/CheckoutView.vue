@@ -411,7 +411,8 @@
                   <div v-if="paymentMethod === 'qr'" class="payment-details">
                     <p>Escanea el siguiente código QR para realizar el pago:</p>
                     <div class="qr-payment-image">
-                      <img src="https://placehold.co/300x300/png?text=QR+Code" alt="QR Code para pago">
+                     <!--  <img src="https://placehold.co/300x300/png?text=QR+Code" alt="QR Code para pago"> -->
+                     <img src="/public/QrDueño/Imagen de WhatsApp 2025-04-16 a las 13.37.56_2fd49104.jpg" alt="QR Code para pago">
                     </div>
                     <div class="voucher-upload">
                       <label for="voucher-file">Subir comprobante de pago (requerido)</label>
@@ -719,7 +720,7 @@ const couponMessage = ref('');
 const couponError = ref(false);
 const cuponForm = ref({ codigo: '' });
 const orderFinalized = ref(false);
-const whatsappNumber = '+59170000000';
+const whatsappNumber = '+59177997694';
 const whatsappLink = computed(() => `https://wa.me/${whatsappNumber}`);
 const showSummary = ref(window.innerWidth > 768);
 const stepsVisible = ref([true, true, true, true]);
@@ -3194,8 +3195,8 @@ input:focus~.input-focus-indicator {
 }
 
 .qr-payment-image img {
-  width: 180px;
-  height: 180px;
+  width: 450px;
+  height: 450px;
   border-radius: 8px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
@@ -4354,8 +4355,8 @@ input:focus~.input-focus-indicator {
   
   /* Optimize QR code display */
   .qr-payment-image img {
-    width: 150px;
-    height: 150px;
+    width: 350px;
+    height: 350px;
   }
 }
 

@@ -65,7 +65,7 @@
             <div class="contact-info">
               <p><i class="fas fa-map-marker-alt" style="color: var(--primary-color);"></i> Avenida América y
                 Libertador, Zona Cala Cala Cochabamba, Bolivia.</p>
-              <p><i class="fas fa-phone-alt" style="color: var(--primary-color);"></i> +591 759-01415</p>
+              <p><i class="fas fa-phone-alt" style="color: var(--primary-color);"></i> +591 77997694</p>
               <p><i class="fas fa-envelope" style="color: var(--primary-color);"></i> contacto@neotechbo.com</p>
             </div>
             <div class="social-links">
