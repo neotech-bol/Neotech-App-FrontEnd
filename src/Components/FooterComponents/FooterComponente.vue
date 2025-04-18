@@ -7,8 +7,7 @@
           <img src="/logo/Logo Neofetch PNG.png" alt="Neo Tech Bol" />
         </div>
         <p class="description">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque molestie eu dolor at eleifend. Lorem
-          ipsum dolor sit amet, consectetur adipiscing elit.
+          Fundada en 2019 por Jaime Jaldín Ninavia, ofrece productos de calidad internacional a los bolivianos. Nos especializamos en la importación de bienes por ciclos y contamos con más de 2,400 clientes satisfechos. Operamos principalmente de forma virtual, con atención personalizada en Cochabamba.
         </p>
       </div>
 
@@ -21,7 +20,7 @@
         <transition name="slide">
           <ul v-show="categoriasOpen || !isMobile" class="links-list">
             <li v-for="categoria in categorias" :key="categoria.id">
-              <a href="#" @click.prevent="irCategoria(categoria.id)" class="footer-link">
+              <a href="#" @click.prevent="irCategoria(categoria.id, categoria.nombre)" class="footer-link">
                 <span class="link-text">{{ categoria.nombre }}</span>
               </a>
             </li>
@@ -110,6 +109,7 @@ import { categoriasActivesID } from '@/Services/CategoriaService';
 import { useRouter, useRoute } from 'vue-router';
 import { useUserStore } from '@/stores/userAuht'; // Asegúrate de tener este store
 import { logout } from '@/Services/AuthService'; // Importa la función de logout
+import { generarSlug } from '@/Utils/string-utils';
 
 // Router y store
 const router = useRouter();
@@ -275,8 +275,10 @@ const listarCategorias = async () => {
   }
 };
 
-const irCategoria = (idCategoria) => {
-  router.push({ path: `/categoria/${idCategoria}` });
+const irCategoria = (idCategoria, nameCategoria) => {
+  const slug = generarSlug(nameCategoria);
+  // Navegar a la ruta de la categoría
+  router.push({ path: `/categoria/${idCategoria}/${slug}` });
   // Hacer scroll al top después de navegar a la categoría
   nextTick(() => {
     scrollToTop();

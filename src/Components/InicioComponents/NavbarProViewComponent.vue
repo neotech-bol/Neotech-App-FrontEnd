@@ -180,7 +180,7 @@
           <transition name="accordion">
             <ul v-if="activeSections.activos" class="category-list">
               <li v-for="catalogo in catalogosActivos" :key="catalogo.id">
-                <a href="#" @click.prevent="viewCatalogoActivo(catalogo.id)">
+                <a href="#" @click.prevent="viewCatalogoActivo(catalogo.id, catalogo.nombre)">
                   <i class="fas fa-book-open"></i>
                   {{ catalogo.nombre }}
                 </a>
@@ -204,7 +204,7 @@
           <transition name="accordion">
             <ul v-if="activeSections.anteriores" class="category-list">
               <li v-for="catalogo in catalogosAnteriores" :key="catalogo.id">
-                <a href="#" @click.prevent="viewCatalogoHistorial(catalogo.id)">
+                <a href="#" @click.prevent="viewCatalogoHistorial(catalogo.id, catalogo.nombre)">
                   <i class="fas fa-history"></i>
                   {{ catalogo.nombre }}
                 </a>
@@ -269,6 +269,7 @@ import { useThemeStoreDark } from '@/stores/themeDarkStore';
 import ThemePageWrapper from '@/components/ThemePageWrapper.vue';
 import { searchProductoCategoriaCatalogo } from '@/Services/SearchService';
 import GlobalSearch from '../GlobalSearch.vue';
+import { generarSlug } from '@/Utils/string-utils';
 const router = useRouter();
 const cartStore = useCartStore();
 const searchQuery = ref('');
@@ -445,13 +446,15 @@ const listarCatalogosActivos = async () => {
   }
 };
 
-const viewCatalogoHistorial = (idCatalogoHistorial) => {
-  router.push({ path: `/catalogo-historial/${idCatalogoHistorial}` });
+const viewCatalogoHistorial = (idCatalogoHistorial, idCatalogoHistorialName) => {
+  const slug = generarSlug(idCatalogoHistorialName);
+  router.push({ path: `/catalogo-historial/${idCatalogoHistorial}/${slug}` });
   toggleSidebar();
 };
 
-const viewCatalogoActivo = (idCatalogo) => {
-  router.push({ path: `/catalogo-activo/${idCatalogo}` });
+const viewCatalogoActivo = (idCatalogo, nameCategoria) => {
+  const slug = generarSlug(nameCategoria);
+  router.push({ path: `/catalogo-activo/${idCatalogo}/${slug}` });
   toggleSidebar();
 };
 

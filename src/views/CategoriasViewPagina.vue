@@ -51,7 +51,7 @@
         :style="{ '--index': index }">
         <!-- Banner de ancho completo -->
         <div class="category-banner-container">
-          <div class="category-banner" @click="viewAllProducts(categoria.id)">
+          <div class="category-banner" @click="viewAllProducts(categoria.id, categoria.nombre)">
             <img :src="categoria.banner" :alt="categoria.nombre" loading="lazy" />
             <div class="banner-overlay">
               <div class="banner-content">
@@ -124,7 +124,7 @@
                     aria-label="Agregar al carrito" :class="{ 'adding': addingToCart === product.id }">
                     <i class="fas" :class="addingToCart === product.id ? 'fa-spinner fa-spin' : 'fa-shopping-cart'"></i>
                   </button>
-                  <button @click.stop="viewProductDetails(product.id)" class="action-button view-btn"
+                  <button @click.stop="viewProductDetails(product.id, product.nombre)" class="action-button view-btn"
                     aria-label="Ver producto">
                     <i class="fas fa-eye"></i>
                   </button>
@@ -270,6 +270,7 @@ import { indexCategoriasConProductos } from '@/Services/CategoriaService';
 import { useCartStore } from '@/stores/cart';
 import { useRouter } from 'vue-router';
 import { storeFavorite } from '@/Services/FavoriteService';
+import { generarSlug } from '@/Utils/string-utils';
 
 const router = useRouter();
 const cartStore = useCartStore();
@@ -368,12 +369,15 @@ const listarCategorias = async (page = 1) => {
   }
 };
 
-const viewProductDetails = (productId) => {
-  router.push({ path: `/producto/${productId}` });
+const viewProductDetails = (productId, productName) => {
+  const slug = generarSlug(productName)
+  router.push({ path: `/producto/${productId}/${slug}` });
 };
 
-const viewAllProducts = (categoryId) => {
-  router.push({ path: `/categoria/${categoryId}` });
+const viewAllProducts = (categoryId, categoryName) => {
+  console.log(categoryId, categoryName);
+  const slug = generarSlug(categoryName)
+  router.push({ path: `/categoria/${categoryId}/${slug}` });
 };
 
 const addToCart = async (product) => {

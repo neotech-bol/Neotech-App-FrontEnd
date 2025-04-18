@@ -70,7 +70,7 @@ const router = createRouter({
           }
         },
         {
-          path: "/producto/:idProducto?",
+          path: "/producto/:idProducto/:slug?",
           name: 'producto',
           component: Producto,
           meta: {
@@ -142,7 +142,7 @@ const router = createRouter({
           }
         },
         {
-          path: 'catalogo-historial/:idCatalogoHistorial?',
+          path: 'catalogo-historial/:idCatalogoHistorial?/:slug?',
           name: 'catalogo-historial',
           component: CatalogoHistorial,
           meta: {
@@ -151,7 +151,7 @@ const router = createRouter({
           }
         },
         {
-          path: 'catalogo-activo/:idCatalogoActivo?',
+          path: 'catalogo-activo/:idCatalogoActivo?/:slug?',
           name: 'catalogo-activo',
           component: CatalogoActivoView,
           meta: {
@@ -160,14 +160,13 @@ const router = createRouter({
           }
         },
         {
-          path: 'categoria/:idCategoria?',
+          path: 'categoria/:idCategoria?/:slug?',
           name: 'categoriaDetail',
           component: CategoriaIdView,
-          props: true, // Permite pasar el idCategoria como prop al componente
           meta: {
-            title: (route) => `Categoria ${route.params.idCategoria} | Neotech-Bol Bolivia`,
-            description: (route) => `Revisa el catálogo de tecnología y electrónica para la categoría ${route.params.idCategoria} en Neotech-Bol Bolivia.`
-          },
+            title: 'Categoria | Neotech-Bol Bolivia',
+            description: 'Revisa el catálogo de tecnología y electrónica para la categoría en Neotech-Bol Bolivia.'
+          }
         }
       ],
     },

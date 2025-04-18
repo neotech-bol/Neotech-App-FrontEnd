@@ -56,7 +56,7 @@
                   :class="{ 'adding': addingToCart === product.id }">
                   <i class="fas" :class="addingToCart === product.id ? 'fa-spinner fa-spin' : 'fa-shopping-cart'"></i>
                 </button>
-                <button class="action-button view-btn" @click.stop="viewProduct(product.id)" aria-label="Ver producto">
+                <button class="action-button view-btn" @click.stop="viewProduct(product.id, product.nombre)" aria-label="Ver producto">
                   <i class="fas fa-eye"></i>
                 </button>
                 <button class="action-button fav-btn" @click.stop="addToFavorites(product.id)"
@@ -160,6 +160,7 @@ import { useCartStore } from '@/stores/cart';
 import { recientesProductos } from '@/Services/ProductoService';
 import { storeFavorite } from '@/Services/FavoriteService';
 import bootstrapBundleMin from 'bootstrap/dist/js/bootstrap.bundle.min';
+import { generarSlug } from '@/Utils/string-utils';
 
 const router = useRouter();
 const cartStore = useCartStore();
@@ -249,9 +250,14 @@ const addToCart = async (product) => {
   }
 };
 
-const viewProduct = (id) => {
-  router.push(`/producto/${id}`);
+// Modificar la función viewProduct para incluir el slug
+const viewProduct = (id, slugName) => {
+    // Generar el slug a partir del nombre del producto
+    const slug = generarSlug(slugName);
+    // Navegar a la ruta con el ID y el slug
+    router.push(`/producto/${id}/${slug}`);
 };
+
 
 const addToFavorites = async (productId) => {
   try {

@@ -36,7 +36,7 @@
                     </p>
                     <p v-else>No hay descripción disponible.</p>
                   </div>
-                  <button class="banner-cta" @click="irCategoria(categoria.id)">
+                  <button class="banner-cta" @click="irCategoria(categoria.id, categoria.nombre)">
                     <span>Ver Colección</span>
                     <i class="fas fa-arrow-right"></i>
                   </button>
@@ -111,7 +111,7 @@
                       <i class="fas"
                         :class="addingToCart === product.id ? 'fa-spinner fa-spin' : 'fa-shopping-cart'"></i>
                     </button>
-                    <button class="action-button view-btn" @click.stop="verProducto(product.id)"
+                    <button class="action-button view-btn" @click.stop="verProducto(product.id, product.nombre)"
                       aria-label="Ver producto">
                       <i class="fas fa-eye"></i>
                     </button>
@@ -187,14 +187,12 @@
                       <span class="summary-label">Estándar:</span>
                       <div class="summary-content">
                         <span class="summary-price">{{ formatPrice(product.precio_preventa) }}</span>
-                        <!-- <span class="summary-quantity">{{ product.cantidad_minima }}+ uds</span> -->
                       </div>
                     </div>
                     <div class="summary-item special" v-if="product.precio_preventa">
                       <span class="summary-label">Especial:</span>
                       <div class="summary-content">
                         <span class="summary-price">{{ formatPrice(product.precio) }}</span>
-                     <!--    <span class="summary-quantity">{{ product.cantidad_minima_preventa }}-{{ product.cantidad_maxima_preventa }} uds</span> -->
                       </div>
                     </div>
                   </div>
@@ -229,6 +227,7 @@ import { useCartStore } from '@/stores/cart';
 import { useRouter } from 'vue-router';
 import { storeFavorite } from '@/Services/FavoriteService';
 import bootstrapBundleMin from 'bootstrap/dist/js/bootstrap.bundle.min';
+import { generarSlug } from '@/Utils/string-utils';
 
 const cartStore = useCartStore();
 const datos = ref([]);
@@ -311,8 +310,11 @@ onMounted(() => {
   });
 });
 
-const verProducto = param => {
-  router.push({ path: `/producto/${param}` });
+const verProducto = (id, slugName) => {
+    // Generar el slug a partir del nombre del producto
+    const slug = generarSlug(slugName);
+    // Navegar a la ruta con el ID y el slug
+    router.push(`/producto/${id}/${slug}`);
 };
 
 const listarCatalogo = async () => {
@@ -500,36 +502,46 @@ const formatPrice = (price) => {
     minimumFractionDigits: 2
   }).format(price);
 };
-const irCategoria = (idCategoria) => {
-  router.push({ path: `/categoria/${idCategoria}` });
+const irCategoria = (idCategoria, nameCategoria) => {
+  const slug = generarSlug(nameCategoria);
+  router.push({ path: `/categoria/${idCategoria}/${slug}` });
 }
 </script>
 
 <style scoped>
 /* Base Container */
 .catalog-container {
+  width: 100%;
   max-width: 1440px;
   margin: 0 auto;
-  padding: 1.5rem;
+  padding: 0;
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
-/* Container para mantener proporciones consistentes */
+@media (min-width: 1440px) {
+  .catalog-container {
+    padding: 0 1rem;
+  }
+}
+
+/* Category Banner Container */
 .category-banner-container {
-  margin-bottom: 2rem;
+  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
   width: 100%;
   position: relative;
+  overflow: hidden;
 }
 
 /* Banner principal con efectos mejorados */
 .category-banner {
   position: relative;
-  height: clamp(250px, 40vh, 500px);
+  height: clamp(200px, 45vw, 600px);
   cursor: pointer;
   overflow: hidden;
   border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  will-change: transform, box-shadow;
 }
 
 .category-banner:hover {
@@ -540,36 +552,41 @@ const irCategoria = (idCategoria) => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+  transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+  will-change: transform;
+}
+
+.category-banner:hover img {
+  transform: scale(1.05);
 }
 
 /* Overlay con gradiente mejorado y animaciones */
 .banner-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right,
-      rgba(0, 0, 0, 0.8) 0%,
-      rgba(0, 0, 0, 0.6) 30%,
-      rgba(0, 0, 0, 0.3) 60%,
-      rgba(0, 0, 0, 0) 100%);
+  background: linear-gradient(90deg, 
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.6) 30%,
+    rgba(0, 0, 0, 0.3) 60%,
+    rgba(0, 0, 0, 0) 100%);
   display: flex;
   align-items: center;
   color: #fff;
-  padding: 2rem;
+  padding: clamp(1rem, 2vw, 2.5rem);
   transition: background 0.3s ease;
 }
 
 .category-banner:hover .banner-overlay {
-  background: linear-gradient(to right,
-      rgba(0, 0, 0, 0.85) 0%,
-      rgba(0, 0, 0, 0.65) 30%,
-      rgba(0, 0, 0, 0.35) 60%,
-      rgba(0, 0, 0, 0) 100%);
+  background: linear-gradient(90deg, 
+    rgba(0, 0, 0, 0.85) 0%,
+    rgba(0, 0, 0, 0.65) 30%,
+    rgba(0, 0, 0, 0.35) 60%,
+    rgba(0, 0, 0, 0) 100%);
 }
 
 /* Contenido del banner con animaciones */
 .banner-content {
-  max-width: 600px;
+  max-width: min(90%, 600px);
   transform: translateY(0);
   opacity: 1;
   transition: transform 0.5s ease, opacity 0.5s ease;
@@ -580,12 +597,13 @@ const irCategoria = (idCategoria) => {
 }
 
 .banner-title {
-  font-size: clamp(1.75rem, 5vw, 3.5rem);
+  font-size: clamp(1.2rem, 3vw, 2.5rem);
   font-weight: 800;
-  margin-bottom: 1rem;
+  margin-bottom: clamp(0.75rem, 2vw, 1.5rem);
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   position: relative;
   display: inline-block;
+  margin-left: clamp(1rem, 5vw, 3rem);
 }
 
 .banner-title::after {
@@ -607,12 +625,13 @@ const irCategoria = (idCategoria) => {
 
 .banner-description-container {
   position: relative;
+  margin-left: clamp(1rem, 5vw, 3rem);
 }
 
 .banner-description {
-  font-size: clamp(1rem, 2vw, 1.25rem);
-  max-width: 60ch;
-  margin-bottom: 1.5rem;
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  max-width: min(90%, 60ch);
+  margin-bottom: clamp(0.75rem, 2vw, 1.5rem);
   line-height: 1.6;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   opacity: 0.9;
@@ -639,8 +658,8 @@ const irCategoria = (idCategoria) => {
 
 /* Botón CTA mejorado */
 .banner-cta {
-  padding: 0.75rem 1.5rem;
-  background: #3498db;
+  padding: clamp(0.5rem, 1vw, 0.75rem) clamp(1rem, 1.5vw, 1.5rem);
+  background: var(--primary-color, #3498db);
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -655,6 +674,7 @@ const irCategoria = (idCategoria) => {
   overflow: hidden;
   z-index: 1;
   box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+  margin-left: clamp(1rem, 5vw, 3rem);
 }
 
 .banner-cta::before {
@@ -664,7 +684,7 @@ const irCategoria = (idCategoria) => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: #2980b9;
+  background: var(--primary-hover-color, #2980b9);
   transform: translateX(-100%);
   transition: transform 0.3s ease;
   z-index: -1;
@@ -705,13 +725,8 @@ const irCategoria = (idCategoria) => {
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .modal-content {
@@ -732,7 +747,6 @@ const irCategoria = (idCategoria) => {
     transform: translateY(30px);
     opacity: 0;
   }
-
   to {
     transform: translateY(0);
     opacity: 1;
@@ -805,17 +819,17 @@ const irCategoria = (idCategoria) => {
 }
 
 .modal-btn.primary {
-  background-color: #3498db;
+  background-color: var(--primary-color, #3498db);
   color: white;
-  border-color: #3498db;
+  border-color: var(--primary-color, #3498db);
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
 .modal-btn.primary:hover {
-  background-color: #2980b9;
-  border-color: #2980b9;
+  background-color: var(--primary-hover-color, #2980b9);
+  border-color: var(--primary-hover-color, #2980b9);
 }
 
 .modal-btn.primary i {
@@ -826,26 +840,21 @@ const irCategoria = (idCategoria) => {
   transform: translateX(3px);
 }
 
-/* Clase para prevenir scroll del body cuando el modal está abierto */
-:global(.modal-open) {
-  overflow: hidden;
-}
-
 /* Category Header */
 .category-header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
 }
 
 .category-header h2 {
-  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
   font-weight: 700;
-  color: var(--text-color);
+  color: var(--text-color, #333);
   margin-bottom: 0.5rem;
 }
 
 .text-accent {
-  color: var(--primary-color);
+  color: var(--primary-color, #3498db);
   position: relative;
 }
 
@@ -856,7 +865,7 @@ const irCategoria = (idCategoria) => {
   left: 0;
   width: 100%;
   height: 2px;
-  background-color: var(--primary-color);
+  background-color: var(--primary-color, #3498db);
   transform: scaleX(0);
   transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   transform-origin: left;
@@ -873,20 +882,20 @@ const irCategoria = (idCategoria) => {
   margin: 0 auto;
 }
 
-/* Products Grid - Estilos actualizados del componente de productos recientes */
+/* Products Grid */
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: clamp(0.75rem, 1.5vw, 1.5rem);
+  margin-bottom: clamp(2rem, 4vw, 3rem);
 }
 
 /* Product Card */
 .product-card {
-  background: var(--background-color);
+  background: var(--background-color, white);
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 3px 6px var(--shadow-color);
+  box-shadow: 0 3px 6px var(--shadow-color, rgba(0, 0, 0, 0.1));
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
   opacity: 0;
@@ -896,6 +905,7 @@ const irCategoria = (idCategoria) => {
   height: 100%;
   display: flex;
   flex-direction: column;
+  will-change: transform, opacity;
 }
 
 @keyframes fadeInUp {
@@ -903,7 +913,6 @@ const irCategoria = (idCategoria) => {
     opacity: 0;
     transform: translateY(20px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -939,6 +948,7 @@ const irCategoria = (idCategoria) => {
   height: 100%;
   object-fit: contain;
   transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+  will-change: transform;
 }
 
 .product-card:hover .product-image img {
@@ -951,8 +961,8 @@ const irCategoria = (idCategoria) => {
   top: 50%;
   transform: translateY(-50%);
   background: rgba(255, 255, 255, 0.9);
-  width: 30px;
-  height: 30px;
+  width: clamp(28px, 3vw, 36px);
+  height: clamp(28px, 3vw, 36px);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -964,6 +974,7 @@ const irCategoria = (idCategoria) => {
   cursor: pointer;
   color: #2d3748;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: clamp(0.7rem, 1vw, 0.9rem);
 }
 
 .nav-button.prev {
@@ -981,7 +992,7 @@ const irCategoria = (idCategoria) => {
 .nav-button:hover {
   background-color: white;
   transform: translateY(-50%) scale(1.1);
-  color: #3498db;
+  color: var(--primary-color, #3498db);
 }
 
 /* Badges */
@@ -1014,17 +1025,9 @@ const irCategoria = (idCategoria) => {
 }
 
 @keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-
-  50% {
-    transform: scale(1.05);
-  }
-
-  100% {
-    transform: scale(1);
-  }
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
 }
 
 /* Product Actions */
@@ -1051,8 +1054,8 @@ const irCategoria = (idCategoria) => {
 .action-button {
   background-color: rgba(255, 255, 255, 0.9);
   border: none;
-  width: 30px;
-  height: 30px;
+  width: clamp(28px, 2.5vw, 35px);
+  height: clamp(28px, 2.5vw, 35px);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1062,7 +1065,7 @@ const irCategoria = (idCategoria) => {
   backdrop-filter: blur(4px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   color: #2d3748;
-  font-size: 0.75rem;
+  font-size: clamp(0.7rem, 1vw, 0.85rem);
 }
 
 .action-button:hover {
@@ -1070,7 +1073,7 @@ const irCategoria = (idCategoria) => {
 }
 
 .cart-btn:hover {
-  background-color: #3498db;
+  background-color: var(--primary-color, #3498db);
   color: white;
 }
 
@@ -1099,7 +1102,7 @@ const irCategoria = (idCategoria) => {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  background-color: var(--background-color);
+  background-color: var(--background-color, white);
 }
 
 .category {
@@ -1117,7 +1120,7 @@ const irCategoria = (idCategoria) => {
 .product-name {
   font-size: 0.875rem;
   font-weight: 700;
-  color: var(--text-color);
+  color: var(--text-color, #333);
   line-height: 1.4;
   transition: color 0.3s ease;
   display: -webkit-box;
@@ -1130,7 +1133,7 @@ const irCategoria = (idCategoria) => {
 }
 
 .product-card:hover .product-name {
-  color: #3498db;
+  color: var(--primary-color, #3498db);
 }
 
 /* NUEVO DISEÑO DE PRECIOS */
@@ -1335,13 +1338,8 @@ const irCategoria = (idCategoria) => {
 }
 
 @keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 /* Error Message */
@@ -1452,7 +1450,7 @@ const irCategoria = (idCategoria) => {
   opacity: 0;
 }
 
-/* Responsive Styles */
+/* Responsive Styles - Enhanced to match carousel */
 @media (min-width: 1200px) {
   .products-grid {
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -1493,6 +1491,21 @@ const irCategoria = (idCategoria) => {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 1.25rem;
   }
+  
+  .category-banner {
+    height: clamp(200px, 50vw, 500px);
+  }
+  
+  .banner-title {
+    font-size: clamp(1.1rem, 2.8vw, 2.2rem);
+  }
+  
+  .banner-overlay {
+    background: linear-gradient(90deg, 
+      rgba(0, 0, 0, 0.65) 0%,
+      rgba(0, 0, 0, 0.3) 70%, 
+      rgba(0, 0, 0, 0.1) 100%);
+  }
 }
 
 @media (min-width: 768px) and (max-width: 991px) {
@@ -1510,43 +1523,32 @@ const irCategoria = (idCategoria) => {
   }
 
   .category-banner {
-    height: clamp(200px, 50vh, 300px);
+    height: clamp(180px, 50vw, 350px);
   }
 
   .banner-overlay {
-    background: linear-gradient(to top,
-        rgba(0, 0, 0, 0.8) 0%,
-        rgba(0, 0, 0, 0.6) 40%,
-        rgba(0, 0, 0, 0.3) 70%,
-        rgba(0, 0, 0, 0) 100%);
-    align-items: flex-end;
-    padding: 1.5rem;
-  }
-
-  .category-banner:hover .banner-overlay {
-    background: linear-gradient(to top,
-        rgba(0, 0, 0, 0.85) 0%,
-        rgba(0, 0, 0, 0.65) 40%,
-        rgba(0, 0, 0, 0.35) 70%,
-        rgba(0, 0, 0, 0) 100%);
-  }
-
-  .banner-content {
-    max-width: 100%;
+    background: linear-gradient(90deg,
+        rgba(0, 0, 0, 0.7) 0%,
+        rgba(0, 0, 0, 0.4) 60%,
+        rgba(0, 0, 0, 0.2) 100%);
+    padding: clamp(0.75rem, 3vw, 1.5rem);
   }
 
   .banner-title {
-    font-size: clamp(1.5rem, 7vw, 2.5rem);
+    font-size: clamp(1rem, 2.5vw, 1.8rem);
+    margin-bottom: clamp(0.5rem, 1.5vw, 1rem);
+    margin-left: clamp(0.5rem, 3vw, 1.5rem);
   }
 
   .banner-description {
-    font-size: clamp(0.875rem, 4vw, 1rem);
+    font-size: clamp(0.875rem, 1.8vw, 1rem);
     margin-bottom: 1rem;
   }
 
   .banner-cta {
     padding: 0.6rem 1.25rem;
     font-size: 0.875rem;
+    margin-left: clamp(0.5rem, 3vw, 1.5rem);
   }
 
   .modal-content {
@@ -1576,26 +1578,23 @@ const irCategoria = (idCategoria) => {
     height: 28px;
   }
   
-  .price-details.expanded {
-    max-height: 350px;
-  }
-}
-
-@media (max-width: 480px) {
   .category-banner {
-    height: 180px;
-    border-radius: 8px;
+    height: clamp(160px, 55vw, 280px);
   }
-
+  
   .banner-overlay {
-    padding: 1rem;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(90deg,
+        rgba(0, 0, 0, 0.75) 0%,
+        rgba(0, 0, 0, 0.4) 100%);
   }
-
+  
   .banner-title {
-    font-size: 1.25rem;
+    font-size: clamp(0.9rem, 5vw, 1.4rem);
     margin-bottom: 0.5rem;
+    margin-left: 0.5rem;
   }
-
+  
   .banner-description {
     font-size: 0.8rem;
     margin-bottom: 0.75rem;
@@ -1603,11 +1602,62 @@ const irCategoria = (idCategoria) => {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    margin-left: 0.5rem;
+  }
+  
+  .banner-cta {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+    margin-left: 0.5rem;
+  }
+  
+  .price-details.expanded {
+    max-height: 350px;
+  }
+}
+
+@media (max-width: 575px) {
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+  
+  .category-banner {
+    height: clamp(140px, 60vw, 240px);
+    border-radius: 8px;
+  }
+
+  .banner-overlay {
+    padding: 0.5rem;
+    background: linear-gradient(90deg,
+        rgba(0, 0, 0, 0.8) 0%,
+        rgba(0, 0, 0, 0.5) 100%);
+  }
+
+  .banner-title {
+    font-size: clamp(0.85rem, 4.5vw, 1.2rem);
+    margin-bottom: 0.4rem;
+    text-align: left;
+    margin-left: 0.3rem;
+  }
+
+  .banner-description-container {
+    margin-left: 0.3rem;
+  }
+
+  .banner-description {
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+    -webkit-line-clamp: 2;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .banner-cta {
-    padding: 0.5rem 1rem;
+    padding: 0.35rem 0.7rem;
     font-size: 0.75rem;
+    margin-left: 0.3rem;
   }
 
   .modal-header h3 {
@@ -1647,6 +1697,83 @@ const irCategoria = (idCategoria) => {
   
   .price-details.expanded {
     max-height: 400px;
+  }
+  
+  .product-name {
+    font-size: 0.8rem;
+    height: 2.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .category-banner {
+    height: clamp(120px, 55vw, 200px);
+  }
+  
+  .banner-title {
+    font-size: clamp(0.8rem, 4vw, 1.1rem);
+    margin-bottom: 0.3rem;
+  }
+  
+  .banner-description {
+    font-size: 0.75rem;
+    -webkit-line-clamp: 1;
+    margin-bottom: 0.4rem;
+  }
+  
+  .banner-cta {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.7rem;
+  }
+  
+  .product-actions-bottom {
+    padding: 0.3rem;
+    gap: 0.3rem;
+  }
+  
+  .action-button {
+    width: 26px;
+    height: 26px;
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.4rem;
+  }
+  
+  .category-banner {
+    height: clamp(100px, 50vw, 180px);
+  }
+
+  .banner-title {
+    font-size: 0.75rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .banner-description {
+    display: none;
+  }
+
+  .banner-cta {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.65rem;
+  }
+  
+  .indicator {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .product-name {
+    font-size: 0.7rem;
+    height: 2rem;
+  }
+  
+  .price-value, .summary-price {
+    font-size: 0.7rem;
   }
 }
 
@@ -1699,7 +1826,6 @@ const irCategoria = (idCategoria) => {
 
 /* Accessibility Improvements */
 @media (prefers-reduced-motion: reduce) {
-
   .product-card,
   .category-banner,
   .modal-content,
@@ -1728,7 +1854,6 @@ const irCategoria = (idCategoria) => {
 
   .retry-button:hover,
   .action-button:hover,
-  .refresh-button:hover,
   .modal-btn:hover {
     transform: none;
   }
@@ -1755,6 +1880,34 @@ const irCategoria = (idCategoria) => {
   
   .price-details {
     transition: none;
+  }
+}
+
+/* Print styles */
+@media print {
+  .category-banner {
+    height: auto;
+    box-shadow: none;
+  }
+  
+  .banner-overlay {
+    position: relative;
+    background: none;
+    color: black;
+  }
+  
+  .banner-title {
+    color: black;
+    text-shadow: none;
+  }
+  
+  .banner-cta {
+    display: none;
+  }
+  
+  .product-actions-bottom,
+  .nav-button {
+    display: none;
   }
 }
 </style>

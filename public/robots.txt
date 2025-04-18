@@ -1,0 +1,7 @@
+
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://neotechbol.com/sitemap.xml
+Sitemap: https://neotechbol.com/image-sitemap.xml

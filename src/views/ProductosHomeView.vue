@@ -116,7 +116,7 @@
                   :class="{ 'adding': addingToCart === product.id }">
                   <i class="fas" :class="addingToCart === product.id ? 'fa-spinner fa-spin' : 'fa-shopping-cart'"></i>
                 </button>
-                <button class="action-button view-btn" @click.stop="viewProductDetails(product.id)"
+                <button class="action-button view-btn" @click.stop="viewProductDetails(product.id, product.nombre)"
                   aria-label="Ver producto">
                   <i class="fas fa-eye"></i>
                 </button>
@@ -257,6 +257,7 @@ import { useCartStore } from '@/stores/cart';
 import { useRouter } from 'vue-router';
 import { storeFavorite } from '@/Services/FavoriteService';
 import { indexCatalogosactives } from '@/Services/CatalogoService';
+import { generarSlug } from '@/Utils/string-utils';
 const router = useRouter();
 const cartStore = useCartStore();
 
@@ -383,8 +384,9 @@ const listarCatalogosActive = async () => {
 }
 
 // Navegación
-const viewProductDetails = (productId) => {
-  router.push({ path: `/producto/${productId}` });
+const viewProductDetails = (productId, productName) => {
+  const slug = generarSlug(productName);
+  router.push({ path: `/producto/${productId}/${slug}` });
 };
 
 // Carrito

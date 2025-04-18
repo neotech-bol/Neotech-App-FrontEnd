@@ -40,8 +40,8 @@ export const detalleProducto = (idProducto) => {
     return httpNotToken().get(`${urlBase}producto-ver/${idProducto}`);
 }
 
-export const recientesProductos = () => {
-    return httpNotToken().get(`${urlBase}productos-recientes`);
+export const recientesProductos = async () => {
+    return await httpNotToken().get(`${urlBase}productos-recientes`);
 }
 
 

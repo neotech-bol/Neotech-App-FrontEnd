@@ -584,6 +584,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { detalleProducto } from '@/Services/ProductoService';
 import { useCartStore } from '@/stores/cart';
 import { indexRatings, storeRating, getProductRatingStats } from '@/Services/RatingService';
+import { generarSlug } from '@/Utils/string-utils';
 
 const dato = ref({});
 const router = useRouter();
@@ -1326,13 +1327,15 @@ const navegarAProducto = async (productId) => {
   try {
     // Primer enfoque: Forzar recarga del componente usando una clave
     // Esto se hace navegando con replace y añadiendo una marca de tiempo
-    await router.replace({
-      path: `/producto/${productId}`,
-      query: { _t: Date.now() } // Añadir marca de tiempo para forzar recarga
-    });
+
 
     // Segundo enfoque: Recargar manualmente los datos después de la navegación
     const { data } = await detalleProducto(productId);
+    const productoSlug = generarSlug(data.dato.nombre);
+    await router.replace({
+      path: `/producto/${productId}/${productoSlug}`,
+      query: { _t: Date.now() } // Añadir marca de tiempo para forzar recarga
+    });
     dato.value = data.dato;
     productosSimilares.value = data.productos_similares || [];
 
