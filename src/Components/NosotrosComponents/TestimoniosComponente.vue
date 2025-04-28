@@ -142,9 +142,9 @@ const listarTestimoniosAprobados = async () => {
     const datosEjemplo = [
       {
         id: 2,
-        nombre_completo: 'diego',
-        ocupacion: 'Desarrollador web',
-        experiencia: 'xd',
+        nombre_completo: 'Isaac Parisaca Huallpa',
+        ocupacion: 'Desarrollador Full Stack Developer',
+        experiencia: 'Me gusta mucho la forma de trabajar de la empresa, son muy profesionales y siempre están dispuestos a ayudar.',
         calificacion: 5,
         estado: 'aprobado',
         fecha_publicacion: null,
@@ -157,24 +157,18 @@ const listarTestimoniosAprobados = async () => {
     
     // Intentar cargar desde la API
     const response = await indexTestimoniosActivos();
-    console.log('Respuesta completa:', response);
-    
     // Verificar diferentes estructuras de datos posibles
     if (Array.isArray(response)) {
       testimonials.value = response;
-      console.log('Testimonios cargados (array):', testimonials.value);
     } 
     else if (response && response.data) {
       if (Array.isArray(response.data)) {
         testimonials.value = response.data;
-        console.log('Testimonios cargados (data array):', testimonials.value);
       }
       else if (response.data.datos && Array.isArray(response.data.datos)) {
         testimonials.value = response.data.datos;
-        console.log('Testimonios cargados (data.datos):', testimonials.value);
       }
       else {
-        console.error('Estructura de datos inesperada, usando datos de ejemplo:', response);
         testimonials.value = datosEjemplo;
       }
     } 
@@ -185,12 +179,8 @@ const listarTestimoniosAprobados = async () => {
     
     // Si después de todo no hay testimonios, usar los datos de ejemplo
     if (!testimonials.value || testimonials.value.length === 0) {
-      console.log('No se encontraron testimonios, usando datos de ejemplo');
       testimonials.value = datosEjemplo;
     }
-    
-    console.log('Testimonios finales:', testimonials.value);
-    
     // Convertir el Proxy a un array normal para evitar problemas de reactividad
     testimoniosArray.value = Array.isArray(testimonials.value) ? [...testimonials.value] : [testimonials.value];
     
@@ -215,7 +205,6 @@ const listarTestimoniosAprobados = async () => {
     // Filtrar elementos nulos o indefinidos
     testimoniosArray.value = testimoniosArray.value.filter(item => item && typeof item === 'object');
     
-    console.log('Array de testimonios para renderizar:', testimoniosArray.value);
   } catch (error) {
     console.error('Error al cargar testimonios activos:', error);
     
@@ -392,7 +381,6 @@ const submitTestimonial = async () => {
     formData.append('estado', 'pendiente');
     
     const response = await storeTestimonio(formData);
-    console.log('Testimonio enviado:', response);
     
     // Mostrar mensaje de éxito con SweetAlert2
     Swal.fire({

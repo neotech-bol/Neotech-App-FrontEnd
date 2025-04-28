@@ -17,7 +17,7 @@ const themes = {
   dark: {
     primary: '#3B82F6',
     hover: '#2563eb',
-    background: '#121212',
+    background: '#000000',
     text: '#f5f5f5',
     surface: '#242424',
     border: '#4b5563'

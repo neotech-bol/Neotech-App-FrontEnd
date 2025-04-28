@@ -3,7 +3,7 @@
     <div class="about-grid">
       <!-- Enhanced Image Gallery with Touch Support -->
       <div class="image-gallery">
-        <swiper-container 
+<!--         <swiper-container 
           class="mobile-swiper"
           :slides-per-view="1"
           :space-between="10"
@@ -21,7 +21,7 @@
               </div>
             </div>
           </swiper-slide>
-        </swiper-container>
+        </swiper-container> -->
 
         <!-- Desktop Gallery -->
         <div class="desktop-gallery">
@@ -86,19 +86,19 @@ const isMobile = ref(false);
 // Enhanced data for images with captions instead of size notes
 const images = ref([
   {
-    src: "/imagenes/working-business-project.jpg",
+    src: "/public/imagenes/working-business-project-qjpx3orx3fd4or633iazgbh68w89ipbg1fzbd65f0g.jpg",
     alt: "Trabajador con tablet",
     size: "large",
     caption: "Innovación y tecnología al servicio de nuestros clientes"
   },
   {
-    src: "/imagenes/sobre-nosotros.jpg",
+    src: "/public/imagenes/sobre-nosotros-400x300.jpg",
     alt: "Contenedores",
     size: "small",
     caption: "Logística internacional eficiente"
   },
   {
-    src: "/imagenes/about-us-marker.jpg",
+    src: "/public/imagenes/depositphotos_39479909-stock-photo-about-us-blue-marker.jpg",
     alt: "Barco de carga",
     size: "small",
     caption: "Transporte marítimo de mercancías"

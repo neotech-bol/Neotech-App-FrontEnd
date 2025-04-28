@@ -5,7 +5,7 @@
         <img src="/public/logo/Logo Neofetch PNG.png" alt="Logo" class="logo-image" />
       </a>
       <a @click.prevent="irAHome" href="#" class="boton-home">
-        <i class="fas fa-home"></i> Ir al Home
+        <i class="fas fa-home"></i>Inicio
       </a>
     </nav>
     <div class="contenido-auth">

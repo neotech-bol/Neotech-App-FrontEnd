@@ -15,35 +15,35 @@
     <transition-group name="fade" tag="div" class="products-grid" mode="out-in">
       <div v-for="product in favorites" :key="product.producto.id" class="product-card">
         <div class="image-container">
-          <img :src="product.producto.imagen_principal" :alt="product.producto.nombre" loading="lazy">
+          <img :src="product.producto.imagen_principal" :alt="product.producto.nombre" loading="lazy" />
           
           <!-- Product Actions -->
           <div class="product-actions">
-            <button @click="viewProductDetails(product.producto.id)" class="action-button view-button" aria-label="Ver detalles">
+            <button @click="viewProductDetails(product.producto.id)" class="action-button view-button" aria-label="Ver detalles del producto">
               <i class="fas fa-eye"></i>
             </button>
-            <button @click="addToCart(product.producto)" class="action-button cart-button" aria-label="Añadir al carrito">
+            <button @click="addToCart(product.producto)" class="action-button cart-button" :disabled="addingToCart === product.producto.id" aria-label="Añadir al carrito">
               <i class="fas fa-shopping-cart"></i>
             </button>
           </div>
 
-          <!-- Remove Button - Always visible -->
+          <!-- Remove Button -->
           <button @click="removeFromFavorites(product.id)" class="remove-favorite-button" aria-label="Eliminar de favoritos">
             <i class="fas fa-heart-broken"></i>
           </button>
           
           <!-- Product Badges -->
           <div class="product-badges">
-            <span v-if="product.producto.estado === 1" class="badge in-stock">
+            <span v-if="product.producto.estado === 1" class="badge badge-in-stock">
               <i class="fas fa-check-circle"></i> Disponible
             </span>
-            <span v-if="isNewProduct(product.producto)" class="badge new-product">
+            <span v-if="isNewProduct(product.producto)" class="badge badge-new">
               <i class="fas fa-star"></i> NUEVO
             </span>
-            <span v-if="hasDiscount(product.producto)" class="badge discount">
+            <span v-if="hasDiscount(product.producto)" class="badge badge-sale">
               <i class="fas fa-bolt"></i> -{{ calculateDiscount(product.producto) }}%
             </span>
-            <span v-if="hasPreventaPrices(product.producto)" class="badge preventa">
+            <span v-if="hasPreventaPrices(product.producto)" class="badge badge-preventa">
               <i class="fas fa-tag"></i> PREVENTA
             </span>
           </div>
@@ -58,23 +58,23 @@
           
           <div class="rating" v-if="product.producto.rating">
             <div class="stars">
-              <span v-for="star in 5" :key="star" class="star" :class="{ 'filled': star <= (product.producto.rating || 0) }">★</span>
+              <span v-for="star in 5" :key="star" class="star" :class="{ filled: star <= (product.producto.rating || 0) }">★</span>
             </div>
             <span class="rating-count">{{ product.producto.total_ratings || 0 }} calificaciones</span>
           </div>
           
-          <!-- Contenedor de precios mejorado -->
+          <!-- Prices Container -->
           <div class="prices-container">
             <div class="prices-header">
               <span class="prices-title">Precios de Preventa</span>
-              <button class="toggle-prices-btn" @click.stop="togglePriceDetails(product.producto.id)">
+              <button class="toggle-prices-btn" @click.stop="togglePriceDetails(product.producto.id)" aria-label="Alternar detalles de precios">
                 <i class="fas" :class="isPriceExpanded(product.producto.id) ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
               </button>
             </div>
             
-            <div class="price-details" :class="{ 'expanded': isPriceExpanded(product.producto.id) }">
-              <!-- Precio Estándar (Preventa por Volumen) -->
-              <div class="price-card">
+            <div class="price-details" :class="{ expanded: isPriceExpanded(product.producto.id) }">
+              <!-- Standard Preventa Price -->
+              <div class="price-card" v-if="product.producto.precio">
                 <div class="price-card-header">
                   <span class="price-type">Preventa Estándar</span>
                   <span class="price-value">{{ formatPrice(product.producto.precio) }}</span>
@@ -87,13 +87,13 @@
                     </div>
                     <div class="quantity-item">
                       <span class="quantity-label">Máximo:</span>
-                      <span class="quantity-value">{{ product.producto.cantidad_maxima || 'Sin límite' }}</span>
+                      <span class="quantity-value">{{ product.producto.cantidad_maxima || 'Sin límite' }} unidades</span>
                     </div>
                   </div>
                 </div>
               </div>
               
-              <!-- Precio Preventa Especial -->
+              <!-- Special Preventa Price -->
               <div class="price-card special" v-if="product.producto.precio_preventa">
                 <div class="price-card-header">
                   <span class="price-type">Preventa Especial</span>
@@ -107,13 +107,13 @@
                     </div>
                     <div class="quantity-item">
                       <span class="quantity-label">Máximo:</span>
-                      <span class="quantity-value">{{ product.producto.cantidad_maxima_preventa || product.producto.cantidad_maxima || 'Sin límite' }}</span>
+                      <span class="quantity-value">{{ product.producto.cantidad_maxima_preventa || product.producto.cantidad_maxima || 'Sin límite' }} unidades</span>
                     </div>
                   </div>
                 </div>
               </div>
               
-              <!-- Precio de Venta (si existe) -->
+              <!-- Sale Price -->
               <div class="price-card sale" v-if="product.producto.precio_venta">
                 <div class="price-card-header">
                   <span class="price-type">Precio de Venta</span>
@@ -121,18 +121,18 @@
                 </div>
               </div>
               
-              <!-- Precio Anterior (si existe) -->
+              <!-- Previous Price -->
               <div class="price-card old" v-if="product.producto.precio_anterior && !product.producto.precio_venta">
                 <div class="price-card-header">
                   <span class="price-type">Precio Anterior</span>
-                  <span class="price-value old">{{ formatPrice(product.producto.precio_anterior) }}</span>
+                  <span class="price-value old-price">{{ formatPrice(product.producto.precio_anterior) }}</span>
                 </div>
               </div>
             </div>
             
-            <!-- Vista resumida de precios (siempre visible) -->
+            <!-- Price Summary -->
             <div class="prices-summary">
-              <div class="summary-item">
+              <div class="summary-item" v-if="product.producto.precio">
                 <span class="summary-label">Estándar:</span>
                 <div class="summary-content">
                   <span class="summary-price">{{ formatPrice(product.producto.precio) }}</span>
@@ -155,7 +155,7 @@
             </div>
           </div>
           
-          <button @click="addToCart(product.producto)" class="add-to-cart-button">
+          <button @click="addToCart(product.producto)" class="add-to-cart-button" :disabled="addingToCart === product.producto.id">
             <i class="fas fa-shopping-cart"></i> 
             <span class="button-text">Añadir al carrito</span>
           </button>
@@ -199,7 +199,7 @@ import { indexFavorites, removeFavorite } from '@/Services/FavoriteService'
 import { useCartStore } from '@/stores/cart'
 import { onMounted, ref, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-
+const addingToCart = ref(null);
 const router = useRouter()
 const cartStore = useCartStore()
 const favorites = ref([])
@@ -350,37 +350,74 @@ const calculateDiscount = (product) => {
 </script>
 
 <style scoped>
+/* CSS Variables */
+:root {
+  --primary-color: #3498db;
+  --primary-hover-color: #2980b9;
+  --success-color: #27ae60;
+  --error-color: #e53e3e;
+  --text-primary: #2d3748;
+  --text-secondary: #718096;
+  --background-light: #f8fafc;
+  --border-light: #e2e8f0;
+}
+
 /* Base Styles */
 .favorites-container {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 2rem 1.5rem;
+  padding: clamp(1rem, 2vw, 1.5rem);
   background: #fff;
   min-height: 100vh;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
 /* Header Styles */
 .favorites-header {
-  margin-bottom: 2rem;
+  margin-bottom: clamp(1.5rem, 3vw, 2rem);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--border-light);
   padding-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.header-content {
+  display: flex;
+  flex-direction: column;
 }
 
 .header-content h1 {
-  font-size: 1.75rem;
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
   font-weight: 700;
-  color: #333;
+  color: var(--text-primary);
   margin: 0;
+  position: relative;
+  display: inline-block;
+}
+
+.header-content h1::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--primary-color);
+  transform: scaleX(0);
+  transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-origin: left;
+}
+
+.favorites-header:hover .header-content h1::after {
+  transform: scaleX(1);
 }
 
 .favorites-count {
-  color: #666;
-  font-size: 1rem;
+  color: var(--text-secondary);
+  font-size: clamp(0.875rem, 1.5vw, 1rem);
   margin-top: 0.25rem;
-  display: inline-block;
 }
 
 .header-actions {
@@ -389,49 +426,63 @@ const calculateDiscount = (product) => {
 }
 
 .browse-button {
-  padding: 0.5rem 1rem;
-  background: #f8f9fa;
-  border: 1px solid #e0e0e0;
-  border-radius: 0.5rem;
-  color: #333;
-  font-size: 0.875rem;
-  font-weight: 500;
+  padding: clamp(0.5rem, 1vw, 0.75rem) clamp(1rem, 1.5vw, 1.5rem);
+  background: var(--background-light);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: clamp(0.875rem, 1.5vw, 1rem);
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .browse-button:hover {
   background: #e9ecef;
   transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Products Grid */
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: clamp(1rem, 2vw, 1.5rem);
   margin-bottom: 2rem;
 }
 
 /* Product Card */
 .product-card {
   background: white;
-  border-radius: 1rem;
+  border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   height: 100%;
   display: flex;
   flex-direction: column;
   position: relative;
+  animation: fadeInUp 0.6s forwards;
 }
 
 .product-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Image Container */
@@ -454,32 +505,32 @@ const calculateDiscount = (product) => {
 }
 
 .product-card:hover .image-container img {
-  transform: scale(1.08);
+  transform: scale(1.05);
 }
 
-/* Remove Favorite Button - Always visible */
+/* Remove Favorite Button */
 .remove-favorite-button {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 36px;
-  height: 36px;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 30px;
+  height: 30px;
   border: none;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.9);
-  color: #e53e3e;
+  color: var(--error-color);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
-  font-size: 1rem;
+  transition: all 0.3s ease;
+  font-size: 0.875rem;
   z-index: 10;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .remove-favorite-button:hover {
-  background: #e53e3e;
+  background: var(--error-color);
   color: white;
   transform: scale(1.1);
 }
@@ -487,14 +538,14 @@ const calculateDiscount = (product) => {
 /* Product Actions */
 .product-actions {
   position: absolute;
-  bottom: 10px;
+  bottom: 0.5rem;
   left: 0;
   right: 0;
   display: flex;
   justify-content: center;
-  gap: 0.75rem;
-  padding: 0.75rem;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.5), transparent);
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
   opacity: 0;
   transition: opacity 0.3s ease, transform 0.3s ease;
   z-index: 2;
@@ -507,10 +558,10 @@ const calculateDiscount = (product) => {
 }
 
 .action-button {
-  background-color: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.9);
   border: none;
-  width: 35px;
-  height: 35px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -518,104 +569,95 @@ const calculateDiscount = (product) => {
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(4px);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-  color: #2d3748;
-  font-size: 0.85rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: var(--text-primary);
+  font-size: 0.75rem;
 }
 
 .action-button:hover {
-  transform: scale(1.15);
-}
-
-.remove-button {
-  color: #e53e3e;
-}
-
-.remove-button:hover {
-  background-color: #e53e3e;
-  color: white;
+  transform: scale(1.1);
 }
 
 .view-button:hover {
-  background-color: #6b46c1;
+  background: #6b46c1;
   color: white;
 }
 
 .cart-button:hover {
-  background-color: #3498db;
+  background: var(--primary-color);
   color: white;
+}
+
+.cart-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* Product Badges */
 .product-badges {
   position: absolute;
-  bottom: 10px;
-  left: 10px;
+  top: 0.5rem;
+  left: 0.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.25rem;
   z-index: 2;
 }
 
 .badge {
-  padding: 0.35rem 0.7rem;
-  font-size: 0.7rem;
+  padding: 0.25rem 0.5rem;
+  font-size: clamp(0.65rem, 1.2vw, 0.7rem);
   font-weight: 700;
   border-radius: 9999px;
   text-transform: uppercase;
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   letter-spacing: 0.5px;
 }
 
-.badge.in-stock {
+.badge-in-stock {
   background: linear-gradient(45deg, #48bb78, #38a169);
   color: white;
 }
 
-.badge.new-product {
-  background: linear-gradient(45deg, #4CAF50, #8BC34A);
+.badge-new {
+  background: linear-gradient(45deg, #48bb78, #38a169);
   color: white;
   animation: pulse 2s infinite;
 }
 
-.badge.discount {
+.badge-sale {
   background: linear-gradient(45deg, #ed8936, #dd6b20);
   color: white;
 }
 
-.badge.preventa {
+.badge-preventa {
   background: linear-gradient(45deg, #ed8936, #dd6b20);
   color: white;
 }
 
 @keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
-  }
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
 }
 
 /* Product Info */
 .product-info {
-  padding: 1rem;
+  padding: clamp(0.75rem, 1.5vw, 1rem);
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  background-color: white;
+  background: white;
   border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .category {
-  font-size: 0.7rem;
-  color: #718096;
+  font-size: clamp(0.65rem, 1.2vw, 0.7rem);
+  color: var(--text-secondary);
   margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
@@ -626,9 +668,9 @@ const calculateDiscount = (product) => {
 }
 
 .product-name {
-  font-size: 0.95rem;
+  font-size: clamp(0.875rem, 1.8vw, 1rem);
   font-weight: 700;
-  color: #2d3748;
+  color: var(--text-primary);
   line-height: 1.4;
   transition: color 0.3s ease;
   display: -webkit-box;
@@ -641,7 +683,7 @@ const calculateDiscount = (product) => {
 }
 
 .product-card:hover .product-name {
-  color: #3498db;
+  color: var(--primary-color);
 }
 
 /* Rating */
@@ -657,7 +699,7 @@ const calculateDiscount = (product) => {
 
 .star {
   color: #e2e8f0;
-  font-size: 0.95rem;
+  font-size: 0.875rem;
 }
 
 .star.filled {
@@ -665,18 +707,17 @@ const calculateDiscount = (product) => {
 }
 
 .rating-count {
-  font-size: 0.7rem;
-  color: #718096;
+  font-size: clamp(0.65rem, 1.2vw, 0.7rem);
+  color: var(--text-secondary);
 }
 
-/* NUEVO DISEÑO DE PRECIOS */
+/* Prices Container */
 .prices-container {
-  margin-top: 0.5rem;
-  margin-bottom: 1rem;
+  margin: 0.5rem 0 1rem;
   border-radius: 8px;
   overflow: hidden;
-  border: 1px solid #e2e8f0;
-  background-color: #f8fafc;
+  border: 1px solid var(--border-light);
+  background: var(--background-light);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
@@ -685,20 +726,20 @@ const calculateDiscount = (product) => {
   justify-content: space-between;
   align-items: center;
   padding: 0.5rem;
-  background: linear-gradient(to right, #f8fafc, #edf2f7);
-  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(to right, var(--background-light), #edf2f7);
+  border-bottom: 1px solid var(--border-light);
 }
 
 .prices-title {
-  font-size: 0.75rem;
+  font-size: clamp(0.7rem, 1.4vw, 0.75rem);
   font-weight: 700;
-  color: #4a5568;
+  color: var(--text-primary);
 }
 
 .toggle-prices-btn {
   background: none;
   border: none;
-  color: #718096;
+  color: var(--text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -710,11 +751,11 @@ const calculateDiscount = (product) => {
 }
 
 .toggle-prices-btn:hover {
-  background-color: #e2e8f0;
-  color: #4a5568;
+  background: var(--border-light);
+  color: var(--text-primary);
 }
 
-/* Detalles de precios expandibles */
+/* Price Details */
 .price-details {
   max-height: 0;
   overflow: hidden;
@@ -727,16 +768,16 @@ const calculateDiscount = (product) => {
 }
 
 .price-details.expanded {
-  max-height: 300px;
+  max-height: 400px;
   opacity: 1;
   padding: 0.5rem;
 }
 
-/* Tarjetas de precio */
+/* Price Cards */
 .price-card {
   border-radius: 6px;
   overflow: hidden;
-  background-color: white;
+  background: white;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   border: 1px solid #edf2f7;
 }
@@ -746,7 +787,7 @@ const calculateDiscount = (product) => {
 }
 
 .price-card.sale {
-  border-left: 3px solid #e53e3e;
+  border-left: 3px solid var(--error-color);
 }
 
 .price-card.old {
@@ -758,20 +799,20 @@ const calculateDiscount = (product) => {
   justify-content: space-between;
   align-items: center;
   padding: 0.5rem;
-  background-color: #f7fafc;
+  background: #f7fafc;
   border-bottom: 1px solid #edf2f7;
 }
 
 .price-type {
-  font-size: 0.7rem;
+  font-size: clamp(0.65rem, 1.2vw, 0.7rem);
   font-weight: 700;
-  color: #4a5568;
+  color: var(--text-primary);
 }
 
 .price-value {
-  font-size: 0.8rem;
+  font-size: clamp(0.75rem, 1.4vw, 0.8rem);
   font-weight: 700;
-  color: #2d3748;
+  color: var(--text-primary);
 }
 
 .price-card.special .price-value {
@@ -779,10 +820,10 @@ const calculateDiscount = (product) => {
 }
 
 .price-card.sale .price-value {
-  color: #e53e3e;
+  color: var(--error-color);
 }
 
-.price-value.old {
+.price-value.old-price {
   color: #a0aec0;
   text-decoration: line-through;
 }
@@ -801,8 +842,8 @@ const calculateDiscount = (product) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.65rem;
-  color: #718096;
+  font-size: clamp(0.6rem, 1.2vw, 0.65rem);
+  color: var(--text-secondary);
 }
 
 .quantity-label {
@@ -810,23 +851,23 @@ const calculateDiscount = (product) => {
 }
 
 .quantity-value {
-  color: #4a5568;
+  color: var(--text-primary);
 }
 
-/* Vista resumida de precios */
+/* Price Summary */
 .prices-summary {
   padding: 0.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  border-top: 1px dashed #e2e8f0;
+  border-top: 1px dashed var(--border-light);
 }
 
 .summary-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.7rem;
+  font-size: clamp(0.65rem, 1.2vw, 0.7rem);
 }
 
 .summary-item.special {
@@ -838,7 +879,7 @@ const calculateDiscount = (product) => {
 }
 
 .summary-label {
-  color: #4a5568;
+  color: var(--text-primary);
   font-weight: 600;
 }
 
@@ -850,7 +891,7 @@ const calculateDiscount = (product) => {
 
 .summary-price {
   font-weight: 700;
-  color: #2d3748;
+  color: var(--text-primary);
 }
 
 .summary-item.special .summary-price {
@@ -858,13 +899,13 @@ const calculateDiscount = (product) => {
 }
 
 .summary-item.sale .summary-price {
-  color: #e53e3e;
+  color: var(--error-color);
 }
 
 .summary-quantity {
-  font-size: 0.6rem;
-  color: #718096;
-  background-color: #edf2f7;
+  font-size: clamp(0.6rem, 1.2vw, 0.65rem);
+  color: var(--text-secondary);
+  background: #edf2f7;
   padding: 0.1rem 0.3rem;
   border-radius: 4px;
 }
@@ -872,12 +913,12 @@ const calculateDiscount = (product) => {
 /* Add to Cart Button */
 .add-to-cart-button {
   width: 100%;
-  padding: 0.75rem 1rem;
-  background: linear-gradient(45deg, #007bff, #0056b3);
+  padding: clamp(0.5rem, 1vw, 0.75rem) clamp(1rem, 1.5vw, 1.5rem);
+  background: var(--primary-color);
   color: white;
   border: none;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
+  border-radius: 6px;
+  font-size: clamp(0.875rem, 1.5vw, 1rem);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -888,13 +929,29 @@ const calculateDiscount = (product) => {
   margin-top: auto;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+  box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+}
+
+.add-to-cart-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--primary-hover-color);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  z-index: -1;
 }
 
 .add-to-cart-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 123, 255, 0.4);
-  background: linear-gradient(45deg, #0062cc, #0046a1);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+}
+
+.add-to-cart-button:hover::before {
+  transform: translateX(0);
 }
 
 .add-to-cart-button:disabled {
@@ -907,53 +964,53 @@ const calculateDiscount = (product) => {
 /* Empty State */
 .empty-state {
   text-align: center;
-  padding: 4rem 2rem;
-  background: #f8f9fa;
-  border-radius: 1rem;
+  padding: clamp(2rem, 4vw, 3rem) clamp(1rem, 2vw, 2rem);
+  background: var(--background-light);
+  border-radius: 12px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
   max-width: 600px;
   margin: 2rem auto;
 }
 
 .empty-icon {
-  font-size: 4rem;
+  font-size: clamp(3rem, 6vw, 4rem);
   color: #cbd5e0;
   margin-bottom: 1.5rem;
 }
 
 .empty-state h2 {
-  font-size: 1.5rem;
+  font-size: clamp(1.25rem, 2.5vw, 1.5rem);
   font-weight: 700;
-  color: #2d3748;
+  color: var(--text-primary);
   margin: 0 0 0.5rem 0;
 }
 
 .empty-state p {
-  color: #718096;
+  color: var(--text-secondary);
+  font-size: clamp(0.875rem, 1.5vw, 1rem);
   margin: 0 0 2rem 0;
-  font-size: 1rem;
 }
 
 .browse-products-button {
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(45deg, #007bff, #0056b3);
+  padding: clamp(0.5rem, 1vw, 0.75rem) clamp(1rem, 1.5vw, 1.5rem);
+  background: var(--primary-color);
   color: white;
   border: none;
-  border-radius: 0.5rem;
-  font-size: 1rem;
+  border-radius: 6px;
+  font-size: clamp(0.875rem, 1.5vw, 1rem);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+  box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
 }
 
 .browse-products-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 123, 255, 0.4);
-  background: linear-gradient(45deg, #0062cc, #0046a1);
+  transform: translateY(-3px);
+  background: var(--primary-hover-color);
+  box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
 }
 
 /* Loading State */
@@ -969,15 +1026,15 @@ const calculateDiscount = (product) => {
 .loading-spinner {
   width: 50px;
   height: 50px;
-  border: 4px solid rgba(0, 123, 255, 0.1);
+  border: 4px solid rgba(52, 152, 219, 0.2);
+  border-top-color: var(--primary-color);
   border-radius: 50%;
-  border-top-color: #007bff;
-  animation: spin 1s ease-in-out infinite;
+  animation: spin 1s linear infinite;
 }
 
 .loading-container p {
-  color: #718096;
-  font-size: 1rem;
+  color: var(--text-secondary);
+  font-size: clamp(0.875rem, 1.5vw, 1rem);
 }
 
 @keyframes spin {
@@ -988,11 +1045,10 @@ const calculateDiscount = (product) => {
 .notification {
   position: fixed;
   bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 0.75rem 1.5rem;
-  border-radius: 2rem;
-  font-size: 0.875rem;
+  right: 20px;
+  padding: clamp(0.5rem, 1vw, 0.75rem) clamp(1rem, 1.5vw, 1.5rem);
+  border-radius: 12px;
+  font-size: clamp(0.875rem, 1.5vw, 1rem);
   font-weight: 500;
   z-index: 1000;
   display: flex;
@@ -1000,6 +1056,7 @@ const calculateDiscount = (product) => {
   gap: 0.5rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   min-width: 300px;
+  max-width: 400px;
   justify-content: space-between;
 }
 
@@ -1009,7 +1066,7 @@ const calculateDiscount = (product) => {
 }
 
 .notification.error {
-  background: linear-gradient(45deg, #e53e3e, #c53030);
+  background: linear-gradient(45deg, var(--error-color), #c53030);
   color: white;
 }
 
@@ -1043,24 +1100,27 @@ const calculateDiscount = (product) => {
 
 .notification-fade-enter-from, .notification-fade-leave-to {
   opacity: 0;
-  transform: translate(-50%, 20px);
+  transform: translateY(20px);
 }
 
 /* Responsive Styles */
-@media (max-width: 1024px) {
+@media (min-width: 1200px) {
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
   .products-grid {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 1.25rem;
   }
-  
-  .price-details.expanded {
-    max-height: 350px;
-  }
 }
 
-@media (max-width: 768px) {
+@media (min-width: 768px) and (max-width: 991px) {
   .favorites-container {
-    padding: 1.5rem 1rem;
+    padding: clamp(1rem, 2vw, 1.25rem);
   }
 
   .favorites-header {
@@ -1088,35 +1148,42 @@ const calculateDiscount = (product) => {
   }
 
   .product-name {
-    font-size: 0.85rem;
+    font-size: clamp(0.8rem, 1.6vw, 0.9rem);
     height: 2.4rem;
-  }
-
-  .action-button {
-    width: 32px;
-    height: 32px;
-    font-size: 0.8rem;
-  }
-
-  .notification {
-    width: 90%;
-    min-width: auto;
-    max-width: 400px;
-  }
-  
-  .price-details.expanded {
-    max-height: 400px;
   }
 }
 
-@media (max-width: 480px) {
+@media (min-width: 576px) and (max-width: 767px) {
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .action-button {
+    width: 28px;
+    height: 28px;
+    font-size: 0.7rem;
+  }
+
+  .remove-favorite-button {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (min-width: 480px) and (max-width: 575px) {
+  .favorites-container {
+    padding: 0.75rem;
+  }
+
   .favorites-header h1 {
-    font-size: 1.5rem;
+    font-size: clamp(1.5rem, 2.5vw, 2rem);
   }
 
   .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 0.5rem;
   }
 
   .product-info {
@@ -1124,67 +1191,118 @@ const calculateDiscount = (product) => {
   }
 
   .product-name {
-    font-size: 0.8rem;
+    font-size: clamp(0.75rem, 1.4vw, 0.8rem);
     height: 2.2rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .prices-container {
-    margin-top: 0.25rem;
-  }
-  
-  .prices-header {
-    padding: 0.3rem 0.5rem;
-  }
-  
-  .prices-title {
-    font-size: 0.7rem;
-  }
-  
-  .toggle-prices-btn {
-    width: 20px;
-    height: 20px;
-  }
-  
-  .price-details.expanded {
-    max-height: 450px;
   }
 
   .add-to-cart-button {
     padding: 0.5rem;
-    font-size: 0.75rem;
+    font-size: clamp(0.75rem, 1.4vw, 0.875rem);
+  }
+
+  .button-text {
+    display: none;
+  }
+}
+
+@media (max-width: 479px) {
+  .favorites-container {
+    padding: 0.5rem;
+  }
+
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.5rem;
+  }
+
+  .product-info {
+    padding: 0.5rem;
+  }
+
+  .product-name {
+    font-size: clamp(0.7rem, 1.4vw, 0.75rem);
+    height: 2rem;
+  }
+
+  .prices-container {
+    margin: 0.25rem 0 0.75rem;
+  }
+
+  .prices-title {
+    font-size: clamp(0.65rem, 1.2vw, 0.7rem);
+  }
+
+  .toggle-prices-btn {
+    width: 20px;
+    height: 20px;
+  }
+
+  .add-to-cart-button {
+    padding: 0.4rem;
+    font-size: clamp(0.7rem, 1.2vw, 0.8rem);
   }
 
   .button-text {
     display: none;
   }
 
-  .badge {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.65rem;
-  }
-
   .empty-state {
-    padding: 2rem 1rem;
+    padding: clamp(1.5rem, 3vw, 2rem) 1rem;
   }
 
   .empty-icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
+    font-size: clamp(2.5rem, 5vw, 3rem);
   }
 
   .empty-state h2 {
-    font-size: 1.25rem;
+    font-size: clamp(1rem, 2vw, 1.25rem);
   }
 
   .empty-state p {
-    font-size: 0.875rem;
-    margin-bottom: 1.5rem;
+    font-size: clamp(0.75rem, 1.4vw, 0.875rem);
   }
 
   .browse-products-button {
     padding: 0.5rem 1rem;
-    font-size: 0.875rem;
+    font-size: clamp(0.75rem, 1.4vw, 0.875rem);
+  }
+
+  .notification {
+    right: 10px;
+    min-width: 250px;
+    max-width: 90%;
+  }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) {
+  .product-card:hover {
+    transform: none;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+  }
+
+  .product-card:active {
+    transform: scale(0.98);
+  }
+
+  .product-actions {
+    opacity: 1;
+    transform: translateY(0);
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+  }
+
+  .action-button:hover,
+  .add-to-cart-button:hover,
+  .browse-products-button:hover,
+  .browse-button:hover {
+    transform: none;
+  }
+
+  .action-button:active,
+  .add-to-cart-button:active,
+  .browse-products-button:active,
+  .browse-button:active {
+    transform: scale(0.95);
   }
 }
 
@@ -1194,13 +1312,14 @@ const calculateDiscount = (product) => {
   .action-button,
   .add-to-cart-button,
   .browse-products-button,
+  .browse-button,
   .notification,
-  .product-card:hover .image-container img,
-  .price-details {
+  .price-details,
+  .product-card:hover .image-container img {
     transition: none;
   }
 
-  .badge.new-product {
+  .badge-new {
     animation: none;
   }
 
@@ -1208,10 +1327,14 @@ const calculateDiscount = (product) => {
     animation: none;
   }
 
-  .fade-enter-active, 
+  .fade-enter-active,
   .fade-leave-active,
-  .notification-fade-enter-active, 
+  .notification-fade-enter-active,
   .notification-fade-leave-active {
+    transition: none;
+  }
+
+  .header-content h1::after {
     transition: none;
   }
 }
@@ -1222,46 +1345,9 @@ const calculateDiscount = (product) => {
 .browse-products-button:focus-visible,
 .browse-button:focus-visible,
 .close-notification:focus-visible,
-.toggle-prices-btn:focus-visible {
-  outline: 2px solid #007bff;
+.toggle-prices-btn:focus-visible,
+.remove-favorite-button:focus-visible {
+  outline: 2px solid var(--primary-color);
   outline-offset: 2px;
-}
-
-/* Touch Device Optimizations */
-@media (hover: none) {
-  .product-card:hover {
-    transform: none;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-  }
-
-  .product-card:active {
-    transform: scale(0.98);
-  }
-
-  .product-actions {
-    opacity: 1;
-    transform: translateY(0);
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.3) 50%, transparent 100%);
-  }
-
-  .action-button:hover {
-    transform: none;
-  }
-
-  .action-button:active {
-    transform: scale(0.95);
-  }
-
-  .add-to-cart-button:hover,
-  .browse-products-button:hover,
-  .browse-button:hover {
-    transform: none;
-  }
-
-  .add-to-cart-button:active,
-  .browse-products-button:active,
-  .browse-button:active {
-    transform: scale(0.98);
-  }
 }
 </style>

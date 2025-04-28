@@ -1,5 +1,4 @@
 <template>
-  <ThemePageWrapper>
     <header class="header">
       <div class="top-bar">
         <div class="top-bar-inner">
@@ -18,11 +17,11 @@
             <!--   <router-link to="/faq" style="text-decoration: none;" class="ms-2"><a href="#"
                 style="text-decoration: none; color: #838384;">FAQ</a></router-link> -->
                           <!-- Botón de alternar tema -->
-<!--           <button @click="themeStoreDark.toggleDarkMode" class="theme-toggle-btn"
+           <button @click="themeStoreDark.toggleDarkMode" class="theme-toggle-btn"
             :title="themeStoreDark.isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
             <i v-if="!themeStoreDark.isDarkMode" class="fas fa-sun"></i>
             <i v-else class="fas fa-moon"></i>
-          </button> -->
+          </button> 
           </div>
         </div>
       </div>
@@ -79,18 +78,6 @@
             <i class="fas fa-times"></i>
           </button>
         </div>
-
-        <!-- Barra de búsqueda móvil -->
-      <!--   <div class="mobile-search" v-if="isMobileMenuOpen">
-          <div class="search-bar">
-            <input v-model="searchQuery" type="text" placeholder="Buscar productos, categorías y más..."
-              @keyup.enter="performSearch" />
-            <button class="search-button" @click="performSearch">
-              <i class="fas fa-search"></i>
-            </button>
-          </div>
-        </div> -->
-
         <button class="catalog-button" @click="toggleSidebar">
           <i class="fas fa-th-large"></i>
           Ver Catálogo
@@ -253,7 +240,6 @@
         <span>Producto agregado al carrito</span>
       </div>
     </div>
-  </ThemePageWrapper>
 </template>
 
 <script setup>
@@ -266,7 +252,6 @@ import { indexCatalogosactives } from '@/Services/CatalogoService';
 import { useUserStore } from '@/stores/userAuht';
 import { useThemeStore } from '@/stores/themeStore';
 import { useThemeStoreDark } from '@/stores/themeDarkStore';
-import ThemePageWrapper from '@/components/ThemePageWrapper.vue';
 import { searchProductoCategoriaCatalogo } from '@/Services/SearchService';
 import GlobalSearch from '../GlobalSearch.vue';
 import { generarSlug } from '@/Utils/string-utils';
@@ -301,75 +286,6 @@ const departments = [
 ];
 
 const userStore = useUserStore();
-
-// Nuevas variables para la búsqueda mejorada
-const searchFocused = ref(false);
-const recentSearches = ref([]);
-const popularSearches = ref(['Laptops', 'Smartphones', 'Tablets', 'Accesorios', 'Monitores', 'Teclados']);
-const selectedSuggestionIndex = ref(-1);
-// Añadir una variable para el estado de carga
-const isSearchLoading = ref(false);
-const searchResults = ref(null);
-// Cargar búsquedas recientes desde localStorage
-const loadRecentSearches = () => {
-  const saved = localStorage.getItem('recentSearches');
-  if (saved) {
-    try {
-      recentSearches.value = JSON.parse(saved).slice(0, 5); // Limitar a 5 búsquedas recientes
-    } catch (e) {
-      console.error('Error loading recent searches:', e);
-      recentSearches.value = [];
-    }
-  }
-};
-
-// Guardar búsqueda reciente
-const saveRecentSearch = (query) => {
-  if (!query || query.trim() === '') return;
-
-  // Eliminar duplicados y añadir al principio
-  const updatedSearches = [query, ...recentSearches.value.filter(s => s !== query)].slice(0, 5);
-  recentSearches.value = updatedSearches;
-
-  // Guardar en localStorage
-  localStorage.setItem('recentSearches', JSON.stringify(updatedSearches));
-};
-
-// Filtrar sugerencias basadas en la consulta actual
-const filteredSuggestions = computed(() => {
-  if (!searchQuery.value) return [...recentSearches.value, ...popularSearches.value];
-
-  const query = searchQuery.value.toLowerCase();
-  const allSuggestions = [...recentSearches.value, ...popularSearches.value];
-
-  // Eliminar duplicados
-  const uniqueSuggestions = [...new Set(allSuggestions)];
-
-  return uniqueSuggestions.filter(s => s.toLowerCase().includes(query));
-});
-
-// Seleccionar sugerencia
-const selectSuggestion = (suggestion) => {
-  searchQuery.value = suggestion;
-  performSearch();
-};
-
-// Navegación por teclado en sugerencias
-const handleKeyNavigation = (e) => {
-  if (!searchFocused.value || filteredSuggestions.value.length === 0) return;
-
-  if (e.key === 'ArrowDown') {
-    e.preventDefault();
-    selectedSuggestionIndex.value = (selectedSuggestionIndex.value + 1) % filteredSuggestions.value.length;
-  } else if (e.key === 'ArrowUp') {
-    e.preventDefault();
-    selectedSuggestionIndex.value = selectedSuggestionIndex.value <= 0 ?
-      filteredSuggestions.value.length - 1 : selectedSuggestionIndex.value - 1;
-  } else if (e.key === 'Enter' && selectedSuggestionIndex.value >= 0) {
-    e.preventDefault();
-    selectSuggestion(filteredSuggestions.value[selectedSuggestionIndex.value]);
-  }
-};
 
 const getInitialLocation = () => {
   return localStorage.getItem('departamento') || userStore.user.departamento || 'cochabamba';
@@ -473,46 +389,6 @@ const closeMobileMenu = () => {
   isMobileMenuOpen.value = false;
 };
 
-const performSearch = async () => {
-  if (searchQuery.value.trim()) {
-    saveRecentSearch(searchQuery.value.trim());
-
-    try {
-      // Mostrar estado de carga
-      isSearchLoading.value = true;
-      // Llamar a la API de búsqueda
-      const response = await searchProductoCategoriaCatalogo(searchQuery.value.trim());
-      // Verificar si la respuesta tiene la estructura esperada
-      if (response && response.data) {
-        // Guardar los resultados
-        searchResults.value = response.data.results;
-
-        // Navegar a la página de resultados con la consulta y resultados
-        router.push({
-          path: '/search',
-          query: { q: searchQuery.value },
-          state: { searchResults: response.data.results }
-        });
-
-        // Resetear la consulta de búsqueda
-        searchQuery.value = '';
-        closeMobileMenu();
-        searchFocused.value = false;
-      } else {
-        console.error('La respuesta no tiene el formato esperado:', response);
-      }
-    } catch (error) {
-      console.error('Error al realizar la búsqueda:', error);
-      if (error.response) {
-        console.error('Datos del error:', error.response.data);
-        console.error('Estado del error:', error.response.status);
-      }
-    } finally {
-      // Ocultar estado de carga
-      isSearchLoading.value = false;
-    }
-  }
-};
 const handleAccountClick = () => {
   router.push({ path: isLoggedIn.value ? '/perfil' : '/login' });
   closeMobileMenu();
@@ -569,11 +445,7 @@ onMounted(() => {
   isLoggedIn.value = !!token;
   listarCatalogosHistoriales();
   listarCatalogosActivos();
-  loadRecentSearches();
   lastCartCount.value = cartItemCount.value;
-
-  // Agregar event listener para navegación por teclado
-  window.addEventListener('keydown', handleKeyNavigation);
 
   // Siempre iniciar con el tema claro, independientemente de lo guardado en localStorage
   themeStoreDark.setDarkMode(false);
@@ -597,7 +469,6 @@ onMounted(() => {
 
   // Limpiar al desmontar
   onUnmounted(() => {
-    window.removeEventListener('keydown', handleKeyNavigation);
     window.removeEventListener('keydown', handleEscKey);
   });
 });
@@ -747,68 +618,6 @@ hr {
   position: relative; /* Añadido para establecer un contexto de apilamiento */
   z-index: 1010; /* Valor mayor que la navegación principal (1000) */
 }
-.search-bar {
-  position: relative;
-  width: 100%;
-  max-width: 600px;
-}
-
-.search-bar input {
-  width: 100%;
-  padding: 12px 40px 12px 16px;
-  border: 1px solid var(--input-border);
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 400;
-  background-color: var(--background-color);
-  transition: all 0.3s ease;
-}
-
-.search-bar input:focus {
-  outline: none;
-  border-color: var(--border-color);
-  box-shadow: 0 0 0 3px var(--shadow-color);
-  background-color: var(--background-color);
-}
-
-.search-button {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 18px;
-  color: #6b7280;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.search-button:hover {
-  color: #3b82f6;
-}
-
-/* Sugerencias de búsqueda */
-.search-suggestions {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 100%;
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 0 0 8px 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  z-index: 1500;
-  /* Aumentado para estar por encima del menú de navegación */
-  max-height: 300px;
-  overflow-y: auto;
-  margin-top: 4px;
-  animation: fadeIn 0.2s ease;
-}
 
 @keyframes fadeIn {
   from {
@@ -848,11 +657,6 @@ hr {
   padding: 16px;
   border-bottom: 1px solid #e5e7eb;
 }
-
-.mobile-search .search-bar {
-  width: 100%;
-}
-
 .icon-button {
   background: none;
   border: none;
@@ -1561,9 +1365,6 @@ hr {
     padding: 12px 20px;
   }
 
-  .search-bar input {
-    font-size: 15px;
-  }
 }
 
 /* Tablet (640px and up) */
@@ -1731,16 +1532,6 @@ hr {
   .logo img {
     height: 48px;
   }
-
-  .search-bar {
-    max-width: 500px;
-  }
-
-  .search-bar input {
-    padding: 14px 44px 14px 20px;
-    font-size: 16px;
-  }
-
   .icon-button {
     padding: 8px 12px;
   }
@@ -1817,14 +1608,3 @@ hr {
   }
 }
 </style>
-
-He solucionado el problema de las sugerencias de búsqueda que estaban siendo tapadas por el menú de navegación. La
-solución principal fue aumentar el z-index de las sugerencias de búsqueda para asegurar que aparezcan por encima de
-todos los demás elementos:
-
-```css
-.search-suggestions {
-/* ... otras propiedades ... */
-z-index: 1500; /* Aumentado para estar por encima del menú de navegación */
-/* ... otras propiedades ... */
-}

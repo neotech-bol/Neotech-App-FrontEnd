@@ -25,7 +25,7 @@
               <img :src="categoria.banner" :alt="`Banner de ${categoria.nombre}`" loading="lazy" />
               <div class="banner-overlay">
                 <div class="banner-content">
-                  <h2>{{ categoria.nombre }}</h2>
+                  <h2 class="banner-title">{{ categoria.nombre }}</h2>
                   <div class="banner-description-container">
                     <p class="banner-description" v-if="categoria.descripcion !== null && categoria.descripcion !== '' && categoria.descripcion !== 'null'">
                       {{ getTruncatedDescription(categoria.descripcion) }}
@@ -36,10 +36,32 @@
                     </p>
                     <p v-else>No hay descripción disponible.</p>
                   </div>
-<!--                   <button class="banner-cta">
+                  <button class="banner-cta" @click="irCategoria(categoria.id, categoria.nombre)">
                     <span>Ver Colección</span>
                     <i class="fas fa-arrow-right"></i>
-                  </button> -->
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Modal para descripción completa -->
+            <div class="description-modal" v-if="isModalOpen && selectedCategoria" @click="closeModal">
+              <div class="modal-content" @click.stop>
+                <div class="modal-header">
+                  <h3>{{ selectedCategoria.nombre }}</h3>
+                  <button class="close-btn" @click="closeModal">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <p>{{ selectedCategoria.descripcion }}</p>
+                </div>
+                <div class="modal-footer">
+                  <button class="modal-btn" @click="closeModal">Cerrar</button>
+                  <button class="modal-btn primary" @click="viewCollectionFromModal">
+                    <span>Ver Colección</span>
+                    <i class="fas fa-arrow-right"></i>
+                  </button>
                 </div>
               </div>
             </div>
@@ -54,14 +76,13 @@
             <p>{{ categoria.subtitulo }}</p>
           </div>
 
-          <!-- Products Grid - Actualizado con estilos de productos recientes -->
+          <!-- Products Grid -->
           <div class="products-grid">
             <div v-for="(product, productIndex) in categoria.productos" 
                  :key="product.id" 
                  class="product-card"
                  :style="{ '--index': productIndex }"
-                 :class="{ 'product-active': product.activo }"
-                 @click="verProducto(product.id)">
+                 @click="verProducto(product.id, product.nombre)">
               <div class="product-image-wrapper">
                 <div class="product-image">
                   <transition name="fade" mode="out-in">
@@ -83,35 +104,29 @@
 
                   <!-- Badges -->
                   <div class="badges">
-                    <span v-if="product.badge" class="badge badge-new">
-                      <i class="fas fa-star-of-life"></i> {{ product.badge }}
-                    </span>
-                    <span v-if="product.descuento" class="badge badge-sale">
-                      <i class="fas fa-bolt"></i> -{{ product.descuento }}%
-                    </span>
                     <span v-if="hasPreventaPrices(product)" class="badge badge-preventa">
                       <i class="fas fa-tag"></i> PREVENTA
                     </span>
                   </div>
                   
-                  <!-- Active Indicator -->
-                  <span v-if="product.activo" class="active-indicator">Activo</span>
-                  
                   <!-- Product Actions -->
                   <div class="product-actions-bottom">
                     <button class="action-button cart-btn" 
                             @click.stop="addToCart(product)" 
-                            aria-label="Agregar al carrito">
-                      <i class="fas fa-shopping-cart"></i>
+                            aria-label="Agregar al carrito"
+                            :class="{ 'adding': addingToCart === product.id }">
+                      <i class="fas"
+                         :class="addingToCart === product.id ? 'fa-spinner fa-spin' : 'fa-shopping-cart'"></i>
                     </button>
                     <button class="action-button view-btn" 
-                            @click.stop="verProducto(product.id)" 
+                            @click.stop="verProducto(product.id, product.nombre)" 
                             aria-label="Ver producto">
                       <i class="fas fa-eye"></i>
                     </button>
                     <button class="action-button fav-btn" 
                             @click.stop="fororiteUser(product.id)" 
-                            aria-label="Agregar a favoritos">
+                            aria-label="Agregar a favoritos"
+                            :class="{ 'in-favorites': favoriteProducts.includes(product.id) }">
                       <i class="fas fa-heart"></i>
                     </button>
                   </div>
@@ -135,8 +150,8 @@
                   
                   <div class="price-details" :class="{ 'expanded': isPriceExpanded(product.id) }">
                     <!-- Precio Estándar (Preventa por Volumen) -->
-                    <div class="price-card">
-                      <div class="price-card-header" v-if="product.precio_preventa">
+                    <div class="price-card" v-if="product.precio_preventa">
+                      <div class="price-card-header">
                         <span class="price-type">Preventa Estándar</span>
                         <span class="price-value">{{ formatPrice(product.precio_preventa) }}</span>
                       </div>
@@ -168,7 +183,7 @@
                           </div>
                           <div class="quantity-item">
                             <span class="quantity-label">Máximo:</span>
-                            <span class="quantity-value">{{ product.cantidad_maxima  }} unidades</span>
+                            <span class="quantity-value">{{ product.cantidad_maxima }} unidades</span>
                           </div>
                         </div>
                       </div>
@@ -181,14 +196,12 @@
                       <span class="summary-label">Estándar:</span>
                       <div class="summary-content">
                         <span class="summary-price">{{ formatPrice(product.precio_preventa) }}</span>
-                 <!--        <span class="summary-quantity">{{ product.cantidad_minima || 1 }}+ uds</span> -->
                       </div>
                     </div>
                     <div class="summary-item special" v-if="product.precio">
                       <span class="summary-label">Especial:</span>
                       <div class="summary-content">
                         <span class="summary-price">{{ formatPrice(product.precio) }}</span>
-                      <!--   <span class="summary-quantity">{{ product.cantidad_minima_preventa || product.cantidad_minima || 1 }}+ uds</span> -->
                       </div>
                     </div>
                   </div>
@@ -213,31 +226,8 @@
         </div>
       </div>
     </div>
-
-    <!-- Modal para descripción completa -->
-    <div class="description-modal" v-if="isModalOpen && selectedCategoria" @click="closeModal">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h3>{{ selectedCategoria.nombre }}</h3>
-          <button class="close-btn" @click="closeModal">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        <div class="modal-body">
-          <p>{{ selectedCategoria.descripcion }}</p>
-        </div>
-        <div class="modal-footer">
-          <button class="modal-btn" @click="closeModal">Cerrar</button>
-          <button class="modal-btn primary" @click="viewCollectionFromModal(selectedCategoria.id)">
-            <span>Ver Colección</span>
-            <i class="fas fa-arrow-right"></i>
-          </button>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
-
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
@@ -246,6 +236,7 @@ import { indexCatalogoItems } from '@/Services/CatalogoService';
 import { storeFavorite } from '@/Services/FavoriteService';
 import { indexRatings, storeRating } from '@/Services/RatingService';
 import { showCatalogosHistoriales } from '@/Services/CatalogoHistorialesService';
+import { generarSlug } from '@/Utils/string-utils';
 
 const router = useRouter();
 const cartStore = useCartStore();
@@ -259,7 +250,7 @@ const idCatalogoHistorial = ref(null);
 const favoriteProducts = ref([]);
 const isMobile = ref(false);
 const expandedPriceDetails = ref([]); // Para controlar los detalles de precios expandidos
-
+const addingToCart = ref(null);
 // Estados para el modal de descripción
 const isModalOpen = ref(false);
 const selectedCategoria = ref(null);
@@ -427,10 +418,18 @@ const showNotification = (message, type) => {
 };
 
 const addToCart = (product) => {
-  const cantidadMinima = product.cantidad_minima || 1;
-  const productWithMinQuantity = { ...product, quantity: cantidadMinima };
-  cartStore.addToCart(productWithMinQuantity);
-  showNotification(`${product.nombre} agregado al carrito`, 'success');
+  addingToCart.value = product.id;
+  try {
+    const cantidadMinima = product.cantidad_minima || 1;
+    const productWithMinQuantity = { ...product, quantity: cantidadMinima };
+    cartStore.addToCart(productWithMinQuantity);
+    showNotification(`${product.nombre} agregado al carrito`, 'success');
+  } catch (error) {
+    console.error('Error al agregar al carrito:', error);
+    showNotification('Error al agregar al carrito', 'error');
+  } finally {
+    setTimeout(() => addingToCart.value = null, 800);
+  }
 };
 
 const formatPrice = (price) => {
@@ -494,7 +493,10 @@ const getLastWord = (title) => {
   const words = title.split(' ');
   return words[words.length - 1];
 };
-
+const irCategoria = (idCategoria, nameCategoria) => {
+  const slug = generarSlug(nameCategoria);
+  router.push({ path: `/categoria/${idCategoria}/${slug}` });
+}
 watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   idCatalogoHistorial.value = newId;
   listarCatalogo();
@@ -504,70 +506,81 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
 <style scoped>
 /* Base Container */
 .catalog-container {
+  width: 100%;
   max-width: 1440px;
   margin: 0 auto;
-  padding: 0.5rem;
+  padding: 0;
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
-/* Container para mantener proporciones consistentes */
-.category-banner-container {
-  margin-bottom: 2rem;
-  width: 100%;
-  position: relative;
-  padding: 0;
+@media (min-width: 1440px) {
+  .catalog-container {
+    padding: 0 1rem;
+  }
 }
 
-/* Category Banner - Corregido para ser responsive */
+/* Category Banner Container */
+.category-banner-container {
+  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Banner principal con efectos mejorados */
 .category-banner {
   position: relative;
-  height: clamp(200px, 40vh, 500px);
+  height: clamp(200px, 45vw, 600px);
   cursor: pointer;
   overflow: hidden;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  width: 100%;
+  will-change: transform, box-shadow;
+}
+
+.category-banner:hover {
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
 }
 
 .category-banner img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+  transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+  will-change: transform;
+}
+
+.category-banner:hover img {
+  transform: scale(1.05);
 }
 
 /* Overlay con gradiente mejorado y animaciones */
 .banner-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to right,
+  background: linear-gradient(90deg, 
     rgba(0, 0, 0, 0.8) 0%,
     rgba(0, 0, 0, 0.6) 30%,
     rgba(0, 0, 0, 0.3) 60%,
-    rgba(0, 0, 0, 0) 100%
-  );
+    rgba(0, 0, 0, 0) 100%);
   display: flex;
   align-items: center;
   color: #fff;
-  padding: 2rem;
+  padding: clamp(1rem, 2vw, 2.5rem);
   transition: background 0.3s ease;
 }
 
 .category-banner:hover .banner-overlay {
-  background: linear-gradient(
-    to right,
+  background: linear-gradient(90deg, 
     rgba(0, 0, 0, 0.85) 0%,
     rgba(0, 0, 0, 0.65) 30%,
     rgba(0, 0, 0, 0.35) 60%,
-    rgba(0, 0, 0, 0) 100%
-  );
+    rgba(0, 0, 0, 0) 100%);
 }
 
 /* Contenido del banner con animaciones */
 .banner-content {
-  max-width: 600px;
+  max-width: min(90%, 600px);
   transform: translateY(0);
   opacity: 1;
   transition: transform 0.5s ease, opacity 0.5s ease;
@@ -577,40 +590,42 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   transform: translateY(-5px);
 }
 
-.banner-overlay h2 {
-  font-size: clamp(1.5rem, 4vw, 3rem);
+.banner-title {
+  font-size: clamp(1.2rem, 3vw, 2.5rem);
   font-weight: 800;
-  margin-bottom: 1rem;
+  margin-bottom: clamp(0.75rem, 2vw, 1.5rem);
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   position: relative;
   display: inline-block;
+  margin-left: clamp(1rem, 5vw, 3rem);
 }
 
-.banner-overlay h2::after {
+.banner-title::after {
   content: '';
   position: absolute;
   bottom: -5px;
   left: 0;
   width: 60px;
   height: 3px;
-  background-color: #3498db;
+  background-color: var(--primary-color, #3498db);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.category-banner:hover .banner-overlay h2::after {
+.category-banner:hover .banner-title::after {
   transform: scaleX(1);
 }
 
 .banner-description-container {
   position: relative;
-  margin-bottom: 1.5rem;
+  margin-left: clamp(1rem, 5vw, 3rem);
 }
 
 .banner-description {
-  font-size: clamp(0.9rem, 2vw, 1.25rem);
-  max-width: 60ch;
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  max-width: min(90%, 60ch);
+  margin-bottom: clamp(0.75rem, 2vw, 1.5rem);
   line-height: 1.6;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   opacity: 0.9;
@@ -619,7 +634,7 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
 .read-more-btn {
   background: none;
   border: none;
-  color: #3498db;
+  color: var(--primary-color, #3498db);
   font-weight: 600;
   cursor: pointer;
   padding: 0;
@@ -632,13 +647,13 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
 }
 
 .read-more-btn:hover {
-  color: #2980b9;
+  color: var(--primary-hover-color, #2980b9);
 }
 
 /* Botón CTA mejorado */
 .banner-cta {
-  padding: 0.75rem 1.5rem;
-  background: #3498db;
+  padding: clamp(0.5rem, 1vw, 0.75rem) clamp(1rem, 1.5vw, 1.5rem);
+  background: var(--primary-color, #3498db);
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -653,6 +668,7 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   overflow: hidden;
   z-index: 1;
   box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+  margin-left: clamp(1rem, 5vw, 3rem);
 }
 
 .banner-cta::before {
@@ -662,7 +678,7 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: #2980b9;
+  background: var(--primary-hover-color, #2980b9);
   transform: translateX(-100%);
   transition: transform 0.3s ease;
   z-index: -1;
@@ -721,8 +737,14 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
 }
 
 @keyframes slideUp {
-  from { transform: translateY(30px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .modal-header {
@@ -791,17 +813,17 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
 }
 
 .modal-btn.primary {
-  background-color: #3498db;
+  background-color: var(--primary-color, #3498db);
   color: white;
-  border-color: #3498db;
+  border-color: var(--primary-color, #3498db);
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
 .modal-btn.primary:hover {
-  background-color: #2980b9;
-  border-color: #2980b9;
+  background-color: var(--primary-hover-color, #2980b9);
+  border-color: var(--primary-hover-color, #2980b9);
 }
 
 .modal-btn.primary i {
@@ -812,26 +834,21 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   transform: translateX(3px);
 }
 
-/* Clase para prevenir scroll del body cuando el modal está abierto */
-:global(.modal-open) {
-  overflow: hidden;
-}
-
 /* Category Header */
 .category-header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
 }
 
 .category-header h2 {
-  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--text-color, #333);
   margin-bottom: 0.5rem;
 }
 
 .text-accent {
-  color: #3498db;
+  color: var(--primary-color, #3498db);
   position: relative;
 }
 
@@ -842,7 +859,7 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   left: 0;
   width: 100%;
   height: 2px;
-  background-color: #3498db;
+  background-color: var(--primary-color, #3498db);
   transform: scaleX(0);
   transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   transform-origin: left;
@@ -859,20 +876,21 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   margin: 0 auto;
 }
 
-/* Products Grid - Actualizado con estilos de productos recientes */
+/* Products Grid */
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: clamp(0.75rem, 1.5vw, 1.5rem);
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+  padding: 0.5rem;
 }
 
 /* Product Card */
 .product-card {
-  background: white;
+  background: var(--background-color, white);
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 3px 6px var(--shadow-color, rgba(0, 0, 0, 0.1));
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
   opacity: 0;
@@ -882,27 +900,7 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   height: 100%;
   display: flex;
   flex-direction: column;
-}
-
-/* Estilo para productos activos */
-.product-active {
-  box-shadow: 0 0 0 2px #27ae60, 0 3px 6px rgba(0, 0, 0, 0.05);
-}
-
-.active-indicator {
-  position: absolute;
-  top: 0.5rem;
-  left: 0.5rem;
-  background-color: #27ae60;
-  color: white;
-  padding: 0.25rem 0.5rem;
-  border-radius: 9999px;
-  font-size: 0.65rem;
-  font-weight: 700;
-  z-index: 2;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  will-change: transform, opacity;
 }
 
 @keyframes fadeInUp {
@@ -945,6 +943,7 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   height: 100%;
   object-fit: contain;
   transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+  will-change: transform;
 }
 
 .product-card:hover .product-image img {
@@ -957,8 +956,8 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   top: 50%;
   transform: translateY(-50%);
   background: rgba(255, 255, 255, 0.9);
-  width: 30px;
-  height: 30px;
+  width: clamp(28px, 3vw, 36px);
+  height: clamp(28px, 3vw, 36px);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -970,6 +969,7 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   cursor: pointer;
   color: #2d3748;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: clamp(0.7rem, 1vw, 0.9rem);
 }
 
 .nav-button.prev {
@@ -987,7 +987,7 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
 .nav-button:hover {
   background-color: white;
   transform: translateY(-50%) scale(1.1);
-  color: #3498db;
+  color: var(--primary-color, #3498db);
 }
 
 /* Badges */
@@ -1014,32 +1014,9 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   letter-spacing: 0.5px;
 }
 
-.badge-new {
-  background: linear-gradient(45deg, #48bb78, #38a169);
-  color: white;
-  animation: pulse 2s infinite;
-}
-
-.badge-sale {
-  background: linear-gradient(45deg, #ed8936, #dd6b20);
-  color: white;
-}
-
 .badge-preventa {
   background: linear-gradient(45deg, #ed8936, #dd6b20);
   color: white;
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
-  }
 }
 
 /* Product Actions */
@@ -1066,8 +1043,8 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
 .action-button {
   background-color: rgba(255, 255, 255, 0.9);
   border: none;
-  width: 30px;
-  height: 30px;
+  width: clamp(28px, 2.5vw, 35px);
+  height: clamp(28px, 2.5vw, 35px);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1077,7 +1054,7 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   backdrop-filter: blur(4px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   color: #2d3748;
-  font-size: 0.75rem;
+  font-size: clamp(0.7rem, 1vw, 0.85rem);
 }
 
 .action-button:hover {
@@ -1085,7 +1062,7 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
 }
 
 .cart-btn:hover {
-  background-color: #3498db;
+  background-color: var(--primary-color, #3498db);
   color: white;
 }
 
@@ -1114,6 +1091,7 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+  background-color: var(--background-color, white);
 }
 
 .category {
@@ -1131,7 +1109,7 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
 .product-name {
   font-size: 0.875rem;
   font-weight: 700;
-  color: #2d3748;
+  color: var(--text-color, #333);
   line-height: 1.4;
   transition: color 0.3s ease;
   display: -webkit-box;
@@ -1144,7 +1122,7 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
 }
 
 .product-card:hover .product-name {
-  color: #3498db;
+  color: var(--primary-color, #3498db);
 }
 
 /* NUEVO DISEÑO DE PRECIOS */
@@ -1293,7 +1271,6 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   font-weight: 700;
 }
 
-
 .summary-label {
   color: #4a5568;
   font-weight: 600;
@@ -1322,7 +1299,7 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   border-radius: 4px;
 }
 
-/* Loading Overlay */
+/* Loading State */
 .loading-overlay {
   position: fixed;
   top: 0;
@@ -1340,12 +1317,13 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
 
 .spinner {
   border: 4px solid rgba(52, 152, 219, 0.2);
-  border-top: 4px solid #3498db;
+  border-top: 4px solid var(--primary-color, #3498db);
   border-radius: 50%;
   width: 50px;
   height: 50px;
-  animation: spin 1s linear infinite;
+  animation: spin 1s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
   margin-bottom: 1rem;
+  box-shadow: 0 4px 10px rgba(52, 152, 219, 0.2);
 }
 
 @keyframes spin {
@@ -1353,27 +1331,30 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   100% { transform: rotate(360deg); }
 }
 
-/* Error State */
+/* Error Message */
 .error-message {
   text-align: center;
-  padding: 3rem 2rem;
+  padding: 2rem 1.5rem;
   background-color: #fff5f5;
   border-radius: 12px;
   margin-bottom: 2rem;
+  box-shadow: 0 10px 25px rgba(254, 178, 178, 0.2);
   border: 1px solid #fed7d7;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
+  animation: fadeIn 0.5s ease;
 }
 
 .error-icon {
-  font-size: 3rem;
+  font-size: 2.5rem;
   color: #e53e3e;
+  margin-bottom: 0.5rem;
 }
 
 .retry-button {
-  background-color: #3498db;
+  background: linear-gradient(45deg, var(--primary-color, #3498db), var(--primary-hover-color, #2980b9));
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -1381,16 +1362,20 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   cursor: pointer;
   transition: all 0.3s ease;
   font-weight: 600;
-  margin-top: 1rem;
-  display: flex;
+  margin-top: 0.75rem;
+  box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
 }
 
 .retry-button:hover {
-  background-color: #2980b9;
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+}
+
+.retry-button:active {
+  transform: translateY(0);
 }
 
 /* Skeleton Loader */
@@ -1420,13 +1405,13 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
 
 .skeleton-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: 1.5rem;
 }
 
 .skeleton-card {
   background: #f5f5f5;
-  border-radius: 10px;
+  border-radius: 12px;
   overflow: hidden;
 }
 
@@ -1454,12 +1439,8 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   opacity: 0;
 }
 
-/* Responsive Styles */
+/* Responsive Styles - Enhanced to match carousel */
 @media (min-width: 1200px) {
-  .catalog-container {
-    padding: 1.5rem;
-  }
-  
   .products-grid {
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 1.5rem;
@@ -1474,6 +1455,14 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
     height: 2.8rem;
   }
 
+  .price-value {
+    font-size: 0.9rem;
+  }
+
+  .summary-price {
+    font-size: 0.9rem;
+  }
+
   .action-button {
     width: 35px;
     height: 35px;
@@ -1484,29 +1473,31 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
     width: 35px;
     height: 35px;
   }
-
-  .badge {
-    padding: 0.35rem 0.7rem;
-    font-size: 0.7rem;
-  }
 }
 
 @media (min-width: 992px) and (max-width: 1199px) {
-  .catalog-container {
-    padding: 1.25rem;
-  }
-  
   .products-grid {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 1.25rem;
   }
+  
+  .category-banner {
+    height: clamp(200px, 50vw, 500px);
+  }
+  
+  .banner-title {
+    font-size: clamp(1.1rem, 2.8vw, 2.2rem);
+  }
+  
+  .banner-overlay {
+    background: linear-gradient(90deg, 
+      rgba(0, 0, 0, 0.65) 0%,
+      rgba(0, 0, 0, 0.3) 70%, 
+      rgba(0, 0, 0, 0.1) 100%);
+  }
 }
 
 @media (min-width: 768px) and (max-width: 991px) {
-  .catalog-container {
-    padding: 1rem;
-  }
-  
   .products-grid {
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 1rem;
@@ -1519,21 +1510,42 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   .nav-button {
     opacity: 0.7;
   }
-  
+
   .category-banner {
-    height: clamp(200px, 40vh, 400px);
+    height: clamp(180px, 50vw, 350px);
   }
-  
+
   .banner-overlay {
-    padding: 1.5rem;
+    background: linear-gradient(90deg,
+        rgba(0, 0, 0, 0.7) 0%,
+        rgba(0, 0, 0, 0.4) 60%,
+        rgba(0, 0, 0, 0.2) 100%);
+    padding: clamp(0.75rem, 3vw, 1.5rem);
+  }
+
+  .banner-title {
+    font-size: clamp(1rem, 2.5vw, 1.8rem);
+    margin-bottom: clamp(0.5rem, 1.5vw, 1rem);
+    margin-left: clamp(0.5rem, 3vw, 1.5rem);
+  }
+
+  .banner-description {
+    font-size: clamp(0.875rem, 1.8vw, 1rem);
+    margin-bottom: 1rem;
+  }
+
+  .banner-cta {
+    padding: 0.6rem 1.25rem;
+    font-size: 0.875rem;
+    margin-left: clamp(0.5rem, 3vw, 1.5rem);
+  }
+
+  .modal-content {
+    max-width: 90%;
   }
 }
 
 @media (min-width: 576px) and (max-width: 767px) {
-  .catalog-container {
-    padding: 0.75rem;
-  }
-  
   .products-grid {
     grid-template-columns: repeat(3, 1fr);
     gap: 0.75rem;
@@ -1556,150 +1568,195 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   }
   
   .category-banner {
-    height: clamp(180px, 35vh, 350px);
+    height: clamp(160px, 55vw, 280px);
   }
   
   .banner-overlay {
-    background: linear-gradient(
-      to right,
-      rgba(0, 0, 0, 0.85) 0%,
-      rgba(0, 0, 0, 0.7) 40%,
-      rgba(0, 0, 0, 0.4) 70%,
-      rgba(0, 0, 0, 0.2) 100%
-    );
-    padding: 1.25rem;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(90deg,
+        rgba(0, 0, 0, 0.75) 0%,
+        rgba(0, 0, 0, 0.4) 100%);
   }
   
-  .banner-description {
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
-  }
-  
-  .banner-cta {
-    padding: 0.6rem 1.25rem;
-    font-size: 0.875rem;
-  }
-}
-
-@media (max-width: 575px) {
-  .banner-overlay {
-    background: linear-gradient(
-      to right,
-      rgba(0, 0, 0, 0.9) 0%,
-      rgba(0, 0, 0, 0.8) 60%,
-      rgba(0, 0, 0, 0.6) 100%
-    );
-    padding: 1rem;
-  }
-  
-  .banner-content {
-    max-width: 100%;
-  }
-  
-  .banner-description {
-    -webkit-line-clamp: 2;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    max-width: 100%;
-  }
-}
-
-@media (min-width: 480px) and (max-width: 575px) {
-  .catalog-container {
-    padding: 0.5rem;
-  }
-  
-  .products-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.5rem;
-  }
-
-  .product-info {
-    padding: 0.5rem;
-  }
-
-  .product-name {
-    font-size: 0.8rem;
-    height: 2.2rem;
-    margin-bottom: 0.25rem;
-  }
-
-  .category {
-    font-size: 0.65rem;
-    margin-bottom: 0.25rem;
-  }
-
-  .action-button {
-    width: 26px;
-    height: 26px;
-    font-size: 0.7rem;
-  }
-
-  .nav-button {
-    width: 26px;
-    height: 26px;
-  }
-
-  .badge {
-    padding: 0.2rem 0.4rem;
-    font-size: 0.6rem;
-  }
-  
-  .category-banner {
-    height: clamp(160px, 30vh, 300px);
-  }
-  
-  .banner-overlay h2 {
-    font-size: 1.25rem;
+  .banner-title {
+    font-size: clamp(0.9rem, 5vw, 1.4rem);
     margin-bottom: 0.5rem;
+    margin-left: 0.5rem;
   }
   
   .banner-description {
     font-size: 0.8rem;
     margin-bottom: 0.75rem;
+    -webkit-line-clamp: 2;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-left: 0.5rem;
   }
   
   .banner-cta {
-    padding: 0.5rem 1rem;
+    padding: 0.4rem 0.8rem;
     font-size: 0.8rem;
+    margin-left: 0.5rem;
+  }
+  
+  .price-details.expanded {
+    max-height: 350px;
   }
 }
 
-@media (max-width: 479px) {
-  .catalog-container {
-    padding: 0.5rem;
-  }
-  
+@media (max-width: 575px) {
   .products-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 0.5rem;
   }
-
-  .product-info {
-    padding: 0.5rem;
+  
+  .category-banner {
+    height: clamp(140px, 60vw, 240px);
   }
 
+  .banner-overlay {
+    padding: 0.5rem;
+    background: linear-gradient(90deg,
+        rgba(0, 0, 0, 0.8) 0%,
+        rgba(0, 0, 0, 0.5) 100%);
+  }
+
+  .banner-title {
+    font-size: clamp(0.85rem, 4.5vw, 1.2rem);
+    margin-bottom: 0.4rem;
+    text-align: left;
+    margin-left: 0.3rem;
+  }
+
+  .banner-description-container {
+    margin-left: 0.3rem;
+  }
+
+  .banner-description {
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+    -webkit-line-clamp: 2;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .banner-cta {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.75rem;
+    margin-left: 0.3rem;
+  }
+
+  .modal-header h3 {
+    font-size: 1.25rem;
+  }
+
+  .modal-body {
+    padding: 1rem;
+    font-size: 0.9rem;
+  }
+
+  .modal-footer {
+    padding: 0.75rem 1rem;
+  }
+
+  .modal-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+  
+  .prices-container {
+    margin-top: 0.25rem;
+  }
+  
+  .prices-header {
+    padding: 0.3rem 0.5rem;
+  }
+  
+  .prices-title {
+    font-size: 0.7rem;
+  }
+  
+  .toggle-prices-btn {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .price-details.expanded {
+    max-height: 400px;
+  }
+  
   .product-name {
     font-size: 0.8rem;
     height: 2.2rem;
-    margin-bottom: 0.25rem;
   }
+}
 
-  .category {
-    font-size: 0.65rem;
-    margin-bottom: 0.25rem;
+@media (max-width: 480px) {
+  .category-banner {
+    height: clamp(120px, 55vw, 200px);
   }
   
-  .category-banner {
-    height: clamp(150px, 30vh, 250px);
+  .banner-title {
+    font-size: clamp(0.8rem, 4vw, 1.1rem);
+    margin-bottom: 0.3rem;
   }
   
   .banner-description {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    font-size: 0.75rem;
+    -webkit-line-clamp: 1;
+    margin-bottom: 0.4rem;
+  }
+  
+  .banner-cta {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.7rem;
+  }
+  
+  .product-actions-bottom {
+    padding: 0.3rem;
+    gap: 0.3rem;
+  }
+  
+  .action-button {
+    width: 26px;
+    height: 26px;
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.4rem;
+  }
+  
+  .category-banner {
+    height: clamp(100px, 50vw, 180px);
+  }
+
+  .banner-title {
+    font-size: clamp(0.75rem, 4vw, 1rem);
+    margin-bottom: 0.2rem;
+  }
+
+  .banner-description {
+    display: none;
+  }
+
+  .banner-cta {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.65rem;
+  }
+  
+  .product-name {
+    font-size: 0.7rem;
+    height: 2rem;
+  }
+  
+  .price-value, .summary-price {
+    font-size: 0.7rem;
   }
 }
 
@@ -1726,33 +1783,51 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   .product-card:active {
     transform: scale(0.98);
   }
-  
+
   .category-banner:hover {
     transform: none;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   }
-  
+
   .category-banner:hover img {
-    transform: none;
+    transform: scale(1);
   }
-  
-  .banner-cta:active {
-    transform: scale(0.95);
+
+  .banner-title::after {
+    transform: scaleX(1);
+    width: 40px;
+  }
+
+  .banner-cta {
+    background: linear-gradient(to right, var(--primary-color, #3498db), var(--primary-hover-color, #2980b9));
+  }
+
+  .banner-cta::before {
+    display: none;
   }
 }
 
 /* Accessibility Improvements */
 @media (prefers-reduced-motion: reduce) {
-  .product-card {
+  .product-card,
+  .category-banner,
+  .modal-content,
+  .description-modal {
     animation: none;
     opacity: 1;
     transform: none;
   }
 
-  .product-card:hover {
+  .product-card:hover,
+  .category-banner:hover,
+  .banner-cta:hover,
+  .action-button:hover,
+  .nav-button:hover {
     transform: none;
   }
 
-  .product-card:hover .product-image img {
+  .product-card:hover .product-image img,
+  .category-banner:hover img {
     transform: none;
   }
 
@@ -1760,13 +1835,9 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
     animation: none;
   }
 
-  .badge-new {
-    animation: none;
-  }
-
   .retry-button:hover,
   .action-button:hover,
-  .banner-cta:hover {
+  .modal-btn:hover {
     transform: none;
   }
 
@@ -1781,29 +1852,45 @@ watch(() => router.currentRoute.value.params.idCatalogoHistorial, (newId) => {
   .skeleton-details {
     animation: none;
   }
-  
-  .category-banner:hover {
+
+  .banner-title::after,
+  .banner-cta::before,
+  .banner-cta i,
+  .modal-btn.primary i {
+    transition: none;
     transform: none;
-  }
-  
-  .category-banner:hover img {
-    transform: none;
-  }
-  
-  .banner-overlay h2::after {
-    transition: none;
-  }
-  
-  .banner-cta::before {
-    transition: none;
-  }
-  
-  .banner-cta i {
-    transition: none;
   }
   
   .price-details {
     transition: none;
+  }
+}
+
+/* Print styles */
+@media print {
+  .category-banner {
+    height: auto;
+    box-shadow: none;
+  }
+  
+  .banner-overlay {
+    position: relative;
+    background: none;
+    color: black;
+  }
+  
+  .banner-title {
+    color: black;
+    text-shadow: none;
+  }
+  
+  .banner-cta {
+    display: none;
+  }
+  
+  .product-actions-bottom,
+  .nav-button {
+    display: none;
   }
 }
 </style>

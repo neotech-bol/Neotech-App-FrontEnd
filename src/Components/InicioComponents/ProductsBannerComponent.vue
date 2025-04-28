@@ -538,7 +538,6 @@ const irCategoria = (idCategoria, nameCategoria) => {
   height: clamp(200px, 45vw, 600px);
   cursor: pointer;
   overflow: hidden;
-  border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   will-change: transform, box-shadow;
@@ -888,6 +887,7 @@ const irCategoria = (idCategoria, nameCategoria) => {
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
   gap: clamp(0.75rem, 1.5vw, 1.5rem);
   margin-bottom: clamp(2rem, 4vw, 3rem);
+  padding: 0.5rem;
 }
 
 /* Product Card */
@@ -1624,7 +1624,6 @@ const irCategoria = (idCategoria, nameCategoria) => {
   
   .category-banner {
     height: clamp(140px, 60vw, 240px);
-    border-radius: 8px;
   }
 
   .banner-overlay {

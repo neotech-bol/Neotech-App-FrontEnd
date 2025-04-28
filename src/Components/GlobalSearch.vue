@@ -4,35 +4,16 @@
       <div class="global-search">
         <div class="search-container" :class="{ 'active': isSearchActive }">
           <div class="search-input-wrapper">
-            <input
-              type="text"
-              v-model="searchQuery"
-              @input="handleInput"
-              @focus="handleFocus"
-              @keyup.enter="performSearch"
-              @keydown.down.prevent="navigateResults('down')"
-              @keydown.up.prevent="navigateResults('up')"
-              @keydown.esc="clearSearch"
-              placeholder="Buscar productos, categorías, catálogos..."
-              class="search-input"
-              ref="searchInput"
-            />
-            <button 
-              v-if="searchQuery" 
-              @click="clearSearch" 
-              class="clear-button" 
-              aria-label="Limpiar búsqueda"
-              type="button"
-            >
+            <input type="text" v-model="searchQuery" @input="handleInput" @focus="handleFocus"
+              @keyup.enter="performSearch" @keydown.down.prevent="navigateResults('down')"
+              @keydown.up.prevent="navigateResults('up')" @keydown.esc="clearSearch"
+              placeholder="Buscar productos, categorías, catálogos..." class="search-input" ref="searchInput" />
+            <button v-if="searchQuery" @click="clearSearch" class="clear-button" aria-label="Limpiar búsqueda"
+              type="button">
               <i class="fas fa-times"></i>
             </button>
-            <button 
-              @click="performSearch" 
-              class="search-button" 
-              :disabled="isLoading"
-              aria-label="Buscar"
-              type="button"
-            >
+            <button @click="performSearch" class="search-button" :disabled="isLoading" aria-label="Buscar"
+              type="button">
               <i class="fas" :class="isLoading ? 'fa-spinner fa-spin' : 'fa-search'"></i>
             </button>
           </div>
@@ -54,13 +35,10 @@
                     <i class="fas fa-box"></i> Productos
                   </h3>
                   <ul class="result-list">
-                    <li 
-                      v-for="(producto, index) in resultadosProductos" 
-                      :key="`producto-${producto.id}`"
+                    <li v-for="(producto, index) in resultadosProductos" :key="`producto-${producto.id}`"
                       :class="['result-item', { 'selected': selectedIndex === getGlobalIndex('productos', index) }]"
                       @click="navigateToResult('producto', producto.id)"
-                      @mouseover="selectedIndex = getGlobalIndex('productos', index)"
-                    >
+                      @mouseover="selectedIndex = getGlobalIndex('productos', index)">
                       <div class="result-icon">
                         <i class="fas fa-box"></i>
                       </div>
@@ -77,13 +55,10 @@
                     <i class="fas fa-tag"></i> Categorías
                   </h3>
                   <ul class="result-list">
-                    <li 
-                      v-for="(categoria, index) in resultadosCategorias" 
-                      :key="`categoria-${categoria.id}`"
+                    <li v-for="(categoria, index) in resultadosCategorias" :key="`categoria-${categoria.id}`"
                       :class="['result-item', { 'selected': selectedIndex === getGlobalIndex('categorias', index) }]"
                       @click="navigateToResult('categoria', categoria.id)"
-                      @mouseover="selectedIndex = getGlobalIndex('categorias', index)"
-                    >
+                      @mouseover="selectedIndex = getGlobalIndex('categorias', index)">
                       <div class="result-icon">
                         <i class="fas fa-tag"></i>
                       </div>
@@ -100,13 +75,10 @@
                     <i class="fas fa-book"></i> Catálogos
                   </h3>
                   <ul class="result-list">
-                    <li 
-                      v-for="(catalogo, index) in resultadosCatalogos" 
-                      :key="`catalogo-${catalogo.id}`"
+                    <li v-for="(catalogo, index) in resultadosCatalogos" :key="`catalogo-${catalogo.id}`"
                       :class="['result-item', { 'selected': selectedIndex === getGlobalIndex('catalogos', index) }]"
                       @click="navigateToResult('catalogo', catalogo.id)"
-                      @mouseover="selectedIndex = getGlobalIndex('catalogos', index)"
-                    >
+                      @mouseover="selectedIndex = getGlobalIndex('catalogos', index)">
                       <div class="result-icon">
                         <i class="fas fa-book"></i>
                       </div>
@@ -123,13 +95,10 @@
                     <i class="fas fa-lightbulb"></i> Sugerencias
                   </h3>
                   <ul class="result-list">
-                    <li 
-                      v-for="(sugerencia, index) in sugerencias" 
-                      :key="`sugerencia-${index}`"
+                    <li v-for="(sugerencia, index) in sugerencias" :key="`sugerencia-${index}`"
                       :class="['result-item', { 'selected': selectedIndex === getGlobalIndex('sugerencias', index) }]"
                       @click="applySearchSuggestion(sugerencia)"
-                      @mouseover="selectedIndex = getGlobalIndex('sugerencias', index)"
-                    >
+                      @mouseover="selectedIndex = getGlobalIndex('sugerencias', index)">
                       <div class="result-icon">
                         <i class="fas fa-search"></i>
                       </div>
@@ -141,7 +110,8 @@
                 </div>
 
                 <!-- Sin resultados -->
-                <div v-if="searchResults.length === 0 && sugerencias.length === 0 && searchQuery.length >= 2" class="no-results">
+                <div v-if="searchResults.length === 0 && sugerencias.length === 0 && searchQuery.length >= 2"
+                  class="no-results">
                   <i class="fas fa-search"></i>
                   <p>No se encontraron resultados para "<strong>{{ searchQuery }}</strong>"</p>
                   <p class="no-results-tip">Intenta con otras palabras o términos más generales</p>
@@ -149,14 +119,14 @@
               </template>
 
               <!-- Footer de resultados -->
-            <!--   <div v-if="searchResults.length > 0" class="results-footer">
+              <!--   <div v-if="searchResults.length > 0" class="results-footer">
                 <span class="results-count">{{ totalResults }} resultados encontrados</span>
                 <button @click="showAllResults" class="show-all-button" type="button">
                   Ver todos los resultados <i class="fas fa-arrow-right"></i>
                 </button>
               </div> -->
             </div>
-            
+
             <!-- Overlay para cerrar los resultados al hacer clic fuera -->
             <div class="search-overlay" @click="clearSearch"></div>
           </div>
@@ -164,7 +134,7 @@
       </div>
     </div>
   </Teleport>
-  
+
   <!-- Elemento placeholder para mantener el espacio en el layout original -->
   <div class="search-placeholder"></div>
 </template>
@@ -191,13 +161,13 @@ const searchPosition = ref({ top: 0, left: 0, width: 0 });
 
 // Computed para controlar cuándo mostrar los resultados
 const showResults = computed(() => {
-  return isSearchActive.value && 
-         (searchResults.value.length > 0 || sugerencias.value.length > 0 || isLoading.value || searchQuery.value.length >= 2);
+  return isSearchActive.value &&
+    (searchResults.value.length > 0 || sugerencias.value.length > 0 || isLoading.value || searchQuery.value.length >= 2);
 });
 
 // Función debounce personalizada
 const debounce = (func, wait) => {
-  return function(...args) {
+  return function (...args) {
     clearTimeout(debounceTimeout);
     debounceTimeout = setTimeout(() => {
       func.apply(this, args);
@@ -225,7 +195,7 @@ const totalResults = computed(() => {
 // Obtener el índice global para la navegación con teclado
 const getGlobalIndex = (type, localIndex) => {
   let globalIndex = localIndex;
-  
+
   if (type === 'categorias') {
     globalIndex += resultadosProductos.value.length;
   } else if (type === 'catalogos') {
@@ -233,25 +203,25 @@ const getGlobalIndex = (type, localIndex) => {
   } else if (type === 'sugerencias') {
     globalIndex += resultadosProductos.value.length + resultadosCategorias.value.length + resultadosCatalogos.value.length;
   }
-  
+
   return globalIndex;
 };
 
 // Función para realizar la búsqueda
 const performSearch = async () => {
   if (!searchQuery.value || searchQuery.value.length < 2) return;
-  
+
   isLoading.value = true;
   searchResults.value = [];
   sugerencias.value = [];
-  
+
   try {
     // Usar el servicio de búsqueda existente
     const response = await searchProductoCategoriaCatalogo(searchQuery.value.trim());
-    
+
     if (response && response.data) {
       const data = response.data;
-      
+
       // Procesar resultados
       if (data.results) {
         // Productos
@@ -264,7 +234,7 @@ const performSearch = async () => {
             });
           });
         }
-        
+
         // Categorías
         if (data.results.categorias) {
           data.results.categorias.forEach(categoria => {
@@ -275,7 +245,7 @@ const performSearch = async () => {
             });
           });
         }
-        
+
         // Catálogos
         if (data.results.catalogos) {
           data.results.catalogos.forEach(catalogo => {
@@ -287,12 +257,12 @@ const performSearch = async () => {
           });
         }
       }
-      
+
       // Procesar sugerencias
       if (data.sugerencias) {
         sugerencias.value = data.sugerencias;
       }
-      
+
       // Guardar búsqueda reciente
       saveRecentSearch(searchQuery.value.trim());
     }
@@ -335,14 +305,14 @@ const clearSearch = () => {
 // Navegar a un resultado
 const navigateToResult = (type, id) => {
   isSearchActive.value = false;
-  
+
   // Definir las rutas según el tipo de resultado
   const routes = {
     producto: `/producto/${id}`,
     categoria: `/categoria/${id}`,
     catalogo: `/catalogo-activo/${id}`
   };
-  
+
   if (routes[type]) {
     router.push(routes[type]);
   }
@@ -357,15 +327,15 @@ const applySearchSuggestion = (suggestion) => {
 // Navegar por los resultados con teclado
 const navigateResults = (direction) => {
   const totalItems = searchResults.value.length + sugerencias.value.length;
-  
+
   if (totalItems === 0) return;
-  
+
   if (direction === 'down') {
     selectedIndex.value = (selectedIndex.value + 1) % totalItems;
   } else if (direction === 'up') {
     selectedIndex.value = (selectedIndex.value - 1 + totalItems) % totalItems;
   }
-  
+
   // Seleccionar el elemento actual al presionar Enter
   if (selectedIndex.value !== -1) {
     const item = getSelectedItem();
@@ -382,7 +352,7 @@ const navigateResults = (direction) => {
 // Obtener el elemento seleccionado actualmente
 const getSelectedItem = () => {
   if (selectedIndex.value < 0) return null;
-  
+
   const allItems = [
     ...resultadosProductos.value.map(item => ({ ...item })),
     ...resultadosCategorias.value.map(item => ({ ...item })),
@@ -393,7 +363,7 @@ const getSelectedItem = () => {
       type: 'sugerencia'
     }))
   ];
-  
+
   return allItems[selectedIndex.value] || null;
 };
 
@@ -448,11 +418,11 @@ const checkNavigationStatus = () => {
   if (sidebarElement) {
     isSidebarOpen.value = sidebarElement.classList.contains('open');
   }
-  
+
   // Verificar menú móvil
   const mobileMenuElement = document.querySelector('.main-nav.mobile-nav-open');
   isMenuOpen.value = !!mobileMenuElement;
-  
+
   // Si alguno está abierto, cerrar los resultados de búsqueda
   if ((isSidebarOpen.value || isMenuOpen.value) && isSearchActive.value) {
     isSearchActive.value = false;
@@ -470,7 +440,7 @@ const updateSearchPosition = () => {
         left: rect.left,
         width: rect.width
       };
-      
+
       // Aplicar posición al portal
       const portal = document.querySelector('.global-search-portal');
       if (portal) {
@@ -487,11 +457,11 @@ const updateSearchPosition = () => {
 const handleCatalogButtonClick = (event) => {
   // Verificar si el clic fue en un botón de catálogo
   const target = event.target;
-  const isCatalogButton = 
-    target.classList.contains('catalog-button') || 
-    target.closest('.catalog-button') || 
+  const isCatalogButton =
+    target.classList.contains('catalog-button') ||
+    target.closest('.catalog-button') ||
     (target.classList.contains('mobile-nav-item') && target.textContent.includes('Catálogo'));
-  
+
   if (isCatalogButton) {
     // Cerrar la búsqueda
     clearSearch();
@@ -504,10 +474,10 @@ onMounted(() => {
   document.addEventListener('click', handleCatalogButtonClick);
   window.addEventListener('resize', updateSearchPosition);
   loadRecentSearches();
-  
+
   // Inicializar posición
   updateSearchPosition();
-  
+
   // Observar cambios en el DOM para detectar cuando se abre/cierra el sidebar o menú
   const observer = new MutationObserver(() => {
     checkNavigationStatus();
@@ -515,15 +485,15 @@ onMounted(() => {
       updateSearchPosition();
     }
   });
-  
+
   // Observar cambios en el cuerpo del documento
-  observer.observe(document.body, { 
-    childList: true, 
+  observer.observe(document.body, {
+    childList: true,
     subtree: true,
     attributes: true,
     attributeFilter: ['class']
   });
-  
+
   // Limpiar al desmontar
   onUnmounted(() => {
     document.removeEventListener('keydown', handleEscKey);
@@ -539,7 +509,7 @@ watch(isSearchActive, (newValue) => {
   if (newValue) {
     // Verificar si el sidebar o menú está abierto
     checkNavigationStatus();
-    
+
     // Enfocar el input cuando se activa la búsqueda
     nextTick(() => {
       if (searchInput.value) {
@@ -564,13 +534,15 @@ watch([isSidebarOpen, isMenuOpen], ([newSidebarOpen, newMenuOpen]) => {
 /* Placeholder para mantener el espacio en el layout original */
 .search-placeholder {
   width: 100%;
-  height: 48px; /* Altura aproximada del input de búsqueda */
+  height: 48px;
+  /* Altura aproximada del input de búsqueda */
   max-width: 600px;
   margin: 0 auto;
 }
 
 .global-search-portal {
-  z-index: 9999; /* Valor muy alto para estar por encima de todo */
+  z-index: 9999;
+  /* Valor muy alto para estar por encima de todo */
 }
 
 .global-search {
@@ -663,7 +635,8 @@ watch([isSidebarOpen, isMenuOpen], ([newSidebarOpen, newMenuOpen]) => {
   height: 100%;
   display: flex;
   justify-content: center;
-  z-index: 9999; /* Valor muy alto para estar por encima de todo */
+  z-index: 9999;
+  /* Valor muy alto para estar por encima de todo */
 }
 
 .search-overlay {
@@ -677,7 +650,8 @@ watch([isSidebarOpen, isMenuOpen], ([newSidebarOpen, newMenuOpen]) => {
 
 .search-results {
   position: absolute;
-  top: 48px; /* Altura del input */
+  top: 48px;
+  /* Altura del input */
   width: 100%;
   max-width: 600px;
   background-color: var(--background-color, #fff);
@@ -686,7 +660,8 @@ watch([isSidebarOpen, isMenuOpen], ([newSidebarOpen, newMenuOpen]) => {
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
   max-height: 70vh;
   overflow-y: auto;
-  z-index: 1; /* Solo necesita ser mayor que el overlay */
+  z-index: 1;
+  /* Solo necesita ser mayor que el overlay */
 }
 
 .loading-indicator {
@@ -837,16 +812,16 @@ watch([isSidebarOpen, isMenuOpen], ([newSidebarOpen, newMenuOpen]) => {
   .search-container {
     max-width: 100%;
   }
-  
+
   .search-input {
     font-size: 14px;
     padding: 10px 12px;
   }
-  
+
   .search-button {
     padding: 10px 16px;
   }
-  
+
   .search-results {
     max-height: 60vh;
     max-width: 90%;
@@ -857,27 +832,27 @@ watch([isSidebarOpen, isMenuOpen], ([newSidebarOpen, newMenuOpen]) => {
   .result-item {
     padding: 8px 12px;
   }
-  
+
   .result-icon {
     width: 28px;
     height: 28px;
     margin-right: 8px;
   }
-  
+
   .section-title {
     font-size: 13px;
   }
-  
+
   .result-name {
     font-size: 13px;
   }
-  
+
   .results-footer {
     flex-direction: column;
     gap: 8px;
     align-items: flex-start;
   }
-  
+
   .show-all-button {
     width: 100%;
     justify-content: center;
