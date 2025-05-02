@@ -4,7 +4,7 @@
         <div class="top-bar-inner">
           <div class="contact">
             <a href="https://wa.me/59177997694" target="_blank" style="text-decoration: none; color: #838384;">
-              <i class="fab fa-whatsapp"></i> <!-- Cambié el ícono a uno de WhatsApp -->
+              <i class="fab fa-whatsapp"></i>
               +591 77997694
             </a>
           </div>
@@ -12,16 +12,13 @@
             Experimenta la mejor tecnología
           </div>
           <div class="top-links">
-            <router-link to="/contacto" style="text-decoration: none;"><a href="#"
-                style="text-decoration: none; color: #838384;">Ayuda</a></router-link>
-            <!--   <router-link to="/faq" style="text-decoration: none;" class="ms-2"><a href="#"
-                style="text-decoration: none; color: #838384;">FAQ</a></router-link> -->
-                          <!-- Botón de alternar tema -->
-           <button @click="themeStoreDark.toggleDarkMode" class="theme-toggle-btn"
-            :title="themeStoreDark.isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
-            <i v-if="!themeStoreDark.isDarkMode" class="fas fa-sun"></i>
-            <i v-else class="fas fa-moon"></i>
-          </button> 
+            <router-link to="/contacto" style="text-decoration: none; color: #838384;">Ayuda</router-link>
+            <!-- Botón de alternar tema -->
+<!--             <button @click="themeStoreDark.toggleDarkMode" class="theme-toggle-btn"
+              :title="themeStoreDark.isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
+              <i v-if="!themeStoreDark.isDarkMode" class="fas fa-sun"></i>
+              <i v-else class="fas fa-moon"></i>
+            </button> -->
           </div>
         </div>
       </div>
@@ -32,7 +29,6 @@
           </router-link>
         </div>
 
-
         <!-- Barra de búsqueda mejorada y centrada -->
         <div class="search-container">
           <GlobalSearch />
@@ -41,27 +37,37 @@
         <div class="header-actions">
           <!-- Botones de acción para escritorio -->
           <div class="user-actions">
-            <button class="icon-button" @click="handleAccountClick">
+            <router-link
+              :to="isLoggedIn ? '/perfil' : '/login'"
+              class="icon-button"
+              @click.prevent="handleAccountClick"
+              style="text-decoration: none;"
+            >
               <img src="/svg/icono-header-cuenta.svg" alt="Account" />
               <span class="label">{{ isLoggedIn ? 'Mi Cuenta' : 'Iniciar Sesión' }}</span>
-            </button>
-            <button class="icon-button" @click="goFavorites">
+            </router-link>
+            <router-link
+              :to="isLoggedIn ? '/favoritos' : '/login'"
+              class="icon-button"
+              @click.prevent="goFavorites"
+              style="text-decoration: none;"
+            >
               <img src="/svg/icono-header-favoritos.svg" alt="Favorites" />
               <span class="label">Favoritos</span>
-            </button>
-            <button class="icon-button cart-button" @click="carritoView">
+            </router-link>
+            <router-link to="/checkout" class="icon-button cart-button" @click.prevent="carritoView" style="text-decoration: none;">
               <img src="/svg/icono-header-carrito.svg" alt="Cart" />
               <span class="label">Carrito</span>
               <span class="cart-count" v-if="cartItemCount > 0">{{ cartItemCount }}</span>
-            </button>
+            </router-link>
           </div>
 
           <!-- Botones para móvil (carrito y menú) -->
           <div class="mobile-header-actions">
-            <button class="icon-button cart-button" @click="carritoView">
+            <router-link to="/checkout" class="icon-button cart-button" @click.prevent="carritoView">
               <img src="/svg/icono-header-carrito.svg" alt="Cart" />
               <span class="cart-count cart-count-animated" v-if="cartItemCount > 0">{{ cartItemCount }}</span>
-            </button>
+            </router-link>
             <div class="mobile-toggle" @click="toggleMobileMenu">
               <i :class="isMobileMenuOpen ? 'fas fa-times' : 'fas fa-bars'"></i>
             </div>
@@ -93,7 +99,6 @@
 
         <!-- Selector de ubicación completamente rediseñado para móviles -->
         <div class="location-selector-container">
-          <!-- Botón para abrir el selector de ubicación -->
           <button :class="[
             'location-button',
             currentDepartment === 'la-paz' ? 'location-button-naranja' : '',
@@ -109,22 +114,30 @@
           <div class="mobile-user-actions-header">
             <h3>Mi cuenta</h3>
           </div>
-          <button class="mobile-action-button" @click="handleAccountClick">
+          <router-link
+            :to="isLoggedIn ? '/perfil' : '/login'"
+            class="mobile-action-button"
+            @click.prevent="handleAccountClick"
+          >
             <i class="fas fa-user"></i>
             <span>{{ isLoggedIn ? 'Mi Cuenta' : 'Iniciar Sesión' }}</span>
             <i class="fas fa-chevron-right action-arrow"></i>
-          </button>
-          <button class="mobile-action-button" @click="goFavorites">
+          </router-link>
+          <router-link
+            :to="isLoggedIn ? '/favoritos' : '/login'"
+            class="mobile-action-button"
+            @click.prevent="goFavorites"
+          >
             <i class="fas fa-heart"></i>
             <span>Favoritos</span>
             <i class="fas fa-chevron-right action-arrow"></i>
-          </button>
-          <button class="mobile-action-button" @click="carritoView">
+          </router-link>
+          <router-link to="/checkout" class="mobile-action-button" @click.prevent="carritoView">
             <i class="fas fa-shopping-cart"></i>
             <span>Carrito</span>
             <span class="mobile-cart-count" v-if="cartItemCount > 0">{{ cartItemCount }}</span>
             <i class="fas fa-chevron-right action-arrow"></i>
-          </button>
+          </router-link>
         </div>
       </nav>
       <hr />
@@ -132,23 +145,27 @@
 
     <!-- Barra de navegación móvil fija en la parte inferior -->
     <div class="mobile-nav-bar">
-      <button class="mobile-nav-item" @click="goHome">
+      <router-link to="/" class="mobile-nav-item" @click.prevent="goHome">
         <i class="fas fa-home"></i>
         <span>Inicio</span>
-      </button>
-      <button class="mobile-nav-item" @click="toggleSidebar">
+      </router-link>
+      <router-link to="#" class="mobile-nav-item" @click.prevent="toggleSidebar">
         <i class="fas fa-th-large"></i>
         <span>Catálogo</span>
-      </button>
-      <button class="mobile-nav-item" @click="handleAccountClick">
+      </router-link>
+      <router-link
+        :to="isLoggedIn ? '/perfil' : '/login'"
+        class="mobile-nav-item"
+        @click.prevent="handleAccountClick"
+      >
         <i class="fas fa-user"></i>
         <span>Cuenta</span>
-      </button>
-      <button class="mobile-nav-item cart-button" @click="carritoView">
+      </router-link>
+      <router-link to="/checkout" class="mobile-nav-item cart-button" @click.prevent="carritoView">
         <i class="fas fa-shopping-cart"></i>
         <span>Carrito</span>
         <span class="mobile-nav-count" v-if="cartItemCount > 0">{{ cartItemCount }}</span>
-      </button>
+      </router-link>
     </div>
 
     <div :class="['sidebar', { 'open': isSidebarOpen }]">
@@ -167,16 +184,22 @@
           <transition name="accordion">
             <ul v-if="activeSections.activos" class="category-list">
               <li v-for="catalogo in catalogosActivos" :key="catalogo.id">
-                <a href="#" @click.prevent="viewCatalogoActivo(catalogo.id, catalogo.nombre)">
+                <router-link
+                  :to="`/catalogo-activo/${catalogo.id}/${generarSlug(catalogo.nombre)}`"
+                  @click.prevent="viewCatalogoActivo(catalogo.id, catalogo.nombre)"
+                >
                   <i class="fas fa-book-open"></i>
                   {{ catalogo.nombre }}
-                </a>
+                </router-link>
                 <ul v-if="catalogo.categorias" class="subcategory-list">
                   <li v-for="categoria in catalogo.categorias" :key="categoria.id">
-                    <a href="#" @click.prevent="viewCategoria(categoria.id)">
+                    <router-link
+                      :to="`/categoria/${categoria.id}`"
+                      @click.prevent="viewCategoria(categoria.id)"
+                    >
                       <i class="fas fa-tag"></i>
                       {{ categoria.nombre }}
-                    </a>
+                    </router-link>
                   </li>
                 </ul>
               </li>
@@ -191,10 +214,13 @@
           <transition name="accordion">
             <ul v-if="activeSections.anteriores" class="category-list">
               <li v-for="catalogo in catalogosAnteriores" :key="catalogo.id">
-                <a href="#" @click.prevent="viewCatalogoHistorial(catalogo.id, catalogo.nombre)">
+                <router-link
+                  :to="`/catalogo-historial/${catalogo.id}/${generarSlug(catalogo.nombre)}`"
+                  @click.prevent="viewCatalogoHistorial(catalogo.id, catalogo.nombre)"
+                >
                   <i class="fas fa-history"></i>
                   {{ catalogo.nombre }}
-                </a>
+                </router-link>
               </li>
             </ul>
           </transition>
@@ -255,6 +281,7 @@ import { useThemeStoreDark } from '@/stores/themeDarkStore';
 import { searchProductoCategoriaCatalogo } from '@/Services/SearchService';
 import GlobalSearch from '../GlobalSearch.vue';
 import { generarSlug } from '@/Utils/string-utils';
+
 const router = useRouter();
 const cartStore = useCartStore();
 const searchQuery = ref('');
@@ -268,13 +295,11 @@ const themeStore = useThemeStore();
 const themeStoreDark = useThemeStoreDark();
 const showCartNotification = ref(false);
 const lastCartCount = ref(0);
-// Variable para controlar la visibilidad del modal de ubicación
 const showLocationModal = ref(false);
 
-// Departamentos con iconos
 const departments = [
   { value: 'la-paz', label: 'La Paz', icon: 'fa-mountain' },
-  { value: 'cochabamba', label: 'Cochabamba', icon: 'fa-tree' },
+  { value: 'cochabamba', label: 'Cochabamba', icon: ' glorias' },
   { value: 'santa-cruz', label: 'Santa Cruz', icon: 'fa-sun' },
   { value: 'tarija', label: 'Tarija', icon: 'fa-wine-glass' },
   { value: 'potosi', label: 'Potosí', icon: 'fa-coins' },
@@ -291,31 +316,26 @@ const getInitialLocation = () => {
   return localStorage.getItem('departamento') || userStore.user.departamento || 'cochabamba';
 };
 
-// Mantener solo esta implementación con el store
 const currentDepartment = computed({
   get: () => themeStore.currentDepartment,
   set: (value) => themeStore.setDepartment(value),
 });
 
-// Obtener el nombre del departamento actual
 const getDepartmentLabel = (value) => {
   const dept = departments.find(d => d.value === value);
   return dept ? dept.label : 'Seleccionar ubicación';
 };
 
-// Abrir el modal de ubicación
 const openLocationModal = () => {
   showLocationModal.value = true;
-  document.body.style.overflow = 'hidden'; // Prevenir scroll
+  document.body.style.overflow = 'hidden';
 };
 
-// Cerrar el modal de ubicación
 const closeLocationModal = () => {
   showLocationModal.value = false;
-  document.body.style.overflow = ''; // Restaurar scroll
+  document.body.style.overflow = '';
 };
 
-// Seleccionar departamento y cerrar modal
 const selectDepartmentAndClose = (value) => {
   currentDepartment.value = value;
   updateDepartment();
@@ -343,10 +363,9 @@ const navItems = [
   { nombre: 'Contacto', path: '/contacto', icon: 'fas fa-envelope' },
 ];
 
-// Función para listar catálogos históricos
 const listarCatalogosHistoriales = async () => {
   try {
-    const { data } = await idCatalogoHistorial(); // Realiza la petición a la API
+    const { data } = await idCatalogoHistorial();
     catalogosAnteriores.value = data.datos;
   } catch (error) {
     console.log(error);
@@ -381,8 +400,8 @@ const viewCategoria = (idCategoria) => {
 
 const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value;
-  isSidebarOpen.value = false; // Cerrar sidebar al abrir el menú móvil
-  showLocationModal.value = false; // Cerrar modal de ubicación
+  isSidebarOpen.value = false;
+  showLocationModal.value = false;
 };
 
 const closeMobileMenu = () => {
@@ -396,8 +415,8 @@ const handleAccountClick = () => {
 
 const toggleSidebar = () => {
   isSidebarOpen.value = !isSidebarOpen.value;
-  isMobileMenuOpen.value = false; // Cerrar menú móvil al abrir sidebar
-  showLocationModal.value = false; // Cerrar modal de ubicación
+  isMobileMenuOpen.value = false;
+  showLocationModal.value = false;
 };
 
 const closeAllMenus = () => {
@@ -429,7 +448,6 @@ const goFavorites = () => {
   }
 };
 
-// Observar cambios en el carrito para mostrar notificación
 watch(cartItemCount, (newCount, oldCount) => {
   if (newCount > oldCount && oldCount !== 0) {
     showCartNotification.value = true;
@@ -447,10 +465,8 @@ onMounted(() => {
   listarCatalogosActivos();
   lastCartCount.value = cartItemCount.value;
 
-  // Siempre iniciar con el tema claro, independientemente de lo guardado en localStorage
   themeStoreDark.setDarkMode(false);
 
-  // Inicializar el departamento desde localStorage o store
   nextTick(() => {
     const initialDept = getInitialLocation();
     if (initialDept) {
@@ -458,7 +474,6 @@ onMounted(() => {
     }
   });
 
-  // Cerrar el modal de ubicación al presionar Escape
   const handleEscKey = (e) => {
     if (e.key === 'Escape' && showLocationModal.value) {
       closeLocationModal();
@@ -467,7 +482,6 @@ onMounted(() => {
 
   window.addEventListener('keydown', handleEscKey);
 
-  // Limpiar al desmontar
   onUnmounted(() => {
     window.removeEventListener('keydown', handleEscKey);
   });
@@ -486,6 +500,7 @@ const toggleSection = (section) => {
   activeSections.value[section] = !activeSections.value[section];
 };
 </script>
+```
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');

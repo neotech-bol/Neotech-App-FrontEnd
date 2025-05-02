@@ -98,7 +98,7 @@ const images = ref([
     caption: "Logística internacional eficiente"
   },
   {
-    src: "/public/imagenes/depositphotos_39479909-stock-photo-about-us-blue-marker.jpg",
+    src: "/public/imagenes/depositphotos_39479909-stock-photo-about-us-blue-marker.webp",
     alt: "Barco de carga",
     size: "small",
     caption: "Transporte marítimo de mercancías"

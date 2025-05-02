@@ -7,7 +7,9 @@
           <img src="/logo/Logo Neofetch PNG.png" alt="Neo Tech Bol" />
         </div>
         <p class="description">
-          Fundada en 2019 por Jaime Jaldín Ninavia, ofrece productos de calidad internacional a los bolivianos. Nos especializamos en la importación de bienes por ciclos y contamos con más de 2,400 clientes satisfechos. Operamos principalmente de forma virtual, con atención personalizada en Cochabamba.
+          Fundada en 2019 por Jaime Jaldín Ninavia, ofrece productos de calidad internacional a los bolivianos. Nos
+          especializamos en la importación de bienes por ciclos y contamos con más de 2,400 clientes satisfechos.
+          Operamos principalmente de forma virtual, con atención personalizada en Cochabamba.
         </p>
       </div>
 
@@ -20,9 +22,13 @@
         <transition name="slide">
           <ul v-show="categoriasOpen || !isMobile" class="links-list">
             <li v-for="categoria in categorias" :key="categoria.id">
-              <a href="#" @click.prevent="irCategoria(categoria.id, categoria.nombre)" class="footer-link">
+              <router-link
+                :to="`/categoria/${categoria.id}/${generarSlug(categoria.nombre)}`"
+                class="footer-link"
+                @click.prevent="irCategoria(categoria.id, categoria.nombre)"
+              >
                 <span class="link-text">{{ categoria.nombre }}</span>
-              </a>
+              </router-link>
             </li>
             <li v-if="categorias.length === 0" class="loading-text">
               <span>Cargando categorías...</span>
@@ -39,14 +45,14 @@
         </div>
         <transition name="slide">
           <ul v-show="section.isOpen || !isMobile" class="links-list">
-            <li v-for="(link, linkIndex) in section.links" :key="linkIndex">
-              <a 
-                :href="link.url === '#' ? '#' : undefined" 
+            <li v-for="(link, linkIndex) in section.links" :key="linkIndex" style="cursor: pointer;">
+              <router-link
+                :to="link.url"
                 class="footer-link"
                 @click.prevent="handleLinkClick(link)"
               >
                 <span class="link-text">{{ link.text }}</span>
-              </a>
+              </router-link>
             </li>
           </ul>
         </transition>
@@ -107,19 +113,16 @@
 import { ref, onMounted, onUnmounted, nextTick } from 'vue';
 import { categoriasActivesID } from '@/Services/CategoriaService';
 import { useRouter, useRoute } from 'vue-router';
-import { useUserStore } from '@/stores/userAuht'; // Asegúrate de tener este store
-import { logout } from '@/Services/AuthService'; // Importa la función de logout
+import { useUserStore } from '@/stores/userAuht';
+import { logout } from '@/Services/AuthService';
 import { generarSlug } from '@/Utils/string-utils';
 
-// Router y store
 const router = useRouter();
 const route = useRoute();
 const authStore = useUserStore();
 
-// Estado para el modal de logout
 const showLogoutModal = ref(false);
 
-// Estado para controlar las secciones colapsables
 const footerSections = ref([
   {
     title: 'Neotech Bol',
@@ -135,33 +138,26 @@ const footerSections = ref([
     links: [
       { text: 'Entrar', url: '/login', action: 'navigate' },
       { text: 'Ver Carrito', url: '/checkout', action: 'navigate' },
-      { text: 'Cerrar sesion', url: '#', action: 'logout' },
+      { text: 'Cerrar sesion', url: '#', action: 'logout' }
     ]
   }
 ]);
 
-// Estado para las categorías
 const categorias = ref([]);
 const categoriasOpen = ref(false);
 const contactSectionOpen = ref(false);
 const isMobile = ref(false);
 const isLoading = ref(false);
 
-// Función para manejar clics en enlaces
 const handleLinkClick = async (link) => {
   if (link.action === 'logout') {
     showLogoutModal.value = true;
   } else if (link.action === 'navigate' && link.url) {
-    // Si estamos en la misma ruta y se requiere scroll al top
     if (route.path === link.url && link.scrollTop) {
       scrollToTop();
     } else {
-      // Navegar a la nueva ruta
       await router.push(link.url);
-      
-      // Si se requiere scroll al top, hacerlo después de la navegación
       if (link.scrollTop) {
-        // Esperar a que el DOM se actualice
         await nextTick();
         scrollToTop();
       }
@@ -169,16 +165,13 @@ const handleLinkClick = async (link) => {
   }
 };
 
-// Función para hacer scroll al inicio de la página
 const scrollToTop = () => {
-  // Scroll suave
   window.scrollTo({
     top: 0,
     behavior: 'smooth'
   });
 };
 
-// Funciones para el modal de logout
 const cancelLogout = () => {
   showLogoutModal.value = false;
 };
@@ -193,38 +186,25 @@ const confirmLogout = async () => {
   }
 };
 
-// Función completa para cerrar sesión
 const cerrarSesion = async () => {
   try {
-    // 1. Llamar al endpoint de logout en el backend (si existe)
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    
     if (token) {
       try {
         const { data } = await logout();
       } catch (apiError) {
         console.warn('Error al llamar al endpoint de logout:', apiError);
-        // Continuamos con el proceso aunque falle la API
       }
     }
-    
-    // 2. Limpiar tokens y datos de usuario del almacenamiento local
     localStorage.removeItem('token');
     localStorage.removeItem('datosUser');
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('datosUser');
-    
-    // 3. Mostrar notificación de éxito
     showNotification('Sesión cerrada correctamente', 'success');
-    
-    // 4. Redireccionar al login
     router.push('/login');
-    
-    // 5. Hacer scroll al top después de redireccionar
     nextTick(() => {
       scrollToTop();
     });
-    
     return Promise.resolve();
   } catch (error) {
     console.error('Error en cerrarSesion:', error);
@@ -233,9 +213,7 @@ const cerrarSesion = async () => {
   }
 };
 
-// Función para mostrar notificaciones
 const showNotification = (message, type) => {
-  // Ejemplo básico de notificación
   const notificationElement = document.createElement('div');
   notificationElement.className = `notification notification-${type}`;
   notificationElement.innerHTML = `
@@ -244,10 +222,7 @@ const showNotification = (message, type) => {
       <span>${message}</span>
     </div>
   `;
-  
   document.body.appendChild(notificationElement);
-  
-  // Eliminar la notificación después de 3 segundos
   setTimeout(() => {
     notificationElement.classList.add('notification-hide');
     setTimeout(() => {
@@ -256,7 +231,6 @@ const showNotification = (message, type) => {
   }, 3000);
 };
 
-// Función para listar categorías desde la API
 const listarCategorias = async () => {
   isLoading.value = true;
   try {
@@ -277,18 +251,14 @@ const listarCategorias = async () => {
 
 const irCategoria = (idCategoria, nameCategoria) => {
   const slug = generarSlug(nameCategoria);
-  // Navegar a la ruta de la categoría
   router.push({ path: `/categoria/${idCategoria}/${slug}` });
-  // Hacer scroll al top después de navegar a la categoría
   nextTick(() => {
     scrollToTop();
   });
-}
+};
 
-// Función para alternar la visibilidad de las secciones
 const toggleSection = (index) => {
   if (!isMobile.value) return;
-
   if (index === footerSections.value.length) {
     contactSectionOpen.value = !contactSectionOpen.value;
   } else {
@@ -296,17 +266,13 @@ const toggleSection = (index) => {
   }
 };
 
-// Función para alternar la sección de categorías
 const toggleCategorias = () => {
   if (!isMobile.value) return;
   categoriasOpen.value = !categoriasOpen.value;
 };
 
-// Función para verificar si es dispositivo móvil
 const checkIfMobile = () => {
   isMobile.value = window.innerWidth <= 768;
-
-  // Si no es móvil, asegurarse de que todas las secciones estén abiertas
   if (!isMobile.value) {
     footerSections.value.forEach(section => {
       section.isOpen = true;
@@ -314,7 +280,6 @@ const checkIfMobile = () => {
     contactSectionOpen.value = true;
     categoriasOpen.value = true;
   } else {
-    // En móvil, cerrar todas las secciones por defecto
     footerSections.value.forEach(section => {
       section.isOpen = false;
     });
@@ -323,13 +288,10 @@ const checkIfMobile = () => {
   }
 };
 
-// Configurar event listeners para el resize y cargar categorías al montar
 onMounted(() => {
   checkIfMobile();
-  listarCategorias(); // Cargar categorías al montar el componente
+  listarCategorias();
   window.addEventListener('resize', checkIfMobile);
-  
-  // Escuchar la tecla Escape para cerrar el modal
   window.addEventListener('keydown', handleKeyDown);
 });
 
@@ -338,13 +300,13 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown);
 });
 
-// Manejar teclas para accesibilidad
 const handleKeyDown = (e) => {
   if (e.key === 'Escape' && showLogoutModal.value) {
     cancelLogout();
   }
 };
 </script>
+```
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
@@ -561,6 +523,7 @@ const handleKeyDown = (e) => {
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -612,7 +575,8 @@ const handleKeyDown = (e) => {
   gap: 10px;
 }
 
-.cancel-btn, .logout-btn {
+.cancel-btn,
+.logout-btn {
   padding: 8px 16px;
   border-radius: 5px;
   font-weight: 500;
@@ -683,6 +647,7 @@ const handleKeyDown = (e) => {
     transform: translateX(100%);
     opacity: 0;
   }
+
   to {
     transform: translateX(0);
     opacity: 1;
@@ -694,6 +659,7 @@ const handleKeyDown = (e) => {
     transform: translateX(0);
     opacity: 1;
   }
+
   to {
     transform: translateX(100%);
     opacity: 0;
@@ -771,7 +737,7 @@ const handleKeyDown = (e) => {
     margin-top: 20px;
     padding: 15px;
   }
-  
+
   .logout-modal-content {
     width: 95%;
   }
@@ -804,16 +770,17 @@ const handleKeyDown = (e) => {
     height: 36px;
     font-size: 1rem;
   }
-  
+
   .logout-modal-header h3 {
     font-size: 1.1rem;
   }
-  
+
   .logout-modal-body p {
     font-size: 0.9rem;
   }
-  
-  .cancel-btn, .logout-btn {
+
+  .cancel-btn,
+  .logout-btn {
     padding: 7px 14px;
     font-size: 0.85rem;
   }

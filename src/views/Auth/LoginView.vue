@@ -10,7 +10,7 @@
     </nav>
     <div class="contenido-auth">
       <div class="imagen-auth">
-        <img src="/imagenes/sunset-photography-1000-x-1000-wallpaper-gzdhdzyk67cfal0m.jpg" alt="Imagen de tecnología"
+        <img src="/imagenes/sunset-photography-1000-x-1000-wallpaper-gzdhdzyk67cfal0m.webp" alt="Imagen de tecnología"
           class="imagen-fondo">
         <div class="overlay-texto">
           <h2>Bienvenido a nuestra plataforma</h2>
