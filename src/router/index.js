@@ -15,7 +15,6 @@ import ContactoView from '@/views/ContactoView.vue'
 import Producto from '@/views/Producto.vue'
 import CheckoutView from '@/views/CheckoutView.vue'
 import PedidosView from '@/Admin/PedidosView.vue'
-import CartView from '@/views/CartView.vue'
 import PerfilView from '@/views/PerfilView.vue'
 import Unauthorized from '@/views/Unauthorized.vue'
 import FavoriteView from '@/views/FavoriteView.vue'
@@ -78,15 +77,6 @@ const router = createRouter({
             description: 'Explora los detalles de nuestros productos tecnológicos en Bolivia: smartphones, laptops y más.'
           }
         },
-        {
-          path: '/carrito',
-          name: 'carrito',
-          component: CartView,
-          meta: {
-            title: 'Carrito | Neotech-Bol Bolivia',
-            description: 'Revisa tu carrito en Neotech-Bol y compra tecnología al mejor precio en Bolivia.'
-          }
-        },  
         {
           path: '/perfil',
           name: 'perfil',

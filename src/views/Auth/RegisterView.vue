@@ -10,7 +10,7 @@
     </nav>
     <div class="contenido-auth">
       <div class="imagen-auth">
-        <img src="../../../public/imagenes/sunset-photography-1000-x-1000-wallpaper-gzdhdzyk67cfal0m.jpg"
+        <img src="/public/imagenes/sunset-photography-1000-x-1000-wallpaper-gzdhdzyk67cfal0m.webp" width="1000" height="1000"
           alt="Imagen de naturaleza" class="imagen-fondo">
         <div class="overlay-texto">
           <h2>Únete a nuestra comunidad</h2>

@@ -10,8 +10,8 @@
     </nav>
     <div class="contenido-auth">
       <div class="imagen-auth">
-        <img src="/imagenes/sunset-photography-1000-x-1000-wallpaper-gzdhdzyk67cfal0m.webp" alt="Imagen de tecnología"
-          class="imagen-fondo">
+        <img src="/public/imagenes/sunset-photography-1000-x-1000-wallpaper-gzdhdzyk67cfal0m.webp" width="1000"
+          height="1000" alt="Imagen de tecnología" class="imagen-fondo">
         <div class="overlay-texto">
           <h2>Bienvenido a nuestra plataforma</h2>
           <p>Accede a todas nuestras funcionalidades y servicios</p>
@@ -87,7 +87,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { login } from '@/Services/AuthService';
 import { Buffer } from "buffer";
-import { useUserStore } from '@/stores/userAuht'; 
+import { useUserStore } from '@/stores/userAuht';
 
 const router = useRouter();
 // Verificar si hay un parámetro de redirección en la URL
@@ -103,10 +103,6 @@ const isLoading = ref(false);
 const mostrarPassword = ref(false);
 const campoActivo = ref('');
 const formActive = ref(false);
-
-
-
-
 onMounted(() => {
   // Activar animación del formulario
   setTimeout(() => {
@@ -143,7 +139,7 @@ const iniciarSesion = async () => {
   }
   error.value = '';
   isLoading.value = true;
-  
+
   // Guardar email si "recordarme" está activado
   if (recordar.value) {
     localStorage.setItem('savedEmail', credenciales.value.email);
@@ -173,10 +169,8 @@ const iniciarSesion = async () => {
 
     // Get redirect path from route query
     const redirectPath = route.query.redirect;
-    
     // Use the centralized redirect handler
     userStore.handleLoginRedirect(router, redirectPath ? redirectPath.toString() : null);
-    
   } catch (err) {
     manejarError(err);
   } finally {
