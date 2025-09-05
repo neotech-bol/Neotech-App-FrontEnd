@@ -108,7 +108,6 @@ const menuItems = ref([
     icon: 'bi-people',
     subItems: [
       { name: 'User List', path: '/usuarios', icon: 'bi-list-ul' },
-      { name: 'Add User', path: '/users/add', icon: 'bi-person-plus' },
     ]
   },
   {
@@ -117,7 +116,7 @@ const menuItems = ref([
     icon: 'bi-collection',
     subItems: [
       { name: 'Catalogos Activos', path: '/catalogos', icon: 'bi-list-ul' },
-      { name: 'Istorial de Catalogos', path: '/catalgos-historiales', icon: 'bi-plus-circle' },
+      { name: 'Historial de Catalogos', path: '/catalgos-historiales', icon: 'bi-plus-circle' },
     ]
   },
   {
@@ -426,9 +425,8 @@ onUnmounted(() => {
 
 .main-content {
   flex: 1;
-  padding: 2rem;
+  padding: 0.5rem;
   overflow-y: auto;
-  background-color: #f8f9fa;
 }
 
 .sidebar-toggle {

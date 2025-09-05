@@ -1,33 +1,48 @@
 <template>
-    <div class="container-fluid py-4">
-        <div class="card shadow">
-            <div
-                class="card-header bg-primary bg-opacity-10 d-flex justify-content-between align-items-center flex-wrap gap-3 p-3">
-                <h2 class="card-title h4 m-0">Gestión de Citas</h2>
-                <div>
-                    <button class="btn btn-primary" v-on:click="abrirModal()">
-                        <i class="fas fa-plus me-2"></i>Agregar Cita
+    <div class="container-fluid py-2 py-md-4 px-2 px-md-3">
+        <div class="card shadow-sm border-0 rounded-3">
+            <!-- Header con título y acciones principales -->
+            <div class="card-header bg-primary bg-opacity-10 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 p-3 p-md-4 border-0">
+                <h2 class="card-title h5 h4-md m-0 d-flex align-items-center">
+                    <span class="badge bg-primary bg-opacity-10 text-primary p-2 me-2 rounded-circle">
+                        <i class="fas fa-calendar-check"></i>
+                    </span>
+                    <span class="d-none d-sm-inline">Gestión de Citas</span>
+                    <span class="d-sm-none">Citas</span>
+                </h2>
+                <div class="d-flex flex-column flex-sm-row gap-2 w-100 w-md-auto justify-content-end">
+                    <button class="btn btn-primary  w-sm-auto" v-on:click="abrirModal()">
+                        <i class="fas fa-plus me-2"></i>
+                        <span class="d-none d-sm-inline">Agregar Cita</span>
+                        <span class="d-sm-none">Agregar</span>
                     </button>
                 </div>
             </div>
+
+            <!-- Filtros y búsqueda -->
             <div class="card-body p-0">
-                <div class="p-3">
-                    <div class="row g-2">
-                        <div class="col-md-8">
-                            <div class="input-group mb-3">
-                                <span class="input-group-text bg-light">
-                                    <i class="fas fa-search"></i>
+                <div class="p-3 p-md-4 bg-light border-top border-bottom">
+                    <div class="row g-2 g-md-3">
+                        <div class="col-12 col-lg-8">
+                            <div class="input-group shadow-sm">
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="fas fa-search text-muted"></i>
                                 </span>
-                                <input type="text" class="form-control" placeholder="Buscar cita..."
+                                <input type="text" class="form-control border-start-0 ps-0" 
+                                    placeholder="Buscar por nombre, correo, servicio..." 
                                     v-model="search" @input="filtrarCitas">
+                                <button class="btn btn-outline-secondary border-start-0" type="button" 
+                                    @click="search = ''; filtrarCitas()" v-if="search">
+                                    <i class="fas fa-times"></i>
+                                </button>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="input-group mb-3">
-                                <span class="input-group-text bg-light">
-                                    <i class="fas fa-filter"></i>
+                        <div class="col-12 col-lg-4">
+                            <div class="input-group shadow-sm">
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="fas fa-filter text-muted"></i>
                                 </span>
-                                <select class="form-select" v-model="estadoSeleccionado" @change="filtrarPorEstado">
+                                <select class="form-select border-start-0 ps-0" v-model="estadoSeleccionado" @change="filtrarPorEstado">
                                     <option value="">Todos los estados</option>
                                     <option value="0">Pendiente</option>
                                     <option value="1">Confirmada</option>
@@ -37,134 +52,206 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Contador de resultados -->
+                    <div class="d-flex align-items-center mt-3">
+                        <span class="badge bg-primary rounded-pill me-2">{{ citas.length }}</span>
+                        <p class="text-muted mb-0 small">
+                            <span class="d-none d-sm-inline">Mostrando {{ citas.length }} citas</span>
+                            <span class="d-sm-none">Citas</span>
+                        </p>
+                    </div>
                 </div>
 
-                <!-- Table for larger screens -->
-                <div class="table-responsive d-none d-md-block">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="bg-light">
-                            <tr class="text-center">
-                                <th>ID</th>
-                                <th>Nombre</th>
-                                <th>Fecha</th>
-                                <th>Hora</th>
-                                <th>Servicio</th>
-                                <th>Estado</th>
-                                <th>Departamento</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="item in citas" :key="item.id" class="text-center">
-                                <td>{{ item.id }}</td>
-                                <td>{{ item.nombre_completo }}</td>
-                                <td>{{ formatearFecha(item.fecha_de_cita) }}</td>
-                                <td>{{ formatearHora(item.hora_de_cita) }}</td>
-                                <td>{{ item.servicio_solicitado }}</td>
-                                <td>
-                                    <span class="badge" :class="getEstadoClass(item.estado)">
+                <!-- Mensaje cuando no hay resultados -->
+                <div v-if="citas.length === 0" class="text-center py-4 py-md-5 px-3">
+                    <div class="mb-3">
+                        <span class="badge bg-light p-3 rounded-circle">
+                            <i class="fas fa-calendar-times fa-2x text-muted"></i>
+                        </span>
+                    </div>
+                    <h5 class="text-muted">No se encontraron citas</h5>
+                    <p class="text-muted small">Intenta con otra búsqueda o agrega una nueva cita</p>
+                    <button class="btn btn-primary mt-2 shadow-sm" @click="abrirModal()">
+                        <i class="fas fa-plus me-2"></i>Agregar cita
+                    </button>
+                </div>
+
+                <!-- Table view - Solo en desktop -->
+                <div class="d-none d-lg-block" v-if="citas.length > 0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="px-3 py-3">ID</th>
+                                    <th class="px-3 py-3">Nombre</th>
+                                    <th class="px-3 py-3">Fecha</th>
+                                    <th class="px-3 py-3">Hora</th>
+                                    <th class="px-3 py-3">Servicio</th>
+                                    <th class="px-3 py-3">Estado</th>
+                                    <th class="px-3 py-3">Departamento</th>
+                                    <th class="px-3 py-3 text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="item in citas" :key="item.id" class="cita-row">
+                                    <td class="px-3 py-3">#{{ item.id }}</td>
+                                    <td class="px-3 py-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-circle me-2" :style="{ backgroundColor: getAvatarColor(item.nombre_completo) }">
+                                                {{ getInitials(item.nombre_completo) }}
+                                            </div>
+                                            <div class="text-start">
+                                                <div class="fw-medium">{{ item.nombre_completo }}</div>
+                                                <small class="text-muted">{{ item.correo }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-3 py-3">
+                                        <i class="fas fa-calendar me-1 text-muted"></i>
+                                        {{ formatearFecha(item.fecha_de_cita) }}
+                                    </td>
+                                    <td class="px-3 py-3">
+                                        <i class="fas fa-clock me-1 text-muted"></i>
+                                        {{ formatearHora(item.hora_de_cita) }}
+                                    </td>
+                                    <td class="px-3 py-3">{{ item.servicio_solicitado }}</td>
+                                    <td class="px-3 py-3">
+                                        <span class="badge rounded-pill" :class="getEstadoClass(item.estado)">
+                                            {{ getEstadoTexto(item.estado) }}
+                                        </span>
+                                    </td>
+                                    <td class="px-3 py-3">{{ item.departamento || 'No especificado' }}</td>
+                                    <td class="px-3 py-3 text-center">
+                                        <div class="btn-group shadow-sm">
+                                            <button class="btn btn-sm btn-outline-primary" @click="mostrarCita(item.id)" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-info" @click="verDetalles(item.id)" title="Ver detalles">
+                                                <i class="fas fa-info-circle"></i>
+                                            </button>
+                                            <button class="btn btn-sm"
+                                                :class="item.estado === 0 ? 'btn-outline-success' : 'btn-outline-danger'"
+                                                @click="cambiarEstado(item.id)" 
+                                                :title="item.estado === 0 ? 'Confirmar' : 'Cancelar'">
+                                                <i :class="item.estado === 0 ? 'fas fa-check' : 'fas fa-times'"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Cards view - Responsive para móviles y tablets -->
+                <div v-if="citas.length > 0" class="d-lg-none">
+                    <div class="row g-3 g-md-4 p-3 p-md-4">
+                        <div class="col-12 col-sm-6 col-xl-4" v-for="item in citas" :key="item.id">
+                            <div class="card h-100 border-0 shadow-sm hover-card rounded-3">
+                                <div class="card-header bg-white d-flex justify-content-between align-items-center p-3 border-0">
+                                    <div class="d-flex align-items-center min-w-0 flex-grow-1">
+                                        <div class="avatar-circle me-2 flex-shrink-0" :style="{ backgroundColor: getAvatarColor(item.nombre_completo) }">
+                                            {{ getInitials(item.nombre_completo) }}
+                                        </div>
+                                        <h5 class="card-title mb-0 fw-bold text-truncate">{{ item.nombre_completo }}</h5>
+                                    </div>
+                                    <span class="badge rounded-pill flex-shrink-0 ms-2" :class="getEstadoClass(item.estado)">
                                         {{ getEstadoTexto(item.estado) }}
                                     </span>
-                                </td>
-                                <td>{{ item.departamento || 'No especificado' }}</td>
-                                <td>
-                                    <div class="btn-group">
-                                        <button class="btn btn-sm btn-outline-primary"
-                                            @click="mostrarCita(item.id)">
-                                            <i class="fas fa-edit"></i>
+                                </div>
+                                <div class="card-body p-3">
+                                    <div class="row g-2 small">
+                                        <div class="col-12">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="text-muted"><i class="fas fa-envelope me-1"></i>Correo:</span>
+                                                <span class="fw-medium text-end text-truncate ms-2" style="max-width: 60%;">
+                                                    {{ item.correo }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="text-muted"><i class="fas fa-calendar me-1"></i>Fecha:</span>
+                                                <span class="fw-medium">{{ formatearFecha(item.fecha_de_cita) }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="text-muted"><i class="fas fa-clock me-1"></i>Hora:</span>
+                                                <span class="fw-medium">{{ formatearHora(item.hora_de_cita) }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="text-muted"><i class="fas fa-briefcase me-1"></i>Servicio:</span>
+                                                <span class="fw-medium text-end text-truncate ms-2" style="max-width: 60%;">
+                                                    {{ item.servicio_solicitado }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="text-muted"><i class="fas fa-map-marker-alt me-1"></i>Departamento:</span>
+                                                <span class="fw-medium">{{ item.departamento || 'No especificado' }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-white p-3 border-top-0">
+                                    <div class="d-flex flex-column flex-sm-row gap-2">
+                                        <button class="btn btn-sm btn-outline-primary flex-fill" @click="mostrarCita(item.id)">
+                                            <i class="fas fa-edit me-1"></i>Editar
                                         </button>
-                                        <button class="btn btn-sm btn-outline-info" @click="verDetalles(item.id)">
-                                            <i class="fas fa-info-circle"></i>
+                                        <button class="btn btn-sm btn-outline-info flex-fill" @click="verDetalles(item.id)">
+                                            <i class="fas fa-info-circle me-1"></i>Detalles
                                         </button>
-                                        <button class="btn btn-sm"
+                                        <button class="btn btn-sm flex-fill"
                                             :class="item.estado === 0 ? 'btn-outline-success' : 'btn-outline-danger'"
                                             @click="cambiarEstado(item.id)">
-                                            <i
-                                                :class="item.estado === 0 ? 'fas fa-check' : 'fas fa-times'"></i>
+                                            <i :class="item.estado === 0 ? 'fas fa-check me-1' : 'fas fa-times me-1'"></i>
                                             {{ item.estado === 0 ? 'Confirmar' : 'Cancelar' }}
                                         </button>
                                     </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Cards for mobile view -->
-                <div class="d-md-none">
-                    <div v-for="item in citas" :key="item.id" class="card cita-card mb-3 mx-3">
-                        <div class="card-body">
-                            <h5 class="card-title text-truncate">{{ item.nombre_completo }}</h5>
-                            <div class="cita-info">
-                                <div class="cita-detail">
-                                    <strong>Fecha:</strong> {{ formatearFecha(item.fecha_de_cita) }}
                                 </div>
-                                <div class="cita-detail">
-                                    <strong>Hora:</strong> {{ formatearHora(item.hora_de_cita) }}
-                                </div>
-                                <div class="cita-detail">
-                                    <strong>Servicio:</strong> {{ item.servicio_solicitado }}
-                                </div>
-                                <div class="cita-detail">
-                                    <strong>Estado:</strong>
-                                    <span class="badge" :class="getEstadoClass(item.estado)">
-                                        {{ getEstadoTexto(item.estado) }}
-                                    </span>
-                                </div>
-                                <div class="cita-detail">
-                                    <strong>Departamento:</strong> {{ item.departamento || 'No especificado' }}
-                                </div>
-                            </div>
-                            <div class="d-flex justify-content-end gap-2 mt-3">
-                                <button class="btn btn-sm btn-outline-primary action-btn"
-                                    @click="mostrarCita(item.id)">
-                                    <i class="fas fa-edit me-1"></i>Editar
-                                </button>
-                                <button class="btn btn-sm btn-outline-info action-btn" @click="verDetalles(item.id)">
-                                    <i class="fas fa-info-circle me-1"></i>Detalles
-                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Pagination -->
-                <div class="d-flex justify-content-center my-4" v-if="pagination && pagination.last_page > 1">
-                    <nav aria-label="Navegación de citas" class="pagination-container">
-                        <ul class="pagination pagination-sm flex-wrap">
-                            <li class="page-item" :class="{ disabled: pagination.current_page === 1 }">
-                                <a class="page-link" href="#" @click.prevent="cambiarPagina(1)"
-                                    aria-label="Primera página">
+                <!-- Paginación responsive -->
+                <div class="d-flex justify-content-center py-3 py-md-4 px-3" v-if="pagination && pagination.last_page > 1">
+                    <nav aria-label="Navegación de citas">
+                        <ul class="pagination pagination-sm shadow-sm mb-0">
+                            <!-- Primera página - Solo en desktop -->
+                            <li class="page-item d-none d-md-block" :class="{ disabled: pagination.current_page === 1 }">
+                                <button type="button" class="page-link" aria-label="Primera" @click="cambiarPagina(1)">
                                     <i class="fas fa-angle-double-left"></i>
-                                </a>
+                                </button>
                             </li>
+                            <!-- Página anterior -->
                             <li class="page-item" :class="{ disabled: pagination.current_page === 1 }">
-                                <a class="page-link" href="#"
-                                    @click.prevent="cambiarPagina(pagination.current_page - 1)"
-                                    aria-label="Página anterior">
+                                <button type="button" class="page-link" aria-label="Anterior" @click="cambiarPagina(pagination.current_page - 1)">
                                     <i class="fas fa-angle-left"></i>
-                                </a>
+                                </button>
                             </li>
 
-                            <li class="page-item" v-for="page in paginationRange" :key="page"
-                                :class="{ active: pagination.current_page === page }">
-                                <a class="page-link" href="#" @click.prevent="cambiarPagina(page)">{{ page }}</a>
+                            <!-- Páginas numeradas - Responsive -->
+                            <li v-for="page in paginationRange" :key="page" class="page-item" :class="{ active: pagination.current_page === page }">
+                                <button type="button" class="page-link" @click="cambiarPagina(page)">{{ page }}</button>
                             </li>
 
-                            <li class="page-item"
-                                :class="{ disabled: pagination.current_page === pagination.last_page }">
-                                <a class="page-link" href="#"
-                                    @click.prevent="cambiarPagina(pagination.current_page + 1)"
-                                    aria-label="Página siguiente">
+                            <!-- Página siguiente -->
+                            <li class="page-item" :class="{ disabled: pagination.current_page === pagination.last_page }">
+                                <button type="button" class="page-link" aria-label="Siguiente" @click="cambiarPagina(pagination.current_page + 1)">
                                     <i class="fas fa-angle-right"></i>
-                                </a>
+                                </button>
                             </li>
-                            <li class="page-item"
-                                :class="{ disabled: pagination.current_page === pagination.last_page }">
-                                <a class="page-link" href="#" @click.prevent="cambiarPagina(pagination.last_page)"
-                                    aria-label="Última página">
+                            <!-- Última página - Solo en desktop -->
+                            <li class="page-item d-none d-md-block" :class="{ disabled: pagination.current_page === pagination.last_page }">
+                                <button type="button" class="page-link" aria-label="Última" @click="cambiarPagina(pagination.last_page)">
                                     <i class="fas fa-angle-double-right"></i>
-                                </a>
+                                </button>
                             </li>
                         </ul>
                     </nav>
@@ -174,16 +261,23 @@
 
         <!-- Modal para agregar/editar cita -->
         <div class="modal fade" id="citaModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header"
+            <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down modal-lg">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header p-3 p-md-4"
                         :class="posicion ? 'bg-warning bg-opacity-10' : 'bg-primary bg-opacity-10'">
-                        <h5 class="modal-title">{{ posicion ? 'Editar Cita' : 'Nueva Cita' }}</h5>
+                        <h5 class="modal-title">
+                            <span class="badge p-2 me-2 rounded-circle"
+                                :class="posicion ? 'bg-warning bg-opacity-10 text-warning' : 'bg-primary bg-opacity-10 text-primary'">
+                                <i :class="posicion ? 'fas fa-edit' : 'fas fa-plus'"></i>
+                            </span>
+                            <span class="d-none d-sm-inline">{{ posicion ? 'Editar Cita' : 'Nueva Cita' }}</span>
+                            <span class="d-sm-none">{{ posicion ? 'Editar' : 'Nueva' }}</span>
+                        </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body p-3 p-md-4">
                         <!-- Alerta de campos requeridos -->
-                        <div class="alert alert-info mb-4" role="alert">
+                        <div class="alert alert-info rounded-3 shadow-sm mb-4" role="alert">
                             <div class="d-flex">
                                 <div class="me-3">
                                     <i class="fas fa-info-circle fa-2x"></i>
@@ -196,8 +290,7 @@
                             </div>
                         </div>
 
-                        <form @submit.prevent="guardarCita" id="citaForm" class="needs-validation"
-                            novalidate>
+                        <form @submit.prevent="guardarCita" id="citaForm" class="needs-validation" novalidate>
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label for="nombre_completo" class="form-label fw-bold">Nombre Completo <span
@@ -373,21 +466,21 @@
                             </div>
                         </form>
                     </div>
-                    <div class="modal-footer">
-                        <div class="d-flex justify-content-between w-100">
+                    <div class="modal-footer border-0 p-3 p-md-4">
+                        <div class="d-flex flex-column flex-sm-row justify-content-between w-100 gap-2">
                             <div>
                                 <span v-if="Object.keys(errors).length > 0" class="text-danger">
                                     <i class="fas fa-exclamation-circle me-1"></i>
                                     Por favor, corrija los errores en el formulario
                                 </span>
                             </div>
-                            <div>
-                                <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">
-                                    <i class="fas fa-times me-1"></i>Cancelar
+                            <div class="d-flex flex-column flex-sm-row gap-2">
+                                <button type="button" class="btn btn-outline-secondary w-100 w-sm-auto" data-bs-dismiss="modal">
+                                    <i class="fas fa-times me-2"></i>Cancelar
                                 </button>
-                                <button type="button" class="btn" :class="posicion ? 'btn-warning' : 'btn-primary'"
+                                <button type="button" class="btn w-100 w-sm-auto" :class="posicion ? 'btn-warning' : 'btn-primary'"
                                     @click="validarYGuardar">
-                                    <i class="fas" :class="posicion ? 'fa-save me-1' : 'fa-plus me-1'"></i>
+                                    <i class="fas" :class="posicion ? 'fa-save me-2' : 'fa-plus me-2'"></i>
                                     {{ posicion ? 'Actualizar' : 'Guardar' }}
                                 </button>
                             </div>
@@ -399,76 +492,129 @@
 
         <!-- Modal de detalles de la cita -->
         <div class="modal fade" id="detallesModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header bg-info bg-opacity-10">
-                        <h5 class="modal-title">Detalles de la Cita</h5>
+            <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down modal-lg">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-info bg-opacity-10 p-3 p-md-4">
+                        <h5 class="modal-title">
+                            <span class="badge bg-info bg-opacity-10 text-info p-2 me-2 rounded-circle">
+                                <i class="fas fa-info-circle"></i>
+                            </span>
+                            <span class="d-none d-sm-inline">Detalles de la Cita</span>
+                            <span class="d-sm-none">Detalles</span>
+                        </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body" v-if="citaSeleccionada">
-                        <div class="row">
+                    <div class="modal-body p-3 p-md-4" v-if="citaSeleccionada">
+                        <div class="row g-3 g-md-4">
                             <div class="col-md-4 text-center mb-3">
-                                <div class="cita-profile-placeholder">
-                                    <i class="fas fa-calendar-check fa-5x text-muted"></i>
+                                <div class="cita-profile-placeholder mb-3">
+                                    <div class="avatar-circle-lg mx-auto" :style="{ backgroundColor: getAvatarColor(citaSeleccionada.nombre_completo) }">
+                                        {{ getInitials(citaSeleccionada.nombre_completo) }}
+                                    </div>
                                 </div>
                                 <div class="mt-3">
-                                    <span class="badge" :class="getEstadoClass(citaSeleccionada.estado)">
+                                    <span class="badge rounded-pill" :class="getEstadoClass(citaSeleccionada.estado)">
                                         {{ getEstadoTexto(citaSeleccionada.estado) }}
                                     </span>
                                 </div>
                             </div>
                             <div class="col-md-8">
-                                <h4 class="cita-title">{{ citaSeleccionada.nombre_completo }}</h4>
-                                <p class="text-muted mb-3">{{ citaSeleccionada.correo }}</p>
-
-                                <div class="cita-detail-item">
-                                    <h6 class="fw-bold">Teléfono:</h6>
-                                    <p>{{ citaSeleccionada.telefono }}</p>
-                                </div>
-
-                                <div class="cita-detail-item">
-                                    <h6 class="fw-bold">Departamento:</h6>
-                                    <p>{{ citaSeleccionada.departamento || 'No especificado' }}</p>
-                                </div>
-
-                                <div class="cita-detail-item">
-                                    <h6 class="fw-bold">Fecha y Hora:</h6>
-                                    <p>{{ formatearFecha(citaSeleccionada.fecha_de_cita) }} a las {{ formatearHora(citaSeleccionada.hora_de_cita) }}</p>
-                                </div>
-
-                                <div class="cita-detail-item">
-                                    <h6 class="fw-bold">Servicio Solicitado:</h6>
-                                    <p>{{ citaSeleccionada.servicio_solicitado }}</p>
-                                </div>
-
-                                <div class="cita-detail-item">
-                                    <h6 class="fw-bold">Fecha de Creación:</h6>
-                                    <p>{{ formatearFecha(citaSeleccionada.created_at) }}</p>
+                                <div class="card h-100 border-0 shadow-sm rounded-3">
+                                    <div class="card-header bg-white border-0 p-3">
+                                        <span class="card-title h6 d-flex align-items-center">
+                                            <span class="badge bg-info bg-opacity-10 text-info p-2 me-2 rounded-circle">
+                                                <i class="fas fa-user"></i>
+                                            </span>
+                                            Información del Cliente
+                                        </span>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <h4 class="mb-1">{{ citaSeleccionada.nombre_completo }}</h4>
+                                        <p class="text-muted mb-3">{{ citaSeleccionada.correo }}</p>
+                                        
+                                        <div class="row g-2 small">
+                                            <div class="col-12">
+                                                <div class="d-flex justify-content-between">
+                                                    <span class="text-muted"><i class="fas fa-phone me-1"></i>Teléfono:</span>
+                                                    <span class="fw-medium">{{ citaSeleccionada.telefono }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <div class="d-flex justify-content-between">
+                                                    <span class="text-muted"><i class="fas fa-map-marker-alt me-1"></i>Departamento:</span>
+                                                    <span class="fw-medium">{{ citaSeleccionada.departamento || 'No especificado' }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <div class="d-flex justify-content-between">
+                                                    <span class="text-muted"><i class="fas fa-calendar me-1"></i>Fecha:</span>
+                                                    <span class="fw-medium">{{ formatearFecha(citaSeleccionada.fecha_de_cita) }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <div class="d-flex justify-content-between">
+                                                    <span class="text-muted"><i class="fas fa-clock me-1"></i>Hora:</span>
+                                                    <span class="fw-medium">{{ formatearHora(citaSeleccionada.hora_de_cita) }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <div class="d-flex justify-content-between">
+                                                    <span class="text-muted"><i class="fas fa-briefcase me-1"></i>Servicio:</span>
+                                                    <span class="fw-medium">{{ citaSeleccionada.servicio_solicitado }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <div class="d-flex justify-content-between">
+                                                    <span class="text-muted"><i class="fas fa-calendar-plus me-1"></i>Creación:</span>
+                                                    <span class="fw-medium">{{ formatearFecha(citaSeleccionada.created_at) }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="cita-notes mt-4" v-if="citaSeleccionada.mensaje">
-                            <h5 class="section-title">Mensaje Adicional</h5>
-                            <div class="p-3 bg-light rounded">
-                                <p class="mb-0">{{ citaSeleccionada.mensaje }}</p>
+                            
+                            <div class="col-12" v-if="citaSeleccionada.mensaje">
+                                <div class="card border-0 shadow-sm rounded-3">
+                                    <div class="card-header bg-white border-0 p-3">
+                                        <span class="card-title h6 d-flex align-items-center">
+                                            <span class="badge bg-info bg-opacity-10 text-info p-2 me-2 rounded-circle">
+                                                <i class="fas fa-sticky-note"></i>
+                                            </span>
+                                            Mensaje Adicional
+                                        </span>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <div class="bg-light rounded-3 p-3">
+                                            <p class="mb-0">{{ citaSeleccionada.mensaje }}</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                        <button v-if="citaSeleccionada && citaSeleccionada.estado === 0"
-                            type="button" class="btn btn-success" @click="confirmarCita(citaSeleccionada.id)">
-                            <i class="fas fa-check me-1"></i>Confirmar
-                        </button>
-                        <button v-if="citaSeleccionada && citaSeleccionada.estado !== 2"
-                            type="button" class="btn btn-danger" @click="cancelarCita(citaSeleccionada.id)">
-                            <i class="fas fa-times me-1"></i>Cancelar
-                        </button>
-                        <button v-if="citaSeleccionada && (citaSeleccionada.estado === 1 || citaSeleccionada.estado === 0)"
-                            type="button" class="btn btn-info" @click="completarCita(citaSeleccionada.id)">
-                            <i class="fas fa-check-double me-1"></i>Marcar como Completada
-                        </button>
+                    <div class="modal-footer border-0 p-3 p-md-4">
+                        <div class="d-flex flex-column flex-sm-row justify-content-between w-100 gap-2">
+                            <div class="d-flex flex-column flex-sm-row gap-2">
+                                <button v-if="citaSeleccionada && citaSeleccionada.estado === 0"
+                                    type="button" class="btn btn-success w-100 w-sm-auto" @click="confirmarCita(citaSeleccionada.id)">
+                                    <i class="fas fa-check me-2"></i>Confirmar
+                                </button>
+                                <button v-if="citaSeleccionada && citaSeleccionada.estado !== 2"
+                                    type="button" class="btn btn-danger w-100 w-sm-auto" @click="cancelarCita(citaSeleccionada.id)">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </button>
+                                <button v-if="citaSeleccionada && (citaSeleccionada.estado === 1 || citaSeleccionada.estado === 0)"
+                                    type="button" class="btn btn-info w-100 w-sm-auto" @click="completarCita(citaSeleccionada.id)">
+                                    <i class="fas fa-check-double me-2"></i>Completar
+                                </button>
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-outline-secondary w-100 w-sm-auto" data-bs-dismiss="modal">
+                                    <i class="fas fa-times me-2"></i>Cerrar
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -873,112 +1019,254 @@ const completarCita = async (id) => {
         alert('Error al marcar la cita como completada. Intente nuevamente.');
     }
 };
+
+// Funciones de utilidad
+const getInitials = (name) => {
+    if (!name) return '?';
+    return name
+        .split(' ')
+        .map(word => word.charAt(0))
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
+};
+
+// Función para generar un color basado en el nombre
+const getAvatarColor = (nombre) => {
+    if (!nombre) return '#6c757d';
+
+    // Generar un color basado en el nombre
+    let hash = 0;
+    for (let i = 0; i < nombre.length; i++) {
+        hash = nombre.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    // Convertir a un color hexadecimal
+    let color = '#';
+    for (let i = 0; i < 3; i++) {
+        const value = (hash >> (i * 8)) & 0xFF;
+        color += ('00' + value.toString(16)).substr(-2);
+    }
+
+    return color;
+};
 </script>
 
 <style scoped>
+/* Estilos base mejorados */
+.container-fluid {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
 .card {
-    transition: box-shadow 0.3s ease-in-out;
+    transition: all 0.3s ease;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1) !important;
 }
 
 .card:hover {
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15) !important;
+    transform: translateY(-2px);
+}
+
+.card-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 1.25rem;
 }
 
 .modal-header,
 .modal-footer {
-    padding: 1rem;
+    padding: 1.25rem;
 }
 
 .modal-body {
     padding: 1.5rem;
 }
 
-/* Estilos para citas en vista móvil */
-.cita-card {
-    transition: all 0.3s ease;
-    border-left: 3px solid transparent;
+.modal-content {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.5rem 2rem rgba(0, 0, 0, 0.15);
 }
 
-.cita-card:hover {
-    border-left-color: #0d6efd;
-    transform: translateX(5px);
+.btn {
+    border-radius: 0.5rem;
+    font-weight: 500;
+    padding: 0.5rem 1.25rem;
+    transition: all 0.2s ease-in-out;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.cita-info {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 0.5rem;
-    margin: 0.75rem 0;
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
 }
 
-.cita-detail {
-    padding: 0.5rem;
-    background-color: #f8f9fa;
-    border-radius: 0.25rem;
+.btn-sm {
+    padding: 0.375rem 0.75rem;
     font-size: 0.875rem;
 }
 
-.action-btn {
-    transition: all 0.2s ease;
+.input-group {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.05);
+    border-radius: 0.5rem;
+    overflow: hidden;
 }
 
-.action-btn:hover {
+.input-group-text {
+    border: none;
+    background-color: #f8f9fa;
+}
+
+.form-control, .form-select {
+    border: none;
+    padding: 0.625rem 1rem;
+}
+
+.form-control:focus, .form-select:focus {
+    box-shadow: none;
+    border-color: #0d6efd;
+}
+
+/* Estilos para citas en vista móvil */
+.hover-card {
+    transition: all 0.3s ease;
+}
+
+.hover-card:hover {
     transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Estilos para avatares responsive */
+.avatar-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    flex-shrink: 0;
+}
+
+.avatar-circle-lg {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 28px;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Utilidades responsive */
+.min-w-0 {
+    min-width: 0;
+}
+
+.flex-shrink-0 {
+    flex-shrink: 0;
+}
+
+.text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Estilos para la vista de tabla */
+.cita-row {
+    transition: background-color 0.2s ease;
+}
+
+.cita-row:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.fw-medium {
+    font-weight: 500;
 }
 
 /* Estilos para la paginación responsive */
-.pagination-container {
-    overflow-x: auto;
-    padding: 0.5rem 0;
+.pagination {
+    margin-bottom: 0;
+    border-radius: 0.375rem;
+    overflow: hidden;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.05);
 }
 
-.pagination {
-    flex-wrap: nowrap;
-    min-width: max-content;
+.page-item.active .page-link {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: white;
+    font-weight: 600;
+}
+
+.page-link {
+    border: none;
+    color: #0d6efd;
+    padding: 0.5rem 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.page-link:hover {
+    background-color: #e9ecef;
+    color: #0a58ca;
+    transform: translateY(-1px);
+}
+
+.page-item.disabled .page-link {
+    color: #6c757d;
+    opacity: 0.5;
 }
 
 /* Estilos para detalles de la cita */
 .cita-profile-placeholder {
-    width: 150px;
-    height: 150px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #f8f9fa;
-    border-radius: 50%;
     margin: 0 auto;
 }
 
-.cita-title {
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: #333;
+/* Estilos para badges */
+.badge {
+    font-weight: 500;
+    padding: 0.5rem 0.75rem;
+    border-radius: 50rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
 }
 
-.cita-detail-item {
-    margin-bottom: 1rem;
+.badge:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15);
 }
 
-.cita-notes {
-    background-color: #fff;
-    border-radius: 0.5rem;
+.badge.rounded-circle {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
 }
 
-.section-title {
-    position: relative;
-    padding-bottom: 0.5rem;
-    margin-bottom: 1rem;
-    font-weight: 600;
-}
-
-.section-title::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 50px;
-    height: 2px;
-    background: linear-gradient(to right, #0d6efd, #0dcaf0);
+/* Estilos para alertas */
+.alert {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1);
 }
 
 /* Animaciones */
@@ -987,36 +1275,167 @@ const completarCita = async (id) => {
         opacity: 0;
         transform: translateY(20px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);
     }
 }
 
-.cita-card {
-    animation: fadeIn 0.5s ease-out;
+/* Media queries para mejorar la responsividad */
+@media (max-width: 575.98px) {
+    /* Estilos para móviles pequeños */
+    .container-fluid {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+
+    .card-header {
+        padding: 1rem !important;
+    }
+
+    .card-body {
+        padding: 1rem !important;
+    }
+
+    .modal-header,
+    .modal-footer,
+    .modal-body {
+        padding: 1rem !important;
+    }
+
+    .btn {
+        font-size: 0.875rem;
+        padding: 0.5rem 1rem;
+    }
+
+    .btn-sm {
+        font-size: 0.8rem;
+        padding: 0.375rem 0.75rem;
+    }
+
+    .avatar-circle {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+
+    .avatar-circle-lg {
+        width: 60px;
+        height: 60px;
+        font-size: 22px;
+    }
 }
 
-/* Media queries para mejorar la responsividad */
-@media (max-width: 767.98px) {
-    .btn-group {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
+@media (min-width: 576px) and (max-width: 767.98px) {
+    /* Estilos para móviles grandes */
+    .avatar-circle {
+        width: 30px;
+        height: 30px;
+        font-size: 13px;
     }
 
-    .btn-group .btn {
-        width: 100%;
+    .avatar-circle-lg {
+        width: 70px;
+        height: 70px;
+        font-size: 24px;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991.98px) {
+    /* Estilos para tablets */
+    .avatar-circle {
+        width: 34px;
+        height: 34px;
+        font-size: 15px;
+    }
+}
+
+@media (min-width: 992px) {
+    /* Estilos para desktop */
+    .avatar-circle {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+}
+
+/* Mejoras de accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+    .card,
+    .btn,
+    .hover-card {
+        transition: none !important;
     }
 
-    .cita-info {
-        grid-template-columns: 1fr;
+    .hover-card:hover,
+    .card:hover,
+    .btn:hover,
+    .page-link:hover,
+    .badge:hover {
+        transform: none !important;
     }
+}
 
-    .cita-profile-placeholder {
-        width: 120px;
-        height: 120px;
-    }
+/* Estilos para la tabla */
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    color: #495057;
+    padding: 1rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.table td {
+    padding: 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+/* Estilos para inputs y selects */
+.form-control::placeholder,
+.form-select::placeholder {
+    color: #adb5bd;
+    opacity: 0.7;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Estilos para botones de acción en la tabla */
+.btn-group .btn {
+    margin-left: -1px;
+}
+
+.btn-group .btn:first-child {
+    border-top-left-radius: 0.5rem;
+    border-bottom-left-radius: 0.5rem;
+}
+
+.btn-group .btn:last-child {
+    border-top-right-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+}
+
+/* Estilos para el contenedor principal */
+.container-fluid {
+    max-width: 1400px;
+    margin: 0 auto;
 }
 </style>

@@ -58,6 +58,7 @@ const getToken = () => {
  * @returns {Promise} Promesa rechazada con el error
  */
 const handleError = (error) => {
+  console.log(error);
   if (error.response?.status === 401) {
     // Si no está autorizado, limpia todo el almacenamiento local y redirige al login
     localStorage.clear()

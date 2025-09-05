@@ -1,185 +1,207 @@
 <template>
-  <div class="container-fluid py-4">
-    <div class="card shadow">
-      <div class="card-header bg-success bg-opacity-10 d-flex justify-content-between align-items-center flex-wrap gap-3 p-3">
-        <h2 class="card-title h4 m-0">
-          <i class="fas fa-address-book me-2"></i>Gestión de Contactos
+  <div class="container-fluid py-2 py-md-4 px-2 px-md-3">
+    <div class="card shadow-sm border-0 rounded-3">
+      <!-- Header con título y acciones principales -->
+      <div class="card-header bg-success bg-opacity-10 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 p-3 p-md-4 border-0">
+        <h2 class="card-title h5 h4-md m-0 d-flex align-items-center">
+          <span class="badge bg-success bg-opacity-10 text-success p-2 me-2 rounded-circle">
+            <i class="fas fa-address-book"></i>
+          </span>
+          <span class="d-none d-sm-inline">Gestión de Contactos</span>
+          <span class="d-sm-none">Contactos</span>
         </h2>
-        <div>
-          <button type="button" class="btn btn-danger me-2" @click="generatePDF()">
-            <i class="fas fa-file-pdf me-2"></i>Generar PDF
+        <div class="d-flex flex-column flex-sm-row gap-2 w-100 w-md-auto">
+          <button type="button" class="btn btn-danger w-100 w-sm-auto" @click="generatePDF()">
+            <i class="fas fa-file-pdf me-2"></i>
+            <span class="d-none d-sm-inline">Generar PDF</span>
+            <span class="d-sm-none">PDF</span>
           </button>
-          <button type="button" class="btn btn-success" @click="generateExcel()">
-            <i class="fas fa-file-excel me-2"></i>Generar Excel
+          <button type="button" class="btn btn-success w-100 w-sm-auto" @click="generateExcel()">
+            <i class="fas fa-file-excel me-2"></i>
+            <span class="d-none d-sm-inline">Generar Excel</span>
+            <span class="d-sm-none">Excel</span>
           </button>
         </div>
       </div>
+
+      <!-- Filtros y búsqueda -->
       <div class="card-body p-0">
-        <div class="p-3">
-          <div class="input-group mb-3">
-            <span class="input-group-text bg-light">
-              <i class="fas fa-search"></i>
+        <div class="p-3 p-md-4 bg-light border-top border-bottom">
+          <div class="input-group shadow-sm mb-3">
+            <span class="input-group-text bg-white border-end-0">
+              <i class="fas fa-search text-muted"></i>
             </span>
-            <input type="text" class="form-control" placeholder="Buscar por nombre, correo, teléfono..." v-model="searchText">
-            <button class="btn btn-outline-secondary" type="button" @click="searchText = ''" v-if="searchText">
+            <input type="text" class="form-control border-start-0 ps-0" 
+              placeholder="Buscar por nombre, correo, teléfono..." 
+              v-model="searchText">
+            <button class="btn btn-outline-secondary border-start-0" type="button" 
+              @click="searchText = ''" v-if="searchText">
               <i class="fas fa-times"></i>
             </button>
           </div>
 
-          <!-- Contador de resultados y filtros -->
-          <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-            <p class="text-muted mb-0">
-              <i class="fas fa-list-ul me-1"></i>
-              Mostrando {{ filteredContacts.length }} contactos
-            </p>
-            <div class="d-flex gap-2 flex-wrap">
-              <div class="btn-group">
-                <button class="btn btn-sm"
-                  :class="vistaActual === 'tabla' ? 'btn-success' : 'btn-outline-success'"
-                  @click="vistaActual = 'tabla'">
-                  <i class="fas fa-table me-1"></i>Tabla
-                </button>
-                <button class="btn btn-sm"
-                  :class="vistaActual === 'tarjetas' ? 'btn-success' : 'btn-outline-success'"
-                  @click="vistaActual = 'tarjetas'">
-                  <i class="fas fa-th-large me-1"></i>Tarjetas
-                </button>
-              </div>
+          <!-- Contador de resultados y selector de vista -->
+          <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3">
+            <div class="d-flex align-items-center">
+              <span class="badge bg-success rounded-pill me-2">{{ filteredContacts.length }}</span>
+              <p class="text-muted mb-0 small">
+                <span class="d-none d-sm-inline">Mostrando {{ filteredContacts.length }} contactos</span>
+                <span class="d-sm-none">Contactos</span>
+              </p>
+            </div>
+            <div class="btn-group shadow-sm w-100 w-sm-auto">
+              <button class="btn btn-sm" :class="vistaActual === 'tabla' ? 'btn-success' : 'btn-outline-success'"
+                @click="vistaActual = 'tabla'">
+                <i class="fas fa-table me-1"></i><span class="d-none d-md-inline">Tabla</span>
+              </button>
+              <button class="btn btn-sm" :class="vistaActual === 'tarjetas' ? 'btn-success' : 'btn-outline-success'"
+                @click="vistaActual = 'tarjetas'">
+                <i class="fas fa-th-large me-1"></i><span class="d-none d-md-inline">Tarjetas</span>
+              </button>
             </div>
           </div>
         </div>
 
         <!-- Mensaje cuando no hay resultados -->
-        <div v-if="filteredContacts.length === 0" class="text-center py-5">
-          <i class="fas fa-address-card fa-3x text-muted mb-3"></i>
+        <div v-if="filteredContacts.length === 0" class="text-center py-4 py-md-5 px-3">
+          <div class="mb-3">
+            <span class="badge bg-light p-3 rounded-circle">
+              <i class="fas fa-address-card fa-2x text-muted"></i>
+            </span>
+          </div>
           <h5 class="text-muted">No se encontraron contactos</h5>
-          <p class="text-muted">Intenta con otra búsqueda o agrega un nuevo contacto</p>
+          <p class="text-muted small">Intenta con otra búsqueda o agrega un nuevo contacto</p>
         </div>
 
-        <!-- Table view -->
-        <div class="table-responsive"
-          v-if="filteredContacts.length > 0 && (vistaActual === 'tabla' || windowWidth >= 768)">
-          <table class="table table-hover align-middle mb-0">
-            <thead class="bg-light">
-              <tr>
-                <th class="px-3">
-                  <div class="d-flex align-items-center">
-                    <span>#</span>
-                    <button class="btn btn-sm text-success border-0 p-0 ms-1"
-                      @click="ordenarPor('id')">
-                      <i class="fas" :class="getIconoOrdenamiento('id')"></i>
-                    </button>
-                  </div>
-                </th>
-                <th class="px-3">
-                  <div class="d-flex align-items-center">
-                    <span>Nombre</span>
-                    <button class="btn btn-sm text-success border-0 p-0 ms-1"
-                      @click="ordenarPor('nombre_completo')">
-                      <i class="fas" :class="getIconoOrdenamiento('nombre_completo')"></i>
-                    </button>
-                  </div>
-                </th>
-                <th class="px-3">Correo electrónico</th>
-                <th class="px-3">Teléfono</th>
-                <th class="px-3">Mensaje</th>
-                <th class="px-3 text-center">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(item, index) in filteredContacts" :key="item.id" class="contact-row">
-                <td class="px-3">{{ index + 1 }}</td>
-                <td>
-                  <div class="d-flex align-items-center">
-                    <div class="avatar-circle"
-                      :style="{ backgroundColor: getAvatarColor(item.nombre_completo) }">
-                      {{ getInitials(item.nombre_completo) }}
+        <!-- Table view - Solo en desktop -->
+        <div class="d-none d-lg-block" v-if="filteredContacts.length > 0 && vistaActual === 'tabla'">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="bg-light">
+                <tr>
+                  <th class="px-3 py-3">
+                    <div class="d-flex align-items-center">
+                      <span>#</span>
+                      <button class="btn btn-sm text-success border-0 p-0 ms-1" @click="ordenarPor('id')">
+                        <i class="fas" :class="getIconoOrdenamiento('id')"></i>
+                      </button>
                     </div>
-                    <div class="ms-2">
-                      <div class="fw-medium">{{ item.nombre_completo }}</div>
-                      <small class="text-muted">Contacto #{{ item.id }}</small>
+                  </th>
+                  <th class="px-3 py-3">
+                    <div class="d-flex align-items-center">
+                      <span>Nombre</span>
+                      <button class="btn btn-sm text-success border-0 p-0 ms-1" @click="ordenarPor('nombre_completo')">
+                        <i class="fas" :class="getIconoOrdenamiento('nombre_completo')"></i>
+                      </button>
                     </div>
-                  </div>
-                </td>
-                <td>
-                  <a :href="`mailto:${item.correo}`" class="text-decoration-none">
-                    <i class="fas fa-envelope me-1 text-muted"></i>{{ item.correo }}
-                  </a>
-                </td>
-                <td>
-                  <a :href="`tel:${item.telefono}`" class="text-decoration-none">
-                    <i class="fas fa-phone me-1 text-muted"></i>{{ item.telefono }}
-                  </a>
-                </td>
-                <td>
-                  <span class="message-preview">{{ truncateMessage(item.mensaje, 50) }}</span>
-                  <button v-if="item.mensaje && item.mensaje.length > 50" 
-                          class="btn btn-link btn-sm p-0 ms-1" 
-                          @click="showFullMessage(item.mensaje)">
-                    Ver más
-                  </button>
-                </td>
-                <td class="text-center">
-                  <div class="btn-group">
-                    <button type="button" class="btn btn-outline-info btn-sm" @click="showFullMessage(item.mensaje)">
-                      <i class="fas fa-eye"></i>
+                  </th>
+                  <th class="px-3 py-3">Correo electrónico</th>
+                  <th class="px-3 py-3">Teléfono</th>
+                  <th class="px-3 py-3">Mensaje</th>
+                  <th class="px-3 py-3 text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, index) in filteredContacts" :key="item.id" class="contact-row">
+                  <td class="px-3 py-3">{{ index + 1 }}</td>
+                  <td class="px-3 py-3">
+                    <div class="d-flex align-items-center">
+                      <div class="avatar-circle me-2" :style="{ backgroundColor: getAvatarColor(item.nombre_completo) }">
+                        {{ getInitials(item.nombre_completo) }}
+                      </div>
+                      <div class="text-start">
+                        <div class="fw-medium">{{ item.nombre_completo }}</div>
+                        <small class="text-muted">Contacto #{{ item.id }}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-3 py-3">
+                    <a :href="`mailto:${item.correo}`" class="text-decoration-none">
+                      <i class="fas fa-envelope me-1 text-muted"></i>{{ item.correo }}
+                    </a>
+                  </td>
+                  <td class="px-3 py-3">
+                    <a :href="`tel:${item.telefono}`" class="text-decoration-none">
+                      <i class="fas fa-phone me-1 text-muted"></i>{{ item.telefono }}
+                    </a>
+                  </td>
+                  <td class="px-3 py-3">
+                    <span class="message-preview">{{ truncateMessage(item.mensaje, 50) }}</span>
+                    <button v-if="item.mensaje && item.mensaje.length > 50" 
+                            class="btn btn-link btn-sm p-0 ms-1" 
+                            @click="showFullMessage(item.mensaje)">
+                      Ver más
                     </button>
-                    <button type="button" class="btn btn-outline-danger btn-sm" @click="confirmDelete(item.id, item.nombre_completo)">
-                      <i class="fas fa-trash-alt"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                  </td>
+                  <td class="px-3 py-3 text-center">
+                    <div class="btn-group shadow-sm">
+                      <button type="button" class="btn btn-outline-success btn-sm" @click="showFullMessage(item.mensaje)">
+                        <i class="fas fa-eye"></i>
+                      </button>
+                      <button type="button" class="btn btn-outline-danger btn-sm" @click="confirmDelete(item.id, item.nombre_completo)">
+                        <i class="fas fa-trash-alt"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <!-- Cards view -->
-        <div v-if="filteredContacts.length > 0 && (vistaActual === 'tarjetas' || windowWidth < 768)">
-          <div class="row g-3 p-3">
-            <div class="col-md-6 col-lg-4" v-for="(item, index) in filteredContacts" :key="item.id">
-              <div class="card h-100 border-0 shadow-sm hover-card">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                  <div class="d-flex align-items-center">
-                    <div class="avatar-circle me-2"
-                      :style="{ backgroundColor: getAvatarColor(item.nombre_completo) }">
+        <!-- Cards view - Responsive para móviles y tablets -->
+        <div v-if="filteredContacts.length > 0 && (vistaActual === 'tarjetas' || windowWidth < 992)">
+          <div class="row g-3 g-md-4 p-3 p-md-4">
+            <div class="col-12 col-sm-6 col-xl-4" v-for="(item, index) in filteredContacts" :key="item.id">
+              <div class="card h-100 border-0 shadow-sm hover-card rounded-3">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center p-3 border-0">
+                  <div class="d-flex align-items-center min-w-0 flex-grow-1">
+                    <div class="avatar-circle me-2 flex-shrink-0" :style="{ backgroundColor: getAvatarColor(item.nombre_completo) }">
                       {{ getInitials(item.nombre_completo) }}
                     </div>
-                    <h5 class="card-title mb-0">{{ item.nombre_completo }}</h5>
+                    <h5 class="card-title mb-0 fw-bold text-truncate">{{ item.nombre_completo }}</h5>
                   </div>
-                  <span class="badge bg-light text-dark">#{{ index + 1 }}</span>
+                  <span class="badge bg-light text-dark flex-shrink-0 ms-2">#{{ index + 1 }}</span>
                 </div>
-                <div class="card-body">
-                  <ul class="list-group list-group-flush mb-3">
-                    <li class="list-group-item d-flex justify-content-between px-0">
-                      <span class="text-muted"><i class="fas fa-envelope me-2"></i>Correo:</span>
-                      <a :href="`mailto:${item.correo}`" class="text-decoration-none">{{ item.correo }}</a>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between px-0">
-                      <span class="text-muted"><i class="fas fa-phone me-2"></i>Teléfono:</span>
-                      <a :href="`tel:${item.telefono}`" class="text-decoration-none">{{ item.telefono }}</a>
-                    </li>
-                    <li class="list-group-item px-0">
-                      <div class="d-flex justify-content-between">
-                        <span class="text-muted"><i class="fas fa-comment me-2"></i>Mensaje:</span>
+                <div class="card-body p-3">
+                  <div class="row g-2 small">
+                    <div class="col-12">
+                      <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted"><i class="fas fa-envelope me-1"></i>Correo:</span>
+                        <a :href="`mailto:${item.correo}`" class="text-decoration-none text-end text-truncate ms-2" style="max-width: 60%;">
+                          {{ item.correo }}
+                        </a>
+                      </div>
+                    </div>
+                    <div class="col-12">
+                      <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted"><i class="fas fa-phone me-1"></i>Teléfono:</span>
+                        <a :href="`tel:${item.telefono}`" class="text-decoration-none text-end text-truncate ms-2" style="max-width: 60%;">
+                          {{ item.telefono }}
+                        </a>
+                      </div>
+                    </div>
+                    <div class="col-12">
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-muted"><i class="fas fa-comment me-1"></i>Mensaje:</span>
                         <button v-if="item.mensaje && item.mensaje.length > 100" 
                                 class="btn btn-link btn-sm p-0" 
                                 @click="showFullMessage(item.mensaje)">
                           Ver completo
                         </button>
                       </div>
-                      <div class="mt-2 message-preview">
+                      <div class="message-preview small">
                         {{ truncateMessage(item.mensaje, 100) }}
                       </div>
-                    </li>
-                  </ul>
+                    </div>
+                  </div>
                 </div>
-                <div class="card-footer bg-white border-top-0">
-                  <div class="d-flex justify-content-between">
-                    <button type="button" class="btn btn-outline-info btn-sm" @click="showFullMessage(item.mensaje)">
+                <div class="card-footer bg-white p-3 border-top-0">
+                  <div class="d-flex flex-column flex-sm-row gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-success flex-fill" @click="showFullMessage(item.mensaje)">
                       <i class="fas fa-eye me-1"></i>Ver mensaje
                     </button>
-                    <button type="button" class="btn btn-outline-danger btn-sm" @click="confirmDelete(item.id, item.nombre_completo)">
+                    <button type="button" class="btn btn-sm btn-outline-danger flex-fill" @click="confirmDelete(item.id, item.nombre_completo)">
                       <i class="fas fa-trash-alt me-1"></i>Eliminar
                     </button>
                   </div>
@@ -189,32 +211,36 @@
           </div>
         </div>
 
-        <!-- Pagination -->
-        <div class="p-3 border-top d-flex justify-content-between align-items-center flex-wrap gap-2" v-if="datos.length > 0">
-          <div class="text-muted small">
-            Mostrando página {{ paginacion.paginaActual }} de {{ totalPaginas }}
-          </div>
-          <nav aria-label="Navegación de páginas">
-            <ul class="pagination pagination-sm mb-0">
-              <li class="page-item" :class="!paginacion.paginaAnterior ? 'disabled' : ''">
+        <!-- Paginación responsive -->
+        <div class="d-flex justify-content-center py-3 py-md-4 px-3" v-if="datos.length > 0">
+          <nav aria-label="Navegación de contactos">
+            <ul class="pagination pagination-sm shadow-sm mb-0">
+              <!-- Primera página - Solo en desktop -->
+              <li class="page-item d-none d-md-block" :class="!paginacion.paginaAnterior ? 'disabled' : ''">
                 <button type="button" class="page-link" aria-label="Primera" @click="irAPrimeraPagina">
                   <i class="fas fa-angle-double-left"></i>
                 </button>
               </li>
+              <!-- Página anterior -->
               <li class="page-item" :class="!paginacion.paginaAnterior ? 'disabled' : ''">
                 <button type="button" class="page-link" aria-label="Anterior" @click="paginaAnterior">
                   <i class="fas fa-angle-left"></i>
                 </button>
               </li>
+
+              <!-- Páginas numeradas - Responsive -->
               <li v-for="pagina in paginasVisibles" :key="pagina" class="page-item" :class="pagina === paginacion.paginaActual ? 'active' : ''">
                 <button type="button" class="page-link" @click="irAPagina(pagina)">{{ pagina }}</button>
               </li>
+
+              <!-- Página siguiente -->
               <li class="page-item" :class="!paginacion.paginaSiguiente ? 'disabled' : ''">
                 <button type="button" class="page-link" aria-label="Siguiente" @click="paginaSiguiente">
                   <i class="fas fa-angle-right"></i>
                 </button>
               </li>
-              <li class="page-item" :class="!paginacion.paginaSiguiente ? 'disabled' : ''">
+              <!-- Última página - Solo en desktop -->
+              <li class="page-item d-none d-md-block" :class="!paginacion.paginaSiguiente ? 'disabled' : ''">
                 <button type="button" class="page-link" aria-label="Última" @click="irAUltimaPagina">
                   <i class="fas fa-angle-double-right"></i>
                 </button>
@@ -227,15 +253,19 @@
 
     <!-- Modal para confirmar eliminación -->
     <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header bg-danger bg-opacity-10">
+      <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
+        <div class="modal-content border-0 shadow">
+          <div class="modal-header bg-danger bg-opacity-10 p-3 p-md-4">
             <h5 class="modal-title" id="deleteModalLabel">
-              <i class="fas fa-trash-alt me-2"></i>Confirmar eliminación
+              <span class="badge bg-danger bg-opacity-10 text-danger p-2 me-2 rounded-circle">
+                <i class="fas fa-trash-alt"></i>
+              </span>
+              <span class="d-none d-sm-inline">Confirmar eliminación</span>
+              <span class="d-sm-none">Eliminar</span>
             </h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body">
+          <div class="modal-body p-3 p-md-4">
             <div class="d-flex align-items-center mb-3">
               <div class="avatar-circle me-3" :style="{ backgroundColor: getAvatarColor(contactToDelete.name) }">
                 {{ getInitials(contactToDelete.name) }}
@@ -245,7 +275,7 @@
                 <p class="text-muted mb-0">ID: {{ contactToDelete.id }}</p>
               </div>
             </div>
-            <div class="alert alert-warning">
+            <div class="alert alert-warning rounded-3 shadow-sm">
               <div class="d-flex">
                 <div class="me-3">
                   <i class="fas fa-exclamation-triangle fa-2x"></i>
@@ -257,13 +287,15 @@
               </div>
             </div>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-              <i class="fas fa-times me-2"></i>Cancelar
-            </button>
-            <button type="button" class="btn btn-danger" @click="deleteContact">
-              <i class="fas fa-trash-alt me-2"></i>Eliminar
-            </button>
+          <div class="modal-footer border-0 p-3 p-md-4">
+            <div class="d-flex flex-column flex-sm-row justify-content-end w-100 gap-2">
+              <button type="button" class="btn btn-outline-secondary w-100 w-sm-auto" data-bs-dismiss="modal">
+                <i class="fas fa-times me-2"></i>Cancelar
+              </button>
+              <button type="button" class="btn btn-danger w-100 w-sm-auto" @click="deleteContact">
+                <i class="fas fa-trash-alt me-2"></i>Eliminar
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -271,23 +303,27 @@
 
     <!-- Modal para ver mensaje completo -->
     <div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header bg-success bg-opacity-10">
+      <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
+        <div class="modal-content border-0 shadow">
+          <div class="modal-header bg-success bg-opacity-10 p-3 p-md-4">
             <h5 class="modal-title" id="messageModalLabel">
-              <i class="fas fa-comment me-2"></i>Mensaje completo
+              <span class="badge bg-success bg-opacity-10 text-success p-2 me-2 rounded-circle">
+                <i class="fas fa-comment"></i>
+              </span>
+              <span class="d-none d-sm-inline">Mensaje completo</span>
+              <span class="d-sm-none">Mensaje</span>
             </h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body">
-            <div class="card border-0 bg-light">
-              <div class="card-body">
+          <div class="modal-body p-3 p-md-4">
+            <div class="card border-0 bg-light rounded-3 shadow-sm">
+              <div class="card-body p-3">
                 <p class="mb-0">{{ fullMessage }}</p>
               </div>
             </div>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-success" data-bs-dismiss="modal">
+          <div class="modal-footer border-0 p-3 p-md-4">
+            <button type="button" class="btn btn-success w-100 w-sm-auto" data-bs-dismiss="modal">
               <i class="fas fa-check me-2"></i>Cerrar
             </button>
           </div>
@@ -297,11 +333,11 @@
 
     <!-- Toast de notificaciones -->
     <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
-      <div id="notificationToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+      <div id="notificationToast" class="toast hide border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
         <div class="toast-header" :class="toastConfig.headerClass">
           <i :class="toastConfig.icon + ' me-2'"></i>
           <strong class="me-auto">{{ toastConfig.title }}</strong>
-          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
         <div class="toast-body">
           {{ toastConfig.message }}
@@ -311,8 +347,9 @@
   </div>
 </template>
 
+
 <script setup>
-import { eliminarContacto, generarExcel, generarPDF, index } from '@/services/ContactoService';
+import { eliminarContacto, generarExcel, generarPDF, index } from '@/Services/ContactoService';
 import { onMounted, ref, computed, onUnmounted } from 'vue';
 import { Modal, Toast } from 'bootstrap/dist/js/bootstrap.bundle.min';
 
@@ -649,8 +686,15 @@ const mostrarNotificacion = (mensaje, tipo) => {
 </script>
 
 <style scoped>
+/* Estilos base responsive */
+.container-fluid {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Estilos para tarjetas */
 .card {
-  transition: box-shadow 0.3s ease-in-out;
+  transition: all 0.3s ease;
   border-radius: 0.5rem;
 }
 
@@ -659,37 +703,97 @@ const mostrarNotificacion = (mensaje, tipo) => {
 }
 
 .hover-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-2px);
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
 }
 
-.card-header {
-  border-top-left-radius: 0.5rem;
-  border-top-right-radius: 0.5rem;
-  padding: 0.75rem 1rem;
+/* Estilos para botones responsive */
+.btn {
+  transition: all 0.2s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+  white-space: nowrap;
 }
 
-.modal-header,
-.modal-footer {
-  padding: 1rem;
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1) !important;
 }
 
-.modal-body {
-  padding: 1.5rem;
+/* Estilos para badges */
+.badge {
+  font-weight: 500;
+  padding: 0.35rem 0.65rem;
+  border-radius: 50rem;
 }
 
+.badge.rounded-circle {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+/* Estilos para avatares responsive */
 .avatar-circle {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  font-size: 16px;
+  font-size: 14px;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  flex-shrink: 0;
 }
 
+/* Estilos para dropdown responsive */
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 1000;
+  display: none;
+  min-width: 10rem;
+  padding: 0.5rem 0;
+  margin: 0.125rem 0 0;
+  font-size: 0.9rem;
+  color: #212529;
+  text-align: left;
+  list-style: none;
+  background-color: #fff;
+  background-clip: padding-box;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.dropdown-menu.show {
+  display: block;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+/* Utilidades responsive */
+.min-w-0 {
+  min-width: 0;
+}
+
+.flex-shrink-0 {
+  flex-shrink: 0;
+}
+
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Estilos para la vista de tabla */
 .contact-row {
   transition: background-color 0.2s ease;
 }
@@ -716,15 +820,11 @@ const mostrarNotificacion = (mensaje, tipo) => {
   font-weight: 500;
 }
 
-.page-link {
-  color: #198754;
-  border-color: #dee2e6;
-}
-
-.page-link:hover {
-  color: #0f5132;
-  background-color: #e9ecef;
-  border-color: #dee2e6;
+/* Estilos para paginación */
+.pagination {
+  margin-bottom: 0;
+  border-radius: 0.375rem;
+  overflow: hidden;
 }
 
 .page-item.active .page-link {
@@ -732,86 +832,129 @@ const mostrarNotificacion = (mensaje, tipo) => {
   border-color: #198754;
 }
 
-.page-item.disabled .page-link {
-  color: #6c757d;
-  pointer-events: none;
-  background-color: #fff;
-  border-color: #dee2e6;
+.page-link {
+  color: #198754;
+  border: none;
+  padding: 0.5rem 0.75rem;
 }
 
-@media (max-width: 767.98px) {
-  .btn-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .btn-group .btn {
-    width: 100%;
-  }
+.page-link:hover {
+  color: #0f5132;
+  background-color: #e9ecef;
+  z-index: 2;
 }
 
 /* Animaciones */
-.btn {
-  transition: all 0.2s ease-in-out;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.btn:hover {
-  transform: translateY(-1px);
+/* Media queries para responsive design */
+@media (max-width: 575.98px) {
+  /* Estilos para móviles pequeños */
+  .container-fluid {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+  .card-header {
+    padding: 1rem !important;
+  }
+  
+  .card-body {
+    padding: 1rem !important;
+  }
+  
+  .modal-header,
+  .modal-footer,
+  .modal-body {
+    padding: 1rem !important;
+  }
+  
+  .btn {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+  }
+  
+  .btn-sm {
+    font-size: 0.8rem;
+    padding: 0.375rem 0.75rem;
+  }
+  
+  .avatar-circle {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
 }
 
-/* Validación de formulario */
-.was-validated .form-control:invalid,
-.form-control.is-invalid {
-  border-color: #dc3545;
-  padding-right: calc(1.5em + 0.75rem);
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right calc(0.375em + 0.1875rem) center;
-  background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+@media (min-width: 576px) and (max-width: 767.98px) {
+  /* Estilos para móviles grandes */
+  .avatar-circle {
+    width: 30px;
+    height: 30px;
+    font-size: 13px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 991.98px) {
+  /* Estilos para tablets */
+  .avatar-circle {
+    width: 34px;
+    height: 34px;
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 992px) {
+  /* Estilos para desktop */
+  .avatar-circle {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+}
+
+/* Mejoras de accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .btn,
+  .hover-card {
+    transition: none;
+  }
+  
+  .hover-card:hover {
+    transform: none;
+  }
+  
+  .btn:hover {
+    transform: none;
+  }
 }
 
 /* Toast de notificaciones */
 .toast {
   opacity: 1 !important;
+  border-radius: 0.5rem;
 }
 
 .toast-header {
-  padding: 0.5rem 0.75rem;
+  padding: 0.75rem 1rem;
+  border-bottom: none;
+}
+
+.toast-header .btn-close {
+  filter: brightness(0) invert(1);
 }
 
 .toast-body {
-  padding: 0.75rem;
+  padding: 1rem;
 }
 </style>
-
-## Mejoras implementadas en la gestión de contactos
-
-He mejorado la interfaz de usuario y la experiencia de usuario del componente de gestión de contactos para que sea más dinámica y coherente con el estilo del componente de gestión de usuarios:
-
-1. **Diseño consistente**:
-   - Implementé el mismo estilo de tarjetas, botones y elementos visuales
-   - Utilicé los mismos componentes de avatar con colores generados dinámicamente
-   - Mantuve la misma estructura de encabezados y secciones
-
-2. **Vistas alternativas**:
-   - Agregué un selector de vista (tabla/tarjetas) igual al de gestión de usuarios
-   - Mejoré la vista de tarjetas con un diseño más organizado y atractivo
-   - Optimicé la visualización en dispositivos móviles
-
-3. **Funcionalidades mejoradas**:
-   - Implementé ordenamiento de columnas en la vista de tabla
-   - Mejoré el sistema de paginación con números de página visibles
-   - Agregué botones para ir a la primera y última página
-
-4. **Interactividad**:
-   - Añadí efectos de hover y transiciones suaves
-   - Mejoré los modales con más información y mejor organización
-   - Implementé un sistema de notificaciones toast para feedback al usuario
-
-5. **Experiencia de usuario**:
-   - Añadí contador de resultados y filtros
-   - Mejoré la visualización de mensajes largos
-   - Implementé scroll automático al cambiar de página
-
-Estas mejoras hacen que la gestión de contactos sea más coherente con el resto de la aplicación y proporcione una experiencia de usuario más fluida y agradable.
